@@ -25,10 +25,17 @@ func main() {
 
 	defer closer.Close()
 
-	database, err := utils.ConfigureDatabase(logger)
+	database, err := utils.ConfigureDatabase(logger, false)
 	if err != nil {
-		logger.Fatalf("Failed to configure Database: %v", err)
+		logger.Warnf("Configuring write database has error: %v", err)
 	}
+
+	replicaDatabase, err := utils.ConfigureDatabase(logger, true)
+	if err != nil {
+		logger.Warnf("Configuring read only database has error: %v", err)
+	}
+
+
 
 	stdArgs := os.Args[1:]
 	if len(stdArgs) > 0 && stdArgs[0] == "migrate" {
@@ -43,7 +50,8 @@ func main() {
 			Logger:          logger,
 			ServerPort: utils.GetEnv("SERVER_PORT", "7000"),
 		}
-		env.SetDb(database)
+		env.SetWriteDb(database)
+		env.SetReadDb(replicaDatabase)
 
 		service.RunServer(&env)
 	}
