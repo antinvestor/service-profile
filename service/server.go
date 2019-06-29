@@ -1,15 +1,16 @@
 package service
 
 import (
+	"context"
+	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
 	otgorm "github.com/smacker/opentracing-gorm"
-	"time"
-	"net/http"
+	"log"
+	"net"
 	"os"
 	"os/signal"
-	"context"
-	"fmt"
+	"time"
 )
 
 // Error represents a handler error. It provides methods for a HTTP status
@@ -35,31 +36,27 @@ func (se StatusError) Status() int {
 	return se.Code
 }
 
-
 // Env Context object supplied around the applications lifetime
 type Env struct {
-	wDb              *gorm.DB
-	rDb              *gorm.DB
-	Logger          *logrus.Entry
-	ServerPort	string
-
+	wDb        *gorm.DB
+	rDb        *gorm.DB
+	Logger     *logrus.Entry
+	ServerPort string
 }
 
 func (env *Env) SetWriteDb(db *gorm.DB) {
 	env.wDb = db
 }
 
-
 func (env *Env) SetReadDb(db *gorm.DB) {
 	env.rDb = db
 }
 
-func (env *Env) GeWtDb(ctx context.Context) *gorm.DB{
+func (env *Env) GeWtDb(ctx context.Context) *gorm.DB {
 	return otgorm.SetSpanToGorm(ctx, env.wDb)
 }
 
-
-func (env *Env) GetRDb(ctx context.Context) *gorm.DB{
+func (env *Env) GetRDb(ctx context.Context) *gorm.DB {
 	return otgorm.SetSpanToGorm(ctx, env.rDb)
 }
 
@@ -67,15 +64,20 @@ func (env *Env) GetRDb(ctx context.Context) *gorm.DB{
 func RunServer(env *Env) {
 
 	waitDuration := time.Second * 15
-	//router := NewRouterV1(env)
 
-	srv := &http.Server{
-		Addr: fmt.Sprintf("0.0.0.0:%s", env.ServerPort ),
-		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
-		//Handler:      handlers.RecoveryHandler()(router), // Pass our instance of gorilla/mux in.
+	implementation := &ProfileServer{Env: env}
+
+	srv := grpc.NewServer(
+		grpc.UnaryInterceptor(AuthInterceptor),
+	)
+
+	pb.RegisterProfileServiceServer(srv, implementation)
+	// Register reflection service on gRPC server.
+	reflection.Register(srv)
+
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", env.ServerPort))
+	if err != nil {
+		env.Logger.Fatalf("Could not start on supplied port %v %v ", env.ServerPort, err)
 	}
 
 	// Run our server in a goroutine so that it doesn't block.
@@ -83,9 +85,11 @@ func RunServer(env *Env) {
 
 		env.Logger.Infof("Service running on port : %v", env.ServerPort)
 
-		if err := srv.ListenAndServe(); err != nil {
-			env.Logger.Fatalf("Service stopping due to error : %v", err)
+		// start the server
+		if err := srv.Serve(lis); err != nil {
+			log.Fatalf("failed to serve: %s", err)
 		}
+
 	}()
 
 	c := make(chan os.Signal, 1)
@@ -95,7 +99,6 @@ func RunServer(env *Env) {
 
 	// Block until we receive our signal.
 	<-c
-
 
 	// Create a deadline to wait for.
 	env2, cancel := context.WithTimeout(context.Background(), waitDuration)

@@ -5,23 +5,23 @@ RUN go get github.com/golang/dep/cmd/dep
 ADD Gopkg.* ./
 RUN dep ensure --vendor-only
 
-WORKDIR /go/src/bitbucket.org/antinvestor/service-boilerplate
+WORKDIR /go/src/bitbucket.org/antinvestor/service-profile
 
 # Copy the local package files to the container's workspace.
 ADD . .
 
 # Build the service command inside the container.
-RUN go install bitbucket.org/antinvestor/service-boilerplate
+RUN go install bitbucket.org/antinvestor/service-profile
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o boilerplate_binary .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o profile_binary .
 
 FROM scratch
-COPY --from=builder /go/src/bitbucket.org/antinvestor/service-boilerplate/boilerplate_binary /boilerplate
-COPY --from=builder /go/src/bitbucket.org/antinvestor/service-boilerplate/migrations /
+COPY --from=builder /go/src/bitbucket.org/antinvestor/service-profile/profile_binary /profile
+COPY --from=builder /go/src/bitbucket.org/antinvestor/service-profile/migrations /
 WORKDIR /
 
 # Run the service command by default when the container starts.
-ENTRYPOINT ["/boilerplate"]
+ENTRYPOINT ["/profile"]
 
 # Document the port that the service listens on by default.
 EXPOSE 7000

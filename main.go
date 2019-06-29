@@ -11,7 +11,7 @@ import (
 
 func main() {
 
-	serviceName := "BoilerPlate"
+	serviceName := "Profile"
 
 	logger, err := utils.ConfigureLogging(serviceName)
 	if err != nil {
@@ -48,7 +48,7 @@ func main() {
 
 		env := service.Env{
 			Logger:          logger,
-			ServerPort: utils.GetEnv("SERVER_PORT", "7000"),
+			ServerPort: utils.GetEnv("SERVER_PORT", "7523"),
 		}
 		env.SetWriteDb(database)
 		env.SetReadDb(replicaDatabase)
