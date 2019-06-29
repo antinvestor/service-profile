@@ -332,14 +332,14 @@ type Contact struct {
 	Version    uint32     `gorm:"DEFAULT 0"`
 }
 
-// BeforeCreate Ensures we update a migrations time stamps
+// BeforeCreate Ensures we update a contact time stamps
 func (model *Contact) BeforeCreate(scope *gorm.Scope) error {
 	scope.SetColumn("ContactID", xid.New().String())
 	scope.SetColumn("CreatedAt", time.Now())
 	return scope.SetColumn("ModifiedAt", time.Now())
 }
 
-// BeforeUpdate Updates time stamp every time we update status of a migration
+// BeforeUpdate Updates time stamp every time we update status of a contact
 func (model *Contact) BeforeUpdate(scope *gorm.Scope) error {
 	scope.SetColumn("Version", model.Version+1)
 	return scope.SetColumn("ModifiedAt", time.Now())
@@ -399,11 +399,10 @@ func (c *Contact) ToObject() *profile.ContactObject {
 }
 
 type Country struct {
-	CountryID string `gorm:"type:varchar(50);primary_key"`
+	ISO3 string `gorm:"type:varchar(50);primary_key"`
 	Name      string
 	City      string
-	ISO2      string
-	ISO3      string
+	ISO2      string	`sql:"unique"`
 
 	CreatedAt  time.Time
 	ModifiedAt time.Time
@@ -412,36 +411,22 @@ type Country struct {
 }
 
 func (country *Country) GetByID(db *gorm.DB, countryID string) error {
-	return db.Where("CountryID = ?", countryID).First(country).Error
+	return db.Where("ISO3 = ?", countryID).First(country).Error
 }
 
-func (country *Country) GetByISO3(db *gorm.DB, iso3Code string) error {
+func (country *Country) GetByAny(db *gorm.DB, c string) error {
 
-	if iso3Code == "" {
+	if c == "" {
 		return profile.ErrorCountryDoesNotExist
 	}
 
-	return db.Where("ISO3 = ?", iso3Code).First(country).Error
+	upperC := strings.ToUpper(c)
+
+	return db.Where("ISO3 = ? OR ISO2 = ? OR Name = ?", upperC, upperC, upperC).First(country).Error
 }
 
 func (country *Country) From(db *gorm.DB, name string) error {
 	return db.Where("name = ?", name).First(country).Error
-}
-
-func (country *Country) Create(db *gorm.DB, name string, iso2 string, iso3 string) error {
-
-	err := country.GetByISO3(db, iso3)
-
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			country.Name = name
-			country.ISO2 = iso2
-			country.ISO3 = iso3
-			return db.Save(country).Error
-		}
-	}
-
-	return nil
 }
 
 type Address struct {
@@ -462,6 +447,19 @@ type Address struct {
 	ModifiedAt time.Time
 	DeletedAt  *time.Time `sql:"index"`
 	Version    uint32     `gorm:"DEFAULT 0"`
+}
+
+// BeforeCreate Ensures we update a Address time stamps
+func (address *Address) BeforeCreate(scope *gorm.Scope) error {
+	scope.SetColumn("AddressID", xid.New().String())
+	scope.SetColumn("CreatedAt", time.Now())
+	return scope.SetColumn("ModifiedAt", time.Now())
+}
+
+// BeforeUpdate Updates time stamp every time we update status of a Address
+func (address *Address) BeforeUpdate(scope *gorm.Scope) error {
+	scope.SetColumn("Version", address.Version+1)
+	return scope.SetColumn("ModifiedAt", time.Now())
 }
 
 func (address *Address) GetByID(db *gorm.DB, addressID string) error {
@@ -492,19 +490,19 @@ func (address *Address) CreateFull(db *gorm.DB, country, town, location, area, s
 	house, postcode string, latitude, longitude float64, ) error {
 
 	countryRecord := Country{}
-	if err := countryRecord.GetByISO3(db, country); err != nil {
+	if err := countryRecord.GetByAny(db, country); err != nil {
 		return err
 	}
 
 	addressRecord := Address{}
-	if err := addressRecord.GetByAll(db, countryRecord.CountryID, area, street, house,
+	if err := addressRecord.GetByAll(db, countryRecord.ISO3, area, street, house,
 		postcode, latitude, longitude, ); err != nil {
 
 		if err != gorm.ErrRecordNotFound {
 			return err
 		}
 
-		if err2 := addressRecord.Create(db, countryRecord.CountryID, area, street,
+		if err2 := addressRecord.Create(db, countryRecord.ISO3, area, street,
 			house, postcode, latitude, longitude, ); err2 != nil {
 			return err2
 		}
@@ -529,6 +527,19 @@ type ProfileAddress struct {
 	Version    uint32     `gorm:"DEFAULT 0"`
 }
 
+// BeforeCreate Ensures we update a ProfileAddress time stamps
+func (profileAddress *ProfileAddress) BeforeCreate(scope *gorm.Scope) error {
+	scope.SetColumn("AddressID", xid.New().String())
+	scope.SetColumn("CreatedAt", time.Now())
+	return scope.SetColumn("ModifiedAt", time.Now())
+}
+
+// BeforeUpdate Updates time stamp every time we update status of a ProfileAddress
+func (profileAddress *ProfileAddress) BeforeUpdate(scope *gorm.Scope) error {
+	scope.SetColumn("Version", profileAddress.Version+1)
+	return scope.SetColumn("ModifiedAt", time.Now())
+}
+
 func (profileAddress *ProfileAddress) Create(db *gorm.DB, profileID string, addressID string, name string) error {
 
 	profileAddress.ProfileID = profileID
@@ -543,9 +554,6 @@ func (profileAddress *ProfileAddress) ToObject(db *gorm.DB) *profile.AddressObje
 
 	if err := profileAddress.Address.GetByID(db, profileAddress.AddressID); err != nil {
 
-		if err == gorm.ErrRecordNotFound {
-			err = profile.ErrorAddressDoesNotExist
-		}
 	}
 
 	obj.Name = profileAddress.Address.Area
@@ -558,9 +566,6 @@ func (profileAddress *ProfileAddress) ToObject(db *gorm.DB) *profile.AddressObje
 
 	if err := profileAddress.Address.Country.GetByID(db, profileAddress.Address.CountryID); err != nil {
 
-		if err == gorm.ErrRecordNotFound {
-			err = profile.ErrorCountryDoesNotExist
-		}
 	}
 
 	obj.Country = profileAddress.Address.Country.Name
