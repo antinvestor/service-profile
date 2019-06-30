@@ -8,7 +8,7 @@ The profile service repository contains code necessary to run the service that i
 * To update the proto service you need to run the command :
     `protoc -I ../api/service/profile/v1/ ../api/service/profile/v1/profile.proto --go_out=plugins=grpc:profile`
 
-    with that in place update the implementation appropriately considering the boilerplate project bare bones.
+    with that in place update the implementation appropriately considering the profile project bare bones.
 
 * Database fixtures and migrations are combined and will be run automatically before the container starts during deployments.
 

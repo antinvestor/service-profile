@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bitbucket.org/antinvestor/service-boilerplate/service"
+	"bitbucket.org/antinvestor/service-profile/service"
 	"log"
 	"os"
 	"time"
 
-	"bitbucket.org/antinvestor/service-boilerplate/utils"
+	"bitbucket.org/antinvestor/service-profile/utils"
 )
 
 func main() {
