@@ -23,4 +23,4 @@ WORKDIR /
 ENTRYPOINT ["/profile"]
 
 # Document the port that the service listens on by default.
-EXPOSE 7000
+EXPOSE 7523
