@@ -486,7 +486,7 @@ func (address *Address) Create(db *gorm.DB, countryID string, area, street, hous
 	return db.Save(address).Error
 }
 
-func (address *Address) CreateFull(db *gorm.DB, country, town, location, area, street,
+func (address *Address) CreateFull(db *gorm.DB, country, area, street,
 	house, postcode string, latitude, longitude float64, ) error {
 
 	countryRecord := Country{}

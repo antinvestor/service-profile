@@ -20,7 +20,7 @@ func (server *ProfileServer) getProfileByID(ctx context.Context, profileID strin
 	return p.ToObject(server.Env.GetRDb(ctx))
 }
 
-func (server *ProfileServer) GetByHash(ctx context.Context,
+func (server *ProfileServer) GetByID(ctx context.Context,
 	request *profile.ProfileIDRequest, ) (*profile.ProfileObject, error) {
 	profileID := strings.TrimSpace(request.GetID())
 	return server.getProfileByID(ctx, profileID)
@@ -29,7 +29,10 @@ func (server *ProfileServer) GetByHash(ctx context.Context,
 func (server *ProfileServer) Search(request *profile.ProfileSearchRequest,
 	stream profile.ProfileService_SearchServer, ) error {
 
-	profiles := []Profile{}
+	var profiles []Profile
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// creating WHERE clause to query by properties JSONB
 	scope := server.Env.GetRDb(ctx).New()
@@ -174,7 +177,7 @@ func (server *ProfileServer) AddAddress(ctx context.Context, request *profile.Pr
 
 	address := Address{}
 
-	if err := address.CreateFull(server.Env.GeWtDb(ctx), obj.GetCountry(), obj.GetTown(), obj.GetLocation(), obj.GetArea(), obj.GetStreet(),
+	if err := address.CreateFull(server.Env.GeWtDb(ctx), obj.GetCountry(), obj.GetArea(), obj.GetStreet(),
 		obj.GetHouse(), obj.GetPostcode(), obj.GetLatitude(), obj.GetLongitude(), ); err != nil {
 		return nil, err
 	}

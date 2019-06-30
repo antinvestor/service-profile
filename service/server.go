@@ -1,11 +1,13 @@
 package service
 
 import (
+	"bitbucket.org/antinvestor/service-profile/profile"
 	"context"
 	"fmt"
 	"github.com/Sirupsen/logrus"
 	"github.com/jinzhu/gorm"
 	otgorm "github.com/smacker/opentracing-gorm"
+	"google.golang.org/grpc"
 	"log"
 	"net"
 	"os"
@@ -63,17 +65,13 @@ func (env *Env) GetRDb(ctx context.Context) *gorm.DB {
 //RunServer Starts a server and waits on it
 func RunServer(env *Env) {
 
-	waitDuration := time.Second * 15
-
 	implementation := &ProfileServer{Env: env}
 
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(AuthInterceptor),
 	)
 
-	pb.RegisterProfileServiceServer(srv, implementation)
-	// Register reflection service on gRPC server.
-	reflection.Register(srv)
+	profile.RegisterProfileServiceServer(srv, implementation)
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", env.ServerPort))
 	if err != nil {
@@ -100,12 +98,7 @@ func RunServer(env *Env) {
 	// Block until we receive our signal.
 	<-c
 
-	// Create a deadline to wait for.
-	env2, cancel := context.WithTimeout(context.Background(), waitDuration)
-	defer cancel()
-	// Doesn't block if no connections, but will otherwise wait
-	// until the timeout deadline.
-	srv.Shutdown(env2)
+	srv.Stop()
 	// Optionally, you could run srv.Shutdown in a goroutine and block on
 	// <-env.Done() if your application should wait for other services
 	// to finalize based on context cancellation.

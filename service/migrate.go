@@ -27,7 +27,8 @@ func PerformMigration(logger *logrus.Entry, db *gorm.DB) {
 	migrationsDirPath := "./migrations/0001"
 
 	// Migrate the schema
-	db.AutoMigrate(&AntMigration{})
+	db.AutoMigrate(&AntMigration{}, &ProfileType{},
+	&Profile{}, &ContactType{}, &CommunicationLevel{}, &Contact{}, &Country{}, &Address{}, &ProfileAddress{})
 
 	if err := scanForNewMigrations(logger, db, migrationsDirPath); err != nil {
 		logger.Warnf("Error scanning for new migrations : %v ", err)
