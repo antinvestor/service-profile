@@ -14,9 +14,7 @@ import (
 /*
 This is just documentation on creating a postgresql db and user
 
-postgres=# create database ant_service;
-postgres=# create user ant with encrypted password 'ant-secret';
-postgres=# grant all privileges on database ant_service to ant;
+postgres=# create database service-profile; create user profile with encrypted password 'profile3'; grant all privileges on database "service-profile" to profile;
 
 */
 
