@@ -1,18 +1,18 @@
 package service
 
 import (
-	"bitbucket.org/antinvestor/service-profile/profile"
-	"context"
+	grpc_health_v1 "antinvestor.com/service/profile/health"
+	"antinvestor.com/service/profile/service/handlers"
+	"antinvestor.com/service/profile/utils"
 	"fmt"
-	"github.com/Sirupsen/logrus"
-	"github.com/jinzhu/gorm"
-	otgorm "github.com/smacker/opentracing-gorm"
 	"google.golang.org/grpc"
 	"log"
 	"net"
 	"os"
 	"os/signal"
 	"time"
+
+	"antinvestor.com/service/profile/grpc/profile"
 )
 
 // Error represents a handler error. It provides methods for a HTTP status
@@ -38,50 +38,29 @@ func (se StatusError) Status() int {
 	return se.Code
 }
 
-// Env Context object supplied around the applications lifetime
-type Env struct {
-	wDb        *gorm.DB
-	rDb        *gorm.DB
-	Logger     *logrus.Entry
-	ServerPort string
-}
-
-func (env *Env) SetWriteDb(db *gorm.DB) {
-	env.wDb = db
-}
-
-func (env *Env) SetReadDb(db *gorm.DB) {
-	env.rDb = db
-}
-
-func (env *Env) GeWtDb(ctx context.Context) *gorm.DB {
-	return otgorm.SetSpanToGorm(ctx, env.wDb)
-}
-
-func (env *Env) GetRDb(ctx context.Context) *gorm.DB {
-	return otgorm.SetSpanToGorm(ctx, env.rDb)
-}
-
 //RunServer Starts a server and waits on it
-func RunServer(env *Env) {
+func RunServer(env *utils.Env) {
 
-	implementation := &ProfileServer{Env: env}
+	implementation := &handlers.ProfileServer{Env: env}
+
+	serverPort := utils.GetEnv(utils.EnvServerPort, "7005")
 
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(AuthInterceptor),
 	)
 
 	profile.RegisterProfileServiceServer(srv, implementation)
+	grpc_health_v1.RegisterHealthServer(srv, implementation)
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", env.ServerPort))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", serverPort))
 	if err != nil {
-		env.Logger.Fatalf("Could not start on supplied port %v %v ", env.ServerPort, err)
+		env.Logger.Fatalf("Could not start on supplied port %v %v ", serverPort, err)
 	}
 
 	// Run our server in a goroutine so that it doesn't block.
 	go func() {
 
-		env.Logger.Infof("Service running on port : %v", env.ServerPort)
+		env.Logger.Infof("Service running on port : %v", serverPort)
 
 		// start the server
 		if err := srv.Serve(lis); err != nil {

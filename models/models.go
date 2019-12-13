@@ -1,20 +1,20 @@
-package service
+package models
 
 import (
-	"bitbucket.org/antinvestor/service-profile/profile"
-	"fmt"
-	"strings"
-	"time"
-
-	"github.com/jinzhu/gorm"
-	"github.com/rs/xid"
-
+	"antinvestor.com/service/profile/utils"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/jinzhu/gorm"
+	"math/rand"
+	"strings"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/ttacon/libphonenumber"
+
+	"antinvestor.com/service/profile/grpc/profile"
 )
 
 type PropertyMap map[string]interface{}
@@ -45,30 +45,6 @@ func (p *PropertyMap) Scan(src interface{}) error {
 	return nil
 }
 
-// AntMigration Our simple table holding all the migration data
-type AntMigration struct {
-	AntMigrationID string `gorm:"type:varchar(50);primary_key"`
-	Name           string `gorm:"type:varchar(50);unique_index"`
-	Patch          string `gorm:"type:text"`
-	AppliedAt      *time.Time
-	CreatedAt      time.Time
-	ModifiedAt     time.Time
-	Version        uint32 `gorm:"DEFAULT 0"`
-}
-
-// BeforeCreate Ensures we update a migrations time stamps
-func (model *AntMigration) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("AntMigrationID", xid.New().String())
-	scope.SetColumn("CreatedAt", time.Now())
-	return scope.SetColumn("ModifiedAt", time.Now())
-}
-
-// BeforeUpdate Updates time stamp every time we update status of a migration
-func (model *AntMigration) BeforeUpdate(scope *gorm.Scope) error {
-	scope.SetColumn("Version", model.Version+1)
-	return scope.SetColumn("ModifiedAt", time.Now())
-}
-
 var profileTypeIDMap = map[profile.ProfileType]uint{
 	profile.ProfileType_PERSON:      0,
 	profile.ProfileType_INSTITUTION: 1,
@@ -80,10 +56,15 @@ type ProfileType struct {
 	UID           uint   `sql:"unique"`
 	Name          string
 	Description   string
-	CreatedAt     time.Time
-	ModifiedAt    time.Time
-	DeletedAt     *time.Time `sql:"index"`
-	Version       uint32     `gorm:"DEFAULT 0"`
+	AntBaseModel
+}
+
+func (model *ProfileType) BeforeCreate(scope *gorm.Scope) error {
+
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("ProfileTypeID", model.IDGen("pft"))
 }
 
 func (pt *ProfileType) From(db *gorm.DB, profileType profile.ProfileType) {
@@ -107,29 +88,20 @@ type Profile struct {
 
 	ProfileTypeUID uint
 	ProfileType    ProfileType
-
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	DeletedAt  *time.Time `sql:"index"`
-	Version    uint32     `gorm:"DEFAULT 0"`
+	AntBaseModel
 }
 
-// BeforeCreate Ensures we update a migrations time stamps
-func (p *Profile) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("ProfileID", xid.New().String())
-	scope.SetColumn("CreatedAt", time.Now())
-	return scope.SetColumn("ModifiedAt", time.Now())
-}
+func (model *Profile) BeforeCreate(scope *gorm.Scope) error {
 
-// BeforeUpdate Updates time stamp every time we update status of a migration
-func (p *Profile) BeforeUpdate(scope *gorm.Scope) error {
-	scope.SetColumn("Version", p.Version+1)
-	return scope.SetColumn("ModifiedAt", time.Now())
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("ProfileID", model.IDGen("pf"))
 }
 
 func (p *Profile) GetByID(db *gorm.DB) error {
 	modelID := strings.TrimSpace(p.ProfileID)
-	if db.Where("ProfileID = ?", modelID).First(p).RecordNotFound() {
+	if db.Where("profile_id = ?", modelID).First(p).RecordNotFound() {
 		return profile.ErrorProfileDoesNotExist
 	}
 	return nil
@@ -147,47 +119,16 @@ func (p *Profile) UpdateProperties(db *gorm.DB, params map[string]interface{}) e
 }
 
 func (p *Profile) Create(db *gorm.DB, profileType profile.ProfileType,
-	contactDetail string, properties map[string]interface{}, ) error {
+	properties map[string]interface{}, ) error {
 
-	if contactDetail == "" {
-		return profile.ErrorEmptyValueSupplied
-	}
+	pt := ProfileType{}
+	pt.From(db, profileType)
 
-	contact := Contact{Detail: contactDetail}
+	p.ProfileTypeUID = pt.UID
+	p.ProfileType = pt
+	p.Properties = properties
 
-	err := contact.GetByDetail(db)
-
-	if err != nil {
-
-		if err != profile.ErrorContactDoesNotExist {
-			return err
-		}
-
-		pt := ProfileType{}
-		pt.From(db, profileType)
-
-		p.ProfileTypeUID = pt.UID
-		p.ProfileType = pt
-		p.Properties = properties
-
-		err := db.Save(p).Error
-		if err != nil {
-			return err
-		}
-
-		return contact.Create(db, p.ProfileID, contactDetail)
-
-	}
-
-	p.ProfileID = contact.ProfileID
-
-	err2 := db.First(p).Error
-	if err2 == nil {
-		return err2
-	}
-
-	return p.UpdateProperties(db, properties)
-
+	return db.Save(p).Error
 }
 
 func (p *Profile) ToObject(db *gorm.DB) (*profile.ProfileObject, error) {
@@ -245,10 +186,15 @@ type ContactType struct {
 	Name        string
 	Description string
 
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	DeletedAt  *time.Time `sql:"index"`
-	Version    uint32     `gorm:"DEFAULT 0"`
+	AntBaseModel
+}
+
+func (model *ContactType) BeforeCreate(scope *gorm.Scope) error {
+
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("ContactTypeID", model.IDGen("cnt"))
 }
 
 func (ct *ContactType) From(db *gorm.DB, contactType profile.ContactType) {
@@ -292,10 +238,15 @@ type CommunicationLevel struct {
 	Name        string
 	Description string
 
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	DeletedAt  *time.Time `sql:"index"`
-	Version    uint32     `gorm:"DEFAULT 0"`
+	AntBaseModel
+}
+
+func (model *CommunicationLevel) BeforeCreate(scope *gorm.Scope) error {
+
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("CommunicationLevelID", model.IDGen("cml"))
 }
 
 func (cl *CommunicationLevel) From(db *gorm.DB, communicationLevel profile.CommunicationLevel) {
@@ -326,23 +277,15 @@ type Contact struct {
 	ProfileID string
 	Profile   Profile
 
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	DeletedAt  *time.Time `sql:"index"`
-	Version    uint32     `gorm:"DEFAULT 0"`
+	AntBaseModel
 }
 
-// BeforeCreate Ensures we update a contact time stamps
 func (model *Contact) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("ContactID", xid.New().String())
-	scope.SetColumn("CreatedAt", time.Now())
-	return scope.SetColumn("ModifiedAt", time.Now())
-}
 
-// BeforeUpdate Updates time stamp every time we update status of a contact
-func (model *Contact) BeforeUpdate(scope *gorm.Scope) error {
-	scope.SetColumn("Version", model.Version+1)
-	return scope.SetColumn("ModifiedAt", time.Now())
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("ContactID", model.IDGen("cn"))
 }
 
 func (c *Contact) GetByDetail(db *gorm.DB) error {
@@ -384,7 +327,13 @@ func (c *Contact) Create(db *gorm.DB, profileID string, contactDetail string) er
 
 	c.ProfileID = profileID
 	c.Detail = contactDetail
-	return db.Save(c).Error
+	err := db.Save(c).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+
 }
 
 func (c *Contact) ToObject() *profile.ContactObject {
@@ -398,16 +347,95 @@ func (c *Contact) ToObject() *profile.ContactObject {
 	return &contactObject
 }
 
+type Verification struct {
+	VerificationID string `gorm:"type:varchar(50);primary_key"`
+	ContactID      string `gorm:"type:varchar(50);"`
+	Contact        Contact
+
+	Pin      string `gorm:"type:varchar(10)"`
+	LinkHash string `gorm:"type:varchar(100)"`
+
+	ExpiresAt  *time.Time
+	VerifiedAt *time.Time
+	AntBaseModel
+}
+
+func (v *Verification) BeforeCreate(scope *gorm.Scope) error {
+	if err := v.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("VerificationID", v.IDGen("vr"))
+}
+
+func (v *Verification) Create(db *gorm.DB, contact Contact, expiryTimeInSec int) error {
+
+	v.Contact = contact
+	v.ContactID = contact.ContactID
+
+	v.Pin= GeneratePin(utils.ConfigLengthOfVerificationPin)
+	v.LinkHash = GeneratePin(utils.ConfigLengthOfVerificationLinkHash)
+
+	if expiryTimeInSec > 0 {
+		expiryTime := time.Now().Add(time.Duration(expiryTimeInSec))
+		v.ExpiresAt = &expiryTime
+	}
+
+	return db.Save(v).Error
+}
+
+// GeneratePin returns securely generated random bytes.
+// It will return an error if the system's secure random
+// number generator fails to function correctly, in which
+// case the caller should not continue.
+func GeneratePin(n int) string {
+
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+	var seededRand *rand.Rand = rand.New(
+		rand.NewSource(time.Now().UnixNano()))
+
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
+	}
+	return string(b)
+}
+
+type VerificationAttempt struct {
+	VerificationAttemptID string `gorm:"type:varchar(50);primary_key"`
+
+	VerificationID string `gorm:"type:varchar(50);"`
+	Verification   Verification
+
+	ContactID string `gorm:"type:varchar(50);"`
+	Contact   Contact
+
+	State string `gorm:"type:varchar(10)"`
+	AntBaseModel
+}
+
+func (model *VerificationAttempt) BeforeCreate(scope *gorm.Scope) error {
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("VerificationAttemptID", model.IDGen("vrat"))
+}
+
 type Country struct {
 	ISO3 string `gorm:"type:varchar(50);primary_key"`
-	Name      string
-	City      string
-	ISO2      string	`sql:"unique"`
+	Name string
+	City string
+	ISO2 string `sql:"unique"`
 
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	DeletedAt  *time.Time `sql:"index"`
-	Version    uint32     `gorm:"DEFAULT 0"`
+	AntBaseModel
+}
+
+func (model *Country) BeforeCreate(scope *gorm.Scope) error {
+
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (country *Country) GetByID(db *gorm.DB, countryID string) error {
@@ -443,23 +471,15 @@ type Address struct {
 	CountryID string
 	Country   Country
 
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	DeletedAt  *time.Time `sql:"index"`
-	Version    uint32     `gorm:"DEFAULT 0"`
+	AntBaseModel
 }
 
-// BeforeCreate Ensures we update a Address time stamps
-func (address *Address) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("AddressID", xid.New().String())
-	scope.SetColumn("CreatedAt", time.Now())
-	return scope.SetColumn("ModifiedAt", time.Now())
-}
+func (model *Address) BeforeCreate(scope *gorm.Scope) error {
 
-// BeforeUpdate Updates time stamp every time we update status of a Address
-func (address *Address) BeforeUpdate(scope *gorm.Scope) error {
-	scope.SetColumn("Version", address.Version+1)
-	return scope.SetColumn("ModifiedAt", time.Now())
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("AddressID", model.IDGen("ad"))
 }
 
 func (address *Address) GetByID(db *gorm.DB, addressID string) error {
@@ -469,7 +489,7 @@ func (address *Address) GetByID(db *gorm.DB, addressID string) error {
 func (address *Address) GetByAll(db *gorm.DB, countryID string, area, street, house, postcode string,
 	latitude, longitude float64, ) error {
 
-	return db.Where("CountryID = ? AND Area = ? AND Street = ? AND House = ? AND PostCode = ? AND Latitude = ? AND Longitude = ?",
+	return db.Where("country_id = ? AND area = ? AND street = ? AND house = ? AND postCode = ? AND latitude = ? AND longitude = ?",
 		countryID, area, street, house, postcode, latitude, longitude).First(address).Error
 
 }
@@ -521,23 +541,15 @@ type ProfileAddress struct {
 	ProfileID string
 	Profile   Profile
 
-	CreatedAt  time.Time
-	ModifiedAt time.Time
-	DeletedAt  *time.Time `sql:"index"`
-	Version    uint32     `gorm:"DEFAULT 0"`
+	AntBaseModel
 }
 
-// BeforeCreate Ensures we update a ProfileAddress time stamps
-func (profileAddress *ProfileAddress) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("AddressID", xid.New().String())
-	scope.SetColumn("CreatedAt", time.Now())
-	return scope.SetColumn("ModifiedAt", time.Now())
-}
+func (model *ProfileAddress) BeforeCreate(scope *gorm.Scope) error {
 
-// BeforeUpdate Updates time stamp every time we update status of a ProfileAddress
-func (profileAddress *ProfileAddress) BeforeUpdate(scope *gorm.Scope) error {
-	scope.SetColumn("Version", profileAddress.Version+1)
-	return scope.SetColumn("ModifiedAt", time.Now())
+	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+		return err
+	}
+	return scope.SetColumn("ProfileAddressID", model.IDGen("prad"))
 }
 
 func (profileAddress *ProfileAddress) Create(db *gorm.DB, profileID string, addressID string, name string) error {
@@ -576,7 +588,7 @@ func (profileAddress *ProfileAddress) ToObject(db *gorm.DB) *profile.AddressObje
 
 func GetProfileAddresses(db *gorm.DB, p *Profile) ([]ProfileAddress, error) {
 	var addresses []ProfileAddress
-	if err := db.Where("ProfileID = ?", p.ProfileID).Find(&addresses).Error; err != nil {
+	if err := db.Where("profile_id = ?", p.ProfileID).Find(&addresses).Error; err != nil {
 		return nil, err
 	}
 

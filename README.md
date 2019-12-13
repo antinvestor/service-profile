@@ -6,7 +6,9 @@ The profile service repository contains code necessary to run the service that i
 
 * The api implementation is found at bitbucket.org/antinvestor/api/service/profile
 * To update the proto service you need to run the command :
-    `protoc -I ../api/service/profile/v1/ ../api/service/profile/v1/profile.proto --go_out=plugins=grpc:profile`
+    `protoc -I ../api/service/profile/v1/ ../api/service/profile/v1/profile.proto --go_out=plugins=grpc:grpc/profile`
+    `protoc -I ../api/service/health/v1/ ../api/service/health/v1/health.proto --go_out=plugins=grpc:grpc/health`
+    `protoc -I ../api/service/notification/v1/ ../api/service/notification/v1/notification.proto --go_out=plugins=grpc:grpc/notification`
 
     with that in place update the implementation appropriately considering the profile project bare bones.
 

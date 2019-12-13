@@ -1,12 +1,12 @@
 package main
 
 import (
-	"bitbucket.org/antinvestor/service-profile/service"
 	"log"
 	"os"
 	"time"
 
-	"bitbucket.org/antinvestor/service-profile/utils"
+	"antinvestor.com/service/profile/service"
+	"antinvestor.com/service/profile/utils"
 )
 
 func main() {
@@ -35,10 +35,9 @@ func main() {
 		logger.Warnf("Configuring read only database has error: %v", err)
 	}
 
-
-
+	isMigration := utils.GetEnv(utils.EnvOnlyMigrate, "")
 	stdArgs := os.Args[1:]
-	if len(stdArgs) > 0 && stdArgs[0] == "migrate" {
+	if (len(stdArgs) > 0 && stdArgs[0] == "migrate") || isMigration == "true" {
 		logger.Info("Initiating migrations")
 
 		service.PerformMigration(logger, database)
@@ -46,15 +45,20 @@ func main() {
 	} else {
 		logger.Infof("Initiating the service at %v", time.Now())
 
-		env := service.Env{
-			Logger:          logger,
-			ServerPort: utils.GetEnv("SERVER_PORT", "7523"),
+		healthChecker, err := utils.ConfigureHealthChecker(logger, database, replicaDatabase)
+		if err != nil {
+			logger.Warnf("Error configuring health checks: %v", err)
+		}
+
+
+		env := utils.Env{
+			Logger:     logger,
+			Health:             healthChecker,
 		}
 		env.SetWriteDb(database)
 		env.SetReadDb(replicaDatabase)
 
 		service.RunServer(&env)
 	}
-
 
 }

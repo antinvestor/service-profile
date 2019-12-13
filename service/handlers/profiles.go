@@ -1,18 +1,20 @@
-package service
+package handlers
 
 import (
-	"bitbucket.org/antinvestor/service-profile/profile"
+	"antinvestor.com/service/profile/grpc/profile"
+	"antinvestor.com/service/profile/models"
+	"antinvestor.com/service/profile/utils"
 	"context"
 	"fmt"
 	"strings"
 )
 
 type ProfileServer struct {
-	Env *Env
+	Env *utils.Env
 }
 
 func (server *ProfileServer) getProfileByID(ctx context.Context, profileID string, ) (*profile.ProfileObject, error) {
-	p := Profile{}
+	p := models.Profile{}
 	p.ProfileID = profileID
 
 	server.Env.GetRDb(ctx).First(&p)
@@ -29,7 +31,7 @@ func (server *ProfileServer) GetByID(ctx context.Context,
 func (server *ProfileServer) Search(request *profile.ProfileSearchRequest,
 	stream profile.ProfileService_SearchServer, ) error {
 
-	var profiles []Profile
+	var profiles []models.Profile
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -61,8 +63,8 @@ func (server *ProfileServer) Search(request *profile.ProfileSearchRequest,
 func (server *ProfileServer) Merge(ctx context.Context, request *profile.ProfileMergeRequest, ) (
 	*profile.ProfileObject, error) {
 
-	var target Profile
-	var merging Profile
+	var target models.Profile
+	var merging models.Profile
 
 	target.ProfileID = request.GetID()
 
@@ -101,16 +103,48 @@ func (server *ProfileServer) Create(ctx context.Context, request *profile.Profil
 		properties[key] = value
 	}
 
-	p := Profile{}
+	contactDetail := strings.TrimSpace(request.GetContact())
 
-	err := p.Create(
-		server.Env.GeWtDb(ctx),
-		request.GetType(),
-		strings.TrimSpace(request.GetContact()),
-		properties,
-	)
+	if contactDetail == "" {
+		return nil, profile.ErrorContactDetailsNotValid
+	}
+
+	p := models.Profile{}
+
+	contact := models.Contact{Detail: contactDetail}
+
+	err := contact.GetByDetail(server.Env.GetRDb(ctx))
+
 	if err != nil {
-		return nil, err
+
+		if err != profile.ErrorContactDoesNotExist {
+			return nil, err
+		}
+
+
+		err := p.Create(server.Env.GeWtDb(ctx), request.GetType(), properties, )
+		if err != nil {
+			return nil, err
+		}
+
+		err = createContact(server.Env, ctx, p.ProfileID, request.GetContact())
+		if err != nil {
+			return nil, err
+		}
+
+	}else{
+
+		p.ProfileID = contact.ProfileID
+
+		err = server.Env.GetRDb(ctx).First(p).Error
+		if err != nil {
+			return nil, err
+		}
+
+		err = p.UpdateProperties(server.Env.GeWtDb(ctx), properties)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return server.getProfileByID(ctx, p.ProfileID)
@@ -120,7 +154,7 @@ func (server *ProfileServer) Update(
 	ctx context.Context,
 	request *profile.ProfileUpdateRequest,
 ) (*profile.ProfileObject, error) {
-	p := Profile{
+	p := models.Profile{
 		ProfileID: strings.TrimSpace(request.GetID()),
 	}
 
@@ -146,44 +180,4 @@ func EscapeColumnName(name string) string {
 		"\r", "",
 		"\n", "",
 	).Replace(name)
-}
-
-func (server *ProfileServer) AddContact(ctx context.Context, request *profile.ProfileAddContactRequest,
-) (*profile.ProfileObject, error) {
-
-	p := Profile{}
-	p.ProfileID = request.GetID()
-	if err := server.Env.GetRDb(ctx).Find(&p).Error; err != nil {
-		return nil, err
-	}
-
-	contact := Contact{}
-	if err := contact.Create(server.Env.GeWtDb(ctx), p.ProfileID, request.GetContact()); err != nil {
-		return nil, err
-	}
-
-	return p.ToObject(server.Env.GetRDb(ctx))
-}
-
-// Adds a new address based on the request.
-func (server *ProfileServer) AddAddress(ctx context.Context, request *profile.ProfileAddAddressRequest) (*profile.ProfileObject, error) {
-	p := Profile{}
-	p.ProfileID = request.GetID()
-	if err := server.Env.GetRDb(ctx).Find(&p).Error; err != nil {
-		return nil, err
-	}
-
-	obj := request.GetAddress()
-
-	address := Address{}
-
-	if err := address.CreateFull(server.Env.GeWtDb(ctx), obj.GetCountry(), obj.GetArea(), obj.GetStreet(),
-		obj.GetHouse(), obj.GetPostcode(), obj.GetLatitude(), obj.GetLongitude(), ); err != nil {
-		return nil, err
-	}
-
-	profileAddress := ProfileAddress{}
-	profileAddress.Create(server.Env.GeWtDb(ctx), p.ProfileID, address.AddressID, obj.GetName())
-
-	return p.ToObject(server.Env.GetRDb(ctx))
 }

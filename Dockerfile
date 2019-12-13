@@ -1,26 +1,25 @@
-FROM golang:1.12 as builder
+FROM golang:1.13 as builder
 
-RUN go get github.com/golang/dep/cmd/dep
-WORKDIR /go/src/bitbucket.org/antinvestor/service-profile
+# Add Maintainer Info
+LABEL maintainer="Bwire Peter <bwire517@gmail.com>"
 
-ADD Gopkg.* ./
-RUN dep ensure --vendor-only
+WORKDIR /
 
-# Copy the local package files to the container's workspace.
+ADD go.mod ./
+
+RUN go mod download
+
 ADD . .
-
-# Build the service command inside the container.
-RUN go install .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o profile_binary .
 
 FROM scratch
-COPY --from=builder /go/src/bitbucket.org/antinvestor/service-profile/profile_binary /profile
-COPY --from=builder /go/src/bitbucket.org/antinvestor/service-profile/migrations /
+COPY --from=builder /profile_binary /profile
+COPY --from=builder /migrations /
 WORKDIR /
 
 # Run the service command by default when the container starts.
 ENTRYPOINT ["/profile"]
 
 # Document the port that the service listens on by default.
-EXPOSE 7523
+EXPOSE 7001
