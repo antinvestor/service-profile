@@ -1,7 +1,7 @@
 package service
 
 import (
-	grpc_health_v1 "antinvestor.com/service/profile/health"
+	grpc_health_v1 "antinvestor.com/service/profile/grpc/health"
 	"antinvestor.com/service/profile/service/handlers"
 	"antinvestor.com/service/profile/utils"
 	"fmt"

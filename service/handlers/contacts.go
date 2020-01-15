@@ -49,7 +49,9 @@ func createContact(env *utils.Env, ctx context.Context, profileID string, contac
 
 func verifyContact(env *utils.Env, ctx context.Context, contact models.Contact) error{
 	verification := models.Verification{}
-	err := verification.Create(env.GeWtDb(ctx), contact, 24*60*60)
+
+	var productID = utils.GetAuthSourceProductID(ctx)
+	err := verification.Create( env.GeWtDb(ctx), productID,contact, 24*60*60)
 	if err != nil {
 		return err
 	}
@@ -57,6 +59,7 @@ func verifyContact(env *utils.Env, ctx context.Context, contact models.Contact) 
 	variables := make(map[string]string)
 	variables["pin"] = verification.Pin
 	variables["linkHash"] = verification.LinkHash
+	variables["expiryDate"] = verification.ExpiresAt.String()
 
 
 	return queue.Notification(env, ctx, contact.ProfileID, contact.ContactID,

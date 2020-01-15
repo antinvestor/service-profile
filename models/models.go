@@ -352,6 +352,8 @@ type Verification struct {
 	ContactID      string `gorm:"type:varchar(50);"`
 	Contact        Contact
 
+	ProductID string `gorm:"type:varchar(50);"`
+
 	Pin      string `gorm:"type:varchar(10)"`
 	LinkHash string `gorm:"type:varchar(100)"`
 
@@ -367,12 +369,14 @@ func (v *Verification) BeforeCreate(scope *gorm.Scope) error {
 	return scope.SetColumn("VerificationID", v.IDGen("vr"))
 }
 
-func (v *Verification) Create(db *gorm.DB, contact Contact, expiryTimeInSec int) error {
+func (v *Verification) Create(db *gorm.DB, productId string, contact Contact, expiryTimeInSec int) error {
+
+	v.ProductID = productId
 
 	v.Contact = contact
 	v.ContactID = contact.ContactID
 
-	v.Pin= GeneratePin(utils.ConfigLengthOfVerificationPin)
+	v.Pin = GeneratePin(utils.ConfigLengthOfVerificationPin)
 	v.LinkHash = GeneratePin(utils.ConfigLengthOfVerificationLinkHash)
 
 	if expiryTimeInSec > 0 {

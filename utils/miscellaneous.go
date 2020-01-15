@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"net"
 	"net/http"
 	"os"
@@ -23,3 +24,11 @@ func GetEnv(key, fallback string) string {
 	return fallback
 }
 
+func GetAuthSourceProductID(ctx context.Context) string  {
+	contextProductId := ctx.Value(ConfigContextKeyProductID)
+	if contextProductId == nil {
+		return ""
+	}else {
+		return contextProductId.(string)
+	}
+}

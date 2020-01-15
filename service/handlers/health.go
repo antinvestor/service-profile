@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	grpc_health_v1 "antinvestor.com/service/profile/health"
+	grpc_health_v1 "antinvestor.com/service/profile/grpc/health"
 	"antinvestor.com/service/profile/utils"
 	"context"
 	"github.com/opentracing/opentracing-go"
@@ -34,4 +34,3 @@ func (server *ProfileServer) Check(ctx context.Context, req *grpc_health_v1.Heal
 func (server *ProfileServer) Watch(req *grpc_health_v1.HealthCheckRequest, srv grpc_health_v1.Health_WatchServer) error {
 	return status.Errorf(codes.Unimplemented, "method Watch not implemented")
 }
-

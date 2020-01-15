@@ -27,13 +27,15 @@ func main() {
 
 	database, err := utils.ConfigureDatabase(logger, false)
 	if err != nil {
-		logger.Warnf("Configuring write database has error: %v", err)
+		logger.WithError(err).Fatal("Could not Configure write database")
 	}
+	defer database.Close()
 
 	replicaDatabase, err := utils.ConfigureDatabase(logger, true)
 	if err != nil {
-		logger.Warnf("Configuring read only database has error: %v", err)
+		logger.WithError(err).Fatal("Could not Configure read database")
 	}
+	defer replicaDatabase.Close()
 
 	isMigration := utils.GetEnv(utils.EnvOnlyMigrate, "")
 	stdArgs := os.Args[1:]
@@ -50,10 +52,9 @@ func main() {
 			logger.Warnf("Error configuring health checks: %v", err)
 		}
 
-
 		env := utils.Env{
-			Logger:     logger,
-			Health:             healthChecker,
+			Logger: logger,
+			Health: healthChecker,
 		}
 		env.SetWriteDb(database)
 		env.SetReadDb(replicaDatabase)

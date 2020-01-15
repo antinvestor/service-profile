@@ -10,8 +10,12 @@ const EnvOnlyMigrate = "ONLY_DO_MIGRATION"
 
 const EnvNotificationServiceUri = "NOTIFICATION_SERVICE_URI"
 
+const ConfigContextKeyProductID = "RequestingProductID"
+
 const ConfigLengthOfVerificationPin = 5
 const ConfigLengthOfVerificationLinkHash = 70
+
+
 
 
 const MessageTemplateContactVerification = "template.profile.contact.verification"
