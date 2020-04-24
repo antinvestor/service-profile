@@ -1,4 +1,4 @@
-FROM golang:1.13 as builder
+FROM golang:1.14 as builder
 
 # Add Maintainer Info
 LABEL maintainer="Bwire Peter <bwire517@gmail.com>"
@@ -22,4 +22,4 @@ WORKDIR /
 ENTRYPOINT ["/profile"]
 
 # Document the port that the service listens on by default.
-EXPOSE 7001
+EXPOSE 7005

@@ -280,20 +280,23 @@ type Contact struct {
 	AntBaseModel
 }
 
-func (model *Contact) BeforeCreate(scope *gorm.Scope) error {
+func (contact *Contact) BeforeCreate(scope *gorm.Scope) error {
 
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
+	if err := contact.AntBaseModel.BeforeCreate(scope); err != nil {
 		return err
 	}
-	return scope.SetColumn("ContactID", model.IDGen("cn"))
+	return scope.SetColumn("ContactID", contact.IDGen("cn"))
 }
 
-func (c *Contact) GetByDetail(db *gorm.DB) error {
+func (contact *Contact) GetByDetail(db *gorm.DB) error {
 
-	detail := strings.TrimSpace(c.Detail)
+	detail := strings.TrimSpace(contact.Detail)
 	detail = strings.ToLower(detail)
-	if db.Find(c, "detail = ?", detail).RecordNotFound() {
-		return profile.ErrorContactDoesNotExist
+	if err := db.Last(contact, "detail = ?", detail).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return profile.ErrorContactDoesNotExist
+		}
+		return err
 	}
 	return nil
 }
@@ -311,23 +314,26 @@ func GetContactsByProfile(db *gorm.DB, p *Profile) ([]Contact, error) {
 	return profileContacts, nil
 }
 
-func (c *Contact) Create(db *gorm.DB, profileID string, contactDetail string) error {
+func (contact *Contact) Create(db *gorm.DB, profileID string, contactDetail string) error {
 
-	detail := strings.TrimSpace(c.Detail)
+	detail := strings.TrimSpace(contactDetail)
 	detail = strings.ToLower(detail)
 	ct := ContactType{}
-	ct.FromDetail(db, detail)
-	c.ContactType = ct
-	c.ContactTypeUID = ct.UID
+	err := ct.FromDetail(db, detail)
+	if err != nil{
+		return err
+	}
+	contact.ContactType = ct
+	contact.ContactTypeUID = ct.UID
 
 	cl := CommunicationLevel{}
 	cl.From(db, profile.CommunicationLevel_ALL)
-	c.CommunicationLevel = cl
-	c.CommunicationLevelUID = cl.UID
+	contact.CommunicationLevel = cl
+	contact.CommunicationLevelUID = cl.UID
 
-	c.ProfileID = profileID
-	c.Detail = contactDetail
-	err := db.Save(c).Error
+	contact.ProfileID = profileID
+	contact.Detail = contactDetail
+	err = db.Save(contact).Error
 	if err != nil {
 		return err
 	}
@@ -336,13 +342,13 @@ func (c *Contact) Create(db *gorm.DB, profileID string, contactDetail string) er
 
 }
 
-func (c *Contact) ToObject() *profile.ContactObject {
+func (contact *Contact) ToObject() *profile.ContactObject {
 
 	contactObject := profile.ContactObject{}
-	contactObject.ID = c.ContactID
-	contactObject.Detail = c.Detail
-	contactObject.Type = c.ContactType.ToEnum()
-	contactObject.CommunicationLevel = c.CommunicationLevel.ToEnum()
+	contactObject.ID = contact.ContactID
+	contactObject.Detail = contact.Detail
+	contactObject.Type = contact.ContactType.ToEnum()
+	contactObject.CommunicationLevel = contact.CommunicationLevel.ToEnum()
 
 	return &contactObject
 }
@@ -520,14 +526,14 @@ func (address *Address) CreateFull(db *gorm.DB, country, area, street,
 
 	addressRecord := Address{}
 	if err := addressRecord.GetByAll(db, countryRecord.ISO3, area, street, house,
-		postcode, latitude, longitude, ); err != nil {
+		postcode, latitude, longitude); err != nil {
 
 		if err != gorm.ErrRecordNotFound {
 			return err
 		}
 
 		if err2 := addressRecord.Create(db, countryRecord.ISO3, area, street,
-			house, postcode, latitude, longitude, ); err2 != nil {
+			house, postcode, latitude, longitude); err2 != nil {
 			return err2
 		}
 	}

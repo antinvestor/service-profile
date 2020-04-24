@@ -5,6 +5,7 @@ import (
 	"antinvestor.com/service/profile/models"
 	"antinvestor.com/service/profile/utils"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -116,19 +117,18 @@ func (server *ProfileServer) Create(ctx context.Context, request *profile.Profil
 	err := contact.GetByDetail(server.Env.GetRDb(ctx))
 
 	if err != nil {
-
-		if err != profile.ErrorContactDoesNotExist {
+		if  !errors.Is(profile.ErrorContactDoesNotExist, err) {
 			return nil, err
 		}
 
 
-		err := p.Create(server.Env.GeWtDb(ctx), request.GetType(), properties, )
+		err := p.Create(server.Env.GeWtDb(ctx), request.GetType(), properties)
 		if err != nil {
 			return nil, err
 		}
 
-		err = createContact(server.Env, ctx, p.ProfileID, request.GetContact())
-		if err != nil {
+		contact, err := createContact(server.Env, ctx, p.ProfileID, contactDetail)
+		if err != nil && contact == nil{
 			return nil, err
 		}
 

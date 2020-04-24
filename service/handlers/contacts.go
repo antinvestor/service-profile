@@ -28,7 +28,7 @@ func (server *ProfileServer) AddContact(ctx context.Context, request *profile.Pr
 		return nil, err
 	}
 
-	err := createContact(server.Env, ctx, p.ProfileID, request.GetContact());
+	_, err := createContact(server.Env, ctx, p.ProfileID, request.GetContact())
 	if err != nil {
 		return nil, err
 	}
@@ -36,22 +36,21 @@ func (server *ProfileServer) AddContact(ctx context.Context, request *profile.Pr
 	return p.ToObject(server.Env.GetRDb(ctx))
 }
 
-func createContact(env *utils.Env, ctx context.Context, profileID string, contactDetail string) error {
+func createContact(env *utils.Env, ctx context.Context, profileID string, contactDetail string) (*models.Contact, error) {
 
-	contact := models.Contact{}
+	contact := models.Contact{Detail: contactDetail, ProfileID: profileID}
 	if err := contact.Create(env.GeWtDb(ctx), profileID, contactDetail); err != nil {
-		return err
+		return nil, err
 	}
-
-	return verifyContact(env, ctx, contact)
-
+	err := verifyContact(env, ctx, contact)
+	return &contact, err
 }
 
-func verifyContact(env *utils.Env, ctx context.Context, contact models.Contact) error{
+func verifyContact(env *utils.Env, ctx context.Context, contact models.Contact) error {
 	verification := models.Verification{}
 
 	var productID = utils.GetAuthSourceProductID(ctx)
-	err := verification.Create( env.GeWtDb(ctx), productID,contact, 24*60*60)
+	err := verification.Create(env.GeWtDb(ctx), productID, contact, 24*60*60)
 	if err != nil {
 		return err
 	}
@@ -60,7 +59,6 @@ func verifyContact(env *utils.Env, ctx context.Context, contact models.Contact) 
 	variables["pin"] = verification.Pin
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
-
 
 	return queue.Notification(env, ctx, contact.ProfileID, contact.ContactID,
 		"", utils.MessageTemplateContactVerification, variables)

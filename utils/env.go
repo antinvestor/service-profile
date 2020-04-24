@@ -60,7 +60,7 @@ func (env *Env) GetNotificationServiceConn() *grpc.ClientConn {
 	//dialOption = grpc.WithTransportCredentials(creds)
 	//
 
-	notificationServiceUri := GetEnv(EnvNotificationServiceUri, "")
+	notificationServiceUri := GetEnv(EnvNotificationServiceUri, "127.0.0.1:7020")
 	notificationServiceConnection, err := grpc.Dial(
 		notificationServiceUri,
 		dialOption,
