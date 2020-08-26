@@ -66,7 +66,7 @@ func (env *Env) GetNotificationServiceConn() *grpc.ClientConn {
 		dialOption,
 		grpc.WithUnaryInterceptor(jwt.UnaryClientInterceptor))
 	if err != nil {
-		env.Logger.Errorf("Could not configure profile service connection: %v", err)
+		env.Logger.Errorf("Could not configure notification service connection: %v", err)
 		return nil
 	}
 
