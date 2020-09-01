@@ -1,6 +1,6 @@
 package utils
 
-const EnvServerPort = "SERVER_PORT"
+const EnvServerPort = "PORT"
 
 const EnvDatabaseDriver = "DATABASE_DRIVER"
 const EnvDatabaseUrl = "DATABASE_URL"
