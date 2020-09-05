@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"antinvestor.com/service/profile/grpc/profile"
-	"antinvestor.com/service/profile/models"
+	"github.com/antinvestor/service-profile/grpc/profile"
+	"github.com/antinvestor/service-profile/models"
 	"context"
 )
 

@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"antinvestor.com/service/profile/grpc/notification"
-	"antinvestor.com/service/profile/utils"
+	"github.com/antinvestor/service-profile/grpc/notification"
+	"github.com/antinvestor/service-profile/utils"
 )
 
 func Notification(env *utils.Env, ctx context.Context,

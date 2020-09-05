@@ -1,7 +1,7 @@
 package models
 
 import (
-	"antinvestor.com/service/profile/utils"
+	"github.com/antinvestor/service-profile/utils"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -14,7 +14,7 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/ttacon/libphonenumber"
 
-	"antinvestor.com/service/profile/grpc/profile"
+	"github.com/antinvestor/service-profile/grpc/profile"
 )
 
 type PropertyMap map[string]interface{}

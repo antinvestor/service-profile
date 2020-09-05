@@ -1,7 +1,7 @@
 package service
 
 import (
-	"antinvestor.com/service/profile/models"
+	"github.com/antinvestor/service-profile/models"
 	"fmt"
 	"io/ioutil"
 	"path/filepath"

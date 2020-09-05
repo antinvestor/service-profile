@@ -1,9 +1,9 @@
 package service
 
 import (
-	grpc_health_v1 "antinvestor.com/service/profile/grpc/health"
-	"antinvestor.com/service/profile/service/handlers"
-	"antinvestor.com/service/profile/utils"
+	grpc_health_v1 "github.com/antinvestor/service-profile/grpc/health"
+	"github.com/antinvestor/service-profile/service/handlers"
+	"github.com/antinvestor/service-profile/utils"
 	"fmt"
 	"google.golang.org/grpc"
 	"log"
@@ -12,7 +12,7 @@ import (
 	"os/signal"
 	"time"
 
-	"antinvestor.com/service/profile/grpc/profile"
+	"github.com/antinvestor/service-profile/grpc/profile"
 )
 
 // Error represents a handler error. It provides methods for a HTTP status

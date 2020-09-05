@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	grpc_health_v1 "antinvestor.com/service/profile/grpc/health"
-	"antinvestor.com/service/profile/utils"
+	grpc_health_v1 "github.com/antinvestor/service-profile/grpc/health"
+	"github.com/antinvestor/service-profile/utils"
 	"context"
 	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc/codes"

@@ -1,4 +1,4 @@
-module antinvestor.com/service/profile
+module github.com/antinvestor/service-profile
 
 go 1.13
 

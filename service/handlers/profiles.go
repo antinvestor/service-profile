@@ -1,9 +1,9 @@
 package handlers
 
 import (
-	"antinvestor.com/service/profile/grpc/profile"
-	"antinvestor.com/service/profile/models"
-	"antinvestor.com/service/profile/utils"
+	"github.com/antinvestor/service-profile/grpc/profile"
+	"github.com/antinvestor/service-profile/models"
+	"github.com/antinvestor/service-profile/utils"
 	"context"
 	"errors"
 	"fmt"

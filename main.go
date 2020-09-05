@@ -5,8 +5,8 @@ import (
 	"os"
 	"time"
 
-	"antinvestor.com/service/profile/service"
-	"antinvestor.com/service/profile/utils"
+	"github.com/antinvestor/service-profile/service"
+	"github.com/antinvestor/service-profile/utils"
 )
 
 func main() {
