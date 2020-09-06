@@ -7,7 +7,6 @@ const EnvDatabaseUrl = "DATABASE_URL"
 const EnvReplicaDatabaseUrl = "REPLICA_DATABASE_URL"
 
 const EnvMigrate = "DO_MIGRATION"
-const EnvOnlyMigrate = "ONLY_DO_MIGRATION"
 
 const EnvNotificationServiceUri = "NOTIFICATION_SERVICE_URI"
 
