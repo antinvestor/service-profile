@@ -1,56 +1,67 @@
 package handlers
 
 import (
-	"github.com/antinvestor/service-profile/grpc/profile"
+	"context"
+	napi "github.com/antinvestor/service-notification-api"
+	papi "github.com/antinvestor/service-profile-api"
+	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/models"
 	"github.com/antinvestor/service-profile/queue"
-	"github.com/antinvestor/service-profile/utils"
-	"context"
+	"github.com/pitabwire/frame"
 )
 
-func (server *ProfileServer) GetByContact(ctx context.Context,
-	request *profile.ProfileContactRequest, ) (*profile.ProfileObject, error) {
+func (ps *ProfileServer) GetByContact(ctx context.Context,
+	request *papi.ProfileContactRequest, ) (*papi.ProfileObject, error) {
 
 	contact := models.Contact{Detail: request.GetContact()}
-	err := contact.GetByDetail(server.Env.GetRDb(ctx))
+	err := contact.GetByDetail(ps.Service.DB(ctx, true))
 	if err != nil {
 		return nil, err
 	}
-	return server.getProfileByID(ctx, contact.ProfileID)
+	return ps.getProfileByID(ctx, contact.ProfileID)
 }
 
-func (server *ProfileServer) AddContact(ctx context.Context, request *profile.ProfileAddContactRequest,
-) (*profile.ProfileObject, error) {
+func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAddContactRequest,
+) (*papi.ProfileObject, error) {
 
 	p := models.Profile{}
 	p.ProfileID = request.GetID()
-	if err := server.Env.GetRDb(ctx).Find(&p).Error; err != nil {
+	if err := ps.Service.DB(ctx, true).Find(&p).Error; err != nil {
 		return nil, err
 	}
 
-	_, err := createContact(server.Env, ctx, p.ProfileID, request.GetContact())
+	_, err := createContact(ctx, ps.Service, ps.NotificationCli, p.ProfileID, request.GetContact())
 	if err != nil {
 		return nil, err
 	}
 
-	return p.ToObject(server.Env.GetRDb(ctx))
+	return p.ToObject(ps.Service.DB(ctx, true))
 }
 
-func createContact(env *utils.Env, ctx context.Context, profileID string, contactDetail string) (*models.Contact, error) {
+func createContact(ctx context.Context, service *frame.Service, ncli *napi.NotificationClient, profileID string, contactDetail string) (*models.Contact, error) {
 
 	contact := models.Contact{Detail: contactDetail, ProfileID: profileID}
-	if err := contact.Create(env.GeWtDb(ctx), profileID, contactDetail); err != nil {
+	if err := contact.Create(service.DB(ctx, false), profileID, contactDetail); err != nil {
 		return nil, err
 	}
-	err := verifyContact(env, ctx, contact)
+	err := verifyContact(ctx, service, ncli, contact)
 	return &contact, err
 }
 
-func verifyContact(env *utils.Env, ctx context.Context, contact models.Contact) error {
+func GetAuthSourceProductID(ctx context.Context) string {
+	contextProductId := ctx.Value(config.ConfigContextKeyProductID)
+	if contextProductId == nil {
+		return ""
+	} else {
+		return contextProductId.(string)
+	}
+}
+
+func verifyContact(ctx context.Context, service *frame.Service, ncli *napi.NotificationClient, contact models.Contact) error {
 	verification := models.Verification{}
 
-	var productID = utils.GetAuthSourceProductID(ctx)
-	err := verification.Create(env.GeWtDb(ctx), productID, contact, 24*60*60)
+	var productID = GetAuthSourceProductID(ctx)
+	err := verification.Create(service.DB(ctx, false), productID, contact, 24*60*60)
 	if err != nil {
 		return err
 	}
@@ -60,7 +71,7 @@ func verifyContact(env *utils.Env, ctx context.Context, contact models.Contact) 
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
 
-	return queue.Notification(env, ctx, contact.ProfileID, contact.ContactID,
-		"", utils.MessageTemplateContactVerification, variables)
+	return queue.Notification(ctx, ncli, contact.ProfileID, contact.ContactID,
+		"", config.MessageTemplateContactVerification, variables)
 
 }

@@ -1,66 +1,97 @@
 package main
 
 import (
+	"context"
+	"fmt"
+	"github.com/antinvestor/apis"
+	"github.com/antinvestor/service-profile/config"
+	"github.com/antinvestor/service-profile/models"
+	"github.com/antinvestor/service-profile/service/handlers"
+	"gocloud.dev/server"
+	"google.golang.org/grpc"
 	"log"
 	"os"
-	"time"
+	"strconv"
+
+	napi "github.com/antinvestor/service-notification-api"
+	papi "github.com/antinvestor/service-profile-api"
+	"github.com/pitabwire/frame"
 
 	"github.com/antinvestor/service-profile/service"
-	"github.com/antinvestor/service-profile/utils"
 )
 
 func main() {
 
 	serviceName := "Profile"
 
-	logger, err := utils.ConfigureLogging(serviceName)
+	ctx := context.Background()
+
+	var serviceOptions []frame.Option
+
+	datasource := frame.GetEnv(config.EnvDatabaseUrl, "postgres://ant:@nt@localhost/service_profile")
+	mainDb := frame.Datastore(ctx, datasource, false)
+	serviceOptions = append(serviceOptions, mainDb)
+
+	readOnlydatasource := frame.GetEnv(config.EnvReplicaDatabaseUrl, datasource)
+	readDb := frame.Datastore(ctx, readOnlydatasource, true)
+	serviceOptions = append(serviceOptions, readDb)
+
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(service.AuthInterceptor),
+	)
+
+	implementation := &handlers.ProfileServer{}
+
+	papi.RegisterProfileServiceServer(grpcServer, implementation)
+
+	httpOptions := &server.Options{}
+
+	defaultServer := frame.GrpcServer(grpcServer, httpOptions)
+	serviceOptions = append(serviceOptions, defaultServer)
+
+	sysService := frame.NewService(serviceName, serviceOptions...)
+
+
+	notificationServiceUrl := frame.GetEnv(config.EnvNotificationServiceUri, "127.0.0.1:7020")
+	notificationCli, err := napi.NewNotificationClient(ctx, apis.WithEndpoint(notificationServiceUrl))
 	if err != nil {
-		log.Fatal("Failed to configure logging: " + err.Error())
+		log.Printf("main -- Could not setup notification service : %v", err)
 	}
 
-	closer, err := utils.ConfigureJuegler(serviceName)
+	implementation.Service = sysService
+	implementation.NotificationCli = notificationCli
+
+
+
+	isMigration, err := strconv.ParseBool(frame.GetEnv(config.EnvMigrate, "false"))
 	if err != nil {
-		logger.Fatal("Failed to configure Juegler: " + err.Error())
+		isMigration = false
 	}
 
-	defer closer.Close()
-
-	database, err := utils.ConfigureDatabase(logger, false)
-	if err != nil {
-		logger.WithError(err).Fatal("Could not Configure write database")
-	}
-	defer database.Close()
-
-	replicaDatabase, err := utils.ConfigureDatabase(logger, true)
-	if err != nil {
-		logger.WithError(err).Fatal("Could not Configure read database")
-	}
-	defer replicaDatabase.Close()
-
-
-	isMigration := utils.GetEnv(utils.EnvMigrate, "")
 	stdArgs := os.Args[1:]
-	if (len(stdArgs) > 0 && stdArgs[0] == "migrate") || isMigration == "true" {
-		logger.Info("Initiating migrations")
+	if (len(stdArgs) > 0 && stdArgs[0] == "migrate") || isMigration {
 
-		service.PerformMigration(logger, database)
-		return
+		migrationPath := frame.GetEnv(config.EnvMigrationPath, "./migrations/0001")
+		err := sysService.MigrateDatastore(ctx, migrationPath,
+			models.ProfileType{},
+			models.Profile{}, models.ContactType{}, models.CommunicationLevel{},
+			models.Contact{}, models.Country{}, &models.Address{}, models.ProfileAddress{},
+			models.Verification{}, models.VerificationAttempt{})
+
+		if err != nil {
+			log.Printf("main -- Could not migrate successfully because : %v", err)
+		}
+
+	} else {
+
+		serverPort := frame.GetEnv(config.EnvServerPort, "7020")
+
+		log.Printf(" main -- Initiating server operations on : %s", serverPort)
+		err := sysService.Run(ctx, fmt.Sprintf(":%v", serverPort))
+		if err != nil {
+			log.Printf("main -- Could not run Server : %v", err)
+		}
+
 	}
-
-	logger.Infof("Initiating the service at %v", time.Now())
-
-	healthChecker, err := utils.ConfigureHealthChecker(logger, database, replicaDatabase)
-	if err != nil {
-		logger.Warnf("Error configuring health checks: %v", err)
-	}
-
-	env := utils.Env{
-		Logger: logger,
-		Health: healthChecker,
-	}
-	env.SetWriteDb(database)
-	env.SetReadDb(replicaDatabase)
-
-	service.RunServer(&env)
 
 }

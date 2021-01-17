@@ -1,16 +1,16 @@
 package handlers
 
 import (
-	"github.com/antinvestor/service-profile/grpc/profile"
-	"github.com/antinvestor/service-profile/models"
 	"context"
+	papi "github.com/antinvestor/service-profile-api"
+	"github.com/antinvestor/service-profile/models"
 )
 
 // Adds a new address based on the request.
-func (server *ProfileServer) AddAddress(ctx context.Context, request *profile.ProfileAddAddressRequest) (*profile.ProfileObject, error) {
+func (ps *ProfileServer) AddAddress(ctx context.Context, request *papi.ProfileAddAddressRequest) (*papi.ProfileObject, error) {
 	p := models.Profile{}
 	p.ProfileID = request.GetID()
-	if err := server.Env.GetRDb(ctx).Find(&p).Error; err != nil {
+	if err := ps.Service.DB(ctx, true).Find(&p).Error; err != nil {
 		return nil, err
 	}
 
@@ -18,15 +18,15 @@ func (server *ProfileServer) AddAddress(ctx context.Context, request *profile.Pr
 
 	address := models.Address{}
 
-	if err := address.CreateFull(server.Env.GeWtDb(ctx), obj.GetCountry(), obj.GetArea(), obj.GetStreet(),
+	if err := address.CreateFull(ps.Service.DB(ctx, false), obj.GetCountry(), obj.GetArea(), obj.GetStreet(),
 		obj.GetHouse(), obj.GetPostcode(), obj.GetLatitude(), obj.GetLongitude(), ); err != nil {
 		return nil, err
 	}
 
 	profileAddress := models.ProfileAddress{}
-	profileAddress.Create(server.Env.GeWtDb(ctx), p.ProfileID, address.AddressID, obj.GetName())
+	profileAddress.Create(ps.Service.DB(ctx, false), p.ProfileID, address.AddressID, obj.GetName())
 
-	return p.ToObject(server.Env.GetRDb(ctx))
+	return p.ToObject(ps.Service.DB(ctx, true))
 }
 
 

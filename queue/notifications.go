@@ -2,41 +2,39 @@ package queue
 
 import (
 	"context"
-	"time"
-
-	"github.com/antinvestor/service-profile/grpc/notification"
-	"github.com/antinvestor/service-profile/utils"
+	napi "github.com/antinvestor/service-notification-api"
 )
 
-func Notification(env *utils.Env, ctx context.Context,
+func Notification(ctx context.Context, ncli *napi.NotificationClient,
 	profileId string, contactId string, language string,
 	template string, variables map[string]string) error {
 
-	_, err := notificationSendOut(env, ctx, profileId, contactId, language, template, variables)
-	if err != nil{
+	_, err := notificationSendOut(ctx, ncli, profileId, contactId, language, template, variables)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func notificationSendOut(env *utils.Env, ctx context.Context,
+func notificationSendOut(ctx context.Context, ncli *napi.NotificationClient,
 	profileId string, contactId string, language string,
-	template string, variables map[string]string) (*notification.StatusResponse, error) {
+	template string, variables map[string]string) (*napi.StatusResponse, error) {
 
-	notificationCtx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
+	//notificationCtx, cancel := context.WithTimeout(ctx, time.Second*30)
+	//defer cancel()
+	//
+	//
+	//
+	//messageOut := napi.MessageOut{
+	//	Autosend:         true,
+	//	MessageTemplete:  template,
+	//	Language:         language,
+	//	ProfileID:        profileId,
+	//	ContactID:        contactId,
+	//	MessageVariables: variables,
+	//}
 
-	notificationService := notification.NewNotificationServiceClient(env.GetNotificationServiceConn())
-
-	messageOut := notification.MessageOut{
-		Autosend:         "true",
-		MessageTemplete:  template,
-		Language:         language,
-		ProfileID:        profileId,
-		ContactID:        contactId,
-		MessageVariables: variables,
-	}
-
-	return notificationService.Out(notificationCtx, &messageOut)
+	//return ncli.Out(notificationCtx, &messageOut)
+	return nil, nil
 }

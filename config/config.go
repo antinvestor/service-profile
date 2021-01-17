@@ -1,12 +1,13 @@
-package utils
+package config
 
 const EnvServerPort = "PORT"
 
-const EnvDatabaseDriver = "DATABASE_DRIVER"
 const EnvDatabaseUrl = "DATABASE_URL"
 const EnvReplicaDatabaseUrl = "REPLICA_DATABASE_URL"
 
 const EnvMigrate = "DO_MIGRATION"
+const EnvMigrationPath = "MIGRATION_PATH"
+
 
 const EnvNotificationServiceUri = "NOTIFICATION_SERVICE_URI"
 
@@ -18,5 +19,5 @@ const ConfigLengthOfVerificationLinkHash = 70
 
 
 
-const MessageTemplateContactVerification = "template.profile.contact.verification"
+const MessageTemplateContactVerification = "template.papi.contact.verification"
 

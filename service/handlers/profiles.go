@@ -1,53 +1,58 @@
 package handlers
 
 import (
-	"github.com/antinvestor/service-profile/grpc/profile"
-	"github.com/antinvestor/service-profile/models"
-	"github.com/antinvestor/service-profile/utils"
 	"context"
 	"errors"
-	"fmt"
+	napi "github.com/antinvestor/service-notification-api"
+	papi "github.com/antinvestor/service-profile-api"
+	"github.com/antinvestor/service-profile/models"
+	"github.com/antinvestor/service-profile/service"
+	"github.com/pitabwire/frame"
+
 	"strings"
 )
 
 type ProfileServer struct {
-	Env *utils.Env
+	Service *frame.Service
+	NotificationCli *napi.NotificationClient
+
+	papi.ProfileServiceServer
 }
 
-func (server *ProfileServer) getProfileByID(ctx context.Context, profileID string, ) (*profile.ProfileObject, error) {
+func (ps *ProfileServer) getProfileByID(ctx context.Context, profileID string, ) (*papi.ProfileObject, error) {
 	p := models.Profile{}
 	p.ProfileID = profileID
 
-	server.Env.GetRDb(ctx).First(&p)
+	ps.Service.DB(ctx, true).First(&p)
 
-	return p.ToObject(server.Env.GetRDb(ctx))
+	return p.ToObject(ps.Service.DB(ctx, true))
 }
 
-func (server *ProfileServer) GetByID(ctx context.Context,
-	request *profile.ProfileIDRequest, ) (*profile.ProfileObject, error) {
+func (ps *ProfileServer) GetByID(ctx context.Context,
+	request *papi.ProfileIDRequest, ) (*papi.ProfileObject, error) {
 	profileID := strings.TrimSpace(request.GetID())
-	return server.getProfileByID(ctx, profileID)
+	return ps.getProfileByID(ctx, profileID)
 }
 
-func (server *ProfileServer) Search(request *profile.ProfileSearchRequest,
-	stream profile.ProfileService_SearchServer, ) error {
+func (ps *ProfileServer) Search(request *papi.ProfileSearchRequest,
+	stream papi.ProfileService_SearchServer, ) error {
 
 	var profiles []models.Profile
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	// creating WHERE clause to query by properties JSONB
-	scope := server.Env.GetRDb(ctx).New()
-	for _, property := range request.GetProperties() {
-		column := fmt.Sprintf("properties->>'%s'", EscapeColumnName(property), )
-		scope = scope.Or(column+" LIKE ?", "%"+request.GetQuery()+"%")
-	}
-
-	scope.Find(&profiles)
+	//// creating WHERE clause to query by properties JSONB
+	//scope := ps.Service.DB(ctx, true).New()
+	//for _, property := range request.GetProperties() {
+	//	column := fmt.Sprintf("properties->>'%s'", EscapeColumnName(property), )
+	//	scope = scope.Or(column+" LIKE ?", "%"+request.GetQuery()+"%")
+	//}
+	//
+	//scope.Find(&profiles)
 
 	for _, p := range profiles {
-		profileObject, err := p.ToObject(server.Env.GetRDb(ctx))
+		profileObject, err := p.ToObject(ps.Service.DB(ctx, true))
 		if err != nil {
 			return err
 		}
@@ -61,21 +66,21 @@ func (server *ProfileServer) Search(request *profile.ProfileSearchRequest,
 	return nil
 }
 
-func (server *ProfileServer) Merge(ctx context.Context, request *profile.ProfileMergeRequest, ) (
-	*profile.ProfileObject, error) {
+func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRequest, ) (
+	*papi.ProfileObject, error) {
 
 	var target models.Profile
 	var merging models.Profile
 
 	target.ProfileID = request.GetID()
 
-	if err := target.GetByID(server.Env.GetRDb(ctx)); err != nil {
+	if err := target.GetByID(ps.Service.DB(ctx, true)); err != nil {
 		return nil, err
 	}
 
 	merging.ProfileID = request.GetMergeID()
 
-	if err := merging.GetByID(server.Env.GetRDb(ctx)); err != nil {
+	if err := merging.GetByID(ps.Service.DB(ctx, true)); err != nil {
 		return nil, err
 	}
 
@@ -90,13 +95,13 @@ func (server *ProfileServer) Merge(ctx context.Context, request *profile.Profile
 		target.Properties[key] = value
 	}
 
-	target.UpdateProperties(server.Env.GeWtDb(ctx), merging.Properties)
+	target.UpdateProperties(ps.Service.DB(ctx, false), merging.Properties)
 
-	return target.ToObject(server.Env.GetRDb(ctx))
+	return target.ToObject(ps.Service.DB(ctx, true))
 }
 
-func (server *ProfileServer) Create(ctx context.Context, request *profile.ProfileCreateRequest, ) (
-	*profile.ProfileObject, error) {
+func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreateRequest, ) (
+	*papi.ProfileObject, error) {
 
 	properties := make(map[string]interface{})
 
@@ -107,27 +112,27 @@ func (server *ProfileServer) Create(ctx context.Context, request *profile.Profil
 	contactDetail := strings.TrimSpace(request.GetContact())
 
 	if contactDetail == "" {
-		return nil, profile.ErrorContactDetailsNotValid
+		return nil, service.ErrorContactDetailsNotValid
 	}
 
 	p := models.Profile{}
 
 	contact := models.Contact{Detail: contactDetail}
 
-	err := contact.GetByDetail(server.Env.GetRDb(ctx))
+	err := contact.GetByDetail(ps.Service.DB(ctx, true))
 
 	if err != nil {
-		if  !errors.Is(profile.ErrorContactDoesNotExist, err) {
+		if  !errors.Is(service.ErrorContactDoesNotExist, err) {
 			return nil, err
 		}
 
 
-		err := p.Create(server.Env.GeWtDb(ctx), request.GetType(), properties)
+		err := p.Create(ps.Service.DB(ctx, false), request.GetType(), properties)
 		if err != nil {
 			return nil, err
 		}
 
-		contact, err := createContact(server.Env, ctx, p.ProfileID, contactDetail)
+		contact, err := createContact( ctx, ps.Service, ps.NotificationCli, p.ProfileID, contactDetail)
 		if err != nil && contact == nil{
 			return nil, err
 		}
@@ -136,31 +141,31 @@ func (server *ProfileServer) Create(ctx context.Context, request *profile.Profil
 
 		p.ProfileID = contact.ProfileID
 
-		err = server.Env.GetRDb(ctx).First(p).Error
+		err = ps.Service.DB(ctx, true).First(p).Error
 		if err != nil {
 			return nil, err
 		}
 
-		err = p.UpdateProperties(server.Env.GeWtDb(ctx), properties)
+		err = p.UpdateProperties(ps.Service.DB(ctx, false), properties)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return server.getProfileByID(ctx, p.ProfileID)
+	return ps.getProfileByID(ctx, p.ProfileID)
 }
 
-func (server *ProfileServer) Update(
+func (ps *ProfileServer) Update(
 	ctx context.Context,
-	request *profile.ProfileUpdateRequest,
-) (*profile.ProfileObject, error) {
+	request *papi.ProfileUpdateRequest,
+) (*papi.ProfileObject, error) {
 	p := models.Profile{
 		ProfileID: strings.TrimSpace(request.GetID()),
 	}
 
-	err := p.GetByID(server.Env.GetRDb(ctx))
+	err := p.GetByID(ps.Service.DB(ctx, true))
 	if err != nil {
-		return nil, profile.ErrorProfileDoesNotExist
+		return nil, service.ErrorProfileDoesNotExist
 	}
 
 	properties := map[string]interface{}{}
@@ -168,9 +173,9 @@ func (server *ProfileServer) Update(
 		properties[key] = value
 	}
 
-	p.UpdateProperties(server.Env.GeWtDb(ctx), properties)
+	p.UpdateProperties(ps.Service.DB(ctx, false), properties)
 
-	return server.getProfileByID(ctx, p.ProfileID)
+	return ps.getProfileByID(ctx, p.ProfileID)
 }
 
 func EscapeColumnName(name string) string {

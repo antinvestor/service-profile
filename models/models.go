@@ -1,12 +1,16 @@
 package models
 
 import (
-	"github.com/antinvestor/service-profile/utils"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jinzhu/gorm"
+	papi "github.com/antinvestor/service-profile-api"
+	"github.com/antinvestor/service-profile/config"
+	"github.com/antinvestor/service-profile/service"
+	"github.com/pitabwire/frame"
+	"gorm.io/gorm"
+
 	"math/rand"
 	"strings"
 	"time"
@@ -14,7 +18,6 @@ import (
 	"github.com/asaskevich/govalidator"
 	"github.com/ttacon/libphonenumber"
 
-	"github.com/antinvestor/service-profile/grpc/profile"
 )
 
 type PropertyMap map[string]interface{}
@@ -45,10 +48,10 @@ func (p *PropertyMap) Scan(src interface{}) error {
 	return nil
 }
 
-var profileTypeIDMap = map[profile.ProfileType]uint{
-	profile.ProfileType_PERSON:      0,
-	profile.ProfileType_INSTITUTION: 1,
-	profile.ProfileType_BOT:         2,
+var profileTypeIDMap = map[papi.ProfileType]uint{
+	papi.ProfileType_PERSON:      0,
+	papi.ProfileType_INSTITUTION: 1,
+	papi.ProfileType_BOT:         2,
 }
 
 type ProfileType struct {
@@ -56,29 +59,21 @@ type ProfileType struct {
 	UID           uint   `sql:"unique"`
 	Name          string
 	Description   string
-	AntBaseModel
+	frame.BaseModel
 }
 
-func (model *ProfileType) BeforeCreate(scope *gorm.Scope) error {
-
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("ProfileTypeID", model.IDGen("pft"))
-}
-
-func (pt *ProfileType) From(db *gorm.DB, profileType profile.ProfileType) {
+func (pt *ProfileType) From(db *gorm.DB, profileType papi.ProfileType) {
 	pt.UID = profileTypeIDMap[profileType]
 	db.First(pt)
 }
 
-func (pt *ProfileType) ToEnum() profile.ProfileType {
+func (pt *ProfileType) ToEnum() papi.ProfileType {
 	for key, val := range profileTypeIDMap {
 		if val == pt.UID {
 			return key
 		}
 	}
-	return profile.ProfileType_PERSON
+	return papi.ProfileType_PERSON
 }
 
 type Profile struct {
@@ -88,21 +83,16 @@ type Profile struct {
 
 	ProfileTypeUID uint
 	ProfileType    ProfileType
-	AntBaseModel
-}
-
-func (model *Profile) BeforeCreate(scope *gorm.Scope) error {
-
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("ProfileID", model.IDGen("pf"))
+	frame.BaseModel
 }
 
 func (p *Profile) GetByID(db *gorm.DB) error {
 	modelID := strings.TrimSpace(p.ProfileID)
-	if db.Where("profile_id = ?", modelID).First(p).RecordNotFound() {
-		return profile.ErrorProfileDoesNotExist
+	if err := db.Where("profile_id = ?", modelID).First(p).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return service.ErrorProfileDoesNotExist
+		}
+		return err
 	}
 	return nil
 }
@@ -118,7 +108,7 @@ func (p *Profile) UpdateProperties(db *gorm.DB, params map[string]interface{}) e
 	return db.Model(p).Update("Properties", p.Properties).Error
 }
 
-func (p *Profile) Create(db *gorm.DB, profileType profile.ProfileType,
+func (p *Profile) Create(db *gorm.DB, profileType papi.ProfileType,
 	properties map[string]interface{}, ) error {
 
 	pt := ProfileType{}
@@ -131,8 +121,8 @@ func (p *Profile) Create(db *gorm.DB, profileType profile.ProfileType,
 	return db.Save(p).Error
 }
 
-func (p *Profile) ToObject(db *gorm.DB) (*profile.ProfileObject, error) {
-	profileObject := profile.ProfileObject{}
+func (p *Profile) ToObject(db *gorm.DB) (*papi.ProfileObject, error) {
+	profileObject := papi.ProfileObject{}
 	profileObject.ID = p.ProfileID
 	profileObject.Type = p.ProfileType.ToEnum()
 	profileObject.Properties = map[string]string{}
@@ -141,7 +131,7 @@ func (p *Profile) ToObject(db *gorm.DB) (*profile.ProfileObject, error) {
 		profileObject.Properties[key] = fmt.Sprintf("%v", val)
 	}
 
-	var contactObjects []*profile.ContactObject
+	var contactObjects []*papi.ContactObject
 	contacts, err := GetContactsByProfile(db, p)
 	if err != nil {
 		return nil, err
@@ -152,7 +142,7 @@ func (p *Profile) ToObject(db *gorm.DB) (*profile.ProfileObject, error) {
 	}
 	profileObject.Contacts = contactObjects
 
-	var addressObjects []*profile.AddressObject
+	var addressObjects []*papi.AddressObject
 	addresses, err2 := GetProfileAddresses(db, p)
 	if err2 != nil {
 		return nil, err2
@@ -167,15 +157,15 @@ func (p *Profile) ToObject(db *gorm.DB) (*profile.ProfileObject, error) {
 
 }
 
-var contactTypeUIDMap = map[profile.ContactType]uint{
-	profile.ContactType_EMAIL: 0,
-	profile.ContactType_PHONE: 1,
+var contactTypeUIDMap = map[papi.ContactType]uint{
+	papi.ContactType_EMAIL: 0,
+	papi.ContactType_PHONE: 1,
 }
 
-var communicationLevelUIDMap = map[profile.CommunicationLevel]uint{
-	profile.CommunicationLevel_ALL:           0,
-	profile.CommunicationLevel_SYSTEM_ALERTS: 1,
-	profile.CommunicationLevel_NO_CONTACT:    2,
+var communicationLevelUIDMap = map[papi.CommunicationLevel]uint{
+	papi.CommunicationLevel_ALL:           0,
+	papi.CommunicationLevel_SYSTEM_ALERTS: 1,
+	papi.CommunicationLevel_NO_CONTACT:    2,
 }
 
 type ContactType struct {
@@ -186,18 +176,10 @@ type ContactType struct {
 	Name        string
 	Description string
 
-	AntBaseModel
+	frame.BaseModel
 }
 
-func (model *ContactType) BeforeCreate(scope *gorm.Scope) error {
-
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("ContactTypeID", model.IDGen("cnt"))
-}
-
-func (ct *ContactType) From(db *gorm.DB, contactType profile.ContactType) {
+func (ct *ContactType) From(db *gorm.DB, contactType papi.ContactType) {
 	ct.UID = contactTypeUIDMap[contactType]
 	db.First(ct)
 }
@@ -206,28 +188,28 @@ func (ct *ContactType) FromDetail(db *gorm.DB, detail string) error {
 
 	if govalidator.IsEmail(detail) {
 
-		ct.From(db, profile.ContactType_EMAIL)
+		ct.From(db, papi.ContactType_EMAIL)
 		return nil
 	} else {
 
 		possibleNumber, err := libphonenumber.Parse(detail, "")
 
 		if err == nil && libphonenumber.IsValidNumber(possibleNumber) {
-			ct.From(db, profile.ContactType_PHONE)
+			ct.From(db, papi.ContactType_PHONE)
 			return nil
 		}
 	}
 
-	return profile.ErrorContactDetailsNotValid
+	return service.ErrorContactDetailsNotValid
 }
 
-func (ct *ContactType) ToEnum() profile.ContactType {
+func (ct *ContactType) ToEnum() papi.ContactType {
 	for key, val := range contactTypeUIDMap {
 		if val == ct.UID {
 			return key
 		}
 	}
-	return profile.ContactType_EMAIL
+	return papi.ContactType_EMAIL
 }
 
 type CommunicationLevel struct {
@@ -238,29 +220,21 @@ type CommunicationLevel struct {
 	Name        string
 	Description string
 
-	AntBaseModel
+	frame.BaseModel
 }
 
-func (model *CommunicationLevel) BeforeCreate(scope *gorm.Scope) error {
-
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("CommunicationLevelID", model.IDGen("cml"))
-}
-
-func (cl *CommunicationLevel) From(db *gorm.DB, communicationLevel profile.CommunicationLevel) {
+func (cl *CommunicationLevel) From(db *gorm.DB, communicationLevel papi.CommunicationLevel) {
 	cl.UID = communicationLevelUIDMap[communicationLevel]
 	db.First(cl)
 }
 
-func (cl *CommunicationLevel) ToEnum() profile.CommunicationLevel {
+func (cl *CommunicationLevel) ToEnum() papi.CommunicationLevel {
 	for key, val := range communicationLevelUIDMap {
 		if val == cl.UID {
 			return key
 		}
 	}
-	return profile.CommunicationLevel_ALL
+	return papi.CommunicationLevel_ALL
 }
 
 type Contact struct {
@@ -277,15 +251,7 @@ type Contact struct {
 	ProfileID string
 	Profile   Profile
 
-	AntBaseModel
-}
-
-func (contact *Contact) BeforeCreate(scope *gorm.Scope) error {
-
-	if err := contact.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("ContactID", contact.IDGen("cn"))
+	frame.BaseModel
 }
 
 func (contact *Contact) GetByDetail(db *gorm.DB) error {
@@ -294,7 +260,7 @@ func (contact *Contact) GetByDetail(db *gorm.DB) error {
 	detail = strings.ToLower(detail)
 	if err := db.Last(contact, "detail = ?", detail).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			return profile.ErrorContactDoesNotExist
+			return service.ErrorContactDoesNotExist
 		}
 		return err
 	}
@@ -327,7 +293,7 @@ func (contact *Contact) Create(db *gorm.DB, profileID string, contactDetail stri
 	contact.ContactTypeUID = ct.UID
 
 	cl := CommunicationLevel{}
-	cl.From(db, profile.CommunicationLevel_ALL)
+	cl.From(db, papi.CommunicationLevel_ALL)
 	contact.CommunicationLevel = cl
 	contact.CommunicationLevelUID = cl.UID
 
@@ -342,9 +308,9 @@ func (contact *Contact) Create(db *gorm.DB, profileID string, contactDetail stri
 
 }
 
-func (contact *Contact) ToObject() *profile.ContactObject {
+func (contact *Contact) ToObject() *papi.ContactObject {
 
-	contactObject := profile.ContactObject{}
+	contactObject := papi.ContactObject{}
 	contactObject.ID = contact.ContactID
 	contactObject.Detail = contact.Detail
 	contactObject.Type = contact.ContactType.ToEnum()
@@ -365,14 +331,7 @@ type Verification struct {
 
 	ExpiresAt  *time.Time
 	VerifiedAt *time.Time
-	AntBaseModel
-}
-
-func (v *Verification) BeforeCreate(scope *gorm.Scope) error {
-	if err := v.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("VerificationID", v.IDGen("vr"))
+	frame.BaseModel
 }
 
 func (v *Verification) Create(db *gorm.DB, productId string, contact Contact, expiryTimeInSec int) error {
@@ -382,8 +341,8 @@ func (v *Verification) Create(db *gorm.DB, productId string, contact Contact, ex
 	v.Contact = contact
 	v.ContactID = contact.ContactID
 
-	v.Pin = GeneratePin(utils.ConfigLengthOfVerificationPin)
-	v.LinkHash = GeneratePin(utils.ConfigLengthOfVerificationLinkHash)
+	v.Pin = GeneratePin(config.ConfigLengthOfVerificationPin)
+	v.LinkHash = GeneratePin(config.ConfigLengthOfVerificationLinkHash)
 
 	if expiryTimeInSec > 0 {
 		expiryTime := time.Now().Add(time.Duration(expiryTimeInSec))
@@ -421,14 +380,7 @@ type VerificationAttempt struct {
 	Contact   Contact
 
 	State string `gorm:"type:varchar(10)"`
-	AntBaseModel
-}
-
-func (model *VerificationAttempt) BeforeCreate(scope *gorm.Scope) error {
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("VerificationAttemptID", model.IDGen("vrat"))
+	frame.BaseModel
 }
 
 type Country struct {
@@ -437,15 +389,7 @@ type Country struct {
 	City string
 	ISO2 string `sql:"unique"`
 
-	AntBaseModel
-}
-
-func (model *Country) BeforeCreate(scope *gorm.Scope) error {
-
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return nil
+	frame.BaseModel
 }
 
 func (country *Country) GetByID(db *gorm.DB, countryID string) error {
@@ -455,7 +399,7 @@ func (country *Country) GetByID(db *gorm.DB, countryID string) error {
 func (country *Country) GetByAny(db *gorm.DB, c string) error {
 
 	if c == "" {
-		return profile.ErrorCountryDoesNotExist
+		return service.ErrorCountryDoesNotExist
 	}
 
 	upperC := strings.ToUpper(c)
@@ -481,15 +425,7 @@ type Address struct {
 	CountryID string
 	Country   Country
 
-	AntBaseModel
-}
-
-func (model *Address) BeforeCreate(scope *gorm.Scope) error {
-
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("AddressID", model.IDGen("ad"))
+	frame.BaseModel
 }
 
 func (address *Address) GetByID(db *gorm.DB, addressID string) error {
@@ -551,15 +487,7 @@ type ProfileAddress struct {
 	ProfileID string
 	Profile   Profile
 
-	AntBaseModel
-}
-
-func (model *ProfileAddress) BeforeCreate(scope *gorm.Scope) error {
-
-	if err := model.AntBaseModel.BeforeCreate(scope); err != nil {
-		return err
-	}
-	return scope.SetColumn("ProfileAddressID", model.IDGen("prad"))
+	frame.BaseModel
 }
 
 func (profileAddress *ProfileAddress) Create(db *gorm.DB, profileID string, addressID string, name string) error {
@@ -570,9 +498,9 @@ func (profileAddress *ProfileAddress) Create(db *gorm.DB, profileID string, addr
 	return db.Save(profileAddress).Error
 }
 
-func (profileAddress *ProfileAddress) ToObject(db *gorm.DB) *profile.AddressObject {
+func (profileAddress *ProfileAddress) ToObject(db *gorm.DB) *papi.AddressObject {
 
-	obj := &profile.AddressObject{}
+	obj := &papi.AddressObject{}
 
 	if err := profileAddress.Address.GetByID(db, profileAddress.AddressID); err != nil {
 
