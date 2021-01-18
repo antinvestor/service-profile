@@ -21,7 +21,7 @@ type ProfileServer struct {
 
 func (ps *ProfileServer) getProfileByID(ctx context.Context, profileID string, ) (*papi.ProfileObject, error) {
 	p := models.Profile{}
-	p.ProfileID = profileID
+	p.ID = profileID
 
 	ps.Service.DB(ctx, true).First(&p)
 
@@ -72,13 +72,13 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRe
 	var target models.Profile
 	var merging models.Profile
 
-	target.ProfileID = request.GetID()
+	target.ID = request.GetID()
 
 	if err := target.GetByID(ps.Service.DB(ctx, true)); err != nil {
 		return nil, err
 	}
 
-	merging.ProfileID = request.GetMergeID()
+	merging.ID = request.GetMergeID()
 
 	if err := merging.GetByID(ps.Service.DB(ctx, true)); err != nil {
 		return nil, err
@@ -132,14 +132,14 @@ func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreate
 			return nil, err
 		}
 
-		contact, err := createContact( ctx, ps.Service, ps.NotificationCli, p.ProfileID, contactDetail)
+		contact, err := createContact( ctx, ps.Service, ps.NotificationCli, p.ID, contactDetail)
 		if err != nil && contact == nil{
 			return nil, err
 		}
 
 	}else{
 
-		p.ProfileID = contact.ProfileID
+		p.ID = contact.ProfileID
 
 		err = ps.Service.DB(ctx, true).First(p).Error
 		if err != nil {
@@ -152,16 +152,15 @@ func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreate
 		}
 	}
 
-	return ps.getProfileByID(ctx, p.ProfileID)
+	return ps.getProfileByID(ctx, p.ID)
 }
 
 func (ps *ProfileServer) Update(
 	ctx context.Context,
 	request *papi.ProfileUpdateRequest,
 ) (*papi.ProfileObject, error) {
-	p := models.Profile{
-		ProfileID: strings.TrimSpace(request.GetID()),
-	}
+	p := models.Profile{}
+	p.ID= strings.TrimSpace(request.GetID())
 
 	err := p.GetByID(ps.Service.DB(ctx, true))
 	if err != nil {
@@ -173,9 +172,12 @@ func (ps *ProfileServer) Update(
 		properties[key] = value
 	}
 
-	p.UpdateProperties(ps.Service.DB(ctx, false), properties)
+	err = p.UpdateProperties(ps.Service.DB(ctx, false), properties)
+	if err != nil {
+		return nil, err
+	}
 
-	return ps.getProfileByID(ctx, p.ProfileID)
+	return ps.getProfileByID(ctx, p.ID)
 }
 
 func EscapeColumnName(name string) string {

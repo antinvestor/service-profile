@@ -6,7 +6,6 @@ import (
 	papi "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/models"
-	"github.com/antinvestor/service-profile/queue"
 	"github.com/pitabwire/frame"
 )
 
@@ -25,12 +24,12 @@ func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAd
 ) (*papi.ProfileObject, error) {
 
 	p := models.Profile{}
-	p.ProfileID = request.GetID()
+	p.ID = request.GetID()
 	if err := ps.Service.DB(ctx, true).Find(&p).Error; err != nil {
 		return nil, err
 	}
 
-	_, err := createContact(ctx, ps.Service, ps.NotificationCli, p.ProfileID, request.GetContact())
+	_, err := createContact(ctx, ps.Service, ps.NotificationCli, p.ID, request.GetContact())
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +70,8 @@ func verifyContact(ctx context.Context, service *frame.Service, ncli *napi.Notif
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
 
-	return queue.Notification(ctx, ncli, contact.ProfileID, contact.ContactID,
-		"", config.MessageTemplateContactVerification, variables)
+	_, err = ncli.Send(ctx, contact.ProfileID, contact.ID, contact.Language, config.MessageTemplateContactVerification, variables)
+		return err
+
 
 }

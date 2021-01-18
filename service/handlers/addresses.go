@@ -9,7 +9,7 @@ import (
 // Adds a new address based on the request.
 func (ps *ProfileServer) AddAddress(ctx context.Context, request *papi.ProfileAddAddressRequest) (*papi.ProfileObject, error) {
 	p := models.Profile{}
-	p.ProfileID = request.GetID()
+	p.ID = request.GetID()
 	if err := ps.Service.DB(ctx, true).Find(&p).Error; err != nil {
 		return nil, err
 	}
@@ -24,8 +24,10 @@ func (ps *ProfileServer) AddAddress(ctx context.Context, request *papi.ProfileAd
 	}
 
 	profileAddress := models.ProfileAddress{}
-	profileAddress.Create(ps.Service.DB(ctx, false), p.ProfileID, address.AddressID, obj.GetName())
-
+	err := profileAddress.Create(ps.Service.DB(ctx, false), p.ID, address.ID, obj.GetName())
+	if err != nil {
+		return nil, err
+	}
 	return p.ToObject(ps.Service.DB(ctx, true))
 }
 
