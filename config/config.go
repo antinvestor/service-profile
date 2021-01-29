@@ -11,10 +11,10 @@ const EnvMigrationPath = "MIGRATION_PATH"
 
 const EnvNotificationServiceUri = "NOTIFICATION_SERVICE_URI"
 
-const ConfigContextKeyProductID = "RequestingProductID"
+const ContextKeyProductID = "RequestingProductID"
 
-const ConfigLengthOfVerificationPin = 5
-const ConfigLengthOfVerificationLinkHash = 70
+const LengthOfVerificationPin = 5
+const LengthOfVerificationLinkHash = 70
 
 
 

@@ -2,18 +2,19 @@ package handlers
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	napi "github.com/antinvestor/service-notification-api"
 	papi "github.com/antinvestor/service-profile-api"
-	"github.com/antinvestor/service-profile/models"
 	"github.com/antinvestor/service-profile/service"
+	"github.com/antinvestor/service-profile/service/models"
+	"github.com/go-errors/errors"
 	"github.com/pitabwire/frame"
 
 	"strings"
 )
 
 type ProfileServer struct {
-	Service *frame.Service
+	Service         *frame.Service
 	NotificationCli *napi.NotificationClient
 
 	papi.ProfileServiceServer
@@ -54,12 +55,12 @@ func (ps *ProfileServer) Search(request *papi.ProfileSearchRequest,
 	for _, p := range profiles {
 		profileObject, err := p.ToObject(ps.Service.DB(ctx, true))
 		if err != nil {
-			return err
+			return errors.Wrap(err, 1)
 		}
 
 		err = stream.Send(profileObject)
 		if err != nil {
-			return err
+			return errors.Wrap(err, 1)
 		}
 	}
 
@@ -75,13 +76,13 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRe
 	target.ID = request.GetID()
 
 	if err := target.GetByID(ps.Service.DB(ctx, true)); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	merging.ID = request.GetMergeID()
 
 	if err := merging.GetByID(ps.Service.DB(ctx, true)); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	for key, value := range merging.Properties {
@@ -95,7 +96,21 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRe
 		target.Properties[key] = value
 	}
 
-	target.UpdateProperties(ps.Service.DB(ctx, false), merging.Properties)
+	storedPropertiesMap := make(map[string]interface{})
+	attributeMap, err := merging.Properties.MarshalJSON()
+	if err != nil {
+		return nil, errors.Wrap(err, 1)
+	}
+
+	err = json.Unmarshal(attributeMap, &storedPropertiesMap)
+	if err != nil {
+		return nil, errors.Wrap(err, 1)
+	}
+
+	err = target.UpdateProperties(ps.Service.DB(ctx, false), storedPropertiesMap)
+	if err != nil {
+		return nil, errors.Wrap(err, 1)
+	}
 
 	return target.ToObject(ps.Service.DB(ctx, true))
 }
@@ -122,33 +137,32 @@ func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreate
 	err := contact.GetByDetail(ps.Service.DB(ctx, true))
 
 	if err != nil {
-		if  !errors.Is(service.ErrorContactDoesNotExist, err) {
-			return nil, err
+		if !errors.Is(service.ErrorContactDoesNotExist, err) {
+			return nil, errors.Wrap(err, 1)
 		}
-
 
 		err := p.Create(ps.Service.DB(ctx, false), request.GetType(), properties)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 1)
 		}
 
-		contact, err := createContact( ctx, ps.Service, ps.NotificationCli, p.ID, contactDetail)
-		if err != nil && contact == nil{
-			return nil, err
+		contact, err := createContact(ctx, ps.Service, ps.NotificationCli, p.ID, contactDetail)
+		if err != nil && contact == nil {
+			return nil, errors.Wrap(err, 1)
 		}
 
-	}else{
+	} else {
 
-		p.ID = contact.ProfileID
+		p = contact.Profile
 
 		err = ps.Service.DB(ctx, true).First(p).Error
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 1)
 		}
 
 		err = p.UpdateProperties(ps.Service.DB(ctx, false), properties)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, 1)
 		}
 	}
 
@@ -160,7 +174,7 @@ func (ps *ProfileServer) Update(
 	request *papi.ProfileUpdateRequest,
 ) (*papi.ProfileObject, error) {
 	p := models.Profile{}
-	p.ID= strings.TrimSpace(request.GetID())
+	p.ID = strings.TrimSpace(request.GetID())
 
 	err := p.GetByID(ps.Service.DB(ctx, true))
 	if err != nil {
@@ -174,17 +188,8 @@ func (ps *ProfileServer) Update(
 
 	err = p.UpdateProperties(ps.Service.DB(ctx, false), properties)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return ps.getProfileByID(ctx, p.ID)
-}
-
-func EscapeColumnName(name string) string {
-	return strings.NewReplacer(
-		"'", "",
-		"\\", "",
-		"\r", "",
-		"\n", "",
-	).Replace(name)
 }

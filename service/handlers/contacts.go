@@ -5,7 +5,8 @@ import (
 	napi "github.com/antinvestor/service-notification-api"
 	papi "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/config"
-	"github.com/antinvestor/service-profile/models"
+	"github.com/antinvestor/service-profile/service/models"
+	"github.com/go-errors/errors"
 	"github.com/pitabwire/frame"
 )
 
@@ -15,9 +16,9 @@ func (ps *ProfileServer) GetByContact(ctx context.Context,
 	contact := models.Contact{Detail: request.GetContact()}
 	err := contact.GetByDetail(ps.Service.DB(ctx, true))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
-	return ps.getProfileByID(ctx, contact.ProfileID)
+	return ps.getProfileByID(ctx, contact.Profile.ID)
 }
 
 func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAddContactRequest,
@@ -26,12 +27,12 @@ func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAd
 	p := models.Profile{}
 	p.ID = request.GetID()
 	if err := ps.Service.DB(ctx, true).Find(&p).Error; err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	_, err := createContact(ctx, ps.Service, ps.NotificationCli, p.ID, request.GetContact())
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 
 	return p.ToObject(ps.Service.DB(ctx, true))
@@ -39,16 +40,16 @@ func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAd
 
 func createContact(ctx context.Context, service *frame.Service, ncli *napi.NotificationClient, profileID string, contactDetail string) (*models.Contact, error) {
 
-	contact := models.Contact{Detail: contactDetail, ProfileID: profileID}
+	contact := models.Contact{Detail: contactDetail}
 	if err := contact.Create(service.DB(ctx, false), profileID, contactDetail); err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, 1)
 	}
 	err := verifyContact(ctx, service, ncli, contact)
 	return &contact, err
 }
 
 func GetAuthSourceProductID(ctx context.Context) string {
-	contextProductId := ctx.Value(config.ConfigContextKeyProductID)
+	contextProductId := ctx.Value(config.ContextKeyProductID)
 	if contextProductId == nil {
 		return ""
 	} else {
@@ -62,7 +63,7 @@ func verifyContact(ctx context.Context, service *frame.Service, ncli *napi.Notif
 	var productID = GetAuthSourceProductID(ctx)
 	err := verification.Create(service.DB(ctx, false), productID, contact, 24*60*60)
 	if err != nil {
-		return err
+		return errors.Wrap(err, 1)
 	}
 
 	variables := make(map[string]string)
@@ -70,8 +71,8 @@ func verifyContact(ctx context.Context, service *frame.Service, ncli *napi.Notif
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
 
-	_, err = ncli.Send(ctx, contact.ProfileID, contact.ID, contact.Language, config.MessageTemplateContactVerification, variables)
-		return err
+	_, err = ncli.Send(ctx, contact.Profile.ID, contact.ID, contact.Language, config.MessageTemplateContactVerification, variables)
+		return errors.Wrap(err, 1)
 
 
 }
