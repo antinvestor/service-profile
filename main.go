@@ -7,9 +7,9 @@ import (
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/handlers"
 	"github.com/antinvestor/service-profile/service/models"
-	grpc_log "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpc_ctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpcctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"google.golang.org/grpc"
 
 	"os"
@@ -32,7 +32,7 @@ func main() {
 	ctx := context.Background()
 
 	logrusEntry := log.NewEntry(log.New())
-	grpc_log.ReplaceGrpcLogger(logrusEntry)
+	grpclog.ReplaceGrpcLogger(logrusEntry)
 
 	var err error
 	var serviceOptions []frame.Option
@@ -47,9 +47,9 @@ func main() {
 
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpc_ctxtags.UnaryServerInterceptor(),
-			grpc_log.UnaryServerInterceptor(logrusEntry),
-			grpc_recovery.UnaryServerInterceptor(),
+			grpcctxtags.UnaryServerInterceptor(),
+			grpclog.UnaryServerInterceptor(logrusEntry),
+			grpcrecovery.UnaryServerInterceptor(),
 		)),
 	)
 

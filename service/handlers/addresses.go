@@ -27,7 +27,7 @@ func (ps *ProfileServer) AddAddress(ctx context.Context, request *papi.ProfileAd
 	profileAddress := models.ProfileAddress{}
 	err := profileAddress.Create(ps.Service.DB(ctx, false), p, address, obj.GetName())
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 	return p.ToObject(ps.Service.DB(ctx, true))
 }

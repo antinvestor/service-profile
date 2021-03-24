@@ -16,7 +16,7 @@ func (ps *ProfileServer) GetByContact(ctx context.Context,
 	contact := models.Contact{Detail: request.GetContact()}
 	err := contact.GetByDetail(ps.Service.DB(ctx, true))
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 	return ps.getProfileByID(ctx, contact.Profile.ID)
 }
@@ -27,12 +27,12 @@ func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAd
 	p := models.Profile{}
 	p.ID = request.GetID()
 	if err := ps.Service.DB(ctx, true).Find(&p).Error; err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	_, err := createContact(ctx, ps.Service, ps.NotificationCli, p.ID, request.GetContact())
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	return p.ToObject(ps.Service.DB(ctx, true))
@@ -63,7 +63,7 @@ func verifyContact(ctx context.Context, service *frame.Service, ncli *napi.Notif
 	var productID = GetAuthSourceProductID(ctx)
 	err := verification.Create(service.DB(ctx, false), productID, contact, 24*60*60)
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	variables := make(map[string]string)
@@ -72,7 +72,7 @@ func verifyContact(ctx context.Context, service *frame.Service, ncli *napi.Notif
 	variables["expiryDate"] = verification.ExpiresAt.String()
 
 	_, err = ncli.Send(ctx, contact.Profile.ID, contact.ID, contact.Language, config.MessageTemplateContactVerification, variables)
-		return errors.Wrap(err, 1)
+		return err
 
 
 }

@@ -55,12 +55,12 @@ func (ps *ProfileServer) Search(request *papi.ProfileSearchRequest,
 	for _, p := range profiles {
 		profileObject, err := p.ToObject(ps.Service.DB(ctx, true))
 		if err != nil {
-			return errors.Wrap(err, 1)
+			return err
 		}
 
 		err = stream.Send(profileObject)
 		if err != nil {
-			return errors.Wrap(err, 1)
+			return err
 		}
 	}
 
@@ -109,7 +109,7 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRe
 
 	err = target.UpdateProperties(ps.Service.DB(ctx, false), storedPropertiesMap)
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	return target.ToObject(ps.Service.DB(ctx, true))
@@ -138,7 +138,7 @@ func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreate
 
 	if err != nil {
 		if !errors.Is(service.ErrorContactDoesNotExist, err) {
-			return nil, errors.Wrap(err, 1)
+			return nil, err
 		}
 
 		err := p.Create(ps.Service.DB(ctx, false), request.GetType(), properties)
