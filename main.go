@@ -55,8 +55,8 @@ func main() {
 
 	implementation.Service = frame.NewService(serviceName, serviceOptions...)
 
-	notificationServiceUrl := frame.GetEnv(config.EnvNotificationServiceUri, "127.0.0.1:7020")
-	implementation.NotificationCli, err = napi.NewNotificationClient(ctx, apis.WithEndpoint(notificationServiceUrl))
+	notificationServiceURL := frame.GetEnv(config.EnvNotificationServiceUri, "127.0.0.1:7020")
+	implementation.NotificationCli, err = napi.NewNotificationClient(ctx, apis.WithEndpoint(notificationServiceURL))
 	if err != nil {
 		log.Printf("main -- Could not setup notification service : %v", err)
 	}
