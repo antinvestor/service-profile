@@ -3,11 +3,12 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	napi "github.com/antinvestor/service-notification-api"
 	papi "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
-	"github.com/go-errors/errors"
+	
 	"github.com/pitabwire/frame"
 
 	"strings"
@@ -76,13 +77,13 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRe
 	target.ID = request.GetID()
 
 	if err := target.GetByID(ps.Service.DB(ctx, true)); err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	merging.ID = request.GetMergeID()
 
 	if err := merging.GetByID(ps.Service.DB(ctx, true)); err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	for key, value := range merging.Properties {
@@ -99,12 +100,12 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRe
 	storedPropertiesMap := make(map[string]interface{})
 	attributeMap, err := merging.Properties.MarshalJSON()
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	err = json.Unmarshal(attributeMap, &storedPropertiesMap)
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	err = target.UpdateProperties(ps.Service.DB(ctx, false), storedPropertiesMap)
@@ -143,12 +144,12 @@ func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreate
 
 		err := p.Create(ps.Service.DB(ctx, false), request.GetType(), properties)
 		if err != nil {
-			return nil, errors.Wrap(err, 1)
+			return nil, err
 		}
 
 		contact, err := createContact(ctx, ps.Service, ps.NotificationCli, p.ID, contactDetail)
 		if err != nil && contact == nil {
-			return nil, errors.Wrap(err, 1)
+			return nil, err
 		}
 
 	} else {
@@ -157,12 +158,12 @@ func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreate
 
 		err = ps.Service.DB(ctx, true).First(p).Error
 		if err != nil {
-			return nil, errors.Wrap(err, 1)
+			return nil, err
 		}
 
 		err = p.UpdateProperties(ps.Service.DB(ctx, false), properties)
 		if err != nil {
-			return nil, errors.Wrap(err, 1)
+			return nil, err
 		}
 	}
 
@@ -188,7 +189,7 @@ func (ps *ProfileServer) Update(
 
 	err = p.UpdateProperties(ps.Service.DB(ctx, false), properties)
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	return ps.getProfileByID(ctx, p.ID)

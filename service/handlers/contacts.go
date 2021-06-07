@@ -6,7 +6,7 @@ import (
 	papi "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/models"
-	"github.com/go-errors/errors"
+	
 	"github.com/pitabwire/frame"
 )
 
@@ -42,7 +42,7 @@ func createContact(ctx context.Context, service *frame.Service, ncli *napi.Notif
 
 	contact := models.Contact{Detail: contactDetail}
 	if err := contact.Create(service.DB(ctx, false), profileID, contactDetail); err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 	err := verifyContact(ctx, service, ncli, contact)
 	return &contact, err

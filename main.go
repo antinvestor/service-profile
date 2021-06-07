@@ -7,10 +7,10 @@ import (
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/handlers"
 	"github.com/antinvestor/service-profile/service/models"
-	grpclog "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpcctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
 	"google.golang.org/grpc"
+	"log"
 
 	"os"
 	"strconv"
@@ -20,19 +20,13 @@ import (
 	"github.com/pitabwire/frame"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware"
-	log "github.com/sirupsen/logrus"
 )
 
-
 func main() {
-
 
 	serviceName := "Profile"
 
 	ctx := context.Background()
-
-	logrusEntry := log.NewEntry(log.New())
-	grpclog.ReplaceGrpcLogger(logrusEntry)
 
 	var err error
 	var serviceOptions []frame.Option
@@ -48,7 +42,6 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpcctxtags.UnaryServerInterceptor(),
-			grpclog.UnaryServerInterceptor(logrusEntry),
 			grpcrecovery.UnaryServerInterceptor(),
 		)),
 	)
@@ -67,7 +60,6 @@ func main() {
 	if err != nil {
 		log.Printf("main -- Could not setup notification service : %v", err)
 	}
-
 
 	isMigration, err := strconv.ParseBool(frame.GetEnv(config.EnvMigrate, "false"))
 	if err != nil {

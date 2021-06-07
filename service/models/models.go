@@ -5,19 +5,22 @@ import (
 	papi "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service"
-	"github.com/go-errors/errors"
 	"github.com/pitabwire/frame"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-
 	"math/rand"
+	"regexp"
 	"strings"
 	"time"
 
-	"github.com/asaskevich/govalidator"
 	"github.com/ttacon/libphonenumber"
 )
+
+var (
+	EmailPattern = regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
+)
+
 
 var profileTypeIDMap = map[papi.ProfileType]uint{
 	papi.ProfileType_PERSON:      0,
@@ -47,12 +50,11 @@ func (pt *ProfileType) ToEnum() papi.ProfileType {
 }
 
 type Profile struct {
-
 	frame.BaseModel
 	Properties datatypes.JSON
 
 	ProfileTypeID string `gorm:"type:varchar(50)"`
-	ProfileType ProfileType
+	ProfileType   ProfileType
 }
 
 func (p *Profile) GetByID(db *gorm.DB) error {
@@ -61,7 +63,7 @@ func (p *Profile) GetByID(db *gorm.DB) error {
 		if err == gorm.ErrRecordNotFound {
 			return service.ErrorProfileDoesNotExist
 		}
-		return errors.Wrap(err, 1)
+		return err
 	}
 	return nil
 }
@@ -71,12 +73,12 @@ func (p *Profile) UpdateProperties(db *gorm.DB, params map[string]interface{}) e
 	storedPropertiesMap := make(map[string]interface{})
 	attributeMap, err := p.Properties.MarshalJSON()
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	err = json.Unmarshal(attributeMap, &storedPropertiesMap)
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	for key, value := range params {
@@ -87,12 +89,12 @@ func (p *Profile) UpdateProperties(db *gorm.DB, params map[string]interface{}) e
 
 	stringProperties, err := json.Marshal(storedPropertiesMap)
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	err = p.Properties.UnmarshalJSON(stringProperties)
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	return db.Model(p).Update("Properties", p.Properties).Error
@@ -108,12 +110,12 @@ func (p *Profile) Create(db *gorm.DB, profileType papi.ProfileType, properties m
 
 	stringProperties, err := json.Marshal(properties)
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	err = p.Properties.UnmarshalJSON(stringProperties)
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	return db.Save(p).Error
@@ -127,18 +129,18 @@ func (p *Profile) ToObject(db *gorm.DB) (*papi.ProfileObject, error) {
 
 	attributeMap, err := p.Properties.MarshalJSON()
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	err = json.Unmarshal(attributeMap, &profileObject.Properties)
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	var contactObjects []*papi.ContactObject
 	contacts, err := GetContactsByProfile(db, p)
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	for _, c := range contacts {
@@ -147,9 +149,9 @@ func (p *Profile) ToObject(db *gorm.DB) (*papi.ProfileObject, error) {
 	profileObject.Contacts = contactObjects
 
 	var addressObjects []*papi.AddressObject
-	addresses, err2 := GetProfileAddresses(db, p)
-	if err2 != nil {
-		return nil, errors.Wrap(err2, 1)
+	addresses, err := GetProfileAddresses(db, p)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, a := range addresses {
@@ -173,13 +175,11 @@ var communicationLevelUIDMap = map[papi.CommunicationLevel]uint{
 }
 
 type ContactType struct {
-
 	frame.BaseModel
 	UID uint `sql:"unique"`
 
 	Name        string
 	Description string
-
 }
 
 func (ct *ContactType) From(db *gorm.DB, contactType papi.ContactType) {
@@ -189,8 +189,7 @@ func (ct *ContactType) From(db *gorm.DB, contactType papi.ContactType) {
 
 func (ct *ContactType) FromDetail(db *gorm.DB, detail string) error {
 
-	if govalidator.IsEmail(detail) {
-
+	if EmailPattern.MatchString(detail) {
 		ct.From(db, papi.ContactType_EMAIL)
 		return nil
 	} else {
@@ -221,7 +220,6 @@ type CommunicationLevel struct {
 
 	Name        string
 	Description string
-
 }
 
 func (cl *CommunicationLevel) From(db *gorm.DB, communicationLevel papi.CommunicationLevel) {
@@ -243,16 +241,15 @@ type Contact struct {
 	Detail string `gorm:"type:varchar(100);unique"`
 
 	ContactTypeID string `gorm:"type:varchar(50)"`
-	ContactType        ContactType
+	ContactType   ContactType
 
 	CommunicationLevelID string `gorm:"type:varchar(50)"`
-	CommunicationLevel CommunicationLevel
+	CommunicationLevel   CommunicationLevel
 
-	Language           string
+	Language string
 
 	ProfileID string `gorm:"type:varchar(50)"`
-	Profile            Profile
-
+	Profile   Profile
 }
 
 func (contact *Contact) GetByDetail(db *gorm.DB) error {
@@ -263,7 +260,7 @@ func (contact *Contact) GetByDetail(db *gorm.DB) error {
 		if err == gorm.ErrRecordNotFound {
 			return service.ErrorContactDoesNotExist
 		}
-		return errors.Wrap(err, 1)
+		return err
 	}
 	return nil
 }
@@ -275,7 +272,7 @@ func GetContactsByProfile(db *gorm.DB, p *Profile) ([]Contact, error) {
 	err := db.Preload(clause.Associations).Where("profile_id = ?", p.ID).Find(&profileContacts).Error
 
 	if err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	return profileContacts, nil
@@ -288,7 +285,7 @@ func (contact *Contact) Create(db *gorm.DB, profileID string, contactDetail stri
 	ct := ContactType{}
 	err := ct.FromDetail(db, detail)
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 	contact.ContactTypeID = ct.ID
 	contact.ContactType = ct
@@ -302,14 +299,14 @@ func (contact *Contact) Create(db *gorm.DB, profileID string, contactDetail stri
 	profile.ID = profileID
 	err = profile.GetByID(db)
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 	contact.Profile = profile
 	contact.ProfileID = profile.ID
 	contact.Detail = contactDetail
 	err = db.Save(contact).Error
 	if err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	return nil
@@ -328,10 +325,9 @@ func (contact *Contact) ToObject() *papi.ContactObject {
 }
 
 type Verification struct {
-
 	frame.BaseModel
 	ContactID string `gorm:"type:varchar(50)"`
-	Contact Contact
+	Contact   Contact
 
 	ProductID string `gorm:"type:varchar(50);"`
 
@@ -379,13 +375,12 @@ func GeneratePin(n int) string {
 }
 
 type VerificationAttempt struct {
-
 	frame.BaseModel
 	VerificationID string `gorm:"type:varchar(50)"`
-	Verification Verification
+	Verification   Verification
 
 	ContactID string `gorm:"type:varchar(50)"`
-	Contact      Contact
+	Contact   Contact
 
 	State string `gorm:"type:varchar(10)"`
 }
@@ -428,7 +423,7 @@ type Address struct {
 	Longitude float64
 
 	CountryID string `gorm:"type:varchar(50)"`
-	Country Country
+	Country   Country
 }
 
 func (address *Address) GetByID(db *gorm.DB, addressID string) error {
@@ -448,8 +443,8 @@ func (address *Address) Create(db *gorm.DB, countryISO3 string, area, street, ho
 
 	country := Country{ISO3: countryISO3}
 	err := country.GetByISO3(db, countryISO3)
-	if err != nil{
-		return errors.Wrap(err, 1)
+	if err != nil {
+		return err
 	}
 	address.Area = area
 	address.Street = street
@@ -466,7 +461,7 @@ func (address *Address) CreateFull(db *gorm.DB, country, area, street,
 
 	countryRecord := Country{}
 	if err := countryRecord.GetByAny(db, country); err != nil {
-		return errors.Wrap(err, 1)
+		return err
 	}
 
 	addressRecord := Address{}
@@ -474,12 +469,12 @@ func (address *Address) CreateFull(db *gorm.DB, country, area, street,
 		postcode, latitude, longitude); err != nil {
 
 		if err != gorm.ErrRecordNotFound {
-			return errors.Wrap(err, 1)
+			return err
 		}
 
 		if err2 := addressRecord.Create(db, countryRecord.ISO3, area, street,
 			house, postcode, latitude, longitude); err2 != nil {
-			return errors.Wrap(err2, 1)
+			return err2
 		}
 	}
 
@@ -487,16 +482,14 @@ func (address *Address) CreateFull(db *gorm.DB, country, area, street,
 }
 
 type ProfileAddress struct {
-
 	frame.BaseModel
-	Name    string
+	Name string
 
 	AddressID string `gorm:"type:varchar(50)"`
-	Address Address
+	Address   Address
 
 	ProfileID string `gorm:"type:varchar(50)"`
-	Profile Profile
-
+	Profile   Profile
 }
 
 func (profileAddress *ProfileAddress) Create(db *gorm.DB, profile Profile, address Address, name string) error {
@@ -527,7 +520,7 @@ func (profileAddress *ProfileAddress) ToObject(db *gorm.DB) *papi.AddressObject 
 func GetProfileAddresses(db *gorm.DB, p *Profile) ([]ProfileAddress, error) {
 	var addresses []ProfileAddress
 	if err := db.Preload(clause.Associations).Where("profile_id = ?", p.ID).Find(&addresses).Error; err != nil {
-		return nil, errors.Wrap(err, 1)
+		return nil, err
 	}
 
 	return addresses, nil
