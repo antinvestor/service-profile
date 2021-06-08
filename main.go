@@ -24,7 +24,7 @@ import (
 
 func main() {
 
-	serviceName := "Profile"
+	serviceName := "service_profile"
 
 	ctx := context.Background()
 
