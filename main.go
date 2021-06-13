@@ -2,13 +2,18 @@ package main
 
 import (
 	"context"
+	"crypto/sha256"
+	"errors"
 	"fmt"
 	"github.com/antinvestor/apis"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/handlers"
 	"github.com/antinvestor/service-profile/service/models"
+	"github.com/antinvestor/service-profile/service/queue"
+	"github.com/antinvestor/service-profile/service/repository"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpcctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"golang.org/x/crypto/pbkdf2"
 	"google.golang.org/grpc"
 	"log"
 
@@ -25,11 +30,25 @@ import (
 func main() {
 
 	serviceName := "service_profile"
-
+	service := frame.NewService(serviceName)
 	ctx := context.Background()
 
 	var err error
 	var serviceOptions []frame.Option
+
+	encryptionKey := frame.GetEnv(config.EnvContactEncryptionKey, "")
+	if encryptionKey == "" {
+		err := errors.New("an encryption key has to be specified")
+		log.Fatalf("main -- Could not start service because : %v", err)
+	}
+
+	encryptionSalt := frame.GetEnv(config.EnvContactEncryptionSalt, "")
+	if encryptionSalt == "" {
+		err := errors.New("an encryption salt has to be specified")
+		log.Fatalf("main -- Could not start service because : %v", err)
+	}
+
+	contactEncryptionKey := pbkdf2.Key([]byte(encryptionKey), []byte(encryptionSalt), 4096, 32, sha256.New)
 
 	datasource := frame.GetEnv(config.EnvDatabaseUrl, "postgres://ant:@nt@localhost/service_profile")
 	mainDb := frame.Datastore(ctx, datasource, false)
@@ -39,6 +58,13 @@ func main() {
 	readDb := frame.Datastore(ctx, readOnlydatasource, true)
 	serviceOptions = append(serviceOptions, readDb)
 
+
+	notificationServiceURL := frame.GetEnv(config.EnvNotificationServiceUri, "127.0.0.1:7020")
+	notificationCli, err := napi.NewNotificationClient(ctx, apis.WithEndpoint(notificationServiceURL))
+	if err != nil {
+		log.Fatalf("main -- Could not setup notification service : %v", err)
+	}
+
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpcctxtags.UnaryServerInterceptor(),
@@ -46,20 +72,30 @@ func main() {
 		)),
 	)
 
-	implementation := &handlers.ProfileServer{}
-
+	implementation := &handlers.ProfileServer{
+		EncryptionKey: contactEncryptionKey,
+		Service: service,
+		NotificationCli: notificationCli,
+	}
 	papi.RegisterProfileServiceServer(grpcServer, implementation)
 
 	grpcServerOpt := frame.GrpcServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
-	implementation.Service = frame.NewService(serviceName, serviceOptions...)
 
-	notificationServiceURL := frame.GetEnv(config.EnvNotificationServiceUri, "127.0.0.1:7020")
-	implementation.NotificationCli, err = napi.NewNotificationClient(ctx, apis.WithEndpoint(notificationServiceURL))
-	if err != nil {
-		log.Printf("main -- Could not setup notification service : %v", err)
+
+	verificationQueueHandler := queue.VerificationsQueueHandler{
+		Service: service,
+		ContactRepo: repository.NewContactRepository(service),
+		NotificationCli: notificationCli,
 	}
+	verificationQueueURL := frame.GetEnv(config.EnvQueueVerification, fmt.Sprintf("mem://%s", config.QueueVerificationName))
+	verificationQueue := frame.RegisterSubscriber(config.QueueVerificationName, verificationQueueURL, 2, &verificationQueueHandler)
+	verificationQueuePublisher := frame.RegisterPublisher(config.QueueVerificationName, verificationQueueURL)
+
+	serviceOptions = append(serviceOptions, verificationQueue, verificationQueuePublisher)
+
+	service.Init(serviceOptions...)
 
 	isMigration, err := strconv.ParseBool(frame.GetEnv(config.EnvMigrate, "false"))
 	if err != nil {
@@ -71,13 +107,13 @@ func main() {
 
 		migrationPath := frame.GetEnv(config.EnvMigrationPath, "./migrations/0001")
 		err := implementation.Service.MigrateDatastore(ctx, migrationPath,
-			models.ProfileType{},
-			models.Profile{}, models.ContactType{}, models.CommunicationLevel{},
-			models.Contact{}, models.Country{}, &models.Address{}, models.ProfileAddress{},
-			models.Verification{}, models.VerificationAttempt{})
+			models.ProfileType{}, models.Profile{}, models.ContactType{},
+			models.CommunicationLevel{}, models.Contact{}, models.Country{},
+			&models.Address{}, models.ProfileAddress{}, models.Verification{},
+			models.VerificationAttempt{})
 
 		if err != nil {
-			log.Printf("main -- Could not migrate successfully because : %v", err)
+			log.Fatalf("main -- Could not migrate successfully because : %v", err)
 		}
 
 	} else {
@@ -87,7 +123,7 @@ func main() {
 		log.Printf(" main -- Initiating server operations on : %s", serverPort)
 		err := implementation.Service.Run(ctx, fmt.Sprintf(":%v", serverPort))
 		if err != nil {
-			log.Printf("main -- Could not run Server : %v", err)
+			log.Fatalf("main -- Could not run Server : %v", err)
 		}
 
 	}

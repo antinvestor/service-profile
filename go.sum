@@ -91,12 +91,12 @@ github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03
 github.com/BurntSushi/xgb v0.0.0-20160522181843-27f122750802/go.mod h1:IVnqGOEym/WlBOVXweHU+Q+/VP0lqqI8lqeDx9IjBqo=
 github.com/GoogleCloudPlatform/cloudsql-proxy v1.22.0/go.mod h1:mAm5O/zik2RFmcpigNjg6nMotDL8ZXJaxKzgGVcSMFA=
 github.com/antinvestor/apis v0.0.0-20210116085558-3a23e70e5458/go.mod h1:JRKaJ1ODaAv61piHgdZVjvwPoTTHe60xW8OAZmETdzc=
-github.com/antinvestor/apis v1.0.3 h1:Fyv7WEFBGcE7YBcCQvNGZdS5J6LSJqh7gdJnh27yvSQ=
-github.com/antinvestor/apis v1.0.3/go.mod h1:0cKNgx6iL0TlmWI3aooiFJFs5X64eFG5/qEL0p85si4=
+github.com/antinvestor/apis v1.0.4 h1:+hi4YvFWf9jkUFmQUdk7aErcMzjl0bD4C5p59dC6Jd4=
+github.com/antinvestor/apis v1.0.4/go.mod h1:0cKNgx6iL0TlmWI3aooiFJFs5X64eFG5/qEL0p85si4=
 github.com/antinvestor/service-notification-api v0.0.0-20210118081642-c369caba815f h1:x7jINnqXgWzLgg6c8XWPWozl+eCkExo6SjRVX0bCTI4=
 github.com/antinvestor/service-notification-api v0.0.0-20210118081642-c369caba815f/go.mod h1:aRrsNKa0shxxOjqUpCDTWghOafJ9wD58Qcs5craJy0Q=
-github.com/antinvestor/service-profile-api v1.0.1 h1:goSwcaUHU8KciEiz2ezdVlHL4af5s/HVNYlyQHPhXGg=
-github.com/antinvestor/service-profile-api v1.0.1/go.mod h1:D+0hxkQjcvv4m9aARmg/6Ej2SWMcQ27fRbkCgfQBjXw=
+github.com/antinvestor/service-profile-api v1.0.2 h1:qwpR7GENpYAyiYr+mZWnLCxxytgwV+qNRo6w+wHmaNg=
+github.com/antinvestor/service-profile-api v1.0.2/go.mod h1:KRQHVRhALBechlaw+JO7ynR/0mspuLbMEcfkbpwsLo8=
 github.com/aws/aws-sdk-go v1.15.27/go.mod h1:mFuSZ37Z9YOHbQEwBWztmVzqXrEkub65tZoCYDt7FT0=
 github.com/aws/aws-sdk-go v1.23.20/go.mod h1:KmX6BPdI08NWTb3/sm4ZGu5ShLoqVDhKgpiN924inxo=
 github.com/aws/aws-sdk-go v1.38.35 h1:7AlAO0FC+8nFjxiGKEmq0QLpiA8/XFr6eIxgRTwkdTg=
@@ -384,8 +384,8 @@ github.com/nicksnyder/go-i18n/v2 v2.1.2/go.mod h1:d++QJC9ZVf7pa48qrsRWhMJ5pSHIPm
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
-github.com/pitabwire/frame v1.2.4 h1:1JZe4c7l2AoxVCRVW52xD2otPOJddV0Rzd29J3oDl2o=
-github.com/pitabwire/frame v1.2.4/go.mod h1:NMIUzgw/sFtce8UeiZA2wVt1njI2I/3zE0qxRAEu3NQ=
+github.com/pitabwire/frame v1.2.6 h1:Wufj8sFGO4RWGBFYEuzUIz0I9+Tx0XCSxfYpehp17TI=
+github.com/pitabwire/frame v1.2.6/go.mod h1:NMIUzgw/sFtce8UeiZA2wVt1njI2I/3zE0qxRAEu3NQ=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
