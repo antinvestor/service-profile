@@ -7,7 +7,7 @@ require (
 	github.com/antinvestor/service-notification-api v0.0.0-20210118081642-c369caba815f
 	github.com/antinvestor/service-profile-api v1.0.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
-	github.com/pitabwire/frame v1.2.7
+	github.com/pitabwire/frame v1.2.8
 	github.com/stretchr/testify v1.7.0
 	github.com/ttacon/builder v0.0.0-20170518171403-c099f663e1c2 // indirect
 	github.com/ttacon/libphonenumber v1.2.1
