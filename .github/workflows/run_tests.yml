@@ -21,8 +21,8 @@ jobs:
           go version
           go get -u golang.org/x/lint/golint
 
-#      - name: Build the docker-compose stack
-#        run: docker-compose -f "tests_runner/docker-compose.yml" up -d --build
+      - name: Build the docker-compose stack
+        run: docker-compose -f "tests_runner/docker-compose.yml" up -d --build
 
       - name: Wait for postgresql to come up
         run: count=0; while ! nc -z localhost 5424 && [[ count -lt 30 ]]; do (( count += 1 )); sleep 1; echo "waiting for postgresql $count"; done;
@@ -30,8 +30,8 @@ jobs:
       - name: Allow 10 seconds for migrations to complete if any
         run: sleep 10s
 
-#      - name: Print out logs to help with debugging
-#        run: docker-compose -f ./tests_runner/docker-compose.yml logs
+      - name: Print out logs to help with debugging
+        run: docker-compose -f ./tests_runner/docker-compose.yml logs
 
       - name: Test partition service
         run: go test  ./...
@@ -41,5 +41,5 @@ jobs:
           go vet .
           golint -set_exit_status=1 .
 
-#      - name: Stop containers
-#        run: docker-compose -f "tests_runner/docker-compose.yml" down
+      - name: Stop containers
+        run: docker-compose -f "tests_runner/docker-compose.yml" down
