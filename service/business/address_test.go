@@ -22,7 +22,9 @@ func testService(ctx context.Context) *frame.Service {
 	verificationQueueURL := fmt.Sprintf("mem://%s", config.QueueVerificationName)
 	verificationQueuePublisher := frame.RegisterPublisher(config.QueueVerificationName, verificationQueueURL)
 
-	return frame.NewService("profile tests", mainDb, verificationQueuePublisher)
+	service := frame.NewService("profile tests", mainDb, verificationQueuePublisher)
+
+	return service
 }
 
 func getEncryptionKey() []byte{
