@@ -33,7 +33,7 @@ jobs:
       - name: Print out logs to help with debugging
         run: docker-compose -f ./tests_runner/docker-compose.yml logs
 
-      - name: Test partition service
+      - name: Test profile service
         run: go test  ./...
 
       - name: Run Vet & Lint
