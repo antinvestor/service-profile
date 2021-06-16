@@ -384,8 +384,8 @@ github.com/nicksnyder/go-i18n/v2 v2.1.2/go.mod h1:d++QJC9ZVf7pa48qrsRWhMJ5pSHIPm
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e/go.mod h1:zD1mROLANZcx1PVRCS0qkT7pwLkGfwJo4zjcN/Tysno=
 github.com/opentracing/opentracing-go v1.1.0/go.mod h1:UkNAQd3GIcIGf0SeVgPpRdFStlNbqXla1AfSYxPUl2o=
-github.com/pitabwire/frame v1.2.12 h1:wfdi7qNnlaEgZoEgt2Wpuy14Xxep++8kSpqFfIntxvY=
-github.com/pitabwire/frame v1.2.12/go.mod h1:NMIUzgw/sFtce8UeiZA2wVt1njI2I/3zE0qxRAEu3NQ=
+github.com/pitabwire/frame v1.2.13 h1:C/4qWGi/0pfuOQi5MOnrue9hiBUaoNgSBvkQIL2T668=
+github.com/pitabwire/frame v1.2.13/go.mod h1:NMIUzgw/sFtce8UeiZA2wVt1njI2I/3zE0qxRAEu3NQ=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

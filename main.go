@@ -39,13 +39,13 @@ func main() {
 	encryptionKey := frame.GetEnv(config.EnvContactEncryptionKey, "")
 	if encryptionKey == "" {
 		err := errors.New("an encryption key has to be specified")
-		log.Fatalf("main -- Could not start service because : %v", err)
+		log.Fatalf("main -- Could not start service because : %+v", err)
 	}
 
 	encryptionSalt := frame.GetEnv(config.EnvContactEncryptionSalt, "")
 	if encryptionSalt == "" {
 		err := errors.New("an encryption salt has to be specified")
-		log.Fatalf("main -- Could not start service because : %v", err)
+		log.Fatalf("main -- Could not start service because : %+v", err)
 	}
 
 	contactEncryptionKey := pbkdf2.Key([]byte(encryptionKey), []byte(encryptionSalt), 4096, 32, sha256.New)
@@ -62,7 +62,7 @@ func main() {
 	notificationServiceURL := frame.GetEnv(config.EnvNotificationServiceUri, "127.0.0.1:7020")
 	notificationCli, err := napi.NewNotificationClient(ctx, apis.WithEndpoint(notificationServiceURL))
 	if err != nil {
-		log.Fatalf("main -- Could not setup notification service : %v", err)
+		log.Fatalf("main -- Could not setup notification service : %+v", err)
 	}
 
 	grpcServer := grpc.NewServer(
@@ -113,7 +113,7 @@ func main() {
 			models.VerificationAttempt{})
 
 		if err != nil {
-			log.Fatalf("main -- Could not migrate successfully because : %v", err)
+			log.Fatalf("main -- Could not migrate successfully because : %+v", err)
 		}
 
 	} else {
@@ -123,7 +123,7 @@ func main() {
 		log.Printf(" main -- Initiating server operations on : %s", serverPort)
 		err := implementation.Service.Run(ctx, fmt.Sprintf(":%v", serverPort))
 		if err != nil {
-			log.Fatalf("main -- Could not run Server : %v", err)
+			log.Fatalf("main -- Could not run Server : %+v", err)
 		}
 
 	}

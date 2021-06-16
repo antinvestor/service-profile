@@ -114,7 +114,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 			}
 			got, err := aB.CreateAddress(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("CreateAddress() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("CreateAddress() error = %v, wantErr %+v", err, tt.wantErr)
 				return
 			}
 			if got == nil || got.ID == "" || got.Name != adObj.Name || got.Area != adObj.Area || got.Country != "Kenya"{
@@ -200,7 +200,7 @@ func Test_addressBusiness_LinkAddressToProfile(t *testing.T) {
 				addressRepo: tt.fields.addressRepo,
 			}
 			if err := aB.LinkAddressToProfile(tt.args.ctx, tt.args.profileID, tt.args.name, tt.args.address); (err != nil) != tt.wantErr {
-				t.Errorf("LinkAddressToProfile() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("LinkAddressToProfile() error = %v, wantErr %+v", err, tt.wantErr)
 			}
 		})
 	}
