@@ -17,7 +17,9 @@ import (
 const testDatastoreConnection = "postgres://profile:secret@localhost:5424/profiledatabase?sslmode=disable"
 
 func testService(ctx context.Context) *frame.Service {
-	mainDb := frame.Datastore(ctx, testDatastoreConnection, false)
+
+	dbUrl := frame.GetEnv(fmt.Sprintf("%s_TEST", config.EnvDatabaseUrl), testDatastoreConnection)
+	mainDb := frame.Datastore(ctx, dbUrl, false)
 
 	verificationQueueURL := fmt.Sprintf("mem://%s", config.QueueVerificationName)
 	verificationQueuePublisher := frame.RegisterPublisher(config.QueueVerificationName, verificationQueueURL)
