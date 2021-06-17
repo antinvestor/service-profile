@@ -33,6 +33,9 @@ jobs:
       - name: Allow 10 seconds for migrations to complete if any
         run: sleep 10s
 
+      - name: Display the docker-compose stack logs
+        run: docker-compose -f "tests_runner/docker-compose.yml" logs
+
       - name: Test profile service
         run: go test  ./...
 

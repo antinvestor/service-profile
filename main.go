@@ -36,20 +36,6 @@ func main() {
 	var err error
 	var serviceOptions []frame.Option
 
-	encryptionKey := frame.GetEnv(config.EnvContactEncryptionKey, "")
-	if encryptionKey == "" {
-		err := errors.New("an encryption key has to be specified")
-		log.Fatalf("main -- Could not start service because : %+v", err)
-	}
-
-	encryptionSalt := frame.GetEnv(config.EnvContactEncryptionSalt, "")
-	if encryptionSalt == "" {
-		err := errors.New("an encryption salt has to be specified")
-		log.Fatalf("main -- Could not start service because : %+v", err)
-	}
-
-	contactEncryptionKey := pbkdf2.Key([]byte(encryptionKey), []byte(encryptionSalt), 4096, 32, sha256.New)
-
 	datasource := frame.GetEnv(config.EnvDatabaseUrl, "postgres://ant:@nt@localhost/service_profile")
 	mainDb := frame.Datastore(ctx, datasource, false)
 	serviceOptions = append(serviceOptions, mainDb)
@@ -57,7 +43,6 @@ func main() {
 	readOnlydatasource := frame.GetEnv(config.EnvReplicaDatabaseUrl, datasource)
 	readDb := frame.Datastore(ctx, readOnlydatasource, true)
 	serviceOptions = append(serviceOptions, readDb)
-
 
 	notificationServiceURL := frame.GetEnv(config.EnvNotificationServiceUri, "127.0.0.1:7020")
 	notificationCli, err := napi.NewNotificationClient(ctx, apis.WithEndpoint(notificationServiceURL))
@@ -73,8 +58,7 @@ func main() {
 	)
 
 	implementation := &handlers.ProfileServer{
-		EncryptionKey: contactEncryptionKey,
-		Service: service,
+		Service:         service,
 		NotificationCli: notificationCli,
 	}
 	papi.RegisterProfileServiceServer(grpcServer, implementation)
@@ -82,11 +66,9 @@ func main() {
 	grpcServerOpt := frame.GrpcServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
-
-
 	verificationQueueHandler := queue.VerificationsQueueHandler{
-		Service: service,
-		ContactRepo: repository.NewContactRepository(service),
+		Service:         service,
+		ContactRepo:     repository.NewContactRepository(service),
 		NotificationCli: notificationCli,
 	}
 	verificationQueueURL := frame.GetEnv(config.EnvQueueVerification, fmt.Sprintf("mem://%s", config.QueueVerificationName))
@@ -117,6 +99,22 @@ func main() {
 		}
 
 	} else {
+
+		encryptionKey := frame.GetEnv(config.EnvContactEncryptionKey, "")
+		if encryptionKey == "" {
+			err := errors.New("an encryption key has to be specified")
+			log.Fatalf("main -- Could not start service because : %+v", err)
+		}
+
+		encryptionSalt := frame.GetEnv(config.EnvContactEncryptionSalt, "")
+		if encryptionSalt == "" {
+			err := errors.New("an encryption salt has to be specified")
+			log.Fatalf("main -- Could not start service because : %+v", err)
+		}
+
+		contactEncryptionKey := pbkdf2.Key([]byte(encryptionKey), []byte(encryptionSalt), 4096, 32, sha256.New)
+		implementation.EncryptionKey = contactEncryptionKey
+
 
 		serverPort := frame.GetEnv(config.EnvServerPort, "7005")
 
