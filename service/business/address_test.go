@@ -10,11 +10,23 @@ import (
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
 	"golang.org/x/crypto/pbkdf2"
+	"net/http"
 	"reflect"
 	"testing"
 )
 
 const testDatastoreConnection = "postgres://profile:secret@localhost:5424/profiledatabase?sslmode=disable"
+
+type testDriver struct {
+}
+
+func (t *testDriver) ListenAndServe(addr string, h http.Handler) error {
+	return nil
+}
+
+func (t *testDriver) Shutdown(ctx context.Context) error {
+	return nil
+}
 
 func testService(ctx context.Context) *frame.Service {
 
@@ -24,12 +36,12 @@ func testService(ctx context.Context) *frame.Service {
 	verificationQueueURL := fmt.Sprintf("mem://%s", config.QueueVerificationName)
 	verificationQueuePublisher := frame.RegisterPublisher(config.QueueVerificationName, verificationQueueURL)
 
-	service := frame.NewService("profile tests", mainDb, verificationQueuePublisher)
-
+	service := frame.NewService("profile tests", mainDb, verificationQueuePublisher, frame.NoopHttpOptions())
+	_ = service.Run(ctx, "")
 	return service
 }
 
-func getEncryptionKey() []byte{
+func getEncryptionKey() []byte {
 	return pbkdf2.Key([]byte("ualgJEcb4GNXLn3jYV9TUGtgYrdTMg"), []byte("VufLmnycUCgz"), 4096, 32, sha256.New)
 }
 
@@ -49,11 +61,11 @@ func TestNewAddressBusiness(t *testing.T) {
 		{
 			name: "New Address Business test",
 			args: args{
-				ctx: ctx,
+				ctx:     ctx,
 				service: srv,
 			},
 			want: &addressBusiness{
-				service: srv,
+				service:     srv,
 				addressRepo: repository.NewAddressRepository(srv),
 			},
 		},
@@ -74,8 +86,8 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 	addRepo := repository.NewAddressRepository(srv)
 
 	adObj := &profileV1.AddressObject{
-		Name: "test address",
-		Area: "Town",
+		Name:    "test address",
+		Area:    "Town",
 		Country: "KEN",
 	}
 
@@ -95,13 +107,13 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "Create Address test",
-			fields:  fields{
-				service: srv,
+			name: "Create Address test",
+			fields: fields{
+				service:     srv,
 				addressRepo: addRepo,
 			},
-			args:    args{
-				ctx: ctx,
+			args: args{
+				ctx:     ctx,
 				request: adObj,
 			},
 			want:    nil,
@@ -119,7 +131,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 				t.Errorf("CreateAddress() error = %v, wantErr %+v", err, tt.wantErr)
 				return
 			}
-			if got == nil || got.ID == "" || got.Name != adObj.Name || got.Area != adObj.Area || got.Country != "Kenya"{
+			if got == nil || got.ID == "" || got.Name != adObj.Name || got.Area != adObj.Area || got.Country != "Kenya" {
 				t.Errorf("CreateAddress() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -137,18 +149,17 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 	prof := &profileV1.ProfileCreateRequest{
 		Contact: "testing@ant.com",
 	}
-	profile, err := profBuss.CreateProfile(ctx, encryptionKey , prof)
+	profile, err := profBuss.CreateProfile(ctx, encryptionKey, prof)
 	if err != nil {
 		t.Errorf(" CreateProfile failed with %+v", err)
 		return
 	}
 
-
 	addBuss := NewAddressBusiness(ctx, srv)
 
 	adObj := &profileV1.AddressObject{
-		Name: "Linked address",
-		Area: "Town",
+		Name:    "Linked address",
+		Area:    "Town",
 		Country: "KEN",
 	}
 
