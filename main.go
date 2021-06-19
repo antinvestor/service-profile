@@ -50,10 +50,15 @@ func main() {
 		log.Fatalf("main -- Could not setup notification service : %+v", err)
 	}
 
+	jwtAudience := frame.GetEnv(config.EnvOauth2JwtVerifyAudience, serviceName)
+	jwtIssuer := frame.GetEnv(config.EnvOauth2JwtVerifyIssuer, "")
+
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
 			grpcctxtags.UnaryServerInterceptor(),
 			grpcrecovery.UnaryServerInterceptor(),
+			frame.UnaryAuthInterceptor(jwtAudience, jwtIssuer),
+
 		)),
 	)
 
@@ -114,7 +119,6 @@ func main() {
 
 		contactEncryptionKey := pbkdf2.Key([]byte(encryptionKey), []byte(encryptionSalt), 4096, 32, sha256.New)
 		implementation.EncryptionKey = contactEncryptionKey
-
 
 		serverPort := frame.GetEnv(config.EnvServerPort, "7005")
 
