@@ -10,23 +10,11 @@ import (
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
 	"golang.org/x/crypto/pbkdf2"
-	"net/http"
 	"reflect"
 	"testing"
 )
 
 const testDatastoreConnection = "postgres://profile:secret@localhost:5424/profiledatabase?sslmode=disable"
-
-type testDriver struct {
-}
-
-func (t *testDriver) ListenAndServe(addr string, h http.Handler) error {
-	return nil
-}
-
-func (t *testDriver) Shutdown(ctx context.Context) error {
-	return nil
-}
 
 func testService(ctx context.Context) *frame.Service {
 
