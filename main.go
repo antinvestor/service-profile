@@ -60,6 +60,7 @@ func main() {
 			frame.UnaryAuthInterceptor(jwtAudience, jwtIssuer),
 
 		)),
+		grpc.StreamInterceptor(frame.StreamAuthInterceptor(jwtAudience, jwtIssuer)),
 	)
 
 	implementation := &handlers.ProfileServer{
