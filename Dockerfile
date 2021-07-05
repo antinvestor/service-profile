@@ -1,10 +1,10 @@
-FROM golang:1.15 as builder
+FROM golang:1.16 as builder
 
 WORKDIR /
 
 COPY go.mod .
 COPY go.sum .
-RUN go mod download
+RUN go env -w GOFLAGS=-mod=mod && go mod download
 
 # Copy the local package files to the container's workspace.
 COPY . .

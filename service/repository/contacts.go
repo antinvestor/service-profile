@@ -51,7 +51,7 @@ func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*m
 func (cr *contactRepository) Save(ctx context.Context, contact *models.Contact) (*models.Contact, error) {
 
 	if contact.ID == "" {
-		contact.GenID()
+		contact.GenID(ctx)
 		err := cr.service.DB(ctx, false).Model(contact).Create(map[string]interface{}{
 			"ID":                   contact.ID,
 			"ContactTypeID":        contact.ContactTypeID,

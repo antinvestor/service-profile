@@ -145,7 +145,7 @@ func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Co
 		ExpiresAt: &expiryTime,
 	}
 
-	verification.GenID()
+	verification.GenID(ctx)
 
 	return cb.service.Publish(ctx, config.QueueVerificationName, verification)
 
