@@ -18,7 +18,7 @@ const testDatastoreConnection = "postgres://profile:secret@localhost:5424/profil
 
 func testService(ctx context.Context) *frame.Service {
 
-	dbUrl := frame.GetEnv(fmt.Sprintf("%s_TEST", config.EnvDatabaseUrl), testDatastoreConnection)
+	dbUrl := frame.GetEnv(fmt.Sprintf("%s_TEST", config.EnvDatabaseURL), testDatastoreConnection)
 	mainDb := frame.Datastore(ctx, dbUrl, false)
 
 	verificationQueueURL := fmt.Sprintf("mem://%s", config.QueueVerificationName)

@@ -16,6 +16,7 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 	"google.golang.org/grpc"
 	"log"
+	"strings"
 
 	"os"
 	"strconv"
@@ -36,16 +37,30 @@ func main() {
 	var err error
 	var serviceOptions []frame.Option
 
-	datasource := frame.GetEnv(config.EnvDatabaseUrl, "postgres://ant:@nt@localhost/service_profile")
+	datasource := frame.GetEnv(config.EnvDatabaseURL, "postgres://ant:@nt@localhost/service_profile")
 	mainDb := frame.Datastore(ctx, datasource, false)
 	serviceOptions = append(serviceOptions, mainDb)
 
-	readOnlydatasource := frame.GetEnv(config.EnvReplicaDatabaseUrl, datasource)
+	readOnlydatasource := frame.GetEnv(config.EnvReplicaDatabaseURL, datasource)
 	readDb := frame.Datastore(ctx, readOnlydatasource, true)
 	serviceOptions = append(serviceOptions, readDb)
 
-	notificationServiceURL := frame.GetEnv(config.EnvNotificationServiceUri, "127.0.0.1:7020")
-	notificationCli, err := napi.NewNotificationClient(ctx, apis.WithEndpoint(notificationServiceURL))
+	oauth2ServiceHost := frame.GetEnv(config.EnvOauth2ServiceURI, "")
+	oauth2ServiceURL := fmt.Sprintf("%s/oauth2/token", oauth2ServiceHost)
+	oauth2ServiceSecret := frame.GetEnv(config.EnvOauth2ServiceClientSecret, "")
+
+	audienceList := make([]string, 0)
+	oauth2ServiceAudience := frame.GetEnv(config.EnvOauth2ServiceAudience, "")
+	if oauth2ServiceAudience != "" {
+		audienceList = strings.Split(oauth2ServiceAudience, "")
+	}
+	notificationServiceURL := frame.GetEnv(config.EnvNotificationServiceURI, "127.0.0.1:7020")
+	notificationCli, err := napi.NewNotificationClient(ctx,
+		apis.WithEndpoint(notificationServiceURL),
+		apis.WithTokenEndpoint(oauth2ServiceURL),
+		apis.WithTokenUsername(serviceName),
+		apis.WithTokenPassword(oauth2ServiceSecret),
+		apis.WithAudiences(audienceList...))
 	if err != nil {
 		log.Fatalf("main -- Could not setup notification service : %+v", err)
 	}
@@ -58,7 +73,6 @@ func main() {
 			grpcctxtags.UnaryServerInterceptor(),
 			grpcrecovery.UnaryServerInterceptor(),
 			frame.UnaryAuthInterceptor(jwtAudience, jwtIssuer),
-
 		)),
 		grpc.StreamInterceptor(frame.StreamAuthInterceptor(jwtAudience, jwtIssuer)),
 	)
