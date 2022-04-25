@@ -6,7 +6,7 @@ require (
 	github.com/antinvestor/apis v1.1.8
 	github.com/antinvestor/service-notification-api v1.1.13
 	github.com/antinvestor/service-profile-api v1.0.10
-	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/pitabwire/frame v1.7.12
 	github.com/stretchr/testify v1.7.1
 	github.com/ttacon/libphonenumber v1.2.1
