@@ -3,9 +3,9 @@ module github.com/antinvestor/service-profile
 go 1.17
 
 require (
-	github.com/antinvestor/apis v1.1.6
-	github.com/antinvestor/service-notification-api v1.1.10
-	github.com/antinvestor/service-profile-api v1.0.7
+	github.com/antinvestor/apis v1.1.7
+	github.com/antinvestor/service-notification-api v1.1.12
+	github.com/antinvestor/service-profile-api v1.0.9
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	github.com/pitabwire/frame v1.7.12
 	github.com/stretchr/testify v1.7.0
