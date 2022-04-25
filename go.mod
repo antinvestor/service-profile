@@ -8,7 +8,7 @@ require (
 	github.com/antinvestor/service-profile-api v1.0.10
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	github.com/pitabwire/frame v1.7.12
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.1
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
 	google.golang.org/grpc v1.46.0
