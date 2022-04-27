@@ -125,6 +125,8 @@ github.com/antinvestor/apis v1.1.13 h1:2kQbkiwk24fAMKNKL+1Ofh742K6V0Tx1rJNMSoh8f
 github.com/antinvestor/apis v1.1.13/go.mod h1:6btbPCLe2W68t8BfuAsKsOzLIdRD/FbRRBsb7GARHJo=
 github.com/antinvestor/service-notification-api v1.1.16 h1:0G83L2ELs8y/pKVKwMESIV05RJ9a0zDOD3Ic/RHwm9Q=
 github.com/antinvestor/service-notification-api v1.1.16/go.mod h1:fp6pu3QP84IsMfmr5Vnunddc1MaiNs+JpGdcq3Ul1EM=
+github.com/antinvestor/service-notification-api v1.1.17 h1:mh6bPrDgC+LKllX5hMLQ5uN1scwOK+HME2V3XCfi4iw=
+github.com/antinvestor/service-notification-api v1.1.17/go.mod h1:/ySsMakGxl43ZNt3h8lnM/4GR+LMgpqorh7UZ4xpNic=
 github.com/antinvestor/service-profile-api v1.0.13 h1:XsjMrfsT4E2UhOr9PYFzfd0o9jt4CUxVbHQ4O+wnBH8=
 github.com/antinvestor/service-profile-api v1.0.13/go.mod h1:nUgD8FFpC12FpK7pqBXBdnTCtzpvBd45kz1EPfbpk1g=
 github.com/antinvestor/service-profile-api v1.0.14 h1:tjHXhPnRuweNOJQs6BAsFtfQ3BTmeubnPHWTv/9tyUQ=
