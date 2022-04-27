@@ -11,8 +11,8 @@ type ProfileRepository interface {
 	Save(ctx context.Context, profile *models.Profile) error
 	Delete(ctx context.Context, id string) error
 
-	GetTypeByID(ctx context.Context, profileTypeId string ) (*models.ProfileType, error)
-	GetTypeByUID(ctx context.Context, profileType papi.ProfileType ) (*models.ProfileType, error)
+	GetTypeByID(ctx context.Context, profileTypeId string) (*models.ProfileType, error)
+	GetTypeByUID(ctx context.Context, profileType papi.ProfileType) (*models.ProfileType, error)
 }
 
 type ContactRepository interface {
@@ -29,8 +29,6 @@ type ContactRepository interface {
 
 	VerificationSave(ctx context.Context, verification *models.Verification) error
 	VerificationAttemptSave(ctx context.Context, attempt *models.VerificationAttempt) error
-
-
 }
 
 type AddressRepository interface {

@@ -7,7 +7,7 @@ import (
 )
 
 func (ps *ProfileServer) GetByContact(ctx context.Context,
-	request *papi.ProfileContactRequest, ) (*papi.ProfileObject, error) {
+	request *papi.ProfileContactRequest) (*papi.ProfileObject, error) {
 
 	err := request.Validate()
 	if err != nil {

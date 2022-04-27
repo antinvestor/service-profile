@@ -18,7 +18,7 @@ var ProfileTypeIDMap = map[papi.ProfileType]uint{
 	papi.ProfileType_BOT:         2,
 }
 
-func ProfileTypeIDToEnum( profileTypeID uint) papi.ProfileType {
+func ProfileTypeIDToEnum(profileTypeID uint) papi.ProfileType {
 	for key, val := range ProfileTypeIDMap {
 		if val == profileTypeID {
 			return key
@@ -26,6 +26,7 @@ func ProfileTypeIDToEnum( profileTypeID uint) papi.ProfileType {
 	}
 	return papi.ProfileType_PERSON
 }
+
 type ProfileType struct {
 	frame.BaseModel
 	UID         uint `sql:"unique"`
@@ -52,7 +53,7 @@ func (p *Profile) GetByID(db *gorm.DB) error {
 	return nil
 }
 
-func (p *Profile) Create(db *gorm.DB, profileType papi.ProfileType, properties map[string]interface{}, ) error {
+func (p *Profile) Create(db *gorm.DB, profileType papi.ProfileType, properties map[string]interface{}) error {
 
 	stringProperties, err := json.Marshal(properties)
 	if err != nil {

@@ -11,7 +11,7 @@ const EnvMigrationPath = "MIGRATION_PATH"
 const EnvNotificationServiceURI = "NOTIFICATION_SERVICE_URI"
 
 const EnvOauth2ServiceURI = "OAUTH2_SERVICE_URI"
-const EnvOauth2ServiceClientSecret = "OAUTH2_SERVICE_CLIENT_SECRET"
+const EnvOauth2ServiceClientSecret = "OAUTH2_SERVICE_CLIENT_SECRET" //nolint:gosec
 const EnvOauth2ServiceAudience = "OAUTH2_SERVICE_AUDIENCE"
 
 const EnvContactEncryptionKey = "CONTACT_ENCRYPTION_KEY"

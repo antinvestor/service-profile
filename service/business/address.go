@@ -2,7 +2,7 @@ package business
 
 import (
 	"context"
-	profileV1 "github.com/antinvestor/service-profile-api"
+	profilev1 "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
@@ -10,16 +10,16 @@ import (
 
 type AddressBusiness interface {
 	GetByProfile(ctx context.Context, profileID string) ([]*models.ProfileAddress, error)
-	CreateAddress(ctx context.Context, request *profileV1.AddressObject) (*profileV1.AddressObject, error)
-	LinkAddressToProfile(ctx context.Context, profile string, name string, address *profileV1.AddressObject)  error
+	CreateAddress(ctx context.Context, request *profilev1.AddressObject) (*profilev1.AddressObject, error)
+	LinkAddressToProfile(ctx context.Context, profile string, name string, address *profilev1.AddressObject) error
 
-	ToApi(address *models.Address) *profileV1.AddressObject
+	ToAPI(address *models.Address) *profilev1.AddressObject
 }
 
 func NewAddressBusiness(ctx context.Context, service *frame.Service) AddressBusiness {
 	addressRepo := repository.NewAddressRepository(service)
 	return &addressBusiness{
-		service:    service,
+		service:     service,
 		addressRepo: addressRepo,
 	}
 }
@@ -29,14 +29,18 @@ type addressBusiness struct {
 	addressRepo repository.AddressRepository
 }
 
-func (aB *addressBusiness) ToApi(address *models.Address) *profileV1.AddressObject {
+func (aB *addressBusiness) ToAPI(address *models.Address) *profilev1.AddressObject {
 
-	addressObj := &profileV1.AddressObject{
-		ID: address.GetID(),
-		Name: address.Name,
-		Area: address.AdminUnit,
-		Country: address.Country.Name,
+	countryName := ""
+	if address.Country != nil {
+		countryName = address.Country.Name
+	}
 
+	addressObj := &profilev1.AddressObject{
+		ID:      address.GetID(),
+		Name:    address.Name,
+		Area:    address.AdminUnit,
+		Country: countryName,
 	}
 
 	return addressObj
@@ -47,9 +51,7 @@ func (aB *addressBusiness) GetByProfile(ctx context.Context, profileID string) (
 	return aB.addressRepo.GetByProfileID(ctx, profileID)
 }
 
-
-func (aB *addressBusiness) CreateAddress(ctx context.Context, request *profileV1.AddressObject) (*profileV1.AddressObject, error){
-
+func (aB *addressBusiness) CreateAddress(ctx context.Context, request *profilev1.AddressObject) (*profilev1.AddressObject, error) {
 
 	country, err := aB.addressRepo.CountryGetByAny(ctx, request.GetCountry())
 	if err != nil {
@@ -64,10 +66,10 @@ func (aB *addressBusiness) CreateAddress(ctx context.Context, request *profileV1
 		}
 
 		a := models.Address{
-			Name: request.GetName(),
+			Name:      request.GetName(),
 			AdminUnit: request.GetArea(),
 			CountryID: country.ISO3,
-			Country: country,
+			Country:   country,
 		}
 
 		err := aB.addressRepo.Save(ctx, &a)
@@ -77,25 +79,24 @@ func (aB *addressBusiness) CreateAddress(ctx context.Context, request *profileV1
 		address = &a
 	}
 
-	return aB.ToApi(address), nil
+	return aB.ToAPI(address), nil
 
 }
-func (aB *addressBusiness) LinkAddressToProfile(ctx context.Context, profileID string, name string, address *profileV1.AddressObject)  error{
-
+func (aB *addressBusiness) LinkAddressToProfile(ctx context.Context, profileID string, name string, address *profilev1.AddressObject) error {
 
 	profileAddresses, err := aB.addressRepo.GetByProfileID(ctx, profileID)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
-	for _, pAddress := range  profileAddresses{
-		if  address.GetID() == pAddress.AddressID {
+	for _, pAddress := range profileAddresses {
+		if address.GetID() == pAddress.AddressID {
 			return nil
 		}
 	}
 
 	profileAddress := models.ProfileAddress{
-		Name: name,
+		Name:      name,
 		AddressID: address.GetID(),
 		ProfileID: profileID,
 	}

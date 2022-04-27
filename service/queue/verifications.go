@@ -11,9 +11,9 @@ import (
 )
 
 type VerificationsQueueHandler struct {
-	Service *frame.Service
-	ContactRepo repository.ContactRepository
-	NotificationCli       *napi.NotificationClient
+	Service         *frame.Service
+	ContactRepo     repository.ContactRepository
+	NotificationCli *napi.NotificationClient
 }
 
 func (vq *VerificationsQueueHandler) Handle(ctx context.Context, payload []byte) error {

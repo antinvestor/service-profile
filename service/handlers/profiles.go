@@ -20,7 +20,7 @@ type ProfileServer struct {
 }
 
 func (ps *ProfileServer) GetByID(ctx context.Context,
-	request *papi.ProfileIDRequest, ) (*papi.ProfileObject, error) {
+	request *papi.ProfileIDRequest) (*papi.ProfileObject, error) {
 
 	err := request.Validate()
 	if err != nil {
@@ -33,7 +33,7 @@ func (ps *ProfileServer) GetByID(ctx context.Context,
 	return profileBusiness.GetByID(ctx, ps.EncryptionKey, profileID)
 }
 
-func (ps *ProfileServer) Search(request *papi.ProfileSearchRequest, stream papi.ProfileService_SearchServer, ) error {
+func (ps *ProfileServer) Search(request *papi.ProfileSearchRequest, stream papi.ProfileService_SearchServer) error {
 
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer cancel()
@@ -43,7 +43,7 @@ func (ps *ProfileServer) Search(request *papi.ProfileSearchRequest, stream papi.
 
 }
 
-func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRequest, ) (
+func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRequest) (
 	*papi.ProfileObject, error) {
 
 	err := request.Validate()
@@ -56,7 +56,7 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRe
 
 }
 
-func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreateRequest, ) (
+func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreateRequest) (
 	*papi.ProfileObject, error) {
 
 	err := request.Validate()

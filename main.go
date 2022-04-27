@@ -45,6 +45,31 @@ func main() {
 	readDb := frame.Datastore(ctx, readOnlydatasource, true)
 	serviceOptions = append(serviceOptions, readDb)
 
+	isMigration, err := strconv.ParseBool(frame.GetEnv(config.EnvMigrate, "false"))
+	if err != nil {
+		isMigration = false
+	}
+
+	stdArgs := os.Args[1:]
+	if (len(stdArgs) > 0 && stdArgs[0] == "migrate") || isMigration {
+
+		service.Init(serviceOptions...)
+
+		migrationPath := frame.GetEnv(config.EnvMigrationPath, "./migrations/0001")
+		err := service.MigrateDatastore(ctx, migrationPath,
+			models.ProfileType{}, models.Profile{}, models.ContactType{},
+			models.CommunicationLevel{}, models.Contact{}, models.Country{},
+			&models.Address{}, models.ProfileAddress{}, models.Verification{},
+			models.VerificationAttempt{})
+
+		if err != nil {
+			log.Fatalf("main -- Could not migrate successfully because : %+v", err)
+		}
+
+		return
+
+	}
+
 	oauth2ServiceHost := frame.GetEnv(config.EnvOauth2ServiceURI, "")
 	oauth2ServiceURL := fmt.Sprintf("%s/oauth2/token", oauth2ServiceHost)
 	oauth2ServiceSecret := frame.GetEnv(config.EnvOauth2ServiceClientSecret, "")
@@ -99,50 +124,27 @@ func main() {
 
 	service.Init(serviceOptions...)
 
-	isMigration, err := strconv.ParseBool(frame.GetEnv(config.EnvMigrate, "false"))
-	if err != nil {
-		isMigration = false
+	encryptionKey := frame.GetEnv(config.EnvContactEncryptionKey, "")
+	if encryptionKey == "" {
+		err := errors.New("an encryption key has to be specified")
+		log.Fatalf("main -- Could not start service because : %+v", err)
 	}
 
-	stdArgs := os.Args[1:]
-	if (len(stdArgs) > 0 && stdArgs[0] == "migrate") || isMigration {
+	encryptionSalt := frame.GetEnv(config.EnvContactEncryptionSalt, "")
+	if encryptionSalt == "" {
+		err := errors.New("an encryption salt has to be specified")
+		log.Fatalf("main -- Could not start service because : %+v", err)
+	}
 
-		migrationPath := frame.GetEnv(config.EnvMigrationPath, "./migrations/0001")
-		err := implementation.Service.MigrateDatastore(ctx, migrationPath,
-			models.ProfileType{}, models.Profile{}, models.ContactType{},
-			models.CommunicationLevel{}, models.Contact{}, models.Country{},
-			&models.Address{}, models.ProfileAddress{}, models.Verification{},
-			models.VerificationAttempt{})
+	contactEncryptionKey := pbkdf2.Key([]byte(encryptionKey), []byte(encryptionSalt), 4096, 32, sha256.New)
+	implementation.EncryptionKey = contactEncryptionKey
 
-		if err != nil {
-			log.Fatalf("main -- Could not migrate successfully because : %+v", err)
-		}
+	serverPort := frame.GetEnv(config.EnvServerPort, "7005")
 
-	} else {
-
-		encryptionKey := frame.GetEnv(config.EnvContactEncryptionKey, "")
-		if encryptionKey == "" {
-			err := errors.New("an encryption key has to be specified")
-			log.Fatalf("main -- Could not start service because : %+v", err)
-		}
-
-		encryptionSalt := frame.GetEnv(config.EnvContactEncryptionSalt, "")
-		if encryptionSalt == "" {
-			err := errors.New("an encryption salt has to be specified")
-			log.Fatalf("main -- Could not start service because : %+v", err)
-		}
-
-		contactEncryptionKey := pbkdf2.Key([]byte(encryptionKey), []byte(encryptionSalt), 4096, 32, sha256.New)
-		implementation.EncryptionKey = contactEncryptionKey
-
-		serverPort := frame.GetEnv(config.EnvServerPort, "7005")
-
-		log.Printf(" main -- Initiating server operations on : %s", serverPort)
-		err := implementation.Service.Run(ctx, fmt.Sprintf(":%v", serverPort))
-		if err != nil {
-			log.Fatalf("main -- Could not run Server : %+v", err)
-		}
-
+	log.Printf(" main -- Initiating server operations on : %s", serverPort)
+	err = implementation.Service.Run(ctx, fmt.Sprintf(":%v", serverPort))
+	if err != nil {
+		log.Fatalf("main -- Could not run Server : %+v", err)
 	}
 
 }

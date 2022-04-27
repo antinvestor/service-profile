@@ -2,7 +2,7 @@ package business
 
 import (
 	"context"
-	profileV1 "github.com/antinvestor/service-profile-api"
+	profilev1 "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
@@ -25,7 +25,7 @@ type ContactBusiness interface {
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
 	CreateContact(ctx context.Context, key []byte, profileID string, detail string) error
 
-	ToApi(ctx context.Context, contact *models.Contact, key []byte) (*profileV1.ContactObject, error)
+	ToAPI(ctx context.Context, contact *models.Contact, key []byte) (*profilev1.ContactObject, error)
 }
 
 func NewContactBusiness(ctx context.Context, service *frame.Service) ContactBusiness {
@@ -41,7 +41,7 @@ type contactBusiness struct {
 	contactRep repository.ContactRepository
 }
 
-func (cb *contactBusiness) ToApi(ctx context.Context, contact *models.Contact, key []byte) (*profileV1.ContactObject, error) {
+func (cb *contactBusiness) ToAPI(ctx context.Context, contact *models.Contact, key []byte) (*profilev1.ContactObject, error) {
 
 	detail, err := utils.AesDecrypt(key, contact.Nonce, contact.Detail)
 	if err != nil {
@@ -58,7 +58,7 @@ func (cb *contactBusiness) ToApi(ctx context.Context, contact *models.Contact, k
 		return nil, err
 	}
 
-	contactObject := profileV1.ContactObject{
+	contactObject := profilev1.ContactObject{
 		ID:                 contact.ID,
 		Detail:             detail,
 		Type:               models.ContactTypeIDToEnum(contactType.UID),
@@ -72,7 +72,7 @@ func (cb *contactBusiness) ToApi(ctx context.Context, contact *models.Contact, k
 func (cb *contactBusiness) FromDetail(ctx context.Context, detail string) (*models.ContactType, error) {
 
 	if EmailPattern.MatchString(detail) {
-		ct, err := cb.contactRep.ContactType(ctx, profileV1.ContactType_EMAIL)
+		ct, err := cb.contactRep.ContactType(ctx, profilev1.ContactType_EMAIL)
 		return ct, err
 
 	} else {
@@ -80,7 +80,7 @@ func (cb *contactBusiness) FromDetail(ctx context.Context, detail string) (*mode
 		possibleNumber, err := libphonenumber.Parse(detail, "")
 
 		if err == nil && libphonenumber.IsValidNumber(possibleNumber) {
-			ct, err := cb.contactRep.ContactType(ctx, profileV1.ContactType_PHONE)
+			ct, err := cb.contactRep.ContactType(ctx, profilev1.ContactType_PHONE)
 			return ct, err
 
 		}
@@ -110,7 +110,7 @@ func (cb *contactBusiness) CreateContact(ctx context.Context, key []byte, profil
 	contact.ContactTypeID = ct.ID
 	contact.ContactType = ct
 
-	cl, err := cb.contactRep.CommunicationLevel(ctx, profileV1.CommunicationLevel_ALL)
+	cl, err := cb.contactRep.CommunicationLevel(ctx, profilev1.CommunicationLevel_ALL)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,6 @@ func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Co
 	return cb.service.Publish(ctx, config.QueueVerificationName, verification)
 
 }
-
 
 // GeneratePin returns securely generated random bytes.
 // It will return an error if the system's secure random

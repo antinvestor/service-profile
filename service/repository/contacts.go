@@ -86,7 +86,6 @@ func (cr *contactRepository) ContactType(ctx context.Context, contactType papi.C
 
 }
 
-
 func (cr *contactRepository) ContactTypeByID(ctx context.Context, contactTypeID string) (*models.ContactType, error) {
 
 	ct := &models.ContactType{}

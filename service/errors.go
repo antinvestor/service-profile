@@ -7,7 +7,7 @@ import (
 
 var (
 	ErrorUnspecifiedID          = status.Error(codes.InvalidArgument, "No id was supplied")
-	ErrorEmptyValueSupplied     = status.Error( codes.InvalidArgument, "Empty value supplied")
+	ErrorEmptyValueSupplied     = status.Error(codes.InvalidArgument, "Empty value supplied")
 	ErrorItemExist              = status.Error(codes.AlreadyExists, "Specified item already exists")
 	ErrorItemDoesNotExist       = status.Error(codes.NotFound, "Specified item does not exist")
 	ErrorContactDetailsNotValid = status.Error(codes.InvalidArgument, "Contact details are invalid ")
@@ -18,5 +18,4 @@ var (
 
 	ErrorAddressDoesNotExist = status.Error(codes.NotFound, "Specified address does not exist")
 	ErrorCountryDoesNotExist = status.Error(codes.NotFound, "Specified country does not exist")
-
 )

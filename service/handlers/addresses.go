@@ -18,5 +18,3 @@ func (ps *ProfileServer) AddAddress(ctx context.Context, request *papi.ProfileAd
 	return profileBusiness.AddAddress(ctx, ps.EncryptionKey, request)
 
 }
-
-

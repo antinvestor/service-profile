@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	profileV1 "github.com/antinvestor/service-profile-api"
+	profilev1 "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
@@ -73,7 +73,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 	srv := testService(ctx)
 	addRepo := repository.NewAddressRepository(srv)
 
-	adObj := &profileV1.AddressObject{
+	adObj := &profilev1.AddressObject{
 		Name:    "test address",
 		Area:    "Town",
 		Country: "KEN",
@@ -85,13 +85,13 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 	}
 	type args struct {
 		ctx     context.Context
-		request *profileV1.AddressObject
+		request *profilev1.AddressObject
 	}
 	tests := []struct {
 		name    string
 		fields  fields
 		args    args
-		want    *profileV1.AddressObject
+		want    *profilev1.AddressObject
 		wantErr bool
 	}{
 		{
@@ -134,7 +134,7 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 
 	profBuss := NewProfileBusiness(ctx, srv)
 
-	prof := &profileV1.ProfileCreateRequest{
+	prof := &profilev1.ProfileCreateRequest{
 		Contact: "testing@ant.com",
 	}
 	profile, err := profBuss.CreateProfile(ctx, encryptionKey, prof)
@@ -145,7 +145,7 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 
 	addBuss := NewAddressBusiness(ctx, srv)
 
-	adObj := &profileV1.AddressObject{
+	adObj := &profilev1.AddressObject{
 		Name:    "Linked address",
 		Area:    "Town",
 		Country: "KEN",
@@ -184,7 +184,7 @@ func Test_addressBusiness_LinkAddressToProfile(t *testing.T) {
 		ctx       context.Context
 		profileID string
 		name      string
-		address   *profileV1.AddressObject
+		address   *profilev1.AddressObject
 	}
 	tests := []struct {
 		name    string
@@ -207,7 +207,7 @@ func Test_addressBusiness_LinkAddressToProfile(t *testing.T) {
 	}
 }
 
-func Test_addressBusiness_ToApi(t *testing.T) {
+func Test_addressBusiness_ToAPI(t *testing.T) {
 	type fields struct {
 		service     *frame.Service
 		addressRepo repository.AddressRepository
@@ -219,7 +219,7 @@ func Test_addressBusiness_ToApi(t *testing.T) {
 		name   string
 		fields fields
 		args   args
-		want   *profileV1.AddressObject
+		want   *profilev1.AddressObject
 	}{
 		// TODO: Add test cases.
 	}
@@ -229,8 +229,8 @@ func Test_addressBusiness_ToApi(t *testing.T) {
 				service:     tt.fields.service,
 				addressRepo: tt.fields.addressRepo,
 			}
-			if got := aB.ToApi(tt.args.address); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("ToApi() = %v, want %v", got, tt.want)
+			if got := aB.ToAPI(tt.args.address); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ToAPI() = %v, want %v", got, tt.want)
 			}
 		})
 	}
