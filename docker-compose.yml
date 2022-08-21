@@ -5,9 +5,9 @@ services:
     image: postgres:14.5
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=profile
+      - POSTGRES_USER=ant
       - POSTGRES_PASSWORD=secret
-      - POSTGRES_DB=profiledatabase
+      - POSTGRES_DB=service_profile
     ports:
       - 5424:5432
 
@@ -19,7 +19,7 @@ services:
     environment:
       - LOG_LEVEL=debug
       - DO_MIGRATION=true
-      - DATABASE_URL=postgres://profile:secret@profile_db:5432/profiledatabase?sslmode=disable
+      - DATABASE_URL=postgres://ant:secret@profile_db:5432/service_profile?sslmode=disable
       - CONTACT_ENCRYPTION_KEY=ualgJEcb4GNXLn3jYV9TUGtgYrdTMg
       - CONTACT_ENCRYPTION_SALT=VufLmnycUCgz
     restart: on-failure

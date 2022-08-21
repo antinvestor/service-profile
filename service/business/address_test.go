@@ -14,17 +14,17 @@ import (
 	"testing"
 )
 
-const testDatastoreConnection = "postgres://profile:secret@localhost:5424/profiledatabase?sslmode=disable"
+const testDatastoreConnection = "postgres://ant:secret@localhost:5424/service_profile?sslmode=disable"
 
 func testService(ctx context.Context) *frame.Service {
 
-	dbUrl := frame.GetEnv(fmt.Sprintf("%s_TEST", config.EnvDatabaseURL), testDatastoreConnection)
-	mainDb := frame.Datastore(ctx, dbUrl, false)
+	dbURL := frame.GetEnv("TEST_DATABASE_URL", testDatastoreConnection)
+	mainDB := frame.Datastore(ctx, dbURL, false)
 
 	verificationQueueURL := fmt.Sprintf("mem://%s", config.QueueVerificationName)
 	verificationQueuePublisher := frame.RegisterPublisher(config.QueueVerificationName, verificationQueueURL)
 
-	service := frame.NewService("profile tests", mainDb, verificationQueuePublisher, frame.NoopHttpOptions())
+	service := frame.NewService("profile tests", mainDB, verificationQueuePublisher, frame.NoopHttpOptions())
 	_ = service.Run(ctx, "")
 	return service
 }
