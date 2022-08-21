@@ -22,10 +22,10 @@ jobs:
           go get -u golang.org/x/lint/golint
 
       - name: Build the docker-compose stack
-        run: docker-compose -f "tests_runner/docker-compose.yml" build
+        run: docker-compose -f "docker-compose.yml" build
 
       - name: Run the docker-compose stack
-        run: docker-compose -f "tests_runner/docker-compose.yml" up -d
+        run: docker-compose -f "docker-compose.yml" up -d
 
       - name: Wait for postgresql to come up
         run: count=0; while ! nc -z localhost 5424 && [[ count -lt 30 ]]; do (( count += 1 )); sleep 1; echo "waiting for postgresql $count"; done;
@@ -34,7 +34,7 @@ jobs:
         run: sleep 10s
 
       - name: Display the docker-compose stack logs
-        run: docker-compose -f "tests_runner/docker-compose.yml" logs
+        run: docker-compose -f "docker-compose.yml" logs
 
       - name: Workaround for go1.16 https://github.com/golang/go/issues/44129#issuecomment-854975677
         run: go env -w GOFLAGS=-mod=mod
@@ -48,4 +48,4 @@ jobs:
           golint -set_exit_status=1 .
 
       - name: Stop containers
-        run: docker-compose -f "tests_runner/docker-compose.yml" down
+        run: docker-compose -f "docker-compose.yml" down

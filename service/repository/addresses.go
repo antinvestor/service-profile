@@ -34,7 +34,7 @@ func (ar *addressRepository) GetByID(ctx context.Context, id string) (*models.Ad
 
 func (ar *addressRepository) GetByNameAdminUnitAndCountry(ctx context.Context, name string, adminUnit string, countryID string) (*models.Address, error) {
 	address := &models.Address{}
-	err := ar.service.DB(ctx, true).First(address, "name = ? AND admin_unit = ? AND country_id = ?", name, adminUnit, countryID).Error
+	err := ar.service.DB(ctx, true).First(address, "name ilike ? AND admin_unit ilike ? AND country_id ilike ?", name, adminUnit, countryID).Error
 	return address, err
 }
 
@@ -72,14 +72,13 @@ func (ar *addressRepository) CountryGetByAny(ctx context.Context, c string) (*mo
 	country := &models.Country{}
 	upperC := strings.ToUpper(c)
 
-	err := ar.service.DB(ctx, true).Where("ISO3 = ? OR ISO2 = ? OR Name = ?", upperC, upperC, upperC).First(country).Error
+	err := ar.service.DB(ctx, true).Where("ISO3 ilike ? OR ISO2 ilike ? OR Name ilike ?", upperC, upperC, upperC).First(country).Error
 	return country, err
 }
 
 func (ar *addressRepository) CountryGetByName(ctx context.Context, name string) (*models.Country, error) {
-
 	country := &models.Country{}
-	err := ar.service.DB(ctx, true).Where("name = ?", name).First(country).Error
+	err := ar.service.DB(ctx, true).Where("name = ilike", strings.ToUpper(name)).First(country).Error
 	return country, err
 }
 

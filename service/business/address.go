@@ -6,6 +6,7 @@ import (
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
+	"github.com/sirupsen/logrus"
 )
 
 type AddressBusiness interface {
@@ -53,13 +54,17 @@ func (aB *addressBusiness) GetByProfile(ctx context.Context, profileID string) (
 
 func (aB *addressBusiness) CreateAddress(ctx context.Context, request *profilev1.AddressObject) (*profilev1.AddressObject, error) {
 
+	logger := logrus.WithField("request", request)
+
 	country, err := aB.addressRepo.CountryGetByAny(ctx, request.GetCountry())
 	if err != nil {
+		logger.WithError(err).Warn("get country error")
 		return nil, err
 	}
 
 	address, err := aB.addressRepo.GetByNameAdminUnitAndCountry(ctx, request.GetName(), request.GetArea(), country.ISO3)
 	if err != nil {
+		logger.WithError(err).Warn("get address error")
 
 		if !frame.DBErrorIsRecordNotFound(err) {
 			return nil, err

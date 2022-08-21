@@ -189,7 +189,6 @@ type Address struct {
 	AdminUnit string
 
 	ParentID string `gorm:"type:varchar(50)"`
-	Parent   *Address
 
 	CountryID string `gorm:"type:varchar(50)"`
 	Country   *Country

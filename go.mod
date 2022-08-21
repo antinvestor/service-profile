@@ -8,6 +8,7 @@ require (
 	github.com/antinvestor/service-profile-api v1.0.14
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/pitabwire/frame v1.7.12
+	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.7.1
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
