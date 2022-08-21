@@ -39,7 +39,7 @@ func (vq *VerificationsQueueHandler) Handle(ctx context.Context, payload []byte)
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
 
-	_, err = vq.NotificationCli.Send(ctx, contact.Profile.ID, contact.ID, contact.Language, config.MessageTemplateContactVerification, variables)
+	_, err = vq.NotificationCli.Send(ctx, contact.Profile.ID, contact.ID, "", contact.Language, config.MessageTemplateContactVerification, variables)
 	return err
 
 }
