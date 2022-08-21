@@ -14,11 +14,9 @@ import (
 	"testing"
 )
 
-const testDatastoreConnection = "postgres://ant:secret@localhost:5424/service_profile?sslmode=disable"
-
 func testService(ctx context.Context) *frame.Service {
 
-	dbURL := frame.GetEnv("TEST_DATABASE_URL", testDatastoreConnection)
+	dbURL := frame.GetEnv("TEST_DATABASE_URL", "postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
 	mainDB := frame.Datastore(ctx, dbURL, false)
 
 	verificationQueueURL := fmt.Sprintf("mem://%s", config.QueueVerificationName)
@@ -169,9 +167,8 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 		return
 	}
 
-	if len(addresses) <= 0 {
+	if len(addresses) == 0 {
 		t.Errorf(" GetByProfile failed with %+v", err)
-
 	}
 }
 

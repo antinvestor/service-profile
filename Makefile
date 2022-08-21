@@ -2,8 +2,8 @@
 ENV_LOCAL_TEST=\
   TEST_DATABASE_URL=postgres://ant:secret@localhost:5434/service_profile?sslmode=disable \
   POSTGRES_PASSWORD=secret \
-  POSTGRES_DB=service_notification \
-  POSTGRES_HOST=notification_db \
+  POSTGRES_DB=service_profile \
+  POSTGRES_HOST=profile_db \
   POSTGRES_USER=ant \
   CONTACT_ENCRYPTION_KEY=ualgJEcb4GNXLn3jYV9TUGtgYrdTMg \
   CONTACT_ENCRYPTION_SALT=VufLmnycUCgz
@@ -40,6 +40,9 @@ doc:    ## generate godocs and start a local documentation webserver on port 808
 docker-setup: ## sets up docker container images
 	docker-compose up -d --remove-orphans
 
+pg_wait:
+	count=0; while ! nc -z localhost 5424 && [[ count -lt 30 ]]; do (( count += 1 )); sleep 1; echo "waiting for postgresql $count"; done;
+
 # shutting down docker components
 docker-stop: ## stops all docker containers
 	docker-compose down
@@ -52,5 +55,5 @@ tests: ## runs all system tests
   	go test ./... -v -run=$(INTEGRATION_TEST_SUITE_PATH)
 
 
-build: clean fmt vet docker-setup tests docker-stop ## run all preliminary steps and tests the setup
+build: clean fmt vet docker-setup pg_wait tests docker-stop ## run all preliminary steps and tests the setup
 
