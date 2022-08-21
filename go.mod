@@ -10,7 +10,7 @@ require (
 	github.com/pitabwire/frame v1.7.12
 	github.com/stretchr/testify v1.7.1
 	github.com/ttacon/libphonenumber v1.2.1
-	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4
+	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8
 	google.golang.org/grpc v1.46.0
 	gorm.io/datatypes v1.0.6
 	gorm.io/gorm v1.23.5
