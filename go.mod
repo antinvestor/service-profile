@@ -9,7 +9,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/pitabwire/frame v1.7.12
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.8.0
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8
 	google.golang.org/grpc v1.46.0
@@ -70,7 +70,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220401170504-314d38edb7de // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.3.2 // indirect
 	gorm.io/driver/postgres v1.3.4 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
