@@ -12,12 +12,12 @@ import (
 
 type VerificationsQueueHandler struct {
 	Service         *frame.Service
+	SystemAccessID  string
 	ContactRepo     repository.ContactRepository
 	NotificationCli *napi.NotificationClient
 }
 
 func (vq *VerificationsQueueHandler) Handle(ctx context.Context, payload []byte) error {
-
 	verification := &models.Verification{}
 	err := json.Unmarshal(payload, verification)
 	if err != nil {
@@ -38,8 +38,8 @@ func (vq *VerificationsQueueHandler) Handle(ctx context.Context, payload []byte)
 	variables["pin"] = verification.Pin
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
-
-	_, err = vq.NotificationCli.Send(ctx, contact.Profile.ID, contact.ID, "", contact.Language, config.MessageTemplateContactVerification, variables)
+	_, err = vq.NotificationCli.Send(ctx, vq.SystemAccessID,
+		contact.ID, "", contact.Language,
+		config.MessageTemplateContactVerification, variables)
 	return err
-
 }

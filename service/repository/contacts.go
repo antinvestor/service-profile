@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	papi "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
@@ -39,7 +40,7 @@ func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*m
 
 	detail = strings.ToLower(strings.TrimSpace(detail))
 	if err := cr.service.DB(ctx, true).First(contact, " tokens @@ to_tsquery(?)", detail).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, service.ErrorContactDoesNotExist
 		}
 		return nil, err
@@ -49,7 +50,6 @@ func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*m
 }
 
 func (cr *contactRepository) Save(ctx context.Context, contact *models.Contact) (*models.Contact, error) {
-
 	if contact.ID == "" {
 		contact.GenID(ctx)
 		err := cr.service.DB(ctx, false).Model(contact).Create(map[string]interface{}{

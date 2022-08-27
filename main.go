@@ -113,6 +113,7 @@ func main() {
 
 	verificationQueueHandler := queue.VerificationsQueueHandler{
 		Service:         service,
+		SystemAccessID:  frame.GetEnv(config.EnvSystemAccessID, "c8cf0ldstmdlinc3eva0"),
 		ContactRepo:     repository.NewContactRepository(service),
 		NotificationCli: notificationCli,
 	}
