@@ -20,9 +20,7 @@ func (ps *ProfileServer) GetByContact(ctx context.Context,
 
 func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAddContactRequest,
 ) (*papi.ProfileObject, error) {
-
-	err := request.Validate()
-	if err != nil {
+	if err := request.Validate(); err != nil {
 		return nil, err
 	}
 

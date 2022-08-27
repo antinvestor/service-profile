@@ -83,14 +83,12 @@ func (pb *profileBusiness) ProfileToAPI(ctx context.Context, p *models.Profile, 
 	profileObject.Addresses = addressObjects
 
 	return &profileObject, nil
-
 }
 
 func (pb *profileBusiness) GetByContact(
 	ctx context.Context,
 	encryptionKey []byte,
 	detail string) (*profilev1.ProfileObject, error) {
-
 	contact, err := pb.contactBusiness.GetByDetail(ctx, detail)
 	if err != nil {
 		return nil, err
@@ -103,7 +101,6 @@ func (pb *profileBusiness) GetByID(
 	ctx context.Context,
 	encryptionKey []byte,
 	profileID string) (*profilev1.ProfileObject, error) {
-
 	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
 		return nil, err
