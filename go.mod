@@ -11,7 +11,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.0
 	github.com/ttacon/libphonenumber v1.2.1
-	golang.org/x/crypto v0.0.0-20220826181053-bd7e27e6170d
+	golang.org/x/crypto v0.0.0-20220829220503-c86fa9a7ed90
 	google.golang.org/grpc v1.49.0
 	gorm.io/datatypes v1.0.7
 	gorm.io/gorm v1.23.8
