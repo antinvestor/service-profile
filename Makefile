@@ -41,10 +41,11 @@ docker-setup: ## sets up docker container images
 	docker-compose up -d --remove-orphans
 
 pg_wait:
-	sleep 10; @count=0; \
+	@count=0; \
 	until  nc -z localhost 5434; do \
 	  if [ $$count -gt 30 ]; then echo "can't wait forever for pg"; exit 1; fi; \
-	    sleep 1; echo "waiting for postgresql" $$count; count=$$(($$count+1)); done;
+	    sleep 1; echo "waiting for postgresql" $$count; count=$$(($$count+1)); done; \
+	    sleep 5;
 
 # shutting down docker components
 docker-stop: ## stops all docker containers
