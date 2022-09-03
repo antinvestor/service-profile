@@ -41,11 +41,10 @@ docker-setup: ## sets up docker container images
 	docker-compose up -d --remove-orphans
 
 pg_wait:
-	@count=0; \
+	sleep 10; @count=0; \
 	until  nc -z localhost 5434; do \
 	  if [ $$count -gt 30 ]; then echo "can't wait forever for pg"; exit 1; fi; \
-	    sleep 1; echo "waiting for postgresql" $$count; count=$$(($$count+1)); done; \
-	    sleep 10;
+	    sleep 1; echo "waiting for postgresql" $$count; count=$$(($$count+1)); done;
 
 # shutting down docker components
 docker-stop: ## stops all docker containers
@@ -59,6 +58,4 @@ tests: ## runs all system tests
 	go test ./... -v -run=$(INTEGRATION_TEST_SUITE_PATH); \
 	 if [ $$? -ne 0 ]; then echo "unit tests failed" && exit 1; fi
 
-
 build: clean fmt vet docker-setup pg_wait tests docker-stop ## run all preliminary steps and tests the setup
-

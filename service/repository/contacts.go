@@ -69,7 +69,6 @@ func (cr *contactRepository) Save(ctx context.Context, contact *models.Contact) 
 }
 
 func (cr *contactRepository) Delete(ctx context.Context, id string) error {
-
 	contact, err := cr.GetByID(ctx, id)
 	if err != nil {
 		return err
@@ -77,8 +76,8 @@ func (cr *contactRepository) Delete(ctx context.Context, id string) error {
 	return cr.service.DB(ctx, false).Delete(contact).Error
 }
 
-func (cr *contactRepository) ContactType(ctx context.Context, contactType papi.ContactType) (*models.ContactType, error) {
-
+func (cr *contactRepository) ContactType(ctx context.Context,
+	contactType papi.ContactType) (*models.ContactType, error) {
 	uid := models.ContactTypeUIDMap[contactType]
 	ct := &models.ContactType{}
 	err := cr.service.DB(ctx, true).First(ct, "uid = ?", uid).Error
@@ -87,14 +86,14 @@ func (cr *contactRepository) ContactType(ctx context.Context, contactType papi.C
 }
 
 func (cr *contactRepository) ContactTypeByID(ctx context.Context, contactTypeID string) (*models.ContactType, error) {
-
 	ct := &models.ContactType{}
 	err := cr.service.DB(ctx, true).First(ct, "id = ?", contactTypeID).Error
 	return ct, err
 
 }
 
-func (cr *contactRepository) CommunicationLevel(ctx context.Context, communicationLevel papi.CommunicationLevel) (*models.CommunicationLevel, error) {
+func (cr *contactRepository) CommunicationLevel(ctx context.Context,
+	communicationLevel papi.CommunicationLevel) (*models.CommunicationLevel, error) {
 
 	uid := models.CommunicationLevelUIDMap[communicationLevel]
 	cl := &models.CommunicationLevel{}
@@ -103,7 +102,8 @@ func (cr *contactRepository) CommunicationLevel(ctx context.Context, communicati
 
 }
 
-func (cr *contactRepository) CommunicationLevelByID(ctx context.Context, communicationLevelID string) (*models.CommunicationLevel, error) {
+func (cr *contactRepository) CommunicationLevelByID(ctx context.Context,
+	communicationLevelID string) (*models.CommunicationLevel, error) {
 
 	cl := &models.CommunicationLevel{}
 	err := cr.service.DB(ctx, true).First(cl, "id = ?", communicationLevelID).Error
