@@ -16,13 +16,23 @@ type ProfileBusiness interface {
 	GetByID(ctx context.Context, encryptionKey []byte, profileID string) (*profilev1.ProfileObject, error)
 	GetByContact(ctx context.Context, encryptionKey []byte, detail string) (*profilev1.ProfileObject, error)
 
-	SearchProfile(ctx context.Context, encryptionKey []byte, request *profilev1.ProfileSearchRequest, stream profilev1.ProfileService_SearchServer) error
-	CreateProfile(ctx context.Context, encryptionKey []byte, request *profilev1.ProfileCreateRequest) (*profilev1.ProfileObject, error)
-	UpdateProfile(ctx context.Context, encryptionKey []byte, request *profilev1.ProfileUpdateRequest) (*profilev1.ProfileObject, error)
-	MergeProfile(ctx context.Context, encryptionKey []byte, request *profilev1.ProfileMergeRequest) (*profilev1.ProfileObject, error)
+	SearchProfile(ctx context.Context, encryptionKey []byte,
+		request *profilev1.ProfileSearchRequest, stream profilev1.ProfileService_SearchServer) error
 
-	AddAddress(ctx context.Context, encryptionKey []byte, address *profilev1.ProfileAddAddressRequest) (*profilev1.ProfileObject, error)
-	AddContact(ctx context.Context, encryptionKey []byte, contact *profilev1.ProfileAddContactRequest) (*profilev1.ProfileObject, error)
+	CreateProfile(ctx context.Context, encryptionKey []byte,
+		request *profilev1.ProfileCreateRequest) (*profilev1.ProfileObject, error)
+
+	UpdateProfile(ctx context.Context, encryptionKey []byte,
+		request *profilev1.ProfileUpdateRequest) (*profilev1.ProfileObject, error)
+
+	MergeProfile(ctx context.Context, encryptionKey []byte,
+		request *profilev1.ProfileMergeRequest) (*profilev1.ProfileObject, error)
+
+	AddAddress(ctx context.Context, encryptionKey []byte,
+		address *profilev1.ProfileAddAddressRequest) (*profilev1.ProfileObject, error)
+
+	AddContact(ctx context.Context, encryptionKey []byte,
+		contact *profilev1.ProfileAddContactRequest) (*profilev1.ProfileObject, error)
 }
 
 func NewProfileBusiness(ctx context.Context, service *frame.Service) ProfileBusiness {
@@ -45,7 +55,8 @@ type profileBusiness struct {
 	profileRepo repository.ProfileRepository
 }
 
-func (pb *profileBusiness) ProfileToAPI(ctx context.Context, p *models.Profile, key []byte) (*profilev1.ProfileObject, error) {
+func (pb *profileBusiness) ProfileToAPI(ctx context.Context,
+	p *models.Profile, key []byte) (*profilev1.ProfileObject, error) {
 	profileObject := profilev1.ProfileObject{}
 	profileObject.ID = p.ID
 

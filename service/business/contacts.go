@@ -150,7 +150,6 @@ func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Co
 	verification.GenID(ctx)
 
 	return cb.service.Publish(ctx, profileConfig.QueueVerificationName, verification)
-
 }
 
 // GeneratePin returns securely generated random bytes.

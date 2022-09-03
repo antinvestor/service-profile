@@ -18,10 +18,12 @@ func testService(ctx context.Context) *frame.Service {
 	dbURL := frame.GetEnv("TEST_DATABASE_URL", "postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
 	mainDB := frame.DatastoreCon(ctx, dbURL, false)
 
-	configProfile := config.Profile{}
+	configProfile := config.Profile{
+		QueueVerification:     fmt.Sprintf("mem://%s", "QueueVerificationName"),
+		QueueVerificationName: "QueueVerificationName",
+	}
 
-	verificationQueueURL := fmt.Sprintf("mem://%s", "QueueVerificationName")
-	verificationQueuePublisher := frame.RegisterPublisher("QueueVerificationName", verificationQueueURL)
+	verificationQueuePublisher := frame.RegisterPublisher(configProfile.QueueVerificationName, configProfile.QueueVerification)
 
 	service := frame.NewService("profile tests", mainDB,
 		verificationQueuePublisher, frame.Config(&configProfile), frame.NoopDriver())
