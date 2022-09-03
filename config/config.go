@@ -1,31 +1,22 @@
 package config
 
-const EnvServerPort = "PORT"
+import "github.com/pitabwire/frame"
 
-const EnvDatabaseURL = "DATABASE_URL"
-const EnvReplicaDatabaseURL = "REPLICA_DATABASE_URL"
+type Profile struct {
+	frame.ConfigurationDefault
+	NotificationServiceURI string `default:"127.0.0.1:7020" envconfig:"NOTIFICATION_SERVICE_URI"`
+	PartitionServiceURI    string `default:"127.0.0.1:7003" envconfig:"PARTITION_SERVICE_URI"`
 
-const EnvMigrate = "DO_MIGRATION"
-const EnvMigrationPath = "MIGRATION_PATH"
+	ContactEncryptionKey  string `required:"true" envconfig:"CONTACT_ENCRYPTION_KEY"`
+	ContactEncryptionSalt string `required:"true" envconfig:"CONTACT_ENCRYPTION_SALT"`
 
-const EnvNotificationServiceURI = "NOTIFICATION_SERVICE_URI"
+	SystemAccessID        string `default:"c8cf0ldstmdlinc3eva0" envconfig:"STATIC_SYSTEM_ACCESS_ID"`
+	QueueVerification     string `default:"mem://contact_verification_queue" envconfig:"QUEUE_VERIFICATION"`
+	QueueVerificationName string `default:"contact_verification_queue" envconfig:"QUEUE_VERIFICATION_NAME"`
 
-const EnvOauth2ServiceURI = "OAUTH2_SERVICE_URI"
-const EnvOauth2ServiceClientSecret = "OAUTH2_SERVICE_CLIENT_SECRET" //nolint:gosec
-const EnvOauth2ServiceAudience = "OAUTH2_SERVICE_AUDIENCE"
+	LengthOfVerificationPin        int `default:"5" envconfig:"LENGTH_OF_VERIFICATION_PIN"`
+	LengthOfVerificationLinkHash   int `default:"70" envconfig:"LENGTH_OF_VERIFICATION_LINK_HASH"`
+	VerificationPinExpiryTimeInSec int `default:"86400" envconfig:"VERIFICATION_PIN_EXPIRY_TIME_IN_SEC"`
 
-const EnvContactEncryptionKey = "CONTACT_ENCRYPTION_KEY"
-const EnvContactEncryptionSalt = "CONTACT_ENCRYPTION_SALT"
-
-const EnvOauth2JwtVerifyAudience = "OAUTH2_JWT_VERIFY_AUDIENCE"
-const EnvOauth2JwtVerifyIssuer = "OAUTH2_JWT_VERIFY_ISSUER"
-
-const EnvSystemAccessID = "STATIC_SYSTEM_ACCESS_ID"
-const EnvQueueVerification = ""
-const QueueVerificationName = ""
-
-const LengthOfVerificationPin = 5
-const LengthOfVerificationLinkHash = 70
-const VerificationPinExpiryTimeInSec = 24 * 60 * 60
-
-const MessageTemplateContactVerification = "template.papi.contact.verification"
+	MessageTemplateContactVerification string `default:"template.papi.contact.verification" envconfig:"MESSAGE_TEMPLATE_CONTACT_VERIFICATION"`
+}

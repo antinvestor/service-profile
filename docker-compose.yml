@@ -3,7 +3,6 @@ version: '3'
 services:
   profile_db:
     image: postgres:14.5
-    restart: unless-stopped
     environment:
       - POSTGRES_USER=ant
       - POSTGRES_PASSWORD=secret

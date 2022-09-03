@@ -110,11 +110,8 @@ func (pb *profileBusiness) GetByID(
 
 }
 
-func (pb *profileBusiness) SearchProfile(
-	ctx context.Context,
-	encryptionKey []byte,
+func (pb *profileBusiness) SearchProfile(ctx context.Context, encryptionKey []byte,
 	request *profilev1.ProfileSearchRequest, stream profilev1.ProfileService_SearchServer) error {
-
 	var profileList []*models.Profile
 	//// creating WHERE clause to query by properties JSONB
 	scope := pb.service.DB(ctx, true)
@@ -142,11 +139,8 @@ func (pb *profileBusiness) SearchProfile(
 	return nil
 }
 
-func (pb *profileBusiness) MergeProfile(
-	ctx context.Context,
-	encryptionKey []byte,
+func (pb *profileBusiness) MergeProfile(ctx context.Context, encryptionKey []byte,
 	request *profilev1.ProfileMergeRequest) (*profilev1.ProfileObject, error) {
-
 	err := request.Validate()
 	if err != nil {
 		return nil, err
@@ -213,10 +207,8 @@ func (pb *profileBusiness) UpdateProfile(
 }
 
 func (pb *profileBusiness) CreateProfile(
-	ctx context.Context,
-	encryptionKey []byte,
+	ctx context.Context, encryptionKey []byte,
 	request *profilev1.ProfileCreateRequest) (*profilev1.ProfileObject, error) {
-
 	err := request.Validate()
 	if err != nil {
 		return nil, err

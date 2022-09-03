@@ -12,7 +12,6 @@ import (
 
 type VerificationsQueueHandler struct {
 	Service         *frame.Service
-	SystemAccessID  string
 	ContactRepo     repository.ContactRepository
 	NotificationCli *napi.NotificationClient
 }
@@ -34,12 +33,14 @@ func (vq *VerificationsQueueHandler) Handle(ctx context.Context, payload []byte)
 		return err
 	}
 
+	profileConfig := vq.Service.Config().(*config.Profile)
+
 	variables := make(map[string]string)
 	variables["pin"] = verification.Pin
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
-	_, err = vq.NotificationCli.Send(ctx, vq.SystemAccessID,
+	_, err = vq.NotificationCli.Send(ctx, profileConfig.SystemAccessID,
 		contact.ID, "", contact.Language,
-		config.MessageTemplateContactVerification, variables)
+		profileConfig.MessageTemplateContactVerification, variables)
 	return err
 }

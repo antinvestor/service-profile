@@ -15,14 +15,16 @@ import (
 )
 
 func testService(ctx context.Context) *frame.Service {
-
 	dbURL := frame.GetEnv("TEST_DATABASE_URL", "postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
-	mainDB := frame.Datastore(ctx, dbURL, false)
+	mainDB := frame.DatastoreCon(ctx, dbURL, false)
 
-	verificationQueueURL := fmt.Sprintf("mem://%s", config.QueueVerificationName)
-	verificationQueuePublisher := frame.RegisterPublisher(config.QueueVerificationName, verificationQueueURL)
+	configProfile := config.Profile{}
 
-	service := frame.NewService("profile tests", mainDB, verificationQueuePublisher, frame.NoopHttpOptions())
+	verificationQueueURL := fmt.Sprintf("mem://%s", "QueueVerificationName")
+	verificationQueuePublisher := frame.RegisterPublisher("QueueVerificationName", verificationQueueURL)
+
+	service := frame.NewService("profile tests", mainDB,
+		verificationQueuePublisher, frame.Config(&configProfile), frame.NoopDriver())
 	_ = service.Run(ctx, "")
 	return service
 }
@@ -66,7 +68,6 @@ func TestNewAddressBusiness(t *testing.T) {
 }
 
 func Test_addressBusiness_CreateAddress(t *testing.T) {
-
 	ctx := context.Background()
 	srv := testService(ctx)
 	addRepo := repository.NewAddressRepository(srv)

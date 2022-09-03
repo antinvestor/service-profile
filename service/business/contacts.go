@@ -137,18 +137,19 @@ func (cb *contactBusiness) CreateContact(ctx context.Context, key []byte, profil
 
 func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Contact) error {
 
-	expiryTime := time.Now().Add(time.Duration(config.VerificationPinExpiryTimeInSec))
+	profileConfig := cb.service.Config().(*config.Profile)
+	expiryTime := time.Now().Add(time.Duration(profileConfig.VerificationPinExpiryTimeInSec))
 
 	verification := &models.Verification{
 		ContactID: contact.ID,
-		Pin:       GeneratePin(config.LengthOfVerificationPin),
-		LinkHash:  GeneratePin(config.LengthOfVerificationLinkHash),
+		Pin:       GeneratePin(profileConfig.LengthOfVerificationPin),
+		LinkHash:  GeneratePin(profileConfig.LengthOfVerificationLinkHash),
 		ExpiresAt: &expiryTime,
 	}
 
 	verification.GenID(ctx)
 
-	return cb.service.Publish(ctx, config.QueueVerificationName, verification)
+	return cb.service.Publish(ctx, profileConfig.QueueVerificationName, verification)
 
 }
 
