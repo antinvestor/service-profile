@@ -14,7 +14,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220919173607-35f4265a4bc0
 	google.golang.org/grpc v1.49.0
 	gorm.io/datatypes v1.0.7
-	gorm.io/gorm v1.23.9
+	gorm.io/gorm v1.23.10
 )
 
 require (
