@@ -12,7 +12,7 @@ require (
 	github.com/stretchr/testify v1.8.0
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a
-	google.golang.org/grpc v1.50.0
+	google.golang.org/grpc v1.50.1
 	gorm.io/datatypes v1.0.7
 	gorm.io/gorm v1.24.0
 )
