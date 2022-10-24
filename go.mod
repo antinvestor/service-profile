@@ -9,7 +9,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/pitabwire/frame v1.8.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.1.0
 	google.golang.org/grpc v1.50.1
