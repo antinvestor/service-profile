@@ -13,7 +13,7 @@ require (
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.7.0
 	google.golang.org/grpc v1.53.0
-	gorm.io/datatypes v1.1.0
+	gorm.io/datatypes v1.1.1
 	gorm.io/gorm v1.24.6
 )
 
@@ -71,7 +71,7 @@ require (
 	google.golang.org/genproto v0.0.0-20230110181048-76db0878b65f // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gorm.io/driver/mysql v1.4.5 // indirect
+	gorm.io/driver/mysql v1.4.7 // indirect
 	gorm.io/driver/postgres v1.4.6 // indirect
 	gorm.io/plugin/opentelemetry v0.1.0 // indirect
 	nhooyr.io/websocket v1.8.7 // indirect
