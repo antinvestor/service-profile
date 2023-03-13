@@ -215,6 +215,8 @@ github.com/antinvestor/service-notification-api v1.1.20 h1:Qzl0APrYXeIpB5s3/jtGX
 github.com/antinvestor/service-notification-api v1.1.20/go.mod h1:/ySsMakGxl43ZNt3h8lnM/4GR+LMgpqorh7UZ4xpNic=
 github.com/antinvestor/service-notification-api v1.1.21 h1:7KAMz4BgAMzE5NCLN+1XSn3PAjbfac8Rj3lAJKH5t5o=
 github.com/antinvestor/service-notification-api v1.1.21/go.mod h1:/ySsMakGxl43ZNt3h8lnM/4GR+LMgpqorh7UZ4xpNic=
+github.com/antinvestor/service-notification-api v1.1.22 h1:84/47jxEFJvFAG8vObNhd3ypRFttpem5QdABhqhq8WA=
+github.com/antinvestor/service-notification-api v1.1.22/go.mod h1:II88YkJ7wMMk3Gh9E0uSgxD9URS2Ev9BHmgsPII1rps=
 github.com/antinvestor/service-profile-api v1.0.14 h1:tjHXhPnRuweNOJQs6BAsFtfQ3BTmeubnPHWTv/9tyUQ=
 github.com/antinvestor/service-profile-api v1.0.14/go.mod h1:38hYLTJrDPX8rgFHVTBJpjz3XRDqiMAt8dWZqEflbNQ=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
