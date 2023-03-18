@@ -7,7 +7,6 @@ repos:
     - id: golangci-lint
     - id: go-build-mod
     - id: go-mod-tidy
-
 - repo: local
   hooks:
     - id: local-build
