@@ -63,7 +63,7 @@ func main() {
 	oauth2ServiceURL := fmt.Sprintf("%s/oauth2/token", oauth2ServiceHost)
 
 	audienceList := make([]string, 0)
-	oauth2ServiceAudience := frame.GetEnv(profileConfig.Oauth2ServiceAudience, "")
+	oauth2ServiceAudience := profileConfig.Oauth2ServiceAudience
 	if oauth2ServiceAudience != "" {
 		audienceList = strings.Split(oauth2ServiceAudience, ",")
 	}

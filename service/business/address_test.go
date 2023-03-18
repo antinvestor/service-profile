@@ -1,4 +1,4 @@
-package business
+package business_test
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"fmt"
 	profilev1 "github.com/antinvestor/service-profile-api"
 	"github.com/antinvestor/service-profile/config"
+	"github.com/antinvestor/service-profile/service/business"
 	"github.com/antinvestor/service-profile/service/models"
-	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
 	"golang.org/x/crypto/pbkdf2"
 	"reflect"
@@ -15,7 +15,8 @@ import (
 )
 
 func testService(ctx context.Context) *frame.Service {
-	dbURL := frame.GetEnv("TEST_DATABASE_URL", "postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
+	dbURL := frame.GetEnv("TEST_DATABASE_URL",
+		"postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
 	mainDB := frame.DatastoreCon(ctx, dbURL, false)
 
 	configProfile := config.Profile{
@@ -23,7 +24,8 @@ func testService(ctx context.Context) *frame.Service {
 		QueueVerificationName: "QueueVerificationName",
 	}
 
-	verificationQueuePublisher := frame.RegisterPublisher(configProfile.QueueVerificationName, configProfile.QueueVerification)
+	verificationQueuePublisher := frame.RegisterPublisher(
+		configProfile.QueueVerificationName, configProfile.QueueVerification)
 
 	service := frame.NewService("profile tests", mainDB,
 		verificationQueuePublisher, frame.Config(&configProfile), frame.NoopDriver())
@@ -46,7 +48,7 @@ func TestNewAddressBusiness(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want AddressBusiness
+		want business.AddressBusiness
 	}{
 		{
 			name: "New Address Business test",
@@ -54,16 +56,12 @@ func TestNewAddressBusiness(t *testing.T) {
 				ctx:     ctx,
 				service: srv,
 			},
-			want: &addressBusiness{
-				service:     srv,
-				addressRepo: repository.NewAddressRepository(srv),
-			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewAddressBusiness(tt.args.ctx, tt.args.service); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewAddressBusiness() = %v, want %v", got, tt.want)
+			if got := business.NewAddressBusiness(tt.args.ctx, tt.args.service); got == nil {
+				t.Errorf("NewAddressBusiness() = %v, want non nil address business", got)
 			}
 		})
 	}
@@ -72,7 +70,6 @@ func TestNewAddressBusiness(t *testing.T) {
 func Test_addressBusiness_CreateAddress(t *testing.T) {
 	ctx := context.Background()
 	srv := testService(ctx)
-	addRepo := repository.NewAddressRepository(srv)
 
 	adObj := &profilev1.AddressObject{
 		Name:    "test address",
@@ -81,8 +78,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 	}
 
 	type fields struct {
-		service     *frame.Service
-		addressRepo repository.AddressRepository
+		service *frame.Service
 	}
 	type args struct {
 		ctx     context.Context
@@ -98,8 +94,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 		{
 			name: "Create Address test",
 			fields: fields{
-				service:     srv,
-				addressRepo: addRepo,
+				service: srv,
 			},
 			args: args{
 				ctx:     ctx,
@@ -111,10 +106,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			aB := &addressBusiness{
-				service:     tt.fields.service,
-				addressRepo: tt.fields.addressRepo,
-			}
+			aB := business.NewAddressBusiness(ctx, tt.fields.service)
 			got, err := aB.CreateAddress(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateAddress() error = %v, wantErr %+v", err, tt.wantErr)
@@ -133,7 +125,7 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 	srv := testService(ctx)
 	encryptionKey := getEncryptionKey()
 
-	profBuss := NewProfileBusiness(ctx, srv)
+	profBuss := business.NewProfileBusiness(ctx, srv)
 
 	prof := &profilev1.ProfileCreateRequest{
 		Contact: "testing@ant.com",
@@ -144,7 +136,7 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 		return
 	}
 
-	addBuss := NewAddressBusiness(ctx, srv)
+	addBuss := business.NewAddressBusiness(ctx, srv)
 
 	adObj := &profilev1.AddressObject{
 		Name:    "Linked address",
@@ -176,9 +168,10 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 }
 
 func Test_addressBusiness_LinkAddressToProfile(t *testing.T) {
+	ctx := context.Background()
+
 	type fields struct {
-		service     *frame.Service
-		addressRepo repository.AddressRepository
+		service *frame.Service
 	}
 	type args struct {
 		ctx       context.Context
@@ -196,10 +189,7 @@ func Test_addressBusiness_LinkAddressToProfile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			aB := &addressBusiness{
-				service:     tt.fields.service,
-				addressRepo: tt.fields.addressRepo,
-			}
+			aB := business.NewAddressBusiness(ctx, tt.fields.service)
 			if err := aB.LinkAddressToProfile(tt.args.ctx, tt.args.profileID, tt.args.name, tt.args.address); (err != nil) != tt.wantErr {
 				t.Errorf("LinkAddressToProfile() error = %v, wantErr %+v", err, tt.wantErr)
 			}
@@ -208,9 +198,9 @@ func Test_addressBusiness_LinkAddressToProfile(t *testing.T) {
 }
 
 func Test_addressBusiness_ToAPI(t *testing.T) {
+	ctx := context.Background()
 	type fields struct {
-		service     *frame.Service
-		addressRepo repository.AddressRepository
+		service *frame.Service
 	}
 	type args struct {
 		address *models.Address
@@ -225,10 +215,7 @@ func Test_addressBusiness_ToAPI(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			aB := &addressBusiness{
-				service:     tt.fields.service,
-				addressRepo: tt.fields.addressRepo,
-			}
+			aB := business.NewAddressBusiness(ctx, tt.fields.service)
 			if got := aB.ToAPI(tt.args.address); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ToAPI() = %v, want %v", got, tt.want)
 			}

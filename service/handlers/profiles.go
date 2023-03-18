@@ -76,3 +76,35 @@ func (ps *ProfileServer) Update(ctx context.Context, request *papi.ProfileUpdate
 	return profileBusiness.UpdateProfile(ctx, ps.EncryptionKey, request)
 
 }
+
+// AddAddress Adds a new address based on the request.
+func (ps *ProfileServer) AddAddress(ctx context.Context,
+	request *papi.ProfileAddAddressRequest) (*papi.ProfileObject, error) {
+	if err := request.Validate(); err != nil {
+		return nil, err
+	}
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	return profileBusiness.AddAddress(ctx, ps.EncryptionKey, request)
+}
+
+func (ps *ProfileServer) GetByContact(ctx context.Context,
+	request *papi.ProfileContactRequest) (*papi.ProfileObject, error) {
+
+	err := request.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	return profileBusiness.GetByContact(ctx, ps.EncryptionKey, request.GetContact())
+}
+
+func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAddContactRequest,
+) (*papi.ProfileObject, error) {
+	if err := request.Validate(); err != nil {
+		return nil, err
+	}
+
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	return profileBusiness.AddContact(ctx, ps.EncryptionKey, request)
+}
