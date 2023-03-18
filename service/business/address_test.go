@@ -19,7 +19,7 @@ func testService(ctx context.Context) *frame.Service {
 		"postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
 	mainDB := frame.DatastoreCon(ctx, dbURL, false)
 
-	configProfile := config.Profile{
+	configProfile := config.ProfileConfig{
 		QueueVerification:     fmt.Sprintf("mem://%s", "QueueVerificationName"),
 		QueueVerificationName: "QueueVerificationName",
 	}

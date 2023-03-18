@@ -137,7 +137,7 @@ func (cb *contactBusiness) CreateContact(ctx context.Context, key []byte, profil
 
 func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Contact) error {
 
-	profileConfig := cb.service.Config().(*config.Profile)
+	profileConfig := cb.service.Config().(*config.ProfileConfig)
 	expiryTime := time.Now().Add(time.Duration(profileConfig.VerificationPinExpiryTimeInSec))
 
 	verification := &models.Verification{

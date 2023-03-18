@@ -33,7 +33,7 @@ func (vq *VerificationsQueueHandler) Handle(ctx context.Context, payload []byte)
 		return err
 	}
 
-	profileConfig := vq.Service.Config().(*config.Profile)
+	profileConfig := vq.Service.Config().(*config.ProfileConfig)
 
 	variables := make(map[string]string)
 	variables["pin"] = verification.Pin
