@@ -3,7 +3,7 @@ module github.com/antinvestor/service-profile
 go 1.19
 
 require (
-	github.com/antinvestor/apis v1.1.14
+	github.com/antinvestor/apis v1.1.16
 	github.com/antinvestor/service-notification-api v1.1.22
 	github.com/antinvestor/service-profile-api v1.0.15
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -60,7 +60,7 @@ require (
 	google.golang.org/api v0.110.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230209215440-0dfe4f8abfcc // indirect
-	google.golang.org/protobuf v1.29.1 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.4.7 // indirect
 	gorm.io/driver/postgres v1.5.0 // indirect
