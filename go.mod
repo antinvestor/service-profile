@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/antinvestor/apis v1.1.16
-	github.com/antinvestor/service-notification-api v1.1.23
+	github.com/antinvestor/service-notification-api v1.1.25
 	github.com/antinvestor/service-profile-api v1.0.15
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/pitabwire/frame v1.8.13
