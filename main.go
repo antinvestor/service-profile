@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/sha256"
 	"fmt"
 	"github.com/antinvestor/apis"
@@ -27,7 +26,6 @@ import (
 func main() {
 
 	serviceName := "service_profile"
-	ctx := context.Background()
 
 	var profileConfig config.ProfileConfig
 	err := frame.ConfigProcess("", &profileConfig)
@@ -36,10 +34,11 @@ func main() {
 		return
 	}
 
-	service := frame.NewService(serviceName, frame.Config(&profileConfig), frame.Datastore(ctx))
+	ctx, service := frame.NewService(serviceName, frame.Config(&profileConfig))
+	defer service.Stop(ctx)
 	log := service.L()
 
-	var serviceOptions []frame.Option
+	serviceOptions := []frame.Option{frame.Datastore(ctx)}
 
 	if profileConfig.DoDatabaseMigrate() {
 
@@ -56,7 +55,6 @@ func main() {
 		}
 
 		return
-
 	}
 
 	oauth2ServiceHost := profileConfig.GetOauth2ServiceURI()

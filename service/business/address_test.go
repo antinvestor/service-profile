@@ -14,10 +14,10 @@ import (
 	"testing"
 )
 
-func testService(ctx context.Context) *frame.Service {
+func testService() (context.Context, *frame.Service) {
 	dbURL := frame.GetEnv("TEST_DATABASE_URL",
 		"postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
-	mainDB := frame.DatastoreCon(ctx, dbURL, false)
+	mainDB := frame.DatastoreCon(dbURL, false)
 
 	configProfile := config.ProfileConfig{
 		QueueVerification:     fmt.Sprintf("mem://%s", "QueueVerificationName"),
@@ -27,10 +27,10 @@ func testService(ctx context.Context) *frame.Service {
 	verificationQueuePublisher := frame.RegisterPublisher(
 		configProfile.QueueVerificationName, configProfile.QueueVerification)
 
-	service := frame.NewService("profile tests", mainDB,
+	ctx, service := frame.NewService("profile tests", mainDB,
 		verificationQueuePublisher, frame.Config(&configProfile), frame.NoopDriver())
 	_ = service.Run(ctx, "")
-	return service
+	return ctx, service
 }
 
 func getEncryptionKey() []byte {
@@ -38,8 +38,7 @@ func getEncryptionKey() []byte {
 }
 
 func TestNewAddressBusiness(t *testing.T) {
-	ctx := context.Background()
-	srv := testService(ctx)
+	ctx, srv := testService()
 	type args struct {
 		ctx     context.Context
 		service *frame.Service
@@ -68,8 +67,7 @@ func TestNewAddressBusiness(t *testing.T) {
 }
 
 func Test_addressBusiness_CreateAddress(t *testing.T) {
-	ctx := context.Background()
-	srv := testService(ctx)
+	ctx, srv := testService()
 
 	adObj := &profilev1.AddressObject{
 		Name:    "test address",
@@ -121,8 +119,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 
 func Test_addressBusiness_GetByProfile(t *testing.T) {
 
-	ctx := context.Background()
-	srv := testService(ctx)
+	ctx, srv := testService()
 	encryptionKey := getEncryptionKey()
 
 	profBuss := business.NewProfileBusiness(ctx, srv)
