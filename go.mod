@@ -7,14 +7,14 @@ require (
 	github.com/antinvestor/service-notification-api v1.1.25
 	github.com/antinvestor/service-profile-api v1.0.15
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
-	github.com/pitabwire/frame v1.13.6
+	github.com/pitabwire/frame v1.14.2
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.10.0
 	google.golang.org/grpc v1.56.1
 	gorm.io/datatypes v1.2.0
-	gorm.io/gorm v1.25.1
+	gorm.io/gorm v1.25.2
 )
 
 require (
