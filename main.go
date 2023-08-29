@@ -116,13 +116,10 @@ func main() {
 		[]byte(profileConfig.ContactEncryptionSalt), 4096, 32, sha256.New)
 	implementation.EncryptionKey = contactEncryptionKey
 
-	serverPort := profileConfig.ServerPort
-	if serverPort == "" {
-		serverPort = "7005"
-	}
-
-	log.WithField("port", serverPort).Info(" initiating server operations")
-	err = implementation.Service.Run(ctx, fmt.Sprintf(":%v", serverPort))
+	log.WithField("server http port", profileConfig.HttpServerPort).
+		WithField("server grpc port", profileConfig.GrpcServerPort).
+		Info(" Initiating server operations")
+	err = implementation.Service.Run(ctx, "")
 	if err != nil {
 		log.WithError(err).Fatal("could not run Server ")
 	}
