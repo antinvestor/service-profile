@@ -6,7 +6,7 @@ require (
 	github.com/antinvestor/apis v1.1.18
 	github.com/antinvestor/service-notification-api v1.1.26
 	github.com/antinvestor/service-profile-api v1.0.17
-	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.0
 	github.com/pitabwire/frame v1.15.7
 	github.com/sirupsen/logrus v1.9.3
