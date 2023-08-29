@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/antinvestor/apis v1.1.16
-	github.com/antinvestor/service-notification-api v1.1.25
+	github.com/antinvestor/service-notification-api v1.1.26
 	github.com/antinvestor/service-profile-api v1.0.15
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/pitabwire/frame v1.15.7
@@ -23,7 +23,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
-	github.com/envoyproxy/protoc-gen-validate v1.0.0 // indirect
+	github.com/envoyproxy/protoc-gen-validate v1.0.2 // indirect
 	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
