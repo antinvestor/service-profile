@@ -764,6 +764,8 @@ github.com/andybalholm/brotli v1.0.4/go.mod h1:fO7iG3H7G2nSZ7m0zPUDn85XEX2GTukHG
 github.com/antihax/optional v1.0.0/go.mod h1:uupD/76wgC+ih3iEmQUL+0Ugr19nfwCT1kdvxnR2qWY=
 github.com/antinvestor/apis v1.1.16 h1:BD5cxlwqY7ohRqIkU84rhwGjHtKYbVAA9wALlOVr+S0=
 github.com/antinvestor/apis v1.1.16/go.mod h1:47UeRdm/DNnxuKmsWZJLud/ek9slREuFcTw43u/89No=
+github.com/antinvestor/apis v1.1.18 h1:JXnMxu2qLoKRUDMkqjiHuj+X3EjZ3CT/q+3WkCVR5AU=
+github.com/antinvestor/apis v1.1.18/go.mod h1:h8wL9/XITja/NOMFdu9xAAFMq4LFaTAWrtWJnukx5nw=
 github.com/antinvestor/service-notification-api v1.1.25 h1:z/eBFUj/jYWS/h2SdksjZbWq0zTQBAEDEi/EJJP9U0Y=
 github.com/antinvestor/service-notification-api v1.1.25/go.mod h1:lIsNR0ntZhVqg2keMyi3ywzuWpC4XzHgrFDmZzPoKsQ=
 github.com/antinvestor/service-notification-api v1.1.26 h1:+eJabnOVgCMmhuoYNibAWGr1PPhe+y8NotTkrPFqw+g=
@@ -2718,6 +2720,8 @@ golang.org/x/oauth2 v0.9.0 h1:BPpt2kU7oMRq3kCHAA1tbSEshXRw1LpG2ztgDwrzuAs=
 golang.org/x/oauth2 v0.9.0/go.mod h1:qYgFZaFiu6Wg24azG8bdV52QJXJGbZzIIsRCdVKzbLw=
 golang.org/x/oauth2 v0.10.0 h1:zHCpF2Khkwy4mMB4bv0U37YtJdTGW8jI0glAApi0Kh8=
 golang.org/x/oauth2 v0.10.0/go.mod h1:kTpgurOux7LqtuxjuyZa4Gj2gdezIt/jQtGnNFfypQI=
+golang.org/x/oauth2 v0.11.0 h1:vPL4xzxBM4niKCW6g9whtaWVXTJf1U5e4aZxxFx/gbU=
+golang.org/x/oauth2 v0.11.0/go.mod h1:LdF7O/8bLR/qWK9DrpXmbHLTouvRHK0SgJl0GmDBchk=
 golang.org/x/sync v0.0.0-20180314180146-1d60e4601c6f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181108010431-42b317875d0f/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20181221193216-37e7f081c4d4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
