@@ -57,6 +57,11 @@ func main() {
 		return
 	}
 
+	err = service.RegisterForJwt(ctx)
+	if err != nil {
+		log.WithError(err).Fatal("main -- could not register fo jwt")
+	}
+
 	oauth2ServiceHost := profileConfig.GetOauth2ServiceURI()
 	oauth2ServiceURL := fmt.Sprintf("%s/oauth2/token", oauth2ServiceHost)
 
@@ -69,7 +74,7 @@ func main() {
 	notificationCli, err := napi.NewNotificationClient(ctx,
 		apis.WithEndpoint(profileConfig.NotificationServiceURI),
 		apis.WithTokenEndpoint(oauth2ServiceURL),
-		apis.WithTokenUsername(serviceName),
+		apis.WithTokenUsername(service.JwtClientID()),
 		apis.WithTokenPassword(profileConfig.Oauth2ServiceClientSecret),
 		apis.WithAudiences(audienceList...))
 	if err != nil {
