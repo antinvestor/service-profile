@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"context"
-	napi "github.com/antinvestor/service-notification-api"
-	papi "github.com/antinvestor/service-profile-api"
+	napi "github.com/antinvestor/apis/notification"
+	papi "github.com/antinvestor/apis/profile"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
 

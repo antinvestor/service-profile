@@ -2,7 +2,7 @@ package business
 
 import (
 	"context"
-	profilev1 "github.com/antinvestor/service-profile-api"
+	profilev1 "github.com/antinvestor/apis/profile"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"

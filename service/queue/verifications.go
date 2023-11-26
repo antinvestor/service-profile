@@ -3,7 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
-	napi "github.com/antinvestor/service-notification-api"
+	napi "github.com/antinvestor/apis/notification"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"

@@ -9,15 +9,14 @@ import (
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/queue"
 	"github.com/antinvestor/service-profile/service/repository"
-	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
-	grpcctxtags "github.com/grpc-ecosystem/go-grpc-middleware/tags"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
 	"google.golang.org/grpc"
 	"strings"
 
-	napi "github.com/antinvestor/service-notification-api"
-	papi "github.com/antinvestor/service-profile-api"
+	napi "github.com/antinvestor/apis/notification"
+	papi "github.com/antinvestor/apis/profile"
 	"github.com/pitabwire/frame"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware"
@@ -88,8 +87,7 @@ func main() {
 
 	grpcServer := grpc.NewServer(
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			grpcctxtags.UnaryServerInterceptor(),
-			grpcrecovery.UnaryServerInterceptor(),
+			recovery.UnaryServerInterceptor(),
 			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
 		)),
 		grpc.StreamInterceptor(service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)),

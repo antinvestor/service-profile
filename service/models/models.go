@@ -2,7 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	papi "github.com/antinvestor/service-profile-api"
+	papi "github.com/antinvestor/apis/profile"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/pitabwire/frame"
 	"gorm.io/datatypes"

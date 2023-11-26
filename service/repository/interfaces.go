@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	papi "github.com/antinvestor/service-profile-api"
+	papi "github.com/antinvestor/apis/profile"
 	"github.com/antinvestor/service-profile/service/models"
 )
 

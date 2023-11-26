@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
-	papi "github.com/antinvestor/service-profile-api"
+	papi "github.com/antinvestor/apis/profile"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
