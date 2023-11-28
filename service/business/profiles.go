@@ -48,9 +48,10 @@ func NewProfileBusiness(ctx context.Context, service *frame.Service) ProfileBusi
 }
 
 type profileBusiness struct {
-	service         *frame.Service
-	contactBusiness ContactBusiness
-	addressBusiness AddressBusiness
+	service              *frame.Service
+	contactBusiness      ContactBusiness
+	addressBusiness      AddressBusiness
+	relationshipBusiness RelationshipBusiness
 
 	profileRepo repository.ProfileRepository
 }

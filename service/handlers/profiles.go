@@ -108,3 +108,53 @@ func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAd
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
 	return profileBusiness.AddContact(ctx, ps.EncryptionKey, request)
 }
+
+func (ps *ProfileServer) AddRelationship(ctx context.Context, request *papi.ProfileAddRelationshipRequest) (*papi.RelationshipObject, error) {
+	if err := request.Validate(); err != nil {
+		return nil, err
+	}
+
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
+	return relationshipBusiness.CreateRelationship(ctx, request)
+}
+
+func (ps *ProfileServer) DeleteRelationship(ctx context.Context, request *papi.ProfileDeleteRelationshipRequest) (*papi.RelationshipObject, error) {
+
+	if err := request.Validate(); err != nil {
+		return nil, err
+	}
+
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
+	return relationshipBusiness.DeleteRelationship(ctx, request)
+}
+
+func (ps *ProfileServer) ListRelationships(request *papi.ProfileListRelationshipRequest, server papi.ProfileService_ListRelationshipsServer) error {
+
+	if err := request.Validate(); err != nil {
+		return err
+	}
+
+	ctx := server.Context()
+
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
+	relationships, err := relationshipBusiness.ListRelationships(ctx, request)
+	if err != nil {
+		return err
+	}
+
+	for _, relationship := range relationships {
+
+		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, request.GetParent(), request.GetParentID(), relationship)
+		if err1 != nil {
+			return err
+		}
+
+		err = server.Send(relationshipObject)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+
+}

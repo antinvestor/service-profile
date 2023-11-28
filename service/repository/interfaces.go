@@ -45,3 +45,13 @@ type AddressRepository interface {
 	CountryGetByAny(ctx context.Context, c string) (*models.Country, error)
 	CountryGetByName(ctx context.Context, name string) (*models.Country, error)
 }
+
+type RelationshipRepository interface {
+	GetByID(ctx context.Context, id string) (*models.Relationship, error)
+	Save(ctx context.Context, relationship *models.Relationship) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, parent string, parentId string, relatedChildrenIds []string, lastRelationshipId string, count int) ([]*models.Relationship, error)
+
+	RelationshipType(ctx context.Context, relationshipType papi.RelationshipType) (*models.RelationshipType, error)
+	RelationshipTypeByID(ctx context.Context, relationshipTypeID string) (*models.RelationshipType, error)
+}

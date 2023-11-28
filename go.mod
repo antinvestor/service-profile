@@ -3,16 +3,16 @@ module github.com/antinvestor/service-profile
 go 1.21
 
 require (
-	github.com/antinvestor/apis v1.3.0
-	github.com/antinvestor/apis/notification v0.0.0-20231126191954-b26022c7c474
-	github.com/antinvestor/apis/profile v0.0.0-20231126191954-b26022c7c474
+	github.com/antinvestor/apis v1.3.1
+	github.com/antinvestor/apis/notification v0.0.0-20231127231828-f23483b11cda
+	github.com/antinvestor/apis/profile v0.0.0-20231128161701-d63f30108cf1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/pitabwire/frame v1.15.10
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/ttacon/libphonenumber v1.2.1
-	golang.org/x/crypto v0.15.0
+	golang.org/x/crypto v0.16.0
 	google.golang.org/grpc v1.59.0
 	gorm.io/datatypes v1.2.0
 	gorm.io/gorm v1.25.5
@@ -55,10 +55,10 @@ require (
 	go.opentelemetry.io/otel/sdk v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
 	gocloud.dev v0.34.0 // indirect
-	golang.org/x/net v0.18.0 // indirect
-	golang.org/x/oauth2 v0.14.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
+	golang.org/x/oauth2 v0.15.0 // indirect
 	golang.org/x/sync v0.3.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/api v0.134.0 // indirect

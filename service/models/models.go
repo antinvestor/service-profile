@@ -18,6 +18,12 @@ var ProfileTypeIDMap = map[papi.ProfileType]uint{
 	papi.ProfileType_BOT:         2,
 }
 
+var RelationshipTypeIDMap = map[papi.RelationshipType]uint{
+	papi.RelationshipType_MEMBER:       0,
+	papi.RelationshipType_AFFILIATED:   1,
+	papi.RelationshipType_BLACK_LISTED: 1,
+}
+
 func ProfileTypeIDToEnum(profileTypeID uint) papi.ProfileType {
 	for key, val := range ProfileTypeIDMap {
 		if val == profileTypeID {
@@ -205,4 +211,35 @@ type ProfileAddress struct {
 
 	ProfileID string `gorm:"type:varchar(50)"`
 	Profile   *Profile
+}
+
+type RelationshipType struct {
+	frame.BaseModel
+	UID         uint `sql:"unique"`
+	Name        string
+	Description string
+}
+
+func RelationshipTypeIDToEnum(relationshipTypeID uint) papi.RelationshipType {
+	for key, val := range RelationshipTypeIDMap {
+		if val == relationshipTypeID {
+			return key
+		}
+	}
+	return papi.RelationshipType_MEMBER
+}
+
+type Relationship struct {
+	frame.BaseModel
+
+	ParentObject   string `gorm:"type:varchar(50)"`
+	ParentObjectID string `gorm:"type:varchar(50)"`
+
+	ChildObject   string `gorm:"type:varchar(50)"`
+	ChildObjectID string `gorm:"type:varchar(50)"`
+
+	RelationshipTypeID string `gorm:"type:varchar(50)"`
+	RelationshipType   *RelationshipType
+
+	Properties datatypes.JSONMap
 }
