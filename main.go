@@ -9,7 +9,7 @@ import (
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/queue"
 	"github.com/antinvestor/service-profile/service/repository"
-	gorillaHandlers "github.com/gorilla/handlers"
+	gorilla_handlers "github.com/gorilla/handlers"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
@@ -19,8 +19,6 @@ import (
 	napi "github.com/antinvestor/apis/notification"
 	papi "github.com/antinvestor/apis/profile"
 	"github.com/pitabwire/frame"
-
-	"github.com/grpc-ecosystem/go-grpc-middleware"
 )
 
 func main() {
@@ -87,11 +85,12 @@ func main() {
 	}
 
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			recovery.UnaryServerInterceptor(),
+		grpc.ChainUnaryInterceptor(
 			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
-		)),
-		grpc.StreamInterceptor(service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)),
+			recovery.UnaryServerInterceptor(),
+		),
+		grpc.ChainStreamInterceptor(
+			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)),
 	)
 
 	implementation := &handlers.ProfileServer{
@@ -103,8 +102,8 @@ func main() {
 	grpcServerOpt := frame.GrpcServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
-	profileServiceRestHandlers := gorillaHandlers.RecoveryHandler(
-		gorillaHandlers.PrintRecoveryStack(true))(
+	profileServiceRestHandlers := gorilla_handlers.RecoveryHandler(
+		gorilla_handlers.PrintRecoveryStack(true))(
 		implementation.NewRouterV1())
 
 	profileRestServer := frame.HttpHandler(profileServiceRestHandlers)
