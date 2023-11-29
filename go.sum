@@ -31,6 +31,8 @@ github.com/antinvestor/apis v1.3.1 h1:M61h+oHHzDHnHYETi1wOPeBPlNCNINEbniywlhPaJe
 github.com/antinvestor/apis v1.3.1/go.mod h1:KNul+h0/ICeKP3mWZOHWtE2/a2s563CBr/ZDaZQCG88=
 github.com/antinvestor/apis/notification v0.0.0-20231127231828-f23483b11cda h1:abMLIfJbgvdDIb5Q9SWTF6RSKXkjuzFhd+oULEq6L3o=
 github.com/antinvestor/apis/notification v0.0.0-20231127231828-f23483b11cda/go.mod h1:OjPa6wz8OCQhMFk2yG/yYIrdIp/902jiYwKVb4cBYmA=
+github.com/antinvestor/apis/notification v0.0.0-20231129044208-35f3f79bdae3 h1:kW8YcVnyH1nnuQtQ+6YxhF1f8lPJ499eafaNrY72nA0=
+github.com/antinvestor/apis/notification v0.0.0-20231129044208-35f3f79bdae3/go.mod h1:ey0g9sBmF4Vxts5991ft1co0aI2H6f+3v5V+ElJcyw4=
 github.com/antinvestor/apis/profile v0.0.0-20231128161701-d63f30108cf1 h1:sQs5+Y4xrbxZX39/GzX1/AozBMUwHEloKpjhIvio1fs=
 github.com/antinvestor/apis/profile v0.0.0-20231128161701-d63f30108cf1/go.mod h1:DGUajUUcjDgUmPv/1UU2uciJ5vSTxZKt723cv471EuA=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
@@ -187,6 +189,8 @@ github.com/gorilla/handlers v1.5.2/go.mod h1:dX+xVpaxdSw+q0Qek8SSsl3dfMk3jNddUkM
 github.com/gorilla/mux v1.6.2/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
 github.com/gorilla/mux v1.7.3 h1:gnP5JzjVOuiZD07fKKToCAOjS0yOpj/qPETTXCCS6hw=
 github.com/gorilla/mux v1.7.3/go.mod h1:1lud6UwP+6orDFRuTfBEV8e9/aOM/c4fVVCaMa2zaAs=
+github.com/gorilla/mux v1.8.1 h1:TuBL49tXwgrFYWhqrNgrUNEY92u81SPhu7sTdzQEiWY=
+github.com/gorilla/mux v1.8.1/go.mod h1:AKf9I4AEqPTmMytcMc0KkNouC66V3BtZ4qD5fmWSiMQ=
 github.com/gorilla/websocket v0.0.0-20170926233335-4201258b820c/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=
 github.com/gorilla/websocket v1.4.1 h1:q7AeDBpnBk8AogcD4DSag/Ukw/KV+YhzLj2bP5HvKCM=
 github.com/gorilla/websocket v1.4.1/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
