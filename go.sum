@@ -35,6 +35,8 @@ github.com/antinvestor/apis/notification v0.0.0-20231129044208-35f3f79bdae3 h1:k
 github.com/antinvestor/apis/notification v0.0.0-20231129044208-35f3f79bdae3/go.mod h1:ey0g9sBmF4Vxts5991ft1co0aI2H6f+3v5V+ElJcyw4=
 github.com/antinvestor/apis/profile v0.0.0-20231128161701-d63f30108cf1 h1:sQs5+Y4xrbxZX39/GzX1/AozBMUwHEloKpjhIvio1fs=
 github.com/antinvestor/apis/profile v0.0.0-20231128161701-d63f30108cf1/go.mod h1:DGUajUUcjDgUmPv/1UU2uciJ5vSTxZKt723cv471EuA=
+github.com/antinvestor/apis/profile v0.0.0-20231129044208-35f3f79bdae3 h1:2NkbuXJq8Fm6GGtxwLW4e+3U4mVHQsjy3XqJp5wRGh4=
+github.com/antinvestor/apis/profile v0.0.0-20231129044208-35f3f79bdae3/go.mod h1:2LAstUIhMCWALnQZ3Tp02SbMe8lLPIq9QZnm6mcgzvc=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/apache/thrift v0.13.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
 github.com/armon/circbuf v0.0.0-20150827004946-bbbad097214e/go.mod h1:3U/XgcO3hCbHZ8TKRvWD2dDTCfh9M9ya+I9JpbB7O8o=
