@@ -8,7 +8,7 @@ require (
 	github.com/antinvestor/apis/profile v0.0.0-20231128161701-d63f30108cf1
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
-	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/pitabwire/frame v1.15.10
 	github.com/sirupsen/logrus v1.9.3
