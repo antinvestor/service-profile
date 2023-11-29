@@ -9,6 +9,7 @@ import (
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/queue"
 	"github.com/antinvestor/service-profile/service/repository"
+	gorillaHandlers "github.com/gorilla/handlers"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
@@ -101,6 +102,13 @@ func main() {
 
 	grpcServerOpt := frame.GrpcServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
+
+	profileServiceRestHandlers := gorillaHandlers.RecoveryHandler(
+		gorillaHandlers.PrintRecoveryStack(true))(
+		implementation.NewRouterV1())
+
+	profileRestServer := frame.HttpHandler(profileServiceRestHandlers)
+	serviceOptions = append(serviceOptions, profileRestServer)
 
 	verificationQueueHandler := queue.VerificationsQueueHandler{
 		Service:         service,

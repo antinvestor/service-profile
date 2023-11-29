@@ -6,6 +6,8 @@ require (
 	github.com/antinvestor/apis v1.3.1
 	github.com/antinvestor/apis/notification v0.0.0-20231127231828-f23483b11cda
 	github.com/antinvestor/apis/profile v0.0.0-20231128161701-d63f30108cf1
+	github.com/gorilla/handlers v1.5.2
+	github.com/gorilla/mux v1.7.3
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/pitabwire/frame v1.15.10
@@ -25,6 +27,7 @@ require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.0.2 // indirect
+	github.com/felixge/httpsnoop v1.0.3 // indirect
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-sql-driver/mysql v1.7.1 // indirect
