@@ -3,6 +3,7 @@ package business
 import (
 	"context"
 	profilev1 "github.com/antinvestor/apis/profile"
+	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
@@ -37,6 +38,10 @@ type relationshipBusiness struct {
 
 func (aB *relationshipBusiness) ToAPI(ctx context.Context, sourceParent, sourceParentID string, relationship *models.Relationship) (*profilev1.RelationshipObject, error) {
 
+	if relationship == nil {
+		return nil, nil
+	}
+
 	parentId := relationship.ParentObjectID
 	if sourceParent != relationship.ParentObject && sourceParentID != relationship.ParentObjectID {
 
@@ -55,7 +60,7 @@ func (aB *relationshipBusiness) ToAPI(ctx context.Context, sourceParent, sourceP
 		Properties: frame.DBPropertiesToMap(relationship.Properties),
 	}
 
-	if relationship.ChildObject != "Profile" {
+	if relationship.ChildObject == "Profile" {
 		profileObj, err := aB.profileBusiness.GetByID(ctx, aB.profileEncryptionKey, parentId)
 		if err != nil {
 			return nil, err
@@ -69,11 +74,24 @@ func (aB *relationshipBusiness) ToAPI(ctx context.Context, sourceParent, sourceP
 }
 
 func (aB *relationshipBusiness) ListRelationships(ctx context.Context, request *profilev1.ProfileListRelationshipRequest) ([]*models.Relationship, error) {
+
+	if request.GetParent() == "Profile" {
+		profileObj, err := aB.profileBusiness.GetByID(ctx, aB.profileEncryptionKey, request.GetParentID())
+		if err != nil {
+			return nil, err
+		}
+
+		if profileObj == nil {
+			return nil, service.ErrorProfileDoesNotExist
+		}
+	}
+
 	return aB.relationshipRepo.List(ctx, request.GetParent(), request.GetParentID(), request.GetRelatedChildrenID(), request.GetLastRelationshipID(), int(request.GetCount()))
 }
 
 func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request *profilev1.ProfileAddRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
+	var profileObj *profilev1.ProfileObject
 	logger := aB.service.L().WithField("request", request)
 
 	relationships, err := aB.relationshipRepo.List(ctx, request.GetParent(), request.GetParentID(), []string{request.GetChildID()}, "", 2)
@@ -88,6 +106,28 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 	if len(relationships) > 0 {
 
 		return aB.ToAPI(ctx, request.GetParent(), request.GetParentID(), relationships[0])
+	}
+
+	if request.GetParent() == "Profile" {
+		profileObj, err = aB.profileBusiness.GetByID(ctx, aB.profileEncryptionKey, request.GetParentID())
+		if err != nil {
+			return nil, err
+		}
+
+		if profileObj == nil {
+			return nil, service.ErrorProfileDoesNotExist
+		}
+	}
+
+	if request.GetChild() == "Profile" {
+		profileObj, err = aB.profileBusiness.GetByID(ctx, aB.profileEncryptionKey, request.GetChildID())
+		if err != nil {
+			return nil, err
+		}
+
+		if profileObj == nil {
+			return nil, service.ErrorProfileDoesNotExist
+		}
 	}
 
 	relationshipType, err := aB.relationshipRepo.RelationshipType(ctx, request.GetType())
@@ -119,11 +159,11 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 func (aB *relationshipBusiness) DeleteRelationship(ctx context.Context, request *profilev1.ProfileDeleteRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
 	relationship, err := aB.relationshipRepo.GetByID(ctx, request.GetID())
-	if err != nil {
+	if err != nil || relationship == nil {
 		return nil, err
 	}
 
-	if request.GetParentID() == relationship.ParentObjectID || request.GetParentID() == "" {
+	if request.GetParentID() == "" || request.GetParentID() == relationship.ParentObjectID {
 
 		err = aB.relationshipRepo.Delete(ctx, request.GetID())
 		if err != nil {

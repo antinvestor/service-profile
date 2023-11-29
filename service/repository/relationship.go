@@ -14,7 +14,7 @@ type relationshipRepository struct {
 
 func (ar *relationshipRepository) GetByID(ctx context.Context, id string) (*models.Relationship, error) {
 	relationship := &models.Relationship{}
-	err := ar.service.DB(ctx, true).First(relationship, "id = ?", id).Error
+	err := ar.service.DB(ctx, true).Preload(clause.Associations).First(relationship, "id = ?", id).Error
 	return relationship, err
 }
 
@@ -27,7 +27,7 @@ func (ar *relationshipRepository) List(ctx context.Context, parent, parentId str
 
 	database := ar.service.DB(ctx, true).Preload(clause.Associations).
 		Limit(count).Where(
-		"(( parent_object = ? AND parent_object_id ) OR ( child_object = ? AND child_object_id = ?)) ",
+		"(( parent_object = ? AND parent_object_id = ? ) OR ( child_object = ? AND child_object_id = ?)) ",
 		parent, parentId, parent, parentId)
 
 	if lastRelationshipId != "" {

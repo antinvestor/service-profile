@@ -122,16 +122,13 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 	ctx, srv := testService()
 	encryptionKey := getEncryptionKey()
 
-	profBuss := business.NewProfileBusiness(ctx, srv)
-
-	prof := &profilev1.ProfileCreateRequest{
-		Contact: "testing@ant.com",
-	}
-	profile, err := profBuss.CreateProfile(ctx, encryptionKey, prof)
+	testProfiles, err := createTestProfiles(ctx, srv, encryptionKey, []string{"testing@ant.com"})
 	if err != nil {
 		t.Errorf(" CreateProfile failed with %+v", err)
 		return
 	}
+
+	profile := testProfiles[0]
 
 	addBuss := business.NewAddressBusiness(ctx, srv)
 

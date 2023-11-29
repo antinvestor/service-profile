@@ -47,7 +47,7 @@ func main() {
 			models.ProfileType{}, models.Profile{}, models.ContactType{},
 			models.CommunicationLevel{}, models.Contact{}, models.Country{},
 			&models.Address{}, models.ProfileAddress{}, models.Verification{},
-			models.VerificationAttempt{})
+			models.VerificationAttempt{}, models.RelationshipType{}, models.Relationship{})
 
 		if err != nil {
 			log.Fatalf("main -- Could not migrate successfully because : %+v", err)
