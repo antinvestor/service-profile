@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/antinvestor/apis v1.3.1
-	github.com/antinvestor/apis/notification v0.0.0-20231127231828-f23483b11cda
+	github.com/antinvestor/apis/notification v0.0.0-20231129044208-35f3f79bdae3
 	github.com/antinvestor/apis/profile v0.0.0-20231128161701-d63f30108cf1
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
