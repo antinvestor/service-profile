@@ -2,7 +2,7 @@ package business
 
 import (
 	"context"
-	profilev1 "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
@@ -60,7 +60,7 @@ func (cb *contactBusiness) ToAPI(ctx context.Context, contact *models.Contact, k
 	}
 
 	contactObject := profilev1.ContactObject{
-		ID:                 contact.ID,
+		Id:                 contact.ID,
 		Detail:             detail,
 		Type:               models.ContactTypeIDToEnum(contactType.UID),
 		CommunicationLevel: models.CommunicationLevelIDToEnum(communicationLevel.UID),

@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
-	papi "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
@@ -77,7 +77,7 @@ func (cr *contactRepository) Delete(ctx context.Context, id string) error {
 }
 
 func (cr *contactRepository) ContactType(ctx context.Context,
-	contactType papi.ContactType) (*models.ContactType, error) {
+	contactType profilev1.ContactType) (*models.ContactType, error) {
 	uid := models.ContactTypeUIDMap[contactType]
 	ct := &models.ContactType{}
 	err := cr.service.DB(ctx, true).First(ct, "uid = ?", uid).Error
@@ -93,7 +93,7 @@ func (cr *contactRepository) ContactTypeByID(ctx context.Context, contactTypeID 
 }
 
 func (cr *contactRepository) CommunicationLevel(ctx context.Context,
-	communicationLevel papi.CommunicationLevel) (*models.CommunicationLevel, error) {
+	communicationLevel profilev1.CommunicationLevel) (*models.CommunicationLevel, error) {
 
 	uid := models.CommunicationLevelUIDMap[communicationLevel]
 	cl := &models.CommunicationLevel{}

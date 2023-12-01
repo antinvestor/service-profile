@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	profilev1 "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/antinvestor/service-profile/service/models"
@@ -110,7 +110,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 				t.Errorf("CreateAddress() error = %v, wantErr %+v", err, tt.wantErr)
 				return
 			}
-			if got == nil || got.ID == "" || got.Name != adObj.Name || got.Area != adObj.Area || got.Country != "Kenya" {
+			if got == nil || got.GetId() == "" || got.Name != adObj.Name || got.Area != adObj.Area || got.Country != "Kenya" {
 				t.Errorf("CreateAddress() got = %v, want %v", got, tt.want)
 			}
 		})
@@ -144,13 +144,13 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 		return
 	}
 
-	err = addBuss.LinkAddressToProfile(ctx, profile.GetID(), "Test Link", add)
+	err = addBuss.LinkAddressToProfile(ctx, profile.GetId(), "Test Link", add)
 	if err != nil {
 		t.Errorf(" LinkAddressToProfile failed with %+v", err)
 		return
 	}
 
-	addresses, err := addBuss.GetByProfile(ctx, profile.GetID())
+	addresses, err := addBuss.GetByProfile(ctx, profile.GetId())
 	if err != nil {
 		t.Errorf(" GetByProfile failed with %+v", err)
 		return

@@ -2,7 +2,7 @@ package business
 
 import (
 	"context"
-	profilev1 "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
@@ -38,7 +38,7 @@ func (aB *addressBusiness) ToAPI(address *models.Address) *profilev1.AddressObje
 	}
 
 	addressObj := &profilev1.AddressObject{
-		ID:      address.GetID(),
+		Id:      address.GetID(),
 		Name:    address.Name,
 		Area:    address.AdminUnit,
 		Country: countryName,
@@ -95,14 +95,14 @@ func (aB *addressBusiness) LinkAddressToProfile(ctx context.Context, profileID s
 	}
 
 	for _, pAddress := range profileAddresses {
-		if address.GetID() == pAddress.AddressID {
+		if address.GetId() == pAddress.AddressID {
 			return nil
 		}
 	}
 
 	profileAddress := models.ProfileAddress{
 		Name:      name,
-		AddressID: address.GetID(),
+		AddressID: address.GetId(),
 		ProfileID: profileID,
 	}
 	return aB.addressRepo.SaveLink(ctx, &profileAddress)

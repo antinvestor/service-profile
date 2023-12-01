@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	papi "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
 )
@@ -17,7 +17,7 @@ func (pr *profileRepository) GetTypeByID(ctx context.Context, profileTypeId stri
 	return profileType, err
 }
 
-func (pr *profileRepository) GetTypeByUID(ctx context.Context, profileType papi.ProfileType) (*models.ProfileType, error) {
+func (pr *profileRepository) GetTypeByUID(ctx context.Context, profileType profilev1.ProfileType) (*models.ProfileType, error) {
 
 	profileTypeUId := models.ProfileTypeIDMap[profileType]
 	profileTypeM := &models.ProfileType{}

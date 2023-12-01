@@ -3,7 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
-	napi "github.com/antinvestor/apis/notification"
+	notificationv1 "github.com/antinvestor/apis/notification/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
@@ -13,7 +13,7 @@ import (
 type VerificationsQueueHandler struct {
 	Service         *frame.Service
 	ContactRepo     repository.ContactRepository
-	NotificationCli *napi.NotificationClient
+	NotificationCli *notificationv1.NotificationClient
 }
 
 func (vq *VerificationsQueueHandler) Handle(ctx context.Context, payload []byte) error {

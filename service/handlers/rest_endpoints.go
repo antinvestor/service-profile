@@ -3,7 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	profilev1 "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/gorilla/mux"
 	"github.com/pitabwire/frame"
@@ -42,10 +42,10 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
 
-	request := &profilev1.ProfileListRelationshipRequest{
+	request := &profilev1.ListRelationshipRequest{
 		Parent:             "Profile",
-		ParentID:           claims.ProfileID,
-		LastRelationshipID: lastRelationshipID,
+		ParentId:           claims.ProfileID,
+		LastRelationshipId: lastRelationshipID,
 		Count:              int32(count),
 	}
 
@@ -59,7 +59,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	for _, relationship := range relationships {
 
-		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, request.GetParent(), request.GetParentID(), relationship)
+		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, request.GetParent(), request.GetParentId(), relationship)
 		if err1 != nil {
 			ps.writeError(rw, err, 500)
 			return
@@ -69,7 +69,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	}
 
 	if len(relationshipObjectList) > 0 {
-		lastRelationshipID = relationshipObjectList[len(relationshipObjectList)-1].GetID()
+		lastRelationshipID = relationshipObjectList[len(relationshipObjectList)-1].GetId()
 	}
 
 	response := map[string]interface{}{
@@ -95,7 +95,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	}
 
 	response := map[string]interface{}{
-		"sub":      profile.GetID(),
+		"sub":      profile.GetId(),
 		"name":     profile.GetProperties()["name"],
 		"contacts": profile.GetContacts(),
 		"url":      profile.GetProperties()["profile_pic"],

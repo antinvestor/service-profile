@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	papi "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
 	"gorm.io/gorm/clause"
@@ -61,7 +61,7 @@ func (ar *relationshipRepository) RelationshipTypeByID(ctx context.Context, prof
 	return relationshipType, err
 }
 
-func (ar *relationshipRepository) RelationshipType(ctx context.Context, profileType papi.RelationshipType) (*models.RelationshipType, error) {
+func (ar *relationshipRepository) RelationshipType(ctx context.Context, profileType profilev1.RelationshipType) (*models.RelationshipType, error) {
 
 	relationshipTypeUId := models.RelationshipTypeIDMap[profileType]
 	relationshipTypeM := &models.RelationshipType{}

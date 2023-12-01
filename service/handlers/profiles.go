@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"context"
-	napi "github.com/antinvestor/apis/notification"
-	papi "github.com/antinvestor/apis/profile"
+	notificationv1 "github.com/antinvestor/apis/notification/v1"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
 
@@ -14,26 +14,26 @@ type ProfileServer struct {
 	EncryptionKey []byte
 
 	Service         *frame.Service
-	NotificationCli *napi.NotificationClient
+	NotificationCli *notificationv1.NotificationClient
 
-	papi.ProfileServiceServer
+	profilev1.ProfileServiceServer
 }
 
 func (ps *ProfileServer) GetByID(ctx context.Context,
-	request *papi.ProfileIDRequest) (*papi.ProfileObject, error) {
+	request *profilev1.GetByIdRequest) (*profilev1.GetByIdResponse, error) {
 
-	err := request.Validate()
+	profileID := strings.TrimSpace(request.GetId())
+
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	profileObj, err := profileBusiness.GetByID(ctx, ps.EncryptionKey, profileID)
 	if err != nil {
 		return nil, err
 	}
 
-	profileID := strings.TrimSpace(request.GetID())
-
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	return profileBusiness.GetByID(ctx, ps.EncryptionKey, profileID)
+	return &profilev1.GetByIdResponse{Data: profileObj}, nil
 }
 
-func (ps *ProfileServer) Search(request *papi.ProfileSearchRequest, stream papi.ProfileService_SearchServer) error {
+func (ps *ProfileServer) Search(request *profilev1.SearchRequest, stream profilev1.ProfileService_SearchServer) error {
 
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer cancel()
@@ -43,96 +43,110 @@ func (ps *ProfileServer) Search(request *papi.ProfileSearchRequest, stream papi.
 
 }
 
-func (ps *ProfileServer) Merge(ctx context.Context, request *papi.ProfileMergeRequest) (
-	*papi.ProfileObject, error) {
+func (ps *ProfileServer) Merge(ctx context.Context, request *profilev1.MergeRequest) (
+	*profilev1.MergeResponse, error) {
 
-	err := request.Validate()
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	profileObj, err := profileBusiness.MergeProfile(ctx, ps.EncryptionKey, request)
 	if err != nil {
 		return nil, err
 	}
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	return profileBusiness.MergeProfile(ctx, ps.EncryptionKey, request)
-
+	return &profilev1.MergeResponse{Data: profileObj}, nil
 }
 
-func (ps *ProfileServer) Create(ctx context.Context, request *papi.ProfileCreateRequest) (
-	*papi.ProfileObject, error) {
+func (ps *ProfileServer) Create(ctx context.Context, request *profilev1.CreateRequest) (
+	*profilev1.CreateResponse, error) {
 
-	err := request.Validate()
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	profileObj, err := profileBusiness.CreateProfile(ctx, ps.EncryptionKey, request)
+
 	if err != nil {
 		return nil, err
 	}
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	return profileBusiness.CreateProfile(ctx, ps.EncryptionKey, request)
-
+	return &profilev1.CreateResponse{Data: profileObj}, nil
 }
 
-func (ps *ProfileServer) Update(ctx context.Context, request *papi.ProfileUpdateRequest) (
-	*papi.ProfileObject, error) {
+func (ps *ProfileServer) Update(ctx context.Context, request *profilev1.UpdateRequest) (
+	*profilev1.UpdateResponse, error) {
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	return profileBusiness.UpdateProfile(ctx, ps.EncryptionKey, request)
+	profileObj, err := profileBusiness.UpdateProfile(ctx, ps.EncryptionKey, request)
 
+	if err != nil {
+		return nil, err
+	}
+
+	return &profilev1.UpdateResponse{Data: profileObj}, nil
 }
 
 // AddAddress Adds a new address based on the request.
 func (ps *ProfileServer) AddAddress(ctx context.Context,
-	request *papi.ProfileAddAddressRequest) (*papi.ProfileObject, error) {
-	if err := request.Validate(); err != nil {
-		return nil, err
-	}
+	request *profilev1.AddAddressRequest) (*profilev1.AddAddressResponse, error) {
+
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	return profileBusiness.AddAddress(ctx, ps.EncryptionKey, request)
-}
-
-func (ps *ProfileServer) GetByContact(ctx context.Context,
-	request *papi.ProfileContactRequest) (*papi.ProfileObject, error) {
-
-	err := request.Validate()
+	profileObj, err := profileBusiness.AddAddress(ctx, ps.EncryptionKey, request)
 	if err != nil {
 		return nil, err
 	}
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	return profileBusiness.GetByContact(ctx, ps.EncryptionKey, request.GetContact())
+	return &profilev1.AddAddressResponse{Data: profileObj}, nil
 }
 
-func (ps *ProfileServer) AddContact(ctx context.Context, request *papi.ProfileAddContactRequest,
-) (*papi.ProfileObject, error) {
-	if err := request.Validate(); err != nil {
-		return nil, err
-	}
+func (ps *ProfileServer) GetByContact(ctx context.Context,
+	request *profilev1.GetByContactRequest) (*profilev1.GetByContactResponse, error) {
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	return profileBusiness.AddContact(ctx, ps.EncryptionKey, request)
-}
+	profileObj, err := profileBusiness.GetByContact(ctx, ps.EncryptionKey, request.GetContact())
 
-func (ps *ProfileServer) AddRelationship(ctx context.Context, request *papi.ProfileAddRelationshipRequest) (*papi.RelationshipObject, error) {
-	if err := request.Validate(); err != nil {
+	if err != nil {
 		return nil, err
 	}
 
-	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
-	return relationshipBusiness.CreateRelationship(ctx, request)
+	return &profilev1.GetByContactResponse{Data: profileObj}, nil
 }
 
-func (ps *ProfileServer) DeleteRelationship(ctx context.Context, request *papi.ProfileDeleteRelationshipRequest) (*papi.RelationshipObject, error) {
+func (ps *ProfileServer) AddContact(ctx context.Context, request *profilev1.AddContactRequest,
+) (*profilev1.AddContactResponse, error) {
 
-	if err := request.Validate(); err != nil {
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	profileObj, err := profileBusiness.AddContact(ctx, ps.EncryptionKey, request)
+
+	if err != nil {
 		return nil, err
 	}
 
-	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
-	return relationshipBusiness.DeleteRelationship(ctx, request)
+	return &profilev1.AddContactResponse{Data: profileObj}, nil
 }
 
-func (ps *ProfileServer) ListRelationships(request *papi.ProfileListRelationshipRequest, server papi.ProfileService_ListRelationshipsServer) error {
+func (ps *ProfileServer) AddRelationship(ctx context.Context,
+	request *profilev1.AddRelationshipRequest) (*profilev1.AddRelationshipResponse, error) {
 
-	if err := request.Validate(); err != nil {
-		return err
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
+	relationshipObj, err := relationshipBusiness.CreateRelationship(ctx, request)
+
+	if err != nil {
+		return nil, err
 	}
+
+	return &profilev1.AddRelationshipResponse{Data: relationshipObj}, nil
+}
+
+func (ps *ProfileServer) DeleteRelationship(ctx context.Context,
+	request *profilev1.DeleteRelationshipRequest) (*profilev1.DeleteRelationshipResponse, error) {
+
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
+	relationshipObj, err := relationshipBusiness.DeleteRelationship(ctx, request)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &profilev1.DeleteRelationshipResponse{Data: relationshipObj}, nil
+}
+
+func (ps *ProfileServer) ListRelationships(request *profilev1.ListRelationshipRequest, server profilev1.ProfileService_ListRelationshipServer) error {
 
 	ctx := server.Context()
 
@@ -142,17 +156,21 @@ func (ps *ProfileServer) ListRelationships(request *papi.ProfileListRelationship
 		return err
 	}
 
+	var responseList []*profilev1.RelationshipObject
+
 	for _, relationship := range relationships {
 
-		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, request.GetParent(), request.GetParentID(), relationship)
+		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, request.GetParent(), request.GetParentId(), relationship)
 		if err1 != nil {
 			return err
 		}
 
-		err = server.Send(relationshipObject)
-		if err != nil {
-			return err
-		}
+		responseList = append(responseList, relationshipObject)
+	}
+
+	err = server.Send(&profilev1.ListRelationshipResponse{Data: responseList})
+	if err != nil {
+		return err
 	}
 
 	return nil

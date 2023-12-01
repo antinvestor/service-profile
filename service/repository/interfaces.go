@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	papi "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service/models"
 )
 
@@ -12,7 +12,7 @@ type ProfileRepository interface {
 	Delete(ctx context.Context, id string) error
 
 	GetTypeByID(ctx context.Context, profileTypeId string) (*models.ProfileType, error)
-	GetTypeByUID(ctx context.Context, profileType papi.ProfileType) (*models.ProfileType, error)
+	GetTypeByUID(ctx context.Context, profileType profilev1.ProfileType) (*models.ProfileType, error)
 }
 
 type ContactRepository interface {
@@ -22,9 +22,9 @@ type ContactRepository interface {
 	Save(ctx context.Context, contact *models.Contact) (*models.Contact, error)
 	Delete(ctx context.Context, id string) error
 
-	ContactType(ctx context.Context, contactType papi.ContactType) (*models.ContactType, error)
+	ContactType(ctx context.Context, contactType profilev1.ContactType) (*models.ContactType, error)
 	ContactTypeByID(ctx context.Context, contactTypeID string) (*models.ContactType, error)
-	CommunicationLevel(ctx context.Context, communicationLevel papi.CommunicationLevel) (*models.CommunicationLevel, error)
+	CommunicationLevel(ctx context.Context, communicationLevel profilev1.CommunicationLevel) (*models.CommunicationLevel, error)
 	CommunicationLevelByID(ctx context.Context, communicationLevelID string) (*models.CommunicationLevel, error)
 
 	VerificationSave(ctx context.Context, verification *models.Verification) error
@@ -52,6 +52,6 @@ type RelationshipRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, parent string, parentId string, relatedChildrenIds []string, lastRelationshipId string, count int) ([]*models.Relationship, error)
 
-	RelationshipType(ctx context.Context, relationshipType papi.RelationshipType) (*models.RelationshipType, error)
+	RelationshipType(ctx context.Context, relationshipType profilev1.RelationshipType) (*models.RelationshipType, error)
 	RelationshipTypeByID(ctx context.Context, relationshipTypeID string) (*models.RelationshipType, error)
 }

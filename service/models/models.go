@@ -2,7 +2,7 @@ package models
 
 import (
 	"encoding/json"
-	papi "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/pitabwire/frame"
 	"gorm.io/datatypes"
@@ -12,25 +12,25 @@ import (
 	"time"
 )
 
-var ProfileTypeIDMap = map[papi.ProfileType]uint{
-	papi.ProfileType_PERSON:      0,
-	papi.ProfileType_INSTITUTION: 1,
-	papi.ProfileType_BOT:         2,
+var ProfileTypeIDMap = map[profilev1.ProfileType]uint{
+	profilev1.ProfileType_PERSON:      0,
+	profilev1.ProfileType_INSTITUTION: 1,
+	profilev1.ProfileType_BOT:         2,
 }
 
-var RelationshipTypeIDMap = map[papi.RelationshipType]uint{
-	papi.RelationshipType_MEMBER:       0,
-	papi.RelationshipType_AFFILIATED:   1,
-	papi.RelationshipType_BLACK_LISTED: 1,
+var RelationshipTypeIDMap = map[profilev1.RelationshipType]uint{
+	profilev1.RelationshipType_MEMBER:       0,
+	profilev1.RelationshipType_AFFILIATED:   1,
+	profilev1.RelationshipType_BLACK_LISTED: 1,
 }
 
-func ProfileTypeIDToEnum(profileTypeID uint) papi.ProfileType {
+func ProfileTypeIDToEnum(profileTypeID uint) profilev1.ProfileType {
 	for key, val := range ProfileTypeIDMap {
 		if val == profileTypeID {
 			return key
 		}
 	}
-	return papi.ProfileType_PERSON
+	return profilev1.ProfileType_PERSON
 }
 
 type ProfileType struct {
@@ -59,7 +59,7 @@ func (p *Profile) GetByID(db *gorm.DB) error {
 	return nil
 }
 
-func (p *Profile) Create(db *gorm.DB, profileType papi.ProfileType, properties map[string]interface{}) error {
+func (p *Profile) Create(db *gorm.DB, profileType profilev1.ProfileType, properties map[string]interface{}) error {
 
 	stringProperties, err := json.Marshal(properties)
 	if err != nil {
@@ -74,15 +74,15 @@ func (p *Profile) Create(db *gorm.DB, profileType papi.ProfileType, properties m
 	return db.Save(p).Error
 }
 
-var ContactTypeUIDMap = map[papi.ContactType]uint{
-	papi.ContactType_EMAIL: 0,
-	papi.ContactType_PHONE: 1,
+var ContactTypeUIDMap = map[profilev1.ContactType]uint{
+	profilev1.ContactType_EMAIL: 0,
+	profilev1.ContactType_PHONE: 1,
 }
 
-var CommunicationLevelUIDMap = map[papi.CommunicationLevel]uint{
-	papi.CommunicationLevel_ALL:           0,
-	papi.CommunicationLevel_SYSTEM_ALERTS: 1,
-	papi.CommunicationLevel_NO_CONTACT:    2,
+var CommunicationLevelUIDMap = map[profilev1.CommunicationLevel]uint{
+	profilev1.CommunicationLevel_ALL:           0,
+	profilev1.CommunicationLevel_SYSTEM_ALERTS: 1,
+	profilev1.CommunicationLevel_NO_CONTACT:    2,
 }
 
 type ContactType struct {
@@ -93,13 +93,13 @@ type ContactType struct {
 	Description string
 }
 
-func ContactTypeIDToEnum(contactTypeID uint) papi.ContactType {
+func ContactTypeIDToEnum(contactTypeID uint) profilev1.ContactType {
 	for key, val := range ContactTypeUIDMap {
 		if val == contactTypeID {
 			return key
 		}
 	}
-	return papi.ContactType_EMAIL
+	return profilev1.ContactType_EMAIL
 }
 
 type CommunicationLevel struct {
@@ -110,18 +110,18 @@ type CommunicationLevel struct {
 	Description string
 }
 
-func (cl *CommunicationLevel) From(db *gorm.DB, communicationLevel papi.CommunicationLevel) {
+func (cl *CommunicationLevel) From(db *gorm.DB, communicationLevel profilev1.CommunicationLevel) {
 	cl.UID = CommunicationLevelUIDMap[communicationLevel]
 	db.First(cl)
 }
 
-func CommunicationLevelIDToEnum(communicationLevelID uint) papi.CommunicationLevel {
+func CommunicationLevelIDToEnum(communicationLevelID uint) profilev1.CommunicationLevel {
 	for key, val := range CommunicationLevelUIDMap {
 		if val == communicationLevelID {
 			return key
 		}
 	}
-	return papi.CommunicationLevel_ALL
+	return profilev1.CommunicationLevel_ALL
 }
 
 type Contact struct {
@@ -220,13 +220,13 @@ type RelationshipType struct {
 	Description string
 }
 
-func RelationshipTypeIDToEnum(relationshipTypeID uint) papi.RelationshipType {
+func RelationshipTypeIDToEnum(relationshipTypeID uint) profilev1.RelationshipType {
 	for key, val := range RelationshipTypeIDMap {
 		if val == relationshipTypeID {
 			return key
 		}
 	}
-	return papi.RelationshipType_MEMBER
+	return profilev1.RelationshipType_MEMBER
 }
 
 type Relationship struct {

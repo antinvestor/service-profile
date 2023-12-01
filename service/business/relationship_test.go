@@ -2,7 +2,7 @@ package business_test
 
 import (
 	"context"
-	profilev1 "github.com/antinvestor/apis/profile"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
 	"testing"
@@ -16,7 +16,7 @@ func createTestProfiles(ctx context.Context, srv *frame.Service, encryptionKey [
 
 	for _, contact := range contacts {
 
-		prof := &profilev1.ProfileCreateRequest{
+		prof := &profilev1.CreateRequest{
 			Contact: contact,
 		}
 		profile, err := profBuss.CreateProfile(ctx, encryptionKey, prof)
@@ -74,7 +74,7 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 
 	type args struct {
 		ctx     context.Context
-		request *profilev1.ProfileAddRelationshipRequest
+		request *profilev1.AddRelationshipRequest
 	}
 	tests := []struct {
 		name    string
@@ -86,17 +86,17 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 			name: "Create a relationship object",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileAddRelationshipRequest{
+				request: &profilev1.AddRelationshipRequest{
 					Parent:     "Profile",
-					ParentID:   testProfiles[0].GetID(),
+					ParentId:   testProfiles[0].GetId(),
 					Child:      "Profile",
-					ChildID:    testProfiles[1].GetID(),
+					ChildId:    testProfiles[1].GetId(),
 					Type:       profilev1.RelationshipType_MEMBER,
 					Properties: nil,
 				},
 			},
 			want: &profilev1.RelationshipObject{
-				ID:         "",
+				Id:         "",
 				Type:       0,
 				Properties: nil,
 				Child:      &profilev1.RelationshipObject_Profile{Profile: testProfiles[1]},
@@ -107,11 +107,11 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 			name: "Create a fake relationship object",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileAddRelationshipRequest{
+				request: &profilev1.AddRelationshipRequest{
 					Parent:     "Profile",
-					ParentID:   testProfiles[0].GetID(),
+					ParentId:   testProfiles[0].GetId(),
 					Child:      "Profile",
-					ChildID:    "bjt4h376abi8cg3kgr80",
+					ChildId:    "bjt4h376abi8cg3kgr80",
 					Type:       profilev1.RelationshipType_MEMBER,
 					Properties: nil,
 				},
@@ -123,11 +123,11 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 			name: "Invalid data relationship object",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileAddRelationshipRequest{
+				request: &profilev1.AddRelationshipRequest{
 					Parent:     "Jokes",
-					ParentID:   testProfiles[0].GetID(),
+					ParentId:   testProfiles[0].GetId(),
 					Child:      "Profile",
-					ChildID:    "",
+					ChildId:    "",
 					Type:       profilev1.RelationshipType_MEMBER,
 					Properties: nil,
 				},
@@ -160,7 +160,7 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 				t.Errorf("CreateRelationship() child is not a profile : %v", wantProfile)
 				return
 			}
-			if gotProfile.Profile.GetID() != wantProfile.Profile.GetID() {
+			if gotProfile.Profile.GetId() != wantProfile.Profile.GetId() {
 				t.Errorf("CreateRelationship() got = %v, want %v", gotProfile, wantProfile)
 			}
 		})
@@ -180,11 +180,11 @@ func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 		return
 	}
 
-	existingRelation, err := aB.CreateRelationship(ctx, &profilev1.ProfileAddRelationshipRequest{
+	existingRelation, err := aB.CreateRelationship(ctx, &profilev1.AddRelationshipRequest{
 		Parent:     "Profile",
-		ParentID:   testProfiles[0].GetID(),
+		ParentId:   testProfiles[0].GetId(),
 		Child:      "Profile",
-		ChildID:    testProfiles[1].GetID(),
+		ChildId:    testProfiles[1].GetId(),
 		Type:       profilev1.RelationshipType_MEMBER,
 		Properties: nil,
 	})
@@ -195,7 +195,7 @@ func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 
 	type args struct {
 		ctx     context.Context
-		request *profilev1.ProfileDeleteRelationshipRequest
+		request *profilev1.DeleteRelationshipRequest
 	}
 	tests := []struct {
 		name    string
@@ -207,8 +207,8 @@ func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 			name: "Delete existing relation",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileDeleteRelationshipRequest{
-					ID: existingRelation.GetID(),
+				request: &profilev1.DeleteRelationshipRequest{
+					Id: existingRelation.GetId(),
 				},
 			},
 			want:    nil,
@@ -218,8 +218,8 @@ func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 			name: "Delete deleted relation",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileDeleteRelationshipRequest{
-					ID: existingRelation.GetID(),
+				request: &profilev1.DeleteRelationshipRequest{
+					Id: existingRelation.GetId(),
 				},
 			},
 			want:    nil,
@@ -254,11 +254,11 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 
 	for i := 0; i < 3; i++ {
 
-		_, err = aB.CreateRelationship(ctx, &profilev1.ProfileAddRelationshipRequest{
+		_, err = aB.CreateRelationship(ctx, &profilev1.AddRelationshipRequest{
 			Parent:     "Profile",
-			ParentID:   testProfiles[0].GetID(),
+			ParentId:   testProfiles[0].GetId(),
 			Child:      "Profile",
-			ChildID:    testProfiles[i+1].GetID(),
+			ChildId:    testProfiles[i+1].GetId(),
 			Type:       profilev1.RelationshipType_MEMBER,
 			Properties: nil,
 		})
@@ -271,7 +271,7 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 
 	type args struct {
 		ctx     context.Context
-		request *profilev1.ProfileListRelationshipRequest
+		request *profilev1.ListRelationshipRequest
 	}
 	tests := []struct {
 		name      string
@@ -283,9 +283,9 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 			name: "None existent relationships",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileListRelationshipRequest{
+				request: &profilev1.ListRelationshipRequest{
 					Parent:   "Profile",
-					ParentID: "bjt4h376abi8cg3kgr80",
+					ParentId: "bjt4h376abi8cg3kgr80",
 				},
 			},
 			wantCount: 0,
@@ -295,9 +295,9 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 			name: "Existent relationships",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileListRelationshipRequest{
+				request: &profilev1.ListRelationshipRequest{
 					Parent:   "Profile",
-					ParentID: testProfiles[0].GetID(),
+					ParentId: testProfiles[0].GetId(),
 				},
 			},
 			wantCount: 3,
@@ -307,9 +307,9 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 			name: "Limited existent relationships",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileListRelationshipRequest{
+				request: &profilev1.ListRelationshipRequest{
 					Parent:   "Profile",
-					ParentID: testProfiles[0].GetID(),
+					ParentId: testProfiles[0].GetId(),
 					Count:    2,
 				},
 			},
@@ -320,10 +320,10 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 			name: "Specific existent relationships",
 			args: args{
 				ctx: ctx,
-				request: &profilev1.ProfileListRelationshipRequest{
+				request: &profilev1.ListRelationshipRequest{
 					Parent:            "Profile",
-					ParentID:          testProfiles[0].GetID(),
-					RelatedChildrenID: []string{testProfiles[3].GetID()},
+					ParentId:          testProfiles[0].GetId(),
+					RelatedChildrenId: []string{testProfiles[3].GetId()},
 				},
 			},
 			wantCount: 1,

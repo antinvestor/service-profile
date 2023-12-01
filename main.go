@@ -9,15 +9,17 @@ import (
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/queue"
 	"github.com/antinvestor/service-profile/service/repository"
+	"github.com/bufbuild/protovalidate-go"
 	gorilla_handlers "github.com/gorilla/handlers"
+	protovalidate_interceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
 	"google.golang.org/grpc"
 	"strings"
 
-	napi "github.com/antinvestor/apis/notification"
-	papi "github.com/antinvestor/apis/profile"
+	notificationv1 "github.com/antinvestor/apis/notification/v1"
+	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/pitabwire/frame"
 )
 
@@ -69,7 +71,7 @@ func main() {
 		audienceList = strings.Split(oauth2ServiceAudience, ",")
 	}
 
-	notificationCli, err := napi.NewNotificationClient(ctx,
+	notificationCli, err := notificationv1.NewNotificationClient(ctx,
 		apis.WithEndpoint(profileConfig.NotificationServiceURI),
 		apis.WithTokenEndpoint(oauth2ServiceURL),
 		apis.WithTokenUsername(service.JwtClientID()),
@@ -84,20 +86,29 @@ func main() {
 		jwtAudience = serviceName
 	}
 
+	validator, err := protovalidate.New()
+	if err != nil {
+		log.WithError(err).Fatal("could not load validator for proto messages")
+	}
+
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
+			protovalidate_interceptor.UnaryServerInterceptor(validator),
 			recovery.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
-			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)),
+			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
+			protovalidate_interceptor.StreamServerInterceptor(validator),
+			recovery.StreamServerInterceptor(),
+		),
 	)
 
 	implementation := &handlers.ProfileServer{
 		Service:         service,
 		NotificationCli: notificationCli,
 	}
-	papi.RegisterProfileServiceServer(grpcServer, implementation)
+	profilev1.RegisterProfileServiceServer(grpcServer, implementation)
 
 	grpcServerOpt := frame.GrpcServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
