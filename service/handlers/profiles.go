@@ -33,6 +33,19 @@ func (ps *ProfileServer) GetByID(ctx context.Context,
 	return &profilev1.GetByIdResponse{Data: profileObj}, nil
 }
 
+func (ps *ProfileServer) GetByContact(ctx context.Context,
+	request *profilev1.GetByContactRequest) (*profilev1.GetByContactResponse, error) {
+
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	profileObj, err := profileBusiness.GetByContact(ctx, ps.EncryptionKey, request.GetContact())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &profilev1.GetByContactResponse{Data: profileObj}, nil
+}
+
 func (ps *ProfileServer) Search(request *profilev1.SearchRequest, stream profilev1.ProfileService_SearchServer) error {
 
 	ctx, cancel := context.WithCancel(stream.Context())
@@ -92,19 +105,6 @@ func (ps *ProfileServer) AddAddress(ctx context.Context,
 	}
 
 	return &profilev1.AddAddressResponse{Data: profileObj}, nil
-}
-
-func (ps *ProfileServer) GetByContact(ctx context.Context,
-	request *profilev1.GetByContactRequest) (*profilev1.GetByContactResponse, error) {
-
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.GetByContact(ctx, ps.EncryptionKey, request.GetContact())
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &profilev1.GetByContactResponse{Data: profileObj}, nil
 }
 
 func (ps *ProfileServer) AddContact(ctx context.Context, request *profilev1.AddContactRequest,
