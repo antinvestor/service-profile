@@ -107,6 +107,10 @@ func main() {
 	implementation := &handlers.ProfileServer{
 		Service:         service,
 		NotificationCli: notificationCli,
+		EncryptionKeyFunc: func() []byte {
+			return pbkdf2.Key([]byte(profileConfig.ContactEncryptionKey),
+				[]byte(profileConfig.ContactEncryptionSalt), 4096, 32, sha256.New)
+		},
 	}
 	profilev1.RegisterProfileServiceServer(grpcServer, implementation)
 
@@ -132,10 +136,6 @@ func main() {
 	serviceOptions = append(serviceOptions, verificationQueue, verificationQueuePublisher)
 
 	service.Init(serviceOptions...)
-
-	contactEncryptionKey := pbkdf2.Key([]byte(profileConfig.ContactEncryptionKey),
-		[]byte(profileConfig.ContactEncryptionSalt), 4096, 32, sha256.New)
-	implementation.EncryptionKey = contactEncryptionKey
 
 	log.WithField("server http port", profileConfig.HttpServerPort).
 		WithField("server grpc port", profileConfig.GrpcServerPort).

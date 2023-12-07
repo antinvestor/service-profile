@@ -10,7 +10,9 @@ import (
 
 func createTestProfiles(ctx context.Context, srv *frame.Service, encryptionKey []byte, contacts []string) ([]*profilev1.ProfileObject, error) {
 
-	profBuss := business.NewProfileBusiness(ctx, srv)
+	profBuss := business.NewProfileBusiness(ctx, srv, func() []byte {
+		return encryptionKey
+	})
 
 	var profileSlice []*profilev1.ProfileObject
 
@@ -19,7 +21,7 @@ func createTestProfiles(ctx context.Context, srv *frame.Service, encryptionKey [
 		prof := &profilev1.CreateRequest{
 			Contact: contact,
 		}
-		profile, err := profBuss.CreateProfile(ctx, encryptionKey, prof)
+		profile, err := profBuss.CreateProfile(ctx, prof)
 		if err != nil {
 			return nil, err
 		}
@@ -54,7 +56,10 @@ func TestNewRelationshipBusiness(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := business.NewRelationshipBusiness(tt.args.ctx, tt.args.service, tt.args.profileEncryptionKey); got == nil {
+			profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
+				return tt.args.profileEncryptionKey
+			})
+			if got := business.NewRelationshipBusiness(tt.args.ctx, tt.args.service, profileBusiness); got == nil {
 				t.Errorf("NewRelationshipBusiness() = %v, is nil", got)
 			}
 		})
@@ -65,6 +70,10 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 
 	ctx, srv := testService()
 	profileEncryptionKey := getEncryptionKey()
+
+	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
+		return profileEncryptionKey
+	})
 
 	testProfiles, err := createTestProfiles(ctx, srv, profileEncryptionKey, []string{"new.relationship.1@ant.com", "new.relationship.2@ant.com"})
 	if err != nil {
@@ -138,7 +147,7 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			aB := business.NewRelationshipBusiness(ctx, srv, profileEncryptionKey)
+			aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
 			got, err1 := aB.CreateRelationship(tt.args.ctx, tt.args.request)
 			if (err1 != nil) != tt.wantErr {
 				t.Errorf("CreateRelationship() error = %v, wantErr %v", err1, tt.wantErr)
@@ -172,7 +181,10 @@ func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 	ctx, srv := testService()
 	profileEncryptionKey := getEncryptionKey()
 
-	aB := business.NewRelationshipBusiness(ctx, srv, profileEncryptionKey)
+	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
+		return profileEncryptionKey
+	})
+	aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
 
 	testProfiles, err := createTestProfiles(ctx, srv, profileEncryptionKey, []string{"delete.relationship.1@ant.com", "delete.relationship.2@ant.com"})
 	if err != nil {
@@ -244,7 +256,11 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 	ctx, srv := testService()
 	profileEncryptionKey := getEncryptionKey()
 
-	aB := business.NewRelationshipBusiness(ctx, srv, profileEncryptionKey)
+	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
+		return profileEncryptionKey
+	})
+
+	aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
 
 	testProfiles, err := createTestProfiles(ctx, srv, profileEncryptionKey, []string{"list.relationship.1@ant.com", "list.relationship.2@ant.com", "list.relationship.3@ant.com", "list.relationship.4@ant.com"})
 	if err != nil {
@@ -332,7 +348,8 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			aB := business.NewRelationshipBusiness(ctx, srv, profileEncryptionKey)
+
+			aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
 			got, err := aB.ListRelationships(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ListRelationships() error = %v, wantErr %v", err, tt.wantErr)

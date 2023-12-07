@@ -40,7 +40,8 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	lastRelationshipID := params["LastRelationshipID"]
 
-	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.EncryptionKey)
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
 
 	request := &profilev1.ListRelationshipRequest{
 		Parent:             "Profile",
@@ -87,8 +88,8 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profile, err := profileBusiness.GetByID(ctx, ps.EncryptionKey, claims.ProfileID)
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
+	profile, err := profileBusiness.GetByID(ctx, claims.ProfileID)
 	if err != nil {
 		ps.writeError(rw, err, 500)
 		return

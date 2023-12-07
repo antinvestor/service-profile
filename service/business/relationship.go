@@ -17,23 +17,20 @@ type RelationshipBusiness interface {
 	ToAPI(ctx context.Context, sourceParent, sourceParentID string, relationship *models.Relationship) (*profilev1.RelationshipObject, error)
 }
 
-func NewRelationshipBusiness(ctx context.Context, service *frame.Service, profileEncryptionKey []byte) RelationshipBusiness {
+func NewRelationshipBusiness(_ context.Context, service *frame.Service, profileBiz ProfileBusiness) RelationshipBusiness {
 	relationshipRepo := repository.NewRelationshipRepository(service)
-	profileBiz := NewProfileBusiness(ctx, service)
 
 	return &relationshipBusiness{
-		service:              service,
-		profileBusiness:      profileBiz,
-		profileEncryptionKey: profileEncryptionKey,
-		relationshipRepo:     relationshipRepo,
+		service:          service,
+		profileBusiness:  profileBiz,
+		relationshipRepo: relationshipRepo,
 	}
 }
 
 type relationshipBusiness struct {
-	service              *frame.Service
-	profileBusiness      ProfileBusiness
-	profileEncryptionKey []byte
-	relationshipRepo     repository.RelationshipRepository
+	service          *frame.Service
+	profileBusiness  ProfileBusiness
+	relationshipRepo repository.RelationshipRepository
 }
 
 func (aB *relationshipBusiness) ToAPI(ctx context.Context, sourceParent, sourceParentID string, relationship *models.Relationship) (*profilev1.RelationshipObject, error) {
@@ -61,7 +58,7 @@ func (aB *relationshipBusiness) ToAPI(ctx context.Context, sourceParent, sourceP
 	}
 
 	if relationship.ChildObject == "Profile" {
-		profileObj, err := aB.profileBusiness.GetByID(ctx, aB.profileEncryptionKey, parentId)
+		profileObj, err := aB.profileBusiness.GetByID(ctx, parentId)
 		if err != nil {
 			return nil, err
 		}
@@ -76,7 +73,7 @@ func (aB *relationshipBusiness) ToAPI(ctx context.Context, sourceParent, sourceP
 func (aB *relationshipBusiness) ListRelationships(ctx context.Context, request *profilev1.ListRelationshipRequest) ([]*models.Relationship, error) {
 
 	if request.GetParent() == "Profile" {
-		profileObj, err := aB.profileBusiness.GetByID(ctx, aB.profileEncryptionKey, request.GetParentId())
+		profileObj, err := aB.profileBusiness.GetByID(ctx, request.GetParentId())
 		if err != nil {
 			return nil, err
 		}
@@ -109,7 +106,7 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 	}
 
 	if request.GetParent() == "Profile" {
-		profileObj, err = aB.profileBusiness.GetByID(ctx, aB.profileEncryptionKey, request.GetParentId())
+		profileObj, err = aB.profileBusiness.GetByID(ctx, request.GetParentId())
 		if err != nil {
 			return nil, err
 		}
@@ -120,7 +117,7 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 	}
 
 	if request.GetChild() == "Profile" {
-		profileObj, err = aB.profileBusiness.GetByID(ctx, aB.profileEncryptionKey, request.GetChildId())
+		profileObj, err = aB.profileBusiness.GetByID(ctx, request.GetChildId())
 		if err != nil {
 			return nil, err
 		}

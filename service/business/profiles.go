@@ -13,34 +13,37 @@ import (
 )
 
 type ProfileBusiness interface {
-	GetByID(ctx context.Context, encryptionKey []byte, profileID string) (*profilev1.ProfileObject, error)
-	GetByContact(ctx context.Context, encryptionKey []byte, detail string) (*profilev1.ProfileObject, error)
+	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, error)
+	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, error)
 
-	SearchProfile(ctx context.Context, encryptionKey []byte,
+	SearchProfile(ctx context.Context,
 		request *profilev1.SearchRequest, stream profilev1.ProfileService_SearchServer) error
 
-	CreateProfile(ctx context.Context, encryptionKey []byte,
+	CreateProfile(ctx context.Context,
 		request *profilev1.CreateRequest) (*profilev1.ProfileObject, error)
 
-	UpdateProfile(ctx context.Context, encryptionKey []byte,
+	UpdateProfile(ctx context.Context,
 		request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error)
 
-	MergeProfile(ctx context.Context, encryptionKey []byte,
+	MergeProfile(ctx context.Context,
 		request *profilev1.MergeRequest) (*profilev1.ProfileObject, error)
 
-	AddAddress(ctx context.Context, encryptionKey []byte,
+	AddAddress(ctx context.Context,
 		address *profilev1.AddAddressRequest) (*profilev1.ProfileObject, error)
 
-	AddContact(ctx context.Context, encryptionKey []byte,
+	AddContact(ctx context.Context,
 		contact *profilev1.AddContactRequest) (*profilev1.ProfileObject, error)
+
+	EncryptionKeyFunc() []byte
 }
 
-func NewProfileBusiness(ctx context.Context, service *frame.Service) ProfileBusiness {
+func NewProfileBusiness(ctx context.Context, service *frame.Service, encryptionKeyFunc func() []byte) ProfileBusiness {
 	profileRepo := repository.NewProfileRepository(service)
 	contactBusiness := NewContactBusiness(ctx, service)
 	addressBusiness := NewAddressBusiness(ctx, service)
 	return &profileBusiness{
 		service:         service,
+		encryptionKey:   encryptionKeyFunc(),
 		contactBusiness: contactBusiness,
 		addressBusiness: addressBusiness,
 		profileRepo:     profileRepo,
@@ -48,16 +51,22 @@ func NewProfileBusiness(ctx context.Context, service *frame.Service) ProfileBusi
 }
 
 type profileBusiness struct {
-	service              *frame.Service
-	contactBusiness      ContactBusiness
-	addressBusiness      AddressBusiness
-	relationshipBusiness RelationshipBusiness
+	service *frame.Service
+
+	encryptionKey []byte
+
+	contactBusiness ContactBusiness
+	addressBusiness AddressBusiness
 
 	profileRepo repository.ProfileRepository
 }
 
+func (pb *profileBusiness) EncryptionKeyFunc() []byte {
+	return pb.encryptionKey
+}
+
 func (pb *profileBusiness) ProfileToAPI(ctx context.Context,
-	p *models.Profile, key []byte) (*profilev1.ProfileObject, error) {
+	p *models.Profile) (*profilev1.ProfileObject, error) {
 	profileObject := profilev1.ProfileObject{}
 	profileObject.Id = p.ID
 
@@ -74,7 +83,7 @@ func (pb *profileBusiness) ProfileToAPI(ctx context.Context,
 		return nil, err
 	}
 	for _, c := range contactList {
-		ctObj, err := pb.contactBusiness.ToAPI(ctx, c, key)
+		ctObj, err := pb.contactBusiness.ToAPI(ctx, c, pb.EncryptionKeyFunc())
 		if err != nil {
 			return nil, err
 		}
@@ -99,30 +108,28 @@ func (pb *profileBusiness) ProfileToAPI(ctx context.Context,
 
 func (pb *profileBusiness) GetByContact(
 	ctx context.Context,
-	encryptionKey []byte,
 	detail string) (*profilev1.ProfileObject, error) {
 	contact, err := pb.contactBusiness.GetByDetail(ctx, detail)
 	if err != nil {
 		return nil, err
 	}
 
-	return pb.GetByID(ctx, encryptionKey, contact.ProfileID)
+	return pb.GetByID(ctx, contact.ProfileID)
 }
 
 func (pb *profileBusiness) GetByID(
 	ctx context.Context,
-	encryptionKey []byte,
 	profileID string) (*profilev1.ProfileObject, error) {
 	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
 		return nil, err
 	}
 
-	return pb.ProfileToAPI(ctx, profile, encryptionKey)
+	return pb.ProfileToAPI(ctx, profile)
 
 }
 
-func (pb *profileBusiness) SearchProfile(ctx context.Context, encryptionKey []byte,
+func (pb *profileBusiness) SearchProfile(ctx context.Context,
 	request *profilev1.SearchRequest, stream profilev1.ProfileService_SearchServer) error {
 	var profileList []*models.Profile
 	//// creating WHERE clause to query by properties JSONB
@@ -138,7 +145,7 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context, encryptionKey []by
 	}
 
 	for _, profile := range profileList {
-		profileObject, err := pb.ProfileToAPI(ctx, profile, encryptionKey)
+		profileObject, err := pb.ProfileToAPI(ctx, profile)
 		if err != nil {
 			return err
 		}
@@ -151,7 +158,7 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context, encryptionKey []by
 	return nil
 }
 
-func (pb *profileBusiness) MergeProfile(ctx context.Context, encryptionKey []byte,
+func (pb *profileBusiness) MergeProfile(ctx context.Context,
 	request *profilev1.MergeRequest) (*profilev1.ProfileObject, error) {
 
 	target, err := pb.profileRepo.GetByID(ctx, request.GetId())
@@ -181,12 +188,11 @@ func (pb *profileBusiness) MergeProfile(ctx context.Context, encryptionKey []byt
 		return nil, err
 	}
 
-	return pb.ProfileToAPI(ctx, target, encryptionKey)
+	return pb.ProfileToAPI(ctx, target)
 }
 
 func (pb *profileBusiness) UpdateProfile(
 	ctx context.Context,
-	encryptionKey []byte,
 	request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error) {
 
 	profile, err := pb.profileRepo.GetByID(ctx, request.GetId())
@@ -206,11 +212,11 @@ func (pb *profileBusiness) UpdateProfile(
 		return nil, err
 	}
 
-	return pb.ProfileToAPI(ctx, profile, encryptionKey)
+	return pb.ProfileToAPI(ctx, profile)
 }
 
 func (pb *profileBusiness) CreateProfile(
-	ctx context.Context, encryptionKey []byte,
+	ctx context.Context,
 	request *profilev1.CreateRequest) (*profilev1.ProfileObject, error) {
 
 	contactDetail := strings.TrimSpace(request.GetContact())
@@ -241,15 +247,15 @@ func (pb *profileBusiness) CreateProfile(
 			return nil, err
 		}
 
-		err = pb.contactBusiness.CreateContact(ctx, encryptionKey, p.GetID(), contactDetail)
+		err = pb.contactBusiness.CreateContact(ctx, pb.EncryptionKeyFunc(), p.GetID(), contactDetail)
 		if err != nil {
 			return nil, err
 		}
 
-		return pb.GetByID(ctx, encryptionKey, p.GetID())
+		return pb.GetByID(ctx, p.GetID())
 	}
 
-	return pb.GetByID(ctx, encryptionKey, contact.ProfileID)
+	return pb.GetByID(ctx, contact.ProfileID)
 
 }
 
@@ -287,7 +293,6 @@ func (pb *profileBusiness) CreateProfile(
 
 func (pb *profileBusiness) AddAddress(
 	ctx context.Context,
-	encryptionKey []byte,
 	request *profilev1.AddAddressRequest) (*profilev1.ProfileObject, error) {
 
 	address, err := pb.addressBusiness.CreateAddress(ctx, request.GetAddress())
@@ -301,15 +306,14 @@ func (pb *profileBusiness) AddAddress(
 		return nil, err
 	}
 
-	return pb.GetByID(ctx, encryptionKey, request.GetId())
+	return pb.GetByID(ctx, request.GetId())
 
 }
 
 func (pb *profileBusiness) AddContact(
 	ctx context.Context,
-	encryptionKey []byte,
 	request *profilev1.AddContactRequest) (*profilev1.ProfileObject, error) {
 
-	return pb.GetByID(ctx, encryptionKey, request.GetId())
+	return pb.GetByID(ctx, request.GetId())
 
 }
