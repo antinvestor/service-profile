@@ -118,8 +118,7 @@ func main() {
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
 	profileServiceRestHandlers := gorillahandlers.RecoveryHandler(
-		gorillahandlers.PrintRecoveryStack(true))(
-		implementation.NewRouterV1())
+		gorillahandlers.PrintRecoveryStack(true))(implementation.NewRouterV1())
 
 	profileRestServer := frame.HttpHandler(profileServiceRestHandlers)
 	serviceOptions = append(serviceOptions, profileRestServer)

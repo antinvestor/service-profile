@@ -16,7 +16,7 @@ type VerificationsQueueHandler struct {
 	NotificationCli *notificationv1.NotificationClient
 }
 
-func (vq *VerificationsQueueHandler) Handle(ctx context.Context, payload []byte) error {
+func (vq *VerificationsQueueHandler) Handle(ctx context.Context, _ map[string]string, payload []byte) error {
 	verification := &models.Verification{}
 	err := json.Unmarshal(payload, verification)
 	if err != nil {
