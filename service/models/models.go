@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"errors"
 	profilev1 "github.com/antinvestor/apis/profile/v1"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/pitabwire/frame"
@@ -49,9 +50,9 @@ type Profile struct {
 }
 
 func (p *Profile) GetByID(db *gorm.DB) error {
-	modelID := strings.TrimSpace(p.ID)
+	modelID := strings.TrimSpace(p.GetID())
 	if err := db.Preload(clause.Associations).Where("id = ?", modelID).First(p).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return service.ErrorProfileDoesNotExist
 		}
 		return err
@@ -146,7 +147,7 @@ func GetContactsByProfile(db *gorm.DB, p *Profile) ([]Contact, error) {
 
 	var profileContacts []Contact
 
-	err := db.Preload(clause.Associations).Where("profile_id = ?", p.ID).Find(&profileContacts).Error
+	err := db.Preload(clause.Associations).Where("profile_id = ?", p.GetID()).Find(&profileContacts).Error
 
 	if err != nil {
 		return nil, err
