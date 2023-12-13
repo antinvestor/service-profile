@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func testService() (context.Context, *frame.Service) {
+func getTestService() (context.Context, *frame.Service) {
 	dbURL := frame.GetEnv("TEST_DATABASE_URL",
 		"postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
 	mainDB := frame.DatastoreCon(dbURL, false)
@@ -38,7 +38,7 @@ func getEncryptionKey() []byte {
 }
 
 func TestNewAddressBusiness(t *testing.T) {
-	ctx, srv := testService()
+	ctx, srv := getTestService()
 	type args struct {
 		ctx     context.Context
 		service *frame.Service
@@ -67,7 +67,7 @@ func TestNewAddressBusiness(t *testing.T) {
 }
 
 func Test_addressBusiness_CreateAddress(t *testing.T) {
-	ctx, srv := testService()
+	ctx, srv := getTestService()
 
 	adObj := &profilev1.AddressObject{
 		Name:    "test address",
@@ -119,7 +119,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 
 func Test_addressBusiness_GetByProfile(t *testing.T) {
 
-	ctx, srv := testService()
+	ctx, srv := getTestService()
 	encryptionKey := getEncryptionKey()
 
 	testProfiles, err := createTestProfiles(ctx, srv, encryptionKey, []string{"testing@ant.com"})

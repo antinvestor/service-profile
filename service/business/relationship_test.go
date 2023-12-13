@@ -34,7 +34,7 @@ func createTestProfiles(ctx context.Context, srv *frame.Service, encryptionKey [
 
 func TestNewRelationshipBusiness(t *testing.T) {
 
-	ctx, srv := testService()
+	ctx, srv := getTestService()
 
 	type args struct {
 		ctx                  context.Context
@@ -68,7 +68,7 @@ func TestNewRelationshipBusiness(t *testing.T) {
 
 func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 
-	ctx, srv := testService()
+	ctx, srv := getTestService()
 	profileEncryptionKey := getEncryptionKey()
 
 	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
@@ -178,7 +178,7 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 
 func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 
-	ctx, srv := testService()
+	ctx, srv := getTestService()
 	profileEncryptionKey := getEncryptionKey()
 
 	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
@@ -253,7 +253,7 @@ func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 
 func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 
-	ctx, srv := testService()
+	ctx, srv := getTestService()
 	profileEncryptionKey := getEncryptionKey()
 
 	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
