@@ -27,6 +27,7 @@ type ContactRepository interface {
 	CommunicationLevel(ctx context.Context, communicationLevel profilev1.CommunicationLevel) (*models.CommunicationLevel, error)
 	CommunicationLevelByID(ctx context.Context, communicationLevelID string) (*models.CommunicationLevel, error)
 
+	GetVerificationByContactID(ctx context.Context, contactID string) (*models.Verification, error)
 	VerificationSave(ctx context.Context, verification *models.Verification) error
 	VerificationAttemptSave(ctx context.Context, attempt *models.VerificationAttempt) error
 }

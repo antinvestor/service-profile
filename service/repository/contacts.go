@@ -15,6 +15,12 @@ type contactRepository struct {
 	service *frame.Service
 }
 
+func (cr *contactRepository) GetVerificationByContactID(ctx context.Context, contactID string) (*models.Verification, error) {
+	verification := &models.Verification{}
+	err := cr.service.DB(ctx, false).Last(verification, "contact_id = ?", contactID).Error
+	return verification, err
+}
+
 func (cr *contactRepository) VerificationSave(ctx context.Context, verification *models.Verification) error {
 	return cr.service.DB(ctx, false).FirstOrCreate(verification).Error
 }

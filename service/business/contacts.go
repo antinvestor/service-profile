@@ -26,6 +26,8 @@ type ContactBusiness interface {
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
 	CreateContact(ctx context.Context, key []byte, profileID string, detail string) error
 
+	GetVerification(ctx context.Context, contactID string) (*models.Verification, error)
+
 	ToAPI(ctx context.Context, contact *models.Contact, key []byte) (*profilev1.ContactObject, error)
 }
 
@@ -59,11 +61,17 @@ func (cb *contactBusiness) ToAPI(ctx context.Context, contact *models.Contact, k
 		return nil, err
 	}
 
+	isVerified := false
+	verification, _ := cb.GetVerification(ctx, contact.GetID())
+
+	isVerified = verification != nil
+
 	contactObject := profilev1.ContactObject{
 		Id:                 contact.ID,
 		Detail:             detail,
-		Type:               models.ContactTypeIDToEnum(contactType.UID),
-		CommunicationLevel: models.CommunicationLevelIDToEnum(communicationLevel.UID),
+		Verified:           isVerified,
+		Type:               profilev1.ContactType(contactType.UID),
+		CommunicationLevel: profilev1.CommunicationLevel(communicationLevel.UID),
 	}
 
 	return &contactObject, err
@@ -98,6 +106,9 @@ func (cb *contactBusiness) GetByProfile(ctx context.Context, profileID string) (
 	return cb.contactRep.GetByProfileID(ctx, profileID)
 }
 
+func (cb *contactBusiness) GetVerification(ctx context.Context, contactID string) (*models.Verification, error) {
+	return cb.contactRep.GetVerificationByContactID(ctx, contactID)
+}
 func (cb *contactBusiness) CreateContact(ctx context.Context, key []byte, profileID string, detail string) error {
 
 	contact := &models.Contact{}
