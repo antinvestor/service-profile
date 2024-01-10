@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"context"
-	notificationv1 "github.com/antinvestor/apis/notification/v1"
-	profilev1 "github.com/antinvestor/apis/profile/v1"
+	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
 

@@ -1,7 +1,7 @@
 package business_test
 
 import (
-	profilev1 "github.com/antinvestor/apis/profile/v1"
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"reflect"
 	"testing"

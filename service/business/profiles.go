@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	profilev1 "github.com/antinvestor/apis/profile/v1"
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"

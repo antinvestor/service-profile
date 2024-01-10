@@ -4,7 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
-	profilev1 "github.com/antinvestor/apis/profile/v1"
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/antinvestor/service-profile/service/models"

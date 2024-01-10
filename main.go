@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
-	"github.com/antinvestor/apis"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/handlers"
 	"github.com/antinvestor/service-profile/service/models"
@@ -18,8 +17,9 @@ import (
 	"google.golang.org/grpc"
 	"strings"
 
-	notificationv1 "github.com/antinvestor/apis/notification/v1"
-	profilev1 "github.com/antinvestor/apis/profile/v1"
+	apis "github.com/antinvestor/apis/go/common"
+	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
 )
 

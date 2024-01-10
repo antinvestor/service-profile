@@ -3,7 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
-	notificationv1 "github.com/antinvestor/apis/notification/v1"
+	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
