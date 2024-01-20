@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/antinvestor/apis/go/common v1.7.18
-	github.com/antinvestor/apis/go/notification v1.7.13
+	github.com/antinvestor/apis/go/notification v1.7.18
 	github.com/antinvestor/apis/go/profile v1.7.13
 	github.com/bufbuild/protovalidate-go v0.4.3
 	github.com/gorilla/handlers v1.5.2
