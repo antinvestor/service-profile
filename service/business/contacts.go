@@ -22,6 +22,7 @@ var (
 )
 
 type ContactBusiness interface {
+	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
 	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
 	CreateContact(ctx context.Context, key []byte, profileID string, detail string) error
@@ -96,6 +97,10 @@ func (cb *contactBusiness) FromDetail(ctx context.Context, detail string) (*mode
 	}
 
 	return nil, service.ErrorContactDetailsNotValid
+}
+
+func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*models.Contact, error) {
+	return cb.contactRep.GetByID(ctx, contactID)
 }
 
 func (cb *contactBusiness) GetByDetail(ctx context.Context, detail string) (*models.Contact, error) {

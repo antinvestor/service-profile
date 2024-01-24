@@ -10,7 +10,6 @@ import (
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/bufbuild/protovalidate-go"
 	gorillahandlers "github.com/gorilla/handlers"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/sirupsen/logrus"
@@ -94,13 +93,11 @@ func main() {
 
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			logging.UnaryServerInterceptor(frame.LoggingInterceptor(service.L()), frame.GetLoggingOptions()...),
 			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
 			protovalidateinterceptor.UnaryServerInterceptor(validator),
 			recovery.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
-			logging.StreamServerInterceptor(frame.LoggingInterceptor(service.L()), frame.GetLoggingOptions()...),
 			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
 			protovalidateinterceptor.StreamServerInterceptor(validator),
 			recovery.StreamServerInterceptor(),

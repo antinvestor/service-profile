@@ -9,6 +9,7 @@ import (
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
+	"github.com/rs/xid"
 	"strings"
 )
 
@@ -108,10 +109,22 @@ func (pb *profileBusiness) ProfileToAPI(ctx context.Context,
 
 func (pb *profileBusiness) GetByContact(
 	ctx context.Context,
-	detail string) (*profilev1.ProfileObject, error) {
-	contact, err := pb.contactBusiness.GetByDetail(ctx, detail)
+	contactData string) (*profilev1.ProfileObject, error) {
+
+	var contact *models.Contact
+
+	_, err := xid.FromString(contactData)
 	if err != nil {
-		return nil, err
+
+		contact, err = pb.contactBusiness.GetByDetail(ctx, contactData)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		contact, err = pb.contactBusiness.GetByID(ctx, contactData)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return pb.GetByID(ctx, contact.ProfileID)
