@@ -100,6 +100,7 @@ func main() {
 			recovery.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
+			logging.StreamServerInterceptor(frame.LoggingInterceptor(service.L()), frame.GetLoggingOptions()...),
 			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
 			protovalidateinterceptor.StreamServerInterceptor(validator),
 			recovery.StreamServerInterceptor(),
