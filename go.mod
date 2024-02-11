@@ -3,14 +3,15 @@ module github.com/antinvestor/service-profile
 go 1.21
 
 require (
-	github.com/antinvestor/apis/go/common v1.7.19
+	github.com/antinvestor/apis/go/common v1.9.5
 	github.com/antinvestor/apis/go/notification v1.7.19
-	github.com/antinvestor/apis/go/profile v1.7.19
+	github.com/antinvestor/apis/go/profile v1.9.6
 	github.com/bufbuild/protovalidate-go v0.5.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/pitabwire/frame v1.17.6
+	github.com/rs/xid v1.5.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
 	github.com/ttacon/libphonenumber v1.2.1
@@ -55,7 +56,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/rs/cors v1.8.3 // indirect
-	github.com/rs/xid v1.5.0 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect
 	github.com/ttacon/builder v0.0.0-20170518171403-c099f663e1c2 // indirect
 	go.opencensus.io v0.24.0 // indirect
