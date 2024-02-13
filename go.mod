@@ -6,7 +6,7 @@ require (
 	github.com/antinvestor/apis/go/common v1.9.6
 	github.com/antinvestor/apis/go/notification v1.7.19
 	github.com/antinvestor/apis/go/profile v1.9.6
-	github.com/bufbuild/protovalidate-go v0.5.1
+	github.com/bufbuild/protovalidate-go v0.5.2
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
@@ -22,7 +22,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.32.0-20231115204500-e097f827e652.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.32.0-20240212200630-3014d81c3a48.1 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/alitto/pond v1.8.3 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.0 // indirect
@@ -36,7 +36,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.0 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/cel-go v0.18.2 // indirect
+	github.com/google/cel-go v0.19.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
