@@ -116,8 +116,7 @@ func main() {
 	profileServiceRestHandlers := service.AuthenticationMiddleware(implementation.NewRouterV1(),
 		jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
 
-	profileRestServer := frame.HttpHandler(profileServiceRestHandlers)
-	serviceOptions = append(serviceOptions, profileRestServer)
+	serviceOptions = append(serviceOptions, frame.HttpHandler(profileServiceRestHandlers))
 
 	verificationQueueHandler := queue.VerificationsQueueHandler{
 		Service:         service,

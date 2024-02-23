@@ -39,15 +39,12 @@ type ProfileBusiness interface {
 }
 
 func NewProfileBusiness(ctx context.Context, service *frame.Service, encryptionKeyFunc func() []byte) ProfileBusiness {
-	profileRepo := repository.NewProfileRepository(service)
-	contactBusiness := NewContactBusiness(ctx, service)
-	addressBusiness := NewAddressBusiness(ctx, service)
 	return &profileBusiness{
 		service:         service,
 		encryptionKey:   encryptionKeyFunc(),
-		contactBusiness: contactBusiness,
-		addressBusiness: addressBusiness,
-		profileRepo:     profileRepo,
+		contactBusiness: NewContactBusiness(ctx, service),
+		addressBusiness: NewAddressBusiness(ctx, service),
+		profileRepo:     repository.NewProfileRepository(service),
 	}
 }
 
