@@ -17,7 +17,7 @@ type ProfileServer struct {
 	profilev1.UnimplementedProfileServiceServer
 }
 
-func (ps *ProfileServer) GetByID(ctx context.Context,
+func (ps *ProfileServer) GetById(ctx context.Context,
 	request *profilev1.GetByIdRequest) (*profilev1.GetByIdResponse, error) {
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
