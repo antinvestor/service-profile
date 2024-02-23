@@ -9,7 +9,6 @@ import (
 	"github.com/antinvestor/service-profile/service/queue"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/bufbuild/protovalidate-go"
-	gorillahandlers "github.com/gorilla/handlers"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
@@ -114,10 +113,8 @@ func main() {
 	grpcServerOpt := frame.GrpcServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
-	profileServiceRestHandlers := gorillahandlers.RecoveryHandler(
-		gorillahandlers.PrintRecoveryStack(true))(
-		service.AuthenticationMiddleware(implementation.NewRouterV1(),
-			jwtAudience, profileConfig.Oauth2JwtVerifyIssuer))
+	profileServiceRestHandlers := service.AuthenticationMiddleware(implementation.NewRouterV1(),
+		jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
 
 	profileRestServer := frame.HttpHandler(profileServiceRestHandlers)
 	serviceOptions = append(serviceOptions, profileRestServer)

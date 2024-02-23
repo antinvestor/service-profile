@@ -6,8 +6,6 @@ import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
-
-	"strings"
 )
 
 type ProfileServer struct {
@@ -22,10 +20,8 @@ type ProfileServer struct {
 func (ps *ProfileServer) GetByID(ctx context.Context,
 	request *profilev1.GetByIdRequest) (*profilev1.GetByIdResponse, error) {
 
-	profileID := strings.TrimSpace(request.GetId())
-
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
-	profileObj, err := profileBusiness.GetByID(ctx, profileID)
+	profileObj, err := profileBusiness.GetByID(ctx, request.GetId())
 	if err != nil {
 		return nil, err
 	}
