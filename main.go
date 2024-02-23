@@ -113,8 +113,8 @@ func main() {
 	grpcServerOpt := frame.GrpcServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
-	profileServiceRestHandlers := service.AuthenticationMiddleware(implementation.NewRouterV1(),
-		jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
+	profileServiceRestHandlers := service.AuthenticationMiddleware(
+		implementation.NewRouterV1(), jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
 
 	serviceOptions = append(serviceOptions, frame.HttpHandler(profileServiceRestHandlers))
 
@@ -134,6 +134,7 @@ func main() {
 	log.WithField("server http port", profileConfig.HttpServerPort).
 		WithField("server grpc port", profileConfig.GrpcServerPort).
 		Info(" Initiating server operations")
+	defer implementation.Service.Stop(ctx)
 	err = implementation.Service.Run(ctx, "")
 	if err != nil {
 		log.WithError(err).Fatal("could not run Server ")

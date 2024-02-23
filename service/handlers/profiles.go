@@ -14,7 +14,7 @@ type ProfileServer struct {
 	Service         *frame.Service
 	NotificationCli *notificationv1.NotificationClient
 
-	profilev1.ProfileServiceServer
+	profilev1.UnimplementedProfileServiceServer
 }
 
 func (ps *ProfileServer) GetByID(ctx context.Context,
