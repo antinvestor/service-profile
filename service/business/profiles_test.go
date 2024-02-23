@@ -1,7 +1,6 @@
 package business_test
 
 import (
-	"context"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"reflect"
@@ -84,11 +83,6 @@ func Test_profileBusiness_GetByID(t *testing.T) {
 		profileAvailable = append(profileAvailable, got.GetId())
 	}
 
-	type args struct {
-		ctx                  context.Context
-		createProfileRequest *profilev1.CreateRequest
-		profileID            string
-	}
 	tests := []struct {
 		name      string
 		profileID string
