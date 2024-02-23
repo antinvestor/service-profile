@@ -11,7 +11,6 @@ import (
 	"github.com/bufbuild/protovalidate-go"
 	gorillahandlers "github.com/gorilla/handlers"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
 	"google.golang.org/grpc"
@@ -95,12 +94,10 @@ func main() {
 		grpc.ChainUnaryInterceptor(
 			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
 			protovalidateinterceptor.UnaryServerInterceptor(validator),
-			recovery.UnaryServerInterceptor(),
 		),
 		grpc.ChainStreamInterceptor(
 			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
 			protovalidateinterceptor.StreamServerInterceptor(validator),
-			recovery.StreamServerInterceptor(),
 		),
 	)
 
