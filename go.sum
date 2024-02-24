@@ -36,6 +36,8 @@ github.com/antinvestor/apis/go/notification v1.10.0 h1:baEQ/hIRE7aaAeaEkPI8x/Cwh
 github.com/antinvestor/apis/go/notification v1.10.0/go.mod h1:Jb14bvMwnFP8GBA0vYHNIEnzoGRSZBUTLATVCdcfVcM=
 github.com/antinvestor/apis/go/profile v1.10.0 h1:6I8N44mv7N5FdK5xaR/e2ZK0gWxbr6q6tGdCclRNbaE=
 github.com/antinvestor/apis/go/profile v1.10.0/go.mod h1:ZhtG3HBHyJOb88NsluL2XNnse1e5HJ0BHt7RBD22hiQ=
+github.com/antinvestor/apis/go/profile v1.11.1 h1:exeoXURyrIS38sUUAtbWPcJULSao5P2FUaQK54E7PHc=
+github.com/antinvestor/apis/go/profile v1.11.1/go.mod h1:6+Ir2gukXs1t8Xemruq50VICR4+TeMM246hccLkplHI=
 github.com/antlr4-go/antlr/v4 v4.13.0 h1:lxCg3LAv+EUK6t1i0y1V6/SLeUi0eKEKdhQAlS8TVTI=
 github.com/antlr4-go/antlr/v4 v4.13.0/go.mod h1:pfChB/xh/Unjila75QW7+VU4TSnWnnk9UTnmpPaOR2g=
 github.com/apache/thrift v0.12.0/go.mod h1:cp2SuWMxlEZw2r+iP2GNCdIi4C1qmUzdZFSVb+bacwQ=
