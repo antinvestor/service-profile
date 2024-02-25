@@ -88,7 +88,6 @@ func (aB *relationshipBusiness) ListRelationships(ctx context.Context, request *
 
 func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request *profilev1.AddRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
-	var profileObj *profilev1.ProfileObject
 	logger := aB.service.L().WithField("request", request)
 
 	relationships, err := aB.relationshipRepo.List(ctx, request.GetParent(), request.GetParentId(), []string{request.GetChildId()}, "", 2)
@@ -103,28 +102,6 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 	if len(relationships) > 0 {
 
 		return aB.ToAPI(ctx, request.GetParent(), request.GetParentId(), relationships[0])
-	}
-
-	if request.GetParent() == "Profile" {
-		profileObj, err = aB.profileBusiness.GetByID(ctx, request.GetParentId())
-		if err != nil {
-			return nil, err
-		}
-
-		if profileObj == nil {
-			return nil, service.ErrorProfileDoesNotExist
-		}
-	}
-
-	if request.GetChild() == "Profile" {
-		profileObj, err = aB.profileBusiness.GetByID(ctx, request.GetChildId())
-		if err != nil {
-			return nil, err
-		}
-
-		if profileObj == nil {
-			return nil, service.ErrorProfileDoesNotExist
-		}
 	}
 
 	relationshipType, err := aB.relationshipRepo.RelationshipType(ctx, request.GetType())
@@ -150,6 +127,8 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Debug("successfully add a relationship")
 
 	return aB.ToAPI(ctx, request.GetParent(), request.GetParentId(), &a)
 
