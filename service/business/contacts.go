@@ -157,6 +157,7 @@ func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Co
 	expiryTime := time.Now().Add(time.Duration(profileConfig.VerificationPinExpiryTimeInSec))
 
 	verification := &models.Verification{
+		ProfileID: contact.ProfileID,
 		ContactID: contact.ID,
 		Pin:       GeneratePin(profileConfig.LengthOfVerificationPin),
 		LinkHash:  GeneratePin(profileConfig.LengthOfVerificationLinkHash),

@@ -39,7 +39,17 @@ func (vq *VerificationsQueueHandler) Handle(ctx context.Context, _ map[string]st
 	variables["pin"] = verification.Pin
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
-	_, err = vq.NotificationCli.Send(ctx, "", contact.ID, contact.Language,
-		profileConfig.MessageTemplateContactVerification, variables)
+
+	nMessages := &notificationv1.Notification{
+		ProfileType: "Profile",
+		ProfileId:   verification.ProfileID,
+		Contact:     &notificationv1.Notification_ContactId{ContactId: contact.ID},
+		Payload:     variables,
+		Language:    contact.Language,
+		Template:    profileConfig.MessageTemplateContactVerification,
+		OutBound:    true,
+	}
+
+	_, err = vq.NotificationCli.Send(ctx, nMessages)
 	return err
 }

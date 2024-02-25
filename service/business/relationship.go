@@ -133,9 +133,6 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 	}
 
 	a := models.Relationship{
-		BaseModel: frame.BaseModel{
-			ID: request.GetId(),
-		},
 		ParentObject:       request.GetParent(),
 		ParentObjectID:     request.GetParentId(),
 		RelationshipTypeID: relationshipType.GetID(),
@@ -143,6 +140,10 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 		ChildObject:        request.GetChild(),
 		ChildObjectID:      request.GetChildId(),
 		Properties:         nil,
+	}
+	a.GenID(ctx)
+	if a.ValidXID(request.GetId()) {
+		a.ID = request.GetId()
 	}
 
 	err = aB.relationshipRepo.Save(ctx, &a)

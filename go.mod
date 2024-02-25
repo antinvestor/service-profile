@@ -3,11 +3,10 @@ module github.com/antinvestor/service-profile
 go 1.21
 
 require (
-	github.com/antinvestor/apis/go/common v1.11.2
-	github.com/antinvestor/apis/go/notification v1.10.0
-	github.com/antinvestor/apis/go/profile v1.11.2
+	github.com/antinvestor/apis/go/common v1.11.3
+	github.com/antinvestor/apis/go/notification v1.11.3
+	github.com/antinvestor/apis/go/profile v1.11.3
 	github.com/bufbuild/protovalidate-go v0.5.2
-	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/pitabwire/frame v1.18.6
@@ -38,6 +37,7 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/cel-go v0.19.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.0 // indirect
+	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect

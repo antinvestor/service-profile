@@ -158,6 +158,7 @@ func GetContactsByProfile(db *gorm.DB, p *Profile) ([]Contact, error) {
 
 type Verification struct {
 	frame.BaseModel
+	ProfileID string `gorm:"type:varchar(50)"`
 	ContactID string `gorm:"type:varchar(50)"`
 	Contact   Contact
 
