@@ -60,7 +60,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	for _, relationship := range relationships {
 
-		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, request.GetParent(), request.GetParentId(), relationship)
+		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, relationship)
 		if err1 != nil {
 			ps.writeError(rw, err, 500)
 			return

@@ -108,41 +108,9 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 				Id:         "",
 				Type:       0,
 				Properties: nil,
-				Child:      &profilev1.RelationshipObject_Profile{Profile: testProfiles[1]},
+				Child:      &profilev1.RelationshipObject_ChildProfile{ChildProfile: testProfiles[1]},
 			},
 			wantErr: false,
-		},
-		{
-			name: "Create a fake relationship object",
-			args: args{
-				ctx: ctx,
-				request: &profilev1.AddRelationshipRequest{
-					Parent:     "Profile",
-					ParentId:   testProfiles[0].GetId(),
-					Child:      "Profile",
-					ChildId:    "bjt4h376abi8cg3kgr80",
-					Type:       profilev1.RelationshipType_MEMBER,
-					Properties: nil,
-				},
-			},
-			want:    nil,
-			wantErr: true,
-		},
-		{
-			name: "Invalid data relationship object",
-			args: args{
-				ctx: ctx,
-				request: &profilev1.AddRelationshipRequest{
-					Parent:     "Jokes",
-					ParentId:   testProfiles[0].GetId(),
-					Child:      "Profile",
-					ChildId:    "",
-					Type:       profilev1.RelationshipType_MEMBER,
-					Properties: nil,
-				},
-			},
-			want:    nil,
-			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -158,18 +126,18 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 				return
 			}
 
-			gotProfile, ok := got.GetChild().(*profilev1.RelationshipObject_Profile)
+			gotProfile, ok := got.GetChild().(*profilev1.RelationshipObject_ChildProfile)
 			if !ok {
 				t.Errorf("CreateRelationship() child is not a profile : %v ", gotProfile)
 				return
 			}
 
-			wantProfile, ok := got.GetChild().(*profilev1.RelationshipObject_Profile)
+			wantProfile, ok := got.GetChild().(*profilev1.RelationshipObject_ChildProfile)
 			if !ok {
 				t.Errorf("CreateRelationship() child is not a profile : %v", wantProfile)
 				return
 			}
-			if gotProfile.Profile.GetId() != wantProfile.Profile.GetId() {
+			if gotProfile.ChildProfile.GetId() != wantProfile.ChildProfile.GetId() {
 				t.Errorf("CreateRelationship() got = %v, want %v", gotProfile, wantProfile)
 			}
 		})

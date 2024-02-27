@@ -159,7 +159,7 @@ func (ps *ProfileServer) ListRelationships(request *profilev1.ListRelationshipRe
 
 	for _, relationship := range relationships {
 
-		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, request.GetParent(), request.GetParentId(), relationship)
+		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, relationship)
 		if err1 != nil {
 			return err
 		}
