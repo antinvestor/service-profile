@@ -5,6 +5,7 @@ import (
 	"fmt"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
+	"github.com/antinvestor/service-profile/service/models"
 	"github.com/gorilla/mux"
 	"github.com/pitabwire/frame"
 	"net/http"
@@ -52,8 +53,12 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	relationships, err := relationshipBusiness.ListRelationships(ctx, request)
 	if err != nil {
-		ps.writeError(rw, err, 500)
-		return
+
+		if !frame.DBErrorIsRecordNotFound(err) {
+			ps.writeError(rw, err, 500)
+			return
+		}
+		relationships = []*models.Relationship{}
 	}
 
 	var relationshipObjectList []*profilev1.RelationshipObject
