@@ -3,8 +3,8 @@ module github.com/antinvestor/service-profile
 go 1.21
 
 require (
-	github.com/antinvestor/apis/go/common v1.12.0
-	github.com/antinvestor/apis/go/notification v1.12.0
+	github.com/antinvestor/apis/go/common v1.12.2
+	github.com/antinvestor/apis/go/notification v1.12.1
 	github.com/antinvestor/apis/go/profile v1.12.0
 	github.com/bufbuild/protovalidate-go v0.6.0
 	github.com/gorilla/mux v1.8.1
