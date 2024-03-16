@@ -12,7 +12,7 @@ require (
 	github.com/pitabwire/frame v1.18.6
 	github.com/rs/xid v1.5.0
 	github.com/sirupsen/logrus v1.9.3
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.20.0
 	google.golang.org/grpc v1.62.1
