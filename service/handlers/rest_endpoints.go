@@ -117,7 +117,7 @@ func (ps *ProfileServer) NewRouterV1() *mux.Router {
 		Methods("GET")
 
 	router.Path("/user/relations").
-		Name("UserInfoEndpoint").
+		Name("UserRelationsEndpoint").
 		HandlerFunc(ps.RestListRelationshipsEndpoint).
 		Methods("GET")
 
