@@ -62,6 +62,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	}
 
 	var relationshipObjectList []*profilev1.RelationshipObject
+	relationshipObjectList = []*profilev1.RelationshipObject{}
 
 	for _, relationship := range relationships {
 
