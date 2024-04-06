@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
+	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/models"
@@ -40,14 +41,18 @@ func (vq *VerificationsQueueHandler) Handle(ctx context.Context, _ map[string]st
 	variables["linkHash"] = verification.LinkHash
 	variables["expiryDate"] = verification.ExpiresAt.String()
 
-	nMessages := &notificationv1.Notification{
+	recipient := &commonv1.ContactLink{
 		ProfileType: "Profile",
 		ProfileId:   verification.ProfileID,
-		Contact:     &notificationv1.Notification_ContactId{ContactId: contact.ID},
-		Payload:     variables,
-		Language:    contact.Language,
-		Template:    profileConfig.MessageTemplateContactVerification,
-		OutBound:    true,
+		ContactId:   contact.ID,
+	}
+
+	nMessages := &notificationv1.Notification{
+		Recipient: recipient,
+		Payload:   variables,
+		Language:  contact.Language,
+		Template:  profileConfig.MessageTemplateContactVerification,
+		OutBound:  true,
 	}
 
 	_, err = vq.NotificationCli.Send(ctx, nMessages)

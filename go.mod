@@ -3,9 +3,9 @@ module github.com/antinvestor/service-profile
 go 1.21
 
 require (
-	github.com/antinvestor/apis/go/common v1.12.2
-	github.com/antinvestor/apis/go/notification v1.12.2
-	github.com/antinvestor/apis/go/profile v1.12.2
+	github.com/antinvestor/apis/go/common v1.15.2
+	github.com/antinvestor/apis/go/notification v1.15.2
+	github.com/antinvestor/apis/go/profile v1.15.2
 	github.com/bufbuild/protovalidate-go v0.6.1
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
@@ -68,13 +68,12 @@ require (
 	gocloud.dev v0.37.0 // indirect
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8 // indirect
 	golang.org/x/net v0.22.0 // indirect
-	golang.org/x/oauth2 v0.18.0 // indirect
+	golang.org/x/oauth2 v0.19.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20231012003039-104605ab7028 // indirect
 	google.golang.org/api v0.169.0 // indirect
-	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240401170217-c3f982113cda // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240401170217-c3f982113cda // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
