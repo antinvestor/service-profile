@@ -117,7 +117,7 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 		RelationshipType:   relationshipType,
 		ChildObject:        request.GetChild(),
 		ChildObjectID:      request.GetChildId(),
-		Properties:         nil,
+		Properties:         frame.DBPropertiesFromMap(request.GetProperties()),
 	}
 	a.GenID(ctx)
 	if a.ValidXID(request.GetId()) {
