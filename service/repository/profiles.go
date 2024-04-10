@@ -26,8 +26,12 @@ func (pr *profileRepository) GetTypeByUID(ctx context.Context, profileType profi
 }
 
 func (pr *profileRepository) GetByID(ctx context.Context, id string) (*models.Profile, error) {
+
+	emptyClaims := &frame.AuthenticationClaims{}
+	emptyCtx := emptyClaims.ClaimsToContext(ctx)
+
 	profile := &models.Profile{}
-	err := pr.service.DB(ctx, true).First(profile, "id = ?", id).Error
+	err := pr.service.DB(emptyCtx, true).First(profile, "id = ?", id).Error
 	return profile, err
 }
 

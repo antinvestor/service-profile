@@ -93,12 +93,10 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
-	emptyClaims := &frame.AuthenticationClaims{}
-	emptyCtx := emptyClaims.ClaimsToContext(ctx)
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
 	subject, _ := claims.GetSubject()
-	profile, err := profileBusiness.GetByID(emptyCtx, subject)
+	profile, err := profileBusiness.GetByID(ctx, subject)
 	if err != nil {
 		ps.writeError(rw, err, 500)
 		return

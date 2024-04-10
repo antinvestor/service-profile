@@ -130,12 +130,16 @@ func (pb *profileBusiness) GetByContact(
 func (pb *profileBusiness) GetByID(
 	ctx context.Context,
 	profileID string) (*profilev1.ProfileObject, error) {
-	profile, err := pb.profileRepo.GetByID(ctx, profileID)
+
+	emptyClaims := &frame.AuthenticationClaims{}
+	emptyCtx := emptyClaims.ClaimsToContext(ctx)
+
+	profile, err := pb.profileRepo.GetByID(emptyCtx, profileID)
 	if err != nil {
 		return nil, err
 	}
 
-	return pb.ProfileToAPI(ctx, profile)
+	return pb.ProfileToAPI(emptyCtx, profile)
 
 }
 
