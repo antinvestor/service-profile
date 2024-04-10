@@ -52,12 +52,19 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 		peerObjectID = subject
 	}
 
+	invertRelationship := false
+	invertRelationshipStr, ok2 := params["InvertRelation"]
+	if !ok2 {
+		invertRelationship, _ = strconv.ParseBool(invertRelationshipStr)
+	}
+
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
 	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
 
 	request := &profilev1.ListRelationshipRequest{
 		PeerName:           peerObject,
 		PeerId:             peerObjectID,
+		InvertRelation:     invertRelationship,
 		LastRelationshipId: lastRelationshipID,
 		Count:              int32(count),
 	}
