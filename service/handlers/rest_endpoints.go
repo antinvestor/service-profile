@@ -41,23 +41,23 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	lastRelationshipID := params["LastRelationshipID"]
 
-	parentObject, ok := params["ParentObjectName"]
+	peerObject, ok := params["ParentObjectName"]
 	if !ok {
-		parentObject = "Profile"
+		peerObject = "Profile"
 	}
 
-	parentObjectID, ok1 := params["ParentObjectID"]
-	if !ok1 || parentObject == "Profile" {
+	peerObjectID, ok1 := params["ParentObjectID"]
+	if !ok1 || peerObject == "Profile" {
 		subject, _ := claims.GetSubject()
-		parentObjectID = subject
+		peerObjectID = subject
 	}
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
 	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
 
 	request := &profilev1.ListRelationshipRequest{
-		Parent:             parentObject,
-		ParentId:           parentObjectID,
+		PeerName:           peerObject,
+		PeerId:             peerObjectID,
 		LastRelationshipId: lastRelationshipID,
 		Count:              int32(count),
 	}

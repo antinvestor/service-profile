@@ -51,7 +51,7 @@ type RelationshipRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Relationship, error)
 	Save(ctx context.Context, relationship *models.Relationship) error
 	Delete(ctx context.Context, id string) error
-	List(ctx context.Context, parent string, parentId string, relatedChildrenIds []string, lastRelationshipId string, count int) ([]*models.Relationship, error)
+	List(ctx context.Context, peerName string, peerId string, inverseRelation bool, relatedChildrenIds []string, lastRelationshipId string, count int) ([]*models.Relationship, error)
 
 	RelationshipType(ctx context.Context, relationshipType profilev1.RelationshipType) (*models.RelationshipType, error)
 	RelationshipTypeByID(ctx context.Context, relationshipTypeID string) (*models.RelationshipType, error)

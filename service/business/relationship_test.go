@@ -268,8 +268,8 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				request: &profilev1.ListRelationshipRequest{
-					Parent:   "Profile",
-					ParentId: "bjt4h376abi8cg3kgr80",
+					PeerName: "Profile",
+					PeerId:   "bjt4h376abi8cg3kgr80",
 				},
 			},
 			wantCount: 0,
@@ -280,8 +280,8 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				request: &profilev1.ListRelationshipRequest{
-					Parent:   "Profile",
-					ParentId: testProfiles[0].GetId(),
+					PeerName: "Profile",
+					PeerId:   testProfiles[0].GetId(),
 				},
 			},
 			wantCount: 3,
@@ -292,8 +292,8 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				request: &profilev1.ListRelationshipRequest{
-					Parent:   "Profile",
-					ParentId: testProfiles[0].GetId(),
+					PeerName: "Profile",
+					PeerId:   testProfiles[0].GetId(),
 					Count:    2,
 				},
 			},
@@ -305,8 +305,8 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				request: &profilev1.ListRelationshipRequest{
-					Parent:            "Profile",
-					ParentId:          testProfiles[0].GetId(),
+					PeerName:          "Profile",
+					PeerId:            testProfiles[0].GetId(),
 					RelatedChildrenId: []string{testProfiles[3].GetId()},
 				},
 			},

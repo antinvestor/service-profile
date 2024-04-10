@@ -73,8 +73,8 @@ func (aB *relationshipBusiness) ToAPI(ctx context.Context, relationship *models.
 
 func (aB *relationshipBusiness) ListRelationships(ctx context.Context, request *profilev1.ListRelationshipRequest) ([]*models.Relationship, error) {
 
-	if request.GetParent() == "Profile" {
-		profileObj, err := aB.profileBusiness.GetByID(ctx, request.GetParentId())
+	if request.GetPeerName() == "Profile" {
+		profileObj, err := aB.profileBusiness.GetByID(ctx, request.GetPeerId())
 		if err != nil {
 			return nil, err
 		}
@@ -84,14 +84,14 @@ func (aB *relationshipBusiness) ListRelationships(ctx context.Context, request *
 		}
 	}
 
-	return aB.relationshipRepo.List(ctx, request.GetParent(), request.GetParentId(), request.GetRelatedChildrenId(), request.GetLastRelationshipId(), int(request.GetCount()))
+	return aB.relationshipRepo.List(ctx, request.GetPeerName(), request.GetPeerId(), request.GetInvertRelation(), request.GetRelatedChildrenId(), request.GetLastRelationshipId(), int(request.GetCount()))
 }
 
 func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request *profilev1.AddRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
 	logger := aB.service.L().WithField("request", request)
 
-	relationships, err := aB.relationshipRepo.List(ctx, request.GetParent(), request.GetParentId(), []string{request.GetChildId()}, "", 2)
+	relationships, err := aB.relationshipRepo.List(ctx, request.GetParent(), request.GetParentId(), false, []string{request.GetChildId()}, "", 2)
 	if err != nil {
 		logger.WithError(err).Warn("get existing relationship error")
 

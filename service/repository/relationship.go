@@ -18,7 +18,7 @@ func (ar *relationshipRepository) GetByID(ctx context.Context, id string) (*mode
 	return relationship, err
 }
 
-func (ar *relationshipRepository) List(ctx context.Context, parent, parentId string, childrenIds []string, lastRelationshipId string, count int) ([]*models.Relationship, error) {
+func (ar *relationshipRepository) List(ctx context.Context, peerName, peerId string, inverseRelation bool, childrenIds []string, lastRelationshipId string, count int) ([]*models.Relationship, error) {
 	var relationshipList []*models.Relationship
 
 	if count == 0 {
@@ -26,10 +26,17 @@ func (ar *relationshipRepository) List(ctx context.Context, parent, parentId str
 	}
 
 	database := ar.service.DB(ctx, true).Preload(clause.Associations).
-		Limit(count).Where(
-		"(( parent_object = ? AND parent_object_id = ? ) OR ( child_object = ? AND child_object_id = ?)) ",
-		parent, parentId, parent, parentId)
+		Limit(count)
 
+	if inverseRelation {
+		database = database.Where(
+			" child_object = ? AND child_object_id = ? ",
+			peerName, peerId)
+	} else {
+		database = database.Where(
+			" parent_object = ? AND parent_object_id = ? ",
+			peerName, peerId)
+	}
 	if lastRelationshipId != "" {
 		database = database.Where("id > ?", lastRelationshipId)
 	}
