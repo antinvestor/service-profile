@@ -47,7 +47,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	}
 
 	parentObjectID, ok1 := params["ParentObjectID"]
-	if !ok1 {
+	if !ok1 || parentObject == "Profile" {
 		subject, _ := claims.GetSubject()
 		parentObjectID = subject
 	}
