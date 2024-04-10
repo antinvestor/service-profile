@@ -80,6 +80,8 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	}
 
 	response := map[string]interface{}{
+		"tenant_id":          claims.TenantId(),
+		"partition_id":       claims.PartitionId(),
 		"relationships":      relationshipObjectList,
 		"count":              len(relationshipObjectList),
 		"LastRelationshipID": lastRelationshipID,
