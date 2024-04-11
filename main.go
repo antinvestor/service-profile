@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"fmt"
 	"github.com/antinvestor/service-profile/config"
+	"github.com/antinvestor/service-profile/service/events"
 	"github.com/antinvestor/service-profile/service/handlers"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/queue"
@@ -100,13 +101,15 @@ func main() {
 		),
 	)
 
+	encryptionFunction := func() []byte {
+		return pbkdf2.Key([]byte(profileConfig.ContactEncryptionKey),
+			[]byte(profileConfig.ContactEncryptionSalt), 4096, 32, sha256.New)
+	}
+
 	implementation := &handlers.ProfileServer{
-		Service:         service,
-		NotificationCli: notificationCli,
-		EncryptionKeyFunc: func() []byte {
-			return pbkdf2.Key([]byte(profileConfig.ContactEncryptionKey),
-				[]byte(profileConfig.ContactEncryptionSalt), 4096, 32, sha256.New)
-		},
+		Service:           service,
+		NotificationCli:   notificationCli,
+		EncryptionKeyFunc: encryptionFunction,
 	}
 	profilev1.RegisterProfileServiceServer(grpcServer, implementation)
 
@@ -129,6 +132,15 @@ func main() {
 
 	serviceOptions = append(serviceOptions, verificationQueue, verificationQueuePublisher)
 
+	serviceOptions = append(serviceOptions,
+		frame.RegisterEvents(
+			&events.RelationshipConnectQueue{
+				Service: service,
+			},
+			&events.RelationshipDisConnectQueue{
+				Service: service,
+			},
+		))
 	service.Init(serviceOptions...)
 
 	log.WithField("server http port", profileConfig.HttpServerPort).

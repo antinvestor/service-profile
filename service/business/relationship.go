@@ -4,6 +4,7 @@ import (
 	"context"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service"
+	"github.com/antinvestor/service-profile/service/events"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
@@ -13,8 +14,6 @@ type RelationshipBusiness interface {
 	ListRelationships(ctx context.Context, request *profilev1.ListRelationshipRequest) ([]*models.Relationship, error)
 	CreateRelationship(ctx context.Context, request *profilev1.AddRelationshipRequest) (*profilev1.RelationshipObject, error)
 	DeleteRelationship(ctx context.Context, request *profilev1.DeleteRelationshipRequest) (*profilev1.RelationshipObject, error)
-
-	ToAPI(ctx context.Context, relationship *models.Relationship) (*profilev1.RelationshipObject, error)
 }
 
 func NewRelationshipBusiness(_ context.Context, service *frame.Service, profileBiz ProfileBusiness) RelationshipBusiness {
@@ -33,48 +32,10 @@ type relationshipBusiness struct {
 	relationshipRepo repository.RelationshipRepository
 }
 
-func (aB *relationshipBusiness) ToAPI(ctx context.Context, relationship *models.Relationship) (*profilev1.RelationshipObject, error) {
-
-	if relationship == nil {
-		return nil, nil
-	}
-
-	relationshipObj := &profilev1.RelationshipObject{
-		Id:         relationship.GetID(),
-		Type:       profilev1.RelationshipType(relationship.RelationshipType.UID),
-		Properties: frame.DBPropertiesToMap(relationship.Properties),
-		ChildEntry: &profilev1.EntryItem{
-			ObjectName: relationship.ChildObject,
-			ObjectId:   relationship.ChildObjectID,
-		},
-		ParentEntry: &profilev1.EntryItem{
-			ObjectName: relationship.ParentObject,
-			ObjectId:   relationship.ParentObjectID,
-		},
-	}
-
-	if relationship.ChildObject == "Profile" {
-		profileObj, err := aB.profileBusiness.GetByID(ctx, relationship.ChildObjectID)
-		if err == nil {
-			relationshipObj.Child = &profilev1.RelationshipObject_ChildProfile{ChildProfile: profileObj}
-		}
-	}
-
-	if relationship.ParentObject == "Profile" {
-		profileObj, err := aB.profileBusiness.GetByID(ctx, relationship.ParentObjectID)
-		if err == nil {
-			relationshipObj.Parent = &profilev1.RelationshipObject_ParentProfile{ParentProfile: profileObj}
-		}
-	}
-
-	return relationshipObj, nil
-
-}
-
-func (aB *relationshipBusiness) ListRelationships(ctx context.Context, request *profilev1.ListRelationshipRequest) ([]*models.Relationship, error) {
+func (rb *relationshipBusiness) ListRelationships(ctx context.Context, request *profilev1.ListRelationshipRequest) ([]*models.Relationship, error) {
 
 	if request.GetPeerName() == "Profile" {
-		profileObj, err := aB.profileBusiness.GetByID(ctx, request.GetPeerId())
+		profileObj, err := rb.profileBusiness.GetByID(ctx, request.GetPeerId())
 		if err != nil {
 			return nil, err
 		}
@@ -84,14 +45,14 @@ func (aB *relationshipBusiness) ListRelationships(ctx context.Context, request *
 		}
 	}
 
-	return aB.relationshipRepo.List(ctx, request.GetPeerName(), request.GetPeerId(), request.GetInvertRelation(), request.GetRelatedChildrenId(), request.GetLastRelationshipId(), int(request.GetCount()))
+	return rb.relationshipRepo.List(ctx, request.GetPeerName(), request.GetPeerId(), request.GetInvertRelation(), request.GetRelatedChildrenId(), request.GetLastRelationshipId(), int(request.GetCount()))
 }
 
-func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request *profilev1.AddRelationshipRequest) (*profilev1.RelationshipObject, error) {
+func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request *profilev1.AddRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
-	logger := aB.service.L().WithField("request", request)
+	logger := rb.service.L().WithField("request", request)
 
-	relationships, err := aB.relationshipRepo.List(ctx, request.GetParent(), request.GetParentId(), false, []string{request.GetChildId()}, "", 2)
+	relationships, err := rb.relationshipRepo.List(ctx, request.GetParent(), request.GetParentId(), false, []string{request.GetChildId()}, "", 2)
 	if err != nil {
 		logger.WithError(err).Warn("get existing relationship error")
 
@@ -102,10 +63,17 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 
 	if len(relationships) > 0 {
 
-		return aB.ToAPI(ctx, relationships[0])
+		evt := events.RelationshipConnectQueue{}
+		err = rb.service.Emit(ctx, evt.Name(), relationships[0].GetID())
+		if err != nil {
+			logger.WithError(err).Warn("could not queue out relationship connection")
+			return nil, err
+		}
+
+		return relationships[0].ToAPI(), nil
 	}
 
-	relationshipType, err := aB.relationshipRepo.RelationshipType(ctx, request.GetType())
+	relationshipType, err := rb.relationshipRepo.RelationshipType(ctx, request.GetType())
 	if err != nil {
 		return nil, err
 	}
@@ -124,31 +92,47 @@ func (aB *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 		a.ID = request.GetId()
 	}
 
-	err = aB.relationshipRepo.Save(ctx, &a)
+	err = rb.relationshipRepo.Save(ctx, &a)
 	if err != nil {
 		return nil, err
 	}
 
 	logger.Debug("successfully add a relationship")
 
-	return aB.ToAPI(ctx, &a)
+	evt := events.RelationshipConnectQueue{}
+	err = rb.service.Emit(ctx, evt.Name(), a.GetID())
+	if err != nil {
+		logger.WithError(err).Warn("could not queue out relationship connection")
+		return nil, err
+	}
+
+	return a.ToAPI(), nil
 
 }
-func (aB *relationshipBusiness) DeleteRelationship(ctx context.Context, request *profilev1.DeleteRelationshipRequest) (*profilev1.RelationshipObject, error) {
+func (rb *relationshipBusiness) DeleteRelationship(ctx context.Context, request *profilev1.DeleteRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
-	relationship, err := aB.relationshipRepo.GetByID(ctx, request.GetId())
+	logger := rb.service.L().WithField("request", request)
+
+	relationship, err := rb.relationshipRepo.GetByID(ctx, request.GetId())
 	if err != nil || relationship == nil {
 		return nil, err
 	}
 
 	if request.GetParentId() == "" || request.GetParentId() == relationship.ParentObjectID {
 
-		err = aB.relationshipRepo.Delete(ctx, request.GetId())
+		evt := events.RelationshipDisConnectQueue{}
+		err = rb.service.Emit(ctx, evt.Name(), request.GetId())
+		if err != nil {
+			logger.WithError(err).Warn("could not queue out relationship connection")
+			return nil, err
+		}
+
+		err = rb.relationshipRepo.Delete(ctx, request.GetId())
 		if err != nil {
 			return nil, err
 		}
 
-		return aB.ToAPI(ctx, relationship)
+		return relationship.ToAPI(), nil
 	}
 
 	return nil, nil

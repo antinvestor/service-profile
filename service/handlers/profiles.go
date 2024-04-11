@@ -158,13 +158,7 @@ func (ps *ProfileServer) ListRelationships(request *profilev1.ListRelationshipRe
 	var responseList []*profilev1.RelationshipObject
 
 	for _, relationship := range relationships {
-
-		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, relationship)
-		if err1 != nil {
-			return err
-		}
-
-		responseList = append(responseList, relationshipObject)
+		responseList = append(responseList, relationship.ToAPI())
 	}
 
 	err = server.Send(&profilev1.ListRelationshipResponse{Data: responseList})

@@ -245,3 +245,23 @@ type Relationship struct {
 
 	Properties datatypes.JSONMap
 }
+
+func (r *Relationship) ToAPI() *profilev1.RelationshipObject {
+
+	relationshipObj := &profilev1.RelationshipObject{
+		Id:         r.GetID(),
+		Type:       profilev1.RelationshipType(r.RelationshipType.UID),
+		Properties: frame.DBPropertiesToMap(r.Properties),
+		ChildEntry: &profilev1.EntryItem{
+			ObjectName: r.ChildObject,
+			ObjectId:   r.ChildObjectID,
+		},
+		ParentEntry: &profilev1.EntryItem{
+			ObjectName: r.ParentObject,
+			ObjectId:   r.ParentObjectID,
+		},
+	}
+
+	return relationshipObj
+
+}

@@ -14,6 +14,12 @@ type ProfileConfig struct {
 	QueueVerification     string `default:"mem://contact_verification_queue" envconfig:"QUEUE_VERIFICATION"`
 	QueueVerificationName string `default:"contact_verification_queue" envconfig:"QUEUE_VERIFICATION_NAME"`
 
+	QueueRelationshipConnectName string `default:"relationships.connect" envconfig:"QUEUE_RELATIONSHIP_CONNECT_NAME"`
+	QueueRelationshipConnectURI  string `default:"mem://default.relationships.connect" envconfig:"QUEUE_RELATIONSHIP_CONNECT_URI"`
+
+	QueueRelationshipDisConnectName string `default:"relationships.disconnect" envconfig:"QUEUE_RELATIONSHIP_DISCONNECT_NAME"`
+	QueueRelationshipDisConnectURI  string `default:"mem://default.relationships.disconnect" envconfig:"QUEUE_RELATIONSHIP_DISCONNECT_URI"`
+
 	LengthOfVerificationPin        int `default:"5" envconfig:"LENGTH_OF_VERIFICATION_PIN"`
 	LengthOfVerificationLinkHash   int `default:"70" envconfig:"LENGTH_OF_VERIFICATION_LINK_HASH"`
 	VerificationPinExpiryTimeInSec int `default:"86400" envconfig:"VERIFICATION_PIN_EXPIRY_TIME_IN_SEC"`
