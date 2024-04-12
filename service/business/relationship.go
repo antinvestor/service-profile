@@ -61,16 +61,19 @@ func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 		}
 	}
 
+	evt := events.RelationshipConnectQueue{}
+
 	if len(relationships) > 0 {
 
-		evt := events.RelationshipConnectQueue{}
-		err = rb.service.Emit(ctx, evt.Name(), relationships[0].GetID())
+		relationship := relationships[0]
+
+		err = rb.service.Emit(ctx, evt.Name(), relationship.GetID())
 		if err != nil {
 			logger.WithError(err).Warn("could not queue out relationship connection")
 			return nil, err
 		}
 
-		return relationships[0].ToAPI(), nil
+		return relationship.ToAPI(), nil
 	}
 
 	relationshipType, err := rb.relationshipRepo.RelationshipType(ctx, request.GetType())
@@ -78,7 +81,7 @@ func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 		return nil, err
 	}
 
-	a := models.Relationship{
+	relationship := models.Relationship{
 		ParentObject:       request.GetParent(),
 		ParentObjectID:     request.GetParentId(),
 		RelationshipTypeID: relationshipType.GetID(),
@@ -87,28 +90,27 @@ func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 		ChildObjectID:      request.GetChildId(),
 		Properties:         frame.DBPropertiesFromMap(request.GetProperties()),
 	}
-	a.GenID(ctx)
-	if a.ValidXID(request.GetId()) {
-		a.ID = request.GetId()
+	relationship.GenID(ctx)
+	if relationship.ValidXID(request.GetId()) {
+		relationship.ID = request.GetId()
 	}
 
-	err = rb.relationshipRepo.Save(ctx, &a)
+	err = rb.relationshipRepo.Save(ctx, &relationship)
 	if err != nil {
 		return nil, err
 	}
 
-	logger.Debug("successfully add a relationship")
+	logger.Debug("successfully add relationship relationship")
 
-	evt := events.RelationshipConnectQueue{}
-	err = rb.service.Emit(ctx, evt.Name(), a.GetID())
+	err = rb.service.Emit(ctx, evt.Name(), relationship.GetID())
 	if err != nil {
 		logger.WithError(err).Warn("could not queue out relationship connection")
 		return nil, err
 	}
 
-	return a.ToAPI(), nil
-
+	return relationship.ToAPI(), nil
 }
+
 func (rb *relationshipBusiness) DeleteRelationship(ctx context.Context, request *profilev1.DeleteRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
 	logger := rb.service.L().WithField("request", request)

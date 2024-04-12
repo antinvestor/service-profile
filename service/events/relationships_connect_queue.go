@@ -17,12 +17,12 @@ func (rcq *RelationshipConnectQueue) Name() string {
 	return "relationship.connect.queue"
 }
 
-func (rcq *RelationshipConnectQueue) PayloadType() interface{} {
+func (rcq *RelationshipConnectQueue) PayloadType() any {
 	pType := ""
 	return &pType
 }
 
-func (rcq *RelationshipConnectQueue) Validate(_ context.Context, payload interface{}) error {
+func (rcq *RelationshipConnectQueue) Validate(_ context.Context, payload any) error {
 	if _, ok := payload.(*string); !ok {
 		return errors.New(" payload is not of type string")
 	}
@@ -30,7 +30,7 @@ func (rcq *RelationshipConnectQueue) Validate(_ context.Context, payload interfa
 	return nil
 }
 
-func (rcq *RelationshipConnectQueue) Execute(ctx context.Context, payload interface{}) error {
+func (rcq *RelationshipConnectQueue) Execute(ctx context.Context, payload any) error {
 	relationshipID := *payload.(*string)
 
 	logger := rcq.Service.L().WithField("payload", relationshipID).WithField("type", rcq.Name())

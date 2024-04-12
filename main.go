@@ -130,16 +130,11 @@ func main() {
 	verificationQueue := frame.RegisterSubscriber(profileConfig.QueueVerificationName, profileConfig.QueueVerification, 2, &verificationQueueHandler)
 	verificationQueuePublisher := frame.RegisterPublisher(profileConfig.QueueVerificationName, profileConfig.QueueVerification)
 
-	serviceOptions = append(serviceOptions, verificationQueue, verificationQueuePublisher)
-
 	serviceOptions = append(serviceOptions,
+		verificationQueue, verificationQueuePublisher,
 		frame.RegisterEvents(
-			&events.RelationshipConnectQueue{
-				Service: service,
-			},
-			&events.RelationshipDisConnectQueue{
-				Service: service,
-			},
+			&events.RelationshipConnectQueue{Service: service},
+			&events.RelationshipDisConnectQueue{Service: service},
 		))
 	service.Init(serviceOptions...)
 

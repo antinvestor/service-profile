@@ -60,7 +60,7 @@ func (p *Profile) GetByID(db *gorm.DB) error {
 	return nil
 }
 
-func (p *Profile) Create(db *gorm.DB, profileType profilev1.ProfileType, properties map[string]interface{}) error {
+func (p *Profile) Create(db *gorm.DB, profileType profilev1.ProfileType, properties map[string]any) error {
 
 	stringProperties, err := json.Marshal(properties)
 	if err != nil {

@@ -17,12 +17,12 @@ func (rdq *RelationshipDisConnectQueue) Name() string {
 	return "relationship.disconnect.queue"
 }
 
-func (rdq *RelationshipDisConnectQueue) PayloadType() interface{} {
+func (rdq *RelationshipDisConnectQueue) PayloadType() any {
 	pType := ""
 	return &pType
 }
 
-func (rdq *RelationshipDisConnectQueue) Validate(_ context.Context, payload interface{}) error {
+func (rdq *RelationshipDisConnectQueue) Validate(_ context.Context, payload any) error {
 	if _, ok := payload.(*string); !ok {
 		return errors.New(" payload is not of type string")
 	}
@@ -30,7 +30,7 @@ func (rdq *RelationshipDisConnectQueue) Validate(_ context.Context, payload inte
 	return nil
 }
 
-func (rdq *RelationshipDisConnectQueue) Execute(ctx context.Context, payload interface{}) error {
+func (rdq *RelationshipDisConnectQueue) Execute(ctx context.Context, payload any) error {
 	relationshipID := *payload.(*string)
 
 	logger := rdq.Service.L().WithField("payload", relationshipID).WithField("type", rdq.Name())

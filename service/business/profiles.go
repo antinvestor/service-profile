@@ -273,9 +273,9 @@ func (pb *profileBusiness) CreateProfile(
 
 }
 
-//func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params map[string]interface{}) error {
+//func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params map[string]any) error {
 //
-//	storedPropertiesMap := make(map[string]interface{})
+//	storedPropertiesMap := make(map[string]any)
 //	attributeMap, err := p.Properties.MarshalJSON()
 //	if err != nil {
 //		return err

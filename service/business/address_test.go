@@ -3,32 +3,51 @@ package business_test
 import (
 	"context"
 	"crypto/sha256"
-	"fmt"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/business"
+	"github.com/antinvestor/service-profile/service/events"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
+	"os"
 	"reflect"
 	"testing"
 )
 
 func getTestService() (context.Context, *frame.Service) {
+
+	_ = os.Setenv("CONTACT_ENCRYPTION_KEY", "")
+	_ = os.Setenv("CONTACT_ENCRYPTION_SALT", "")
+
 	dbURL := frame.GetEnv("TEST_DATABASE_URL",
 		"postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
+
 	mainDB := frame.DatastoreCon(dbURL, false)
 
-	configProfile := config.ProfileConfig{
-		QueueVerification:     fmt.Sprintf("mem://%s", "QueueVerificationName"),
-		QueueVerificationName: "QueueVerificationName",
+	var configProfile config.ProfileConfig
+	err := frame.ConfigProcess("", &configProfile)
+	if err != nil {
+		logrus.WithError(err).Fatal("could not process configs")
 	}
 
-	verificationQueuePublisher := frame.RegisterPublisher(
-		configProfile.QueueVerificationName, configProfile.QueueVerification)
+	verificationQueuePublisher := frame.RegisterPublisher(configProfile.QueueVerificationName, configProfile.QueueVerification)
 
-	ctx, service := frame.NewService("profile tests", mainDB,
-		verificationQueuePublisher, frame.Config(&configProfile), frame.NoopDriver())
+	ctx, service := frame.NewService(
+		"profile tests", mainDB,
+		frame.Config(&configProfile), frame.NoopDriver())
+
+	service.Init(verificationQueuePublisher,
+		frame.RegisterEvents(
+			&events.RelationshipConnectQueue{
+				Service: service,
+			},
+			&events.RelationshipDisConnectQueue{
+				Service: service,
+			},
+		))
+
 	_ = service.Run(ctx, "")
 	return ctx, service
 }

@@ -82,7 +82,6 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 	}
 
 	type args struct {
-		ctx     context.Context
 		request *profilev1.AddRelationshipRequest
 	}
 	tests := []struct {
@@ -94,7 +93,6 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 		{
 			name: "Create a relationship object",
 			args: args{
-				ctx: ctx,
 				request: &profilev1.AddRelationshipRequest{
 					Parent:     "Profile",
 					ParentId:   testProfiles[0].GetId(),
@@ -108,7 +106,7 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 				Id:         "",
 				Type:       0,
 				Properties: nil,
-				Child:      &profilev1.RelationshipObject_ChildProfile{ChildProfile: testProfiles[1]},
+				ChildEntry: &profilev1.EntryItem{ObjectName: "Profile", ObjectId: testProfiles[0].GetId()},
 			},
 			wantErr: false,
 		},
@@ -116,7 +114,7 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
-			got, err1 := aB.CreateRelationship(tt.args.ctx, tt.args.request)
+			got, err1 := aB.CreateRelationship(ctx, tt.args.request)
 			if (err1 != nil) != tt.wantErr {
 				t.Errorf("CreateRelationship() error = %v, wantErr %v", err1, tt.wantErr)
 				return
@@ -126,18 +124,11 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 				return
 			}
 
-			gotProfile, ok := got.GetChild().(*profilev1.RelationshipObject_ChildProfile)
-			if !ok {
-				t.Errorf("CreateRelationship() child is not a profile : %v ", gotProfile)
-				return
-			}
+			gotProfile := got.GetChildEntry()
 
-			wantProfile, ok := got.GetChild().(*profilev1.RelationshipObject_ChildProfile)
-			if !ok {
-				t.Errorf("CreateRelationship() child is not a profile : %v", wantProfile)
-				return
-			}
-			if gotProfile.ChildProfile.GetId() != wantProfile.ChildProfile.GetId() {
+			wantProfile := got.GetChildEntry()
+
+			if gotProfile.GetObjectId() != wantProfile.GetObjectId() {
 				t.Errorf("CreateRelationship() got = %v, want %v", gotProfile, wantProfile)
 			}
 		})
@@ -169,7 +160,7 @@ func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 		Properties: nil,
 	})
 	if err != nil {
-		t.Errorf("CreateRelationship() error = %v", err)
+		t.Errorf("DeleteRelationship() error = %v", err)
 		return
 	}
 
@@ -232,7 +223,7 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 
 	testProfiles, err := createTestProfiles(ctx, srv, profileEncryptionKey, []string{"list.relationship.1@ant.com", "list.relationship.2@ant.com", "list.relationship.3@ant.com", "list.relationship.4@ant.com"})
 	if err != nil {
-		t.Errorf(" Delete profile failed with %+v", err)
+		t.Errorf(" List profile failed with %+v", err)
 		return
 	}
 
@@ -248,7 +239,7 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 		})
 
 		if err != nil {
-			t.Errorf(" Create relationship failed with %+v", err)
+			t.Errorf(" List relationship failed with %+v", err)
 			return
 		}
 	}

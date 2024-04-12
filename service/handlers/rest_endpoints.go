@@ -90,7 +90,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 		lastRelationshipID = relationshipObjectList[len(relationshipObjectList)-1].GetId()
 	}
 
-	response := map[string]interface{}{
+	response := map[string]any{
 		"tenant_id":          claims.TenantId(),
 		"partition_id":       claims.PartitionId(),
 		"relationships":      relationshipObjectList,
@@ -115,7 +115,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	response := map[string]interface{}{
+	response := map[string]any{
 		"sub":      profile.GetId(),
 		"name":     profile.GetProperties()["name"],
 		"contacts": profile.GetContacts(),
