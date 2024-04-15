@@ -39,11 +39,19 @@ func (rdq *RelationshipDisConnectQueue) Execute(ctx context.Context, payload any
 	relationshipRepo := repository.NewRelationshipRepository(rdq.Service)
 	relationship, err := relationshipRepo.GetByID(ctx, relationshipID)
 	if err != nil {
+		if frame.DBErrorIsRecordNotFound(err) {
+			logger.WithError(err).Error("no such relationship exists")
+
+			return nil
+		}
+		logger.WithError(err).Error("could not get relationship")
+
 		return err
 	}
 
 	binaryProto, err := proto.Marshal(relationship.ToAPI())
 	if err != nil {
+		logger.WithError(err).Error("could not encode api object")
 		return err
 	}
 
@@ -52,6 +60,7 @@ func (rdq *RelationshipDisConnectQueue) Execute(ctx context.Context, payload any
 	// Queue relationship for further processing by peripheral services
 	err = rdq.Service.Publish(ctx, profileConfig.QueueRelationshipDisConnectName, binaryProto)
 	if err != nil {
+		logger.WithError(err).Error("could not publish relationship")
 		return err
 	}
 
