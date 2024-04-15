@@ -6,7 +6,6 @@ import (
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
-	"github.com/sirupsen/logrus"
 )
 
 type AddressBusiness interface {
@@ -17,7 +16,7 @@ type AddressBusiness interface {
 	ToAPI(address *models.Address) *profilev1.AddressObject
 }
 
-func NewAddressBusiness(ctx context.Context, service *frame.Service) AddressBusiness {
+func NewAddressBusiness(_ context.Context, service *frame.Service) AddressBusiness {
 	addressRepo := repository.NewAddressRepository(service)
 	return &addressBusiness{
 		service:     service,
@@ -54,7 +53,7 @@ func (aB *addressBusiness) GetByProfile(ctx context.Context, profileID string) (
 
 func (aB *addressBusiness) CreateAddress(ctx context.Context, request *profilev1.AddressObject) (*profilev1.AddressObject, error) {
 
-	logger := logrus.WithField("request", request)
+	logger := aB.service.L().WithField("request", request)
 
 	country, err := aB.addressRepo.CountryGetByAny(ctx, request.GetCountry())
 	if err != nil {

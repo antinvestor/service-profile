@@ -11,7 +11,7 @@ type ProfileConfig struct {
 	ContactEncryptionSalt string `required:"true" envconfig:"CONTACT_ENCRYPTION_SALT"`
 
 	SystemAccessID        string `default:"c8cf0ldstmdlinc3eva0" envconfig:"STATIC_SYSTEM_ACCESS_ID"`
-	QueueVerification     string `default:"mem://contact_verification_queue" envconfig:"QUEUE_VERIFICATION"`
+	QueueVerification     string `default:"mem://contact_verification_queue" envconfig:"QUEUE_VERIFICATION_URI"`
 	QueueVerificationName string `default:"contact_verification_queue" envconfig:"QUEUE_VERIFICATION_NAME"`
 
 	QueueRelationshipConnectName string `default:"relationships.connect" envconfig:"QUEUE_RELATIONSHIP_CONNECT_NAME"`
