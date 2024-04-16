@@ -40,7 +40,7 @@ func getTestService() (context.Context, *frame.Service) {
 
 	service.Init(verificationQueuePublisher,
 		frame.RegisterEvents(
-			&events.RelationshipConnectQueue{
+			&events.ClientConnectedSetupQueue{
 				Service: service,
 			},
 			&events.RelationshipDisConnectQueue{

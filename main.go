@@ -136,7 +136,7 @@ func main() {
 		verificationQueue, verificationQueuePublisher,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.RegisterEvents(
-			&events.RelationshipConnectQueue{Service: service},
+			&events.ClientConnectedSetupQueue{Service: service},
 			&events.RelationshipDisConnectQueue{Service: service},
 		))
 	service.Init(serviceOptions...)
