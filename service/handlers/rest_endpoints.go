@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func (ps *ProfileServer) writeError(w http.ResponseWriter, err error, code int) {
@@ -32,11 +33,11 @@ func (ps *ProfileServer) writeError(w http.ResponseWriter, err error, code int) 
 func (ps *ProfileServer) RestCentrifugoProxyEndpoint(rw http.ResponseWriter, req *http.Request) {
 
 	ctx := req.Context()
-	service := frame.FromContext(ctx)
+	claims := frame.ClaimsFromContext(ctx)
 
 	params := mux.Vars(req)
 
-	logger := service.L().
+	logger := ps.Service.L().
 		WithField("path_var", params)
 
 	body, err := io.ReadAll(req.Body)
@@ -56,12 +57,41 @@ func (ps *ProfileServer) RestCentrifugoProxyEndpoint(rw http.ResponseWriter, req
 		return
 	}
 
-	result := map[string]string{}
-	if params["ProxyAction"] == "" {
-		result["data"] = "empty"
+	subject, _ := claims.GetSubject()
+	result := map[string]any{
+		"user": subject,
 	}
 
-	response := map[string]map[string]string{"result": result}
+	if params["ProxyAction"] == "connect" {
+
+		profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
+		relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
+
+		request := &profilev1.ListRelationshipRequest{
+			Count: int32(5000),
+		}
+
+		var relationships []*models.Relationship
+		relationships, err = relationshipBusiness.ListRelationships(ctx, request)
+		if err != nil {
+			logger.WithError(err).Error("could not list relationships")
+		}
+
+		var channelSlice []string
+		for _, relationship := range relationships {
+			if relationship.ParentObjectID == subject && strings.ToLower(relationship.ChildObject) != "profile" {
+
+				channel := fmt.Sprintf("%s:%s", relationship.ChildObject, relationship.ChildObjectID)
+				channelSlice = append(channelSlice, channel)
+
+			}
+		}
+
+		result["channels"] = channelSlice
+
+	}
+
+	response := map[string]map[string]any{"result": result}
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
