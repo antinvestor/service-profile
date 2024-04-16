@@ -22,7 +22,7 @@ func (ar *relationshipRepository) List(ctx context.Context, peerName, peerId str
 	var relationshipList []*models.Relationship
 
 	if count == 0 {
-		count = 100
+		count = 50
 	}
 
 	database := ar.service.DB(ctx, true).Preload(clause.Associations).

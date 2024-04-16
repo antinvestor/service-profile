@@ -150,20 +150,41 @@ func (ps *ProfileServer) ListRelationships(request *profilev1.ListRelationshipRe
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
 	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
-	relationships, err := relationshipBusiness.ListRelationships(ctx, request)
-	if err != nil {
-		return err
+
+	totalSent := 0
+	requiredCount := int(request.GetCount())
+	if requiredCount == 0 {
+		requiredCount = 1000000
 	}
+	for {
 
-	var responseList []*profilev1.RelationshipObject
+		remainingCount := requiredCount - totalSent
+		if remainingCount > 50 {
+			remainingCount = 50
+		}
+		request.Count = int32(remainingCount)
 
-	for _, relationship := range relationships {
-		responseList = append(responseList, relationship.ToAPI())
-	}
+		relationships, err := relationshipBusiness.ListRelationships(ctx, request)
+		if err != nil {
+			return err
+		}
 
-	err = server.Send(&profilev1.ListRelationshipResponse{Data: responseList})
-	if err != nil {
-		return err
+		var responseList []*profilev1.RelationshipObject
+
+		for _, relationship := range relationships {
+			responseList = append(responseList, relationship.ToAPI())
+		}
+
+		err = server.Send(&profilev1.ListRelationshipResponse{Data: responseList})
+		if err != nil {
+			return err
+		}
+
+		totalSent += len(relationships)
+
+		if totalSent >= requiredCount || len(relationships) < remainingCount {
+			break
+		}
 	}
 
 	return nil

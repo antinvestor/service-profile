@@ -8,10 +8,8 @@ import (
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/gorilla/mux"
 	"github.com/pitabwire/frame"
-	"io"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
 func (ps *ProfileServer) writeError(w http.ResponseWriter, err error, code int) {
@@ -27,75 +25,6 @@ func (ps *ProfileServer) writeError(w http.ResponseWriter, err error, code int) 
 	if err != nil {
 		ps.Service.L().WithError(err).Error("could not write error to response")
 	}
-}
-
-// RestCentrifugoProxyEndpoint implementation is based on : https://centrifugal.dev/docs/server/proxy#subscribe-proxy
-func (ps *ProfileServer) RestCentrifugoProxyEndpoint(rw http.ResponseWriter, req *http.Request) {
-
-	ctx := req.Context()
-	claims := frame.ClaimsFromContext(ctx)
-
-	params := mux.Vars(req)
-
-	logger := ps.Service.L().
-		WithField("path_var", params)
-
-	body, err := io.ReadAll(req.Body)
-	if err != nil {
-		logger.WithError(err).Error("could not read request body")
-		ps.writeError(rw, err, 500)
-		return
-	}
-
-	logger.WithField("proxy_data", string(body)).Info("received a proxy action")
-
-	var subscriptionReq map[string]any
-	err = json.Unmarshal(body, &subscriptionReq)
-	if err != nil {
-		logger.WithError(err).Error("could not decode subscription request")
-		ps.writeError(rw, err, 500)
-		return
-	}
-
-	subject, _ := claims.GetSubject()
-	result := map[string]any{
-		"user": subject,
-	}
-
-	if params["ProxyAction"] == "connect" {
-
-		profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
-		relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
-
-		request := &profilev1.ListRelationshipRequest{
-			Count: int32(5000),
-		}
-
-		var relationships []*models.Relationship
-		relationships, err = relationshipBusiness.ListRelationships(ctx, request)
-		if err != nil {
-			logger.WithError(err).Error("could not list relationships")
-		}
-
-		var channelSlice []string
-		for _, relationship := range relationships {
-			if relationship.ParentObjectID == subject && strings.ToLower(relationship.ChildObject) != "profile" {
-
-				channel := fmt.Sprintf("%s:%s", relationship.ChildObject, relationship.ChildObjectID)
-				channelSlice = append(channelSlice, channel)
-
-			}
-		}
-
-		result["channels"] = channelSlice
-
-	}
-
-	response := map[string]map[string]any{"result": result}
-
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(rw).Encode(response)
 }
 
 func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, req *http.Request) {
@@ -210,11 +139,6 @@ func (ps *ProfileServer) NewRouterV1() *mux.Router {
 		Name("UserRelationsEndpoint").
 		HandlerFunc(ps.RestListRelationshipsEndpoint).
 		Methods("GET")
-
-	router.Path("/centrifugo/proxy/{ProxyAction}").
-		Name("CentrifugoProxyEndpoint").
-		HandlerFunc(ps.RestCentrifugoProxyEndpoint).
-		Methods("POST")
 
 	return router
 }
