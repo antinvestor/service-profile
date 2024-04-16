@@ -61,7 +61,7 @@ func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 		}
 	}
 
-	evt := events.ClientConnectedSetupQueue{}
+	evt := events.RelationshipConnectQueue{}
 
 	if len(relationships) > 0 {
 
