@@ -43,12 +43,6 @@ func getTestService() (context.Context, *frame.Service) {
 			&events.ClientConnectedSetupQueue{
 				Service: service,
 			},
-			&events.RelationshipConnectQueue{
-				Service: service,
-			},
-			&events.RelationshipDisConnectQueue{
-				Service: service,
-			},
 		))
 
 	_ = service.Run(ctx, "")

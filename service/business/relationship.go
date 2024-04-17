@@ -4,7 +4,6 @@ import (
 	"context"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service"
-	"github.com/antinvestor/service-profile/service/events"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/pitabwire/frame"
@@ -61,17 +60,9 @@ func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 		}
 	}
 
-	evt := events.RelationshipConnectQueue{}
-
 	if len(relationships) > 0 {
 
 		relationship := relationships[0]
-
-		err = rb.service.Emit(ctx, evt.Name(), relationship.GetID())
-		if err != nil {
-			logger.WithError(err).Warn("could not queue out relationship connection")
-			return nil, err
-		}
 
 		return relationship.ToAPI(), nil
 	}
@@ -102,12 +93,6 @@ func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 
 	logger.Debug("successfully add relationship relationship")
 
-	err = rb.service.Emit(ctx, evt.Name(), relationship.GetID())
-	if err != nil {
-		logger.WithError(err).Warn("could not queue out relationship connection")
-		return nil, err
-	}
-
 	return relationship.ToAPI(), nil
 }
 
@@ -122,15 +107,9 @@ func (rb *relationshipBusiness) DeleteRelationship(ctx context.Context, request 
 
 	if request.GetParentId() == "" || request.GetParentId() == relationship.ParentObjectID {
 
-		evt := events.RelationshipDisConnectQueue{}
-		err = rb.service.Emit(ctx, evt.Name(), request.GetId())
-		if err != nil {
-			logger.WithError(err).Warn("could not queue out relationship connection")
-			return nil, err
-		}
-
 		err = rb.relationshipRepo.Delete(ctx, request.GetId())
 		if err != nil {
+			logger.WithError(err).Warn("could not delete relationship")
 			return nil, err
 		}
 
