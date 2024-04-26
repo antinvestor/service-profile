@@ -9,7 +9,7 @@ require (
 	github.com/bufbuild/protovalidate-go v0.6.1
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
-	github.com/pitabwire/frame v1.19.7
+	github.com/pitabwire/frame v1.20.0
 	github.com/rs/xid v1.5.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
