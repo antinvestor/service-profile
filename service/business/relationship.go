@@ -13,6 +13,8 @@ type RelationshipBusiness interface {
 	ListRelationships(ctx context.Context, request *profilev1.ListRelationshipRequest) ([]*models.Relationship, error)
 	CreateRelationship(ctx context.Context, request *profilev1.AddRelationshipRequest) (*profilev1.RelationshipObject, error)
 	DeleteRelationship(ctx context.Context, request *profilev1.DeleteRelationshipRequest) (*profilev1.RelationshipObject, error)
+
+	ToAPI(ctx context.Context, relationship *models.Relationship, invertRelationship bool) (*profilev1.RelationshipObject, error)
 }
 
 func NewRelationshipBusiness(_ context.Context, service *frame.Service, profileBiz ProfileBusiness) RelationshipBusiness {
@@ -117,4 +119,39 @@ func (rb *relationshipBusiness) DeleteRelationship(ctx context.Context, request 
 	}
 
 	return nil, nil
+}
+
+func (rb *relationshipBusiness) ToAPI(ctx context.Context, relationship *models.Relationship, invertRelationship bool) (*profilev1.RelationshipObject, error) {
+
+	if relationship == nil {
+		return nil, nil
+	}
+
+	relationshipObj := relationship.ToAPI()
+
+	peerProfileId := ""
+
+	if !invertRelationship {
+
+		if relationship.ChildObject == "Profile" {
+			peerProfileId = relationship.ChildObjectID
+		}
+	} else {
+		if relationship.ParentObject == "Profile" {
+			peerProfileId = relationship.ParentObjectID
+		}
+	}
+
+	if peerProfileId != "" {
+		profileObj, err := rb.profileBusiness.GetByID(ctx, peerProfileId)
+		if err == nil {
+			relationshipObj.PeerProfile = profileObj
+		}
+
+		relationshipObj.PeerProfile = profileObj
+
+	}
+
+	return relationshipObj, nil
+
 }

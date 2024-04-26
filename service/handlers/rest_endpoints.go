@@ -83,7 +83,14 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	relationshipObjectList = []*profilev1.RelationshipObject{}
 
 	for _, relationship := range relationships {
-		relationshipObjectList = append(relationshipObjectList, relationship.ToAPI())
+
+		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, relationship, request.GetInvertRelation())
+		if err1 != nil {
+			ps.writeError(rw, err, 500)
+			return
+		}
+
+		relationshipObjectList = append(relationshipObjectList, relationshipObject)
 	}
 
 	if len(relationshipObjectList) > 0 {
