@@ -54,7 +54,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	invertRelationship := false
 	invertRelationshipStr, ok2 := params["InvertRelation"]
-	if !ok2 {
+	if ok2 {
 		invertRelationship, _ = strconv.ParseBool(invertRelationshipStr)
 	}
 
