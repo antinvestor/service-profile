@@ -21,12 +21,11 @@ func (ar *relationshipRepository) GetByID(ctx context.Context, id string) (*mode
 func (ar *relationshipRepository) List(ctx context.Context, peerName, peerId string, inverseRelation bool, childrenIds []string, lastRelationshipId string, count int) ([]*models.Relationship, error) {
 	var relationshipList []*models.Relationship
 
-	if count == 0 {
-		count = 50
-	}
+	database := ar.service.DB(ctx, true).Preload(clause.Associations)
 
-	database := ar.service.DB(ctx, true).Preload(clause.Associations).
-		Limit(count)
+	if count > 0 {
+		database = database.Limit(count)
+	}
 
 	if inverseRelation {
 		database = database.Where(

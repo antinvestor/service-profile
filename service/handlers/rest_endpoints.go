@@ -41,12 +41,12 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	lastRelationshipID := params["LastRelationshipID"]
 
-	peerObject, ok := params["ParentObjectName"]
+	peerObject, ok := params["PeerObjectName"]
 	if !ok {
 		peerObject = "Profile"
 	}
 
-	peerObjectID, ok1 := params["ParentObjectID"]
+	peerObjectID, ok1 := params["PeerObjectID"]
 	if !ok1 || peerObject == "Profile" {
 		subject, _ := claims.GetSubject()
 		peerObjectID = subject
