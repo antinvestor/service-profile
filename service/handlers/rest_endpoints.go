@@ -36,35 +36,35 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	log := ps.Service.L().
 		WithField("method", "RestListRelationshipsEndpoint")
 
-	params := mux.Vars(req)
-	log.WithField("params", params).Debug("listing relationships request")
+	urlQuery := req.URL.Query()
+	log.WithField("url params", urlQuery).Debug("listing relationships request")
 
-	countStr := params["Count"]
+	countStr := urlQuery.Get("Count")
 
 	count, err := strconv.Atoi(countStr)
 	if err != nil {
 		count = 100
 	}
 
-	lastRelationshipID, ok := params["LastRelationshipID"]
-	if !ok {
-		lastRelationshipID = ""
+	lastRelationshipID := ""
+	if urlQuery.Has("LastRelationshipID") {
+		lastRelationshipID = urlQuery.Get("LastRelationshipID")
 	}
 
-	peerObject, ok := params["PeerObjectName"]
-	if !ok {
-		peerObject = "Profile"
+	peerObject := "Profile"
+	if urlQuery.Has("PeerObjectName") {
+		peerObject = urlQuery.Get("PeerObjectName")
 	}
 
-	peerObjectID, ok := params["PeerObjectID"]
-	if !ok || peerObject == "Profile" {
+	peerObjectID := urlQuery.Get("PeerObjectId")
+	if !urlQuery.Has("PeerObjectID") || peerObject == "Profile" {
 		subject, _ := claims.GetSubject()
 		peerObjectID = subject
 	}
 
-	invertRelationshipStr, ok := params["InvertRelation"]
-	if !ok {
-		invertRelationshipStr = "false"
+	invertRelationshipStr := "false"
+	if urlQuery.Has("InvertRelation") {
+		invertRelationshipStr = urlQuery.Get("InvertRelation")
 	}
 
 	invertRelationship, _ := strconv.ParseBool(invertRelationshipStr)
