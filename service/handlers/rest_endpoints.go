@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
@@ -16,14 +17,15 @@ func (ps *ProfileServer) writeError(w http.ResponseWriter, err error, code int) 
 
 	w.Header().Set("Content-Type", "application/json")
 
-	ps.Service.L().
-		WithField("code", code).
-		WithError(err).Error("internal service error")
+	log := ps.Service.L().
+		WithField("code", code)
+
+	log.WithError(err).Error("internal service error")
 	w.WriteHeader(code)
 
 	err = json.NewEncoder(w).Encode(fmt.Sprintf(" internal processing err message: %v", err))
 	if err != nil {
-		ps.Service.L().WithError(err).Error("could not write error to response")
+		log.WithError(err).Error("could not write error to response")
 	}
 }
 
@@ -31,7 +33,12 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
 
+	log := ps.Service.L().
+		WithField("method", "RestListRelationshipsEndpoint")
+
 	params := mux.Vars(req)
+	log.WithField("params", params).Debug("listing relationships request")
+
 	countStr := params["Count"]
 
 	count, err := strconv.Atoi(countStr)
@@ -39,21 +46,24 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 		count = 100
 	}
 
-	lastRelationshipID := params["LastRelationshipID"]
+	lastRelationshipID, ok := params["LastRelationshipID"]
+	if !ok {
+		lastRelationshipID = ""
+	}
 
 	peerObject, ok := params["PeerObjectName"]
 	if !ok {
 		peerObject = "Profile"
 	}
 
-	peerObjectID, ok1 := params["PeerObjectID"]
-	if !ok1 || peerObject == "Profile" {
+	peerObjectID, ok := params["PeerObjectID"]
+	if !ok || peerObject == "Profile" {
 		subject, _ := claims.GetSubject()
 		peerObjectID = subject
 	}
 
-	invertRelationshipStr, ok2 := params["InvertRelation"]
-	if !ok2 {
+	invertRelationshipStr, ok := params["InvertRelation"]
+	if !ok {
 		invertRelationshipStr = "false"
 	}
 
@@ -99,11 +109,14 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	}
 
 	response := map[string]any{
-		"tenant_id":          claims.TenantId(),
-		"partition_id":       claims.PartitionId(),
 		"relationships":      relationshipObjectList,
 		"count":              len(relationshipObjectList),
 		"LastRelationshipID": lastRelationshipID,
+	}
+
+	if claims != nil {
+		response["tenant_id"] = claims.TenantId()
+		response["partition_id"] = claims.PartitionId()
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
@@ -114,6 +127,11 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
+
+	if claims == nil {
+		ps.writeError(rw, errors.New("claims can not be empty"), 500)
+		return
+	}
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
 	subject, _ := claims.GetSubject()
