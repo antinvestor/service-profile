@@ -56,7 +56,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 		peerObject = urlQuery.Get("PeerObjectName")
 	}
 
-	peerObjectID := urlQuery.Get("PeerObjectId")
+	peerObjectID := urlQuery.Get("PeerObjectID")
 	if !urlQuery.Has("PeerObjectID") || peerObject == "Profile" {
 		subject, _ := claims.GetSubject()
 		peerObjectID = subject
