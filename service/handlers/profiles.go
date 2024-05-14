@@ -6,6 +6,8 @@ import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type ProfileServer struct {
@@ -17,13 +19,28 @@ type ProfileServer struct {
 	profilev1.UnimplementedProfileServiceServer
 }
 
+func (ps *ProfileServer) toApiError(err error) error {
+
+	grpcError, ok := status.FromError(err)
+
+	if ok {
+		return grpcError.Err()
+	}
+
+	if frame.DBErrorIsRecordNotFound(err) {
+		return status.Error(codes.NotFound, err.Error())
+	}
+
+	return grpcError.Err()
+}
+
 func (ps *ProfileServer) GetById(ctx context.Context,
 	request *profilev1.GetByIdRequest) (*profilev1.GetByIdResponse, error) {
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
 	profileObj, err := profileBusiness.GetByID(ctx, request.GetId())
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.GetByIdResponse{Data: profileObj}, nil
@@ -36,7 +53,7 @@ func (ps *ProfileServer) GetByContact(ctx context.Context,
 	profileObj, err := profileBusiness.GetByContact(ctx, request.GetContact())
 
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.GetByContactResponse{Data: profileObj}, nil
@@ -48,7 +65,8 @@ func (ps *ProfileServer) Search(request *profilev1.SearchRequest, stream profile
 	defer cancel()
 
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
-	return profileBusiness.SearchProfile(ctx, request, stream)
+	err := profileBusiness.SearchProfile(ctx, request, stream)
+	return ps.toApiError(err)
 
 }
 
@@ -58,7 +76,7 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *profilev1.MergeRequ
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
 	profileObj, err := profileBusiness.MergeProfile(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.MergeResponse{Data: profileObj}, nil
@@ -71,7 +89,7 @@ func (ps *ProfileServer) Create(ctx context.Context, request *profilev1.CreateRe
 	profileObj, err := profileBusiness.CreateProfile(ctx, request)
 
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.CreateResponse{Data: profileObj}, nil
@@ -84,7 +102,7 @@ func (ps *ProfileServer) Update(ctx context.Context, request *profilev1.UpdateRe
 	profileObj, err := profileBusiness.UpdateProfile(ctx, request)
 
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.UpdateResponse{Data: profileObj}, nil
@@ -97,7 +115,7 @@ func (ps *ProfileServer) AddAddress(ctx context.Context,
 	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
 	profileObj, err := profileBusiness.AddAddress(ctx, request)
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.AddAddressResponse{Data: profileObj}, nil
@@ -110,7 +128,7 @@ func (ps *ProfileServer) AddContact(ctx context.Context, request *profilev1.AddC
 	profileObj, err := profileBusiness.AddContact(ctx, request)
 
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.AddContactResponse{Data: profileObj}, nil
@@ -124,7 +142,7 @@ func (ps *ProfileServer) AddRelationship(ctx context.Context,
 	relationshipObj, err := relationshipBusiness.CreateRelationship(ctx, request)
 
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.AddRelationshipResponse{Data: relationshipObj}, nil
@@ -138,7 +156,7 @@ func (ps *ProfileServer) DeleteRelationship(ctx context.Context,
 	relationshipObj, err := relationshipBusiness.DeleteRelationship(ctx, request)
 
 	if err != nil {
-		return nil, err
+		return nil, ps.toApiError(err)
 	}
 
 	return &profilev1.DeleteRelationshipResponse{Data: relationshipObj}, nil
@@ -166,7 +184,7 @@ func (ps *ProfileServer) ListRelationships(request *profilev1.ListRelationshipRe
 
 		relationships, err := relationshipBusiness.ListRelationships(ctx, request)
 		if err != nil {
-			return err
+			return ps.toApiError(err)
 		}
 
 		var responseList []*profilev1.RelationshipObject
@@ -177,7 +195,7 @@ func (ps *ProfileServer) ListRelationships(request *profilev1.ListRelationshipRe
 
 		err = server.Send(&profilev1.ListRelationshipResponse{Data: responseList})
 		if err != nil {
-			return err
+			return ps.toApiError(err)
 		}
 
 		totalSent += len(relationships)
