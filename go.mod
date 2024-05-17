@@ -9,7 +9,7 @@ require (
 	github.com/bufbuild/protovalidate-go v0.6.2
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
-	github.com/pitabwire/frame v1.20.2
+	github.com/pitabwire/frame v1.20.3
 	github.com/rs/xid v1.5.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.9.0
@@ -68,7 +68,7 @@ require (
 	go.uber.org/mock v0.4.0 // indirect
 	gocloud.dev v0.37.0 // indirect
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8 // indirect
-	golang.org/x/net v0.24.0 // indirect
+	golang.org/x/net v0.25.0 // indirect
 	golang.org/x/oauth2 v0.19.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
