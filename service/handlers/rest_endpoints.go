@@ -115,8 +115,8 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	}
 
 	if claims != nil {
-		response["tenant_id"] = claims.TenantId()
-		response["partition_id"] = claims.PartitionId()
+		response["tenant_id"] = claims.GetTenantId()
+		response["partition_id"] = claims.GetPartitionId()
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
