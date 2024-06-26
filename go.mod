@@ -16,7 +16,7 @@ require (
 	github.com/ttacon/libphonenumber v1.2.1
 	golang.org/x/crypto v0.23.0
 	google.golang.org/grpc v1.64.0
-	google.golang.org/protobuf v1.34.1
+	google.golang.org/protobuf v1.34.2
 	gorm.io/datatypes v1.2.0
 	gorm.io/gorm v1.25.10
 )
