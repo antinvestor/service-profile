@@ -4,7 +4,7 @@ go 1.22
 
 require (
 	github.com/antinvestor/apis/go/common v1.20.5
-	github.com/antinvestor/apis/go/notification v1.20.5
+	github.com/antinvestor/apis/go/notification v1.21.1
 	github.com/antinvestor/apis/go/profile v1.20.5
 	github.com/bufbuild/protovalidate-go v0.6.3
 	github.com/gorilla/mux v1.8.1
