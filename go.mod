@@ -17,7 +17,7 @@ require (
 	golang.org/x/crypto v0.27.0
 	google.golang.org/grpc v1.67.1
 	google.golang.org/protobuf v1.34.2
-	gorm.io/datatypes v1.2.1
+	gorm.io/datatypes v1.2.2
 	gorm.io/gorm v1.25.11
 )
 
@@ -38,6 +38,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/cel-go v0.21.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.4 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
 	github.com/improbable-eng/grpc-web v0.15.0 // indirect
