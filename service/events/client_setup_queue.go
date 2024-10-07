@@ -33,7 +33,7 @@ func (csq *ClientConnectedSetupQueue) Validate(_ context.Context, payload any) e
 func (csq *ClientConnectedSetupQueue) Execute(ctx context.Context, payload any) error {
 	relationshipID := *payload.(*string)
 
-	logger := csq.Service.L().WithField("payload", relationshipID).WithField("type", csq.Name())
+	logger := csq.Service.L(ctx).WithField("payload", relationshipID).WithField("type", csq.Name())
 	logger.Debug("handling csq")
 
 	relationshipRepo := repository.NewRelationshipRepository(csq.Service)

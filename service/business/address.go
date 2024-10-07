@@ -53,7 +53,7 @@ func (aB *addressBusiness) GetByProfile(ctx context.Context, profileID string) (
 
 func (aB *addressBusiness) CreateAddress(ctx context.Context, request *profilev1.AddressObject) (*profilev1.AddressObject, error) {
 
-	logger := aB.service.L().WithField("request", request)
+	logger := aB.service.L(ctx).WithField("request", request)
 
 	country, err := aB.addressRepo.CountryGetByAny(ctx, request.GetCountry())
 	if err != nil {

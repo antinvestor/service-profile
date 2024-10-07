@@ -4,6 +4,7 @@ import "github.com/pitabwire/frame"
 
 type ProfileConfig struct {
 	frame.ConfigurationDefault
+
 	NotificationServiceURI string `default:"127.0.0.1:7020" envconfig:"NOTIFICATION_SERVICE_URI"`
 	PartitionServiceURI    string `default:"127.0.0.1:7003" envconfig:"PARTITION_SERVICE_URI"`
 

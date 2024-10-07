@@ -21,10 +21,11 @@ func getTestService() (context.Context, *frame.Service) {
 	_ = os.Setenv("CONTACT_ENCRYPTION_KEY", "")
 	_ = os.Setenv("CONTACT_ENCRYPTION_SALT", "")
 
+	ctx := context.Background()
 	dbURL := frame.GetEnv("TEST_DATABASE_URL",
 		"postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
 
-	mainDB := frame.DatastoreCon(dbURL, false)
+	mainDB := frame.DatastoreConnection(ctx, dbURL, false)
 
 	var configProfile config.ProfileConfig
 	err := frame.ConfigProcess("", &configProfile)
@@ -34,7 +35,7 @@ func getTestService() (context.Context, *frame.Service) {
 
 	verificationQueuePublisher := frame.RegisterPublisher(configProfile.QueueVerificationName, configProfile.QueueVerification)
 
-	ctx, service := frame.NewService(
+	ctx, service := frame.NewServiceWithContext(ctx,
 		"profile tests", mainDB,
 		frame.Config(&configProfile), frame.NoopDriver())
 

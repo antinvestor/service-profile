@@ -51,7 +51,7 @@ func (rb *relationshipBusiness) ListRelationships(ctx context.Context, request *
 
 func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request *profilev1.AddRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
-	logger := rb.service.L().WithField("request", request)
+	logger := rb.service.L(ctx).WithField("request", request)
 
 	relationships, err := rb.relationshipRepo.List(ctx, request.GetParent(), request.GetParentId(), false, []string{request.GetChildId()}, "", 2)
 	if err != nil {
@@ -100,7 +100,7 @@ func (rb *relationshipBusiness) CreateRelationship(ctx context.Context, request 
 
 func (rb *relationshipBusiness) DeleteRelationship(ctx context.Context, request *profilev1.DeleteRelationshipRequest) (*profilev1.RelationshipObject, error) {
 
-	logger := rb.service.L().WithField("request", request)
+	logger := rb.service.L(ctx).WithField("request", request)
 
 	relationship, err := rb.relationshipRepo.GetByID(ctx, request.GetId())
 	if err != nil || relationship == nil {

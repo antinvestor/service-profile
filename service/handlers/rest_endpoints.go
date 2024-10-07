@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,11 +14,11 @@ import (
 	"strconv"
 )
 
-func (ps *ProfileServer) writeError(w http.ResponseWriter, err error, code int) {
+func (ps *ProfileServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	log := ps.Service.L().
+	log := ps.Service.L(ctx).
 		WithField("code", code)
 
 	log.WithError(err).Error("internal service error")
@@ -33,7 +34,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
 
-	log := ps.Service.L().
+	log := ps.Service.L(ctx).
 		WithField("method", "RestListRelationshipsEndpoint")
 
 	urlQuery := req.URL.Query()
@@ -84,7 +85,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	if err != nil {
 
 		if !frame.DBErrorIsRecordNotFound(err) {
-			ps.writeError(rw, err, 500)
+			ps.writeError(ctx, rw, err, 500)
 			return
 		}
 		relationships = []*models.Relationship{}
@@ -97,7 +98,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, relationship, request.GetInvertRelation())
 		if err1 != nil {
-			ps.writeError(rw, err, 500)
+			ps.writeError(ctx, rw, err, 500)
 			return
 		}
 
@@ -129,7 +130,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	claims := frame.ClaimsFromContext(ctx)
 
 	if claims == nil {
-		ps.writeError(rw, errors.New("claims can not be empty"), 500)
+		ps.writeError(ctx, rw, errors.New("claims can not be empty"), 500)
 		return
 	}
 
@@ -137,7 +138,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	subject, _ := claims.GetSubject()
 	profile, err := profileBusiness.GetByID(ctx, subject)
 	if err != nil {
-		ps.writeError(rw, err, 500)
+		ps.writeError(ctx, rw, err, 500)
 		return
 	}
 

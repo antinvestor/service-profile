@@ -11,9 +11,11 @@ import (
 	"github.com/antinvestor/service-profile/service/repository"
 	"github.com/bufbuild/protovalidate-go"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"strings"
 
 	apis "github.com/antinvestor/apis/go/common"
@@ -35,7 +37,7 @@ func main() {
 
 	ctx, service := frame.NewService(serviceName, frame.Config(&profileConfig))
 	defer service.Stop(ctx)
-	log := service.L()
+	log := service.L(ctx)
 
 	serviceOptions := []frame.Option{frame.Datastore(ctx)}
 
@@ -92,12 +94,14 @@ func main() {
 
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
 			protovalidateinterceptor.UnaryServerInterceptor(validator),
-		),
+			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
+			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)),
 		grpc.ChainStreamInterceptor(
-			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
+
 			protovalidateinterceptor.StreamServerInterceptor(validator),
+			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
+			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
 		),
 	)
 
@@ -116,10 +120,23 @@ func main() {
 	grpcServerOpt := frame.GrpcServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
+	proxyOptions := apis.ProxyOptions{
+		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", profileConfig.GrpcServerPort),
+		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
+	}
+
+	proxyMux, err := profilev1.CreateProxyHandler(ctx, proxyOptions)
+	if err != nil {
+		log.WithError(err).Fatal("could not create the proxy handler")
+		return
+	}
+
 	profileServiceRestHandlers := service.AuthenticationMiddleware(
 		implementation.NewRouterV1(), jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
 
-	serviceOptions = append(serviceOptions, frame.HttpHandler(profileServiceRestHandlers))
+	proxyMux.Handle("/public", profileServiceRestHandlers)
+
+	serviceOptions = append(serviceOptions, frame.HttpHandler(proxyMux))
 
 	verificationQueueHandler := queue.VerificationsQueueHandler{
 		Service:         service,

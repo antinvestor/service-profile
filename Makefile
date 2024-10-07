@@ -38,7 +38,7 @@ doc:    ## generate godocs and start a local documentation webserver on port 808
 
 # this command will start docker components that we set in docker-compose.yml
 docker-setup: ## sets up docker container images
-	docker compose up -d --remove-orphans --force-recreate
+	docker compose up -d --remove-orphans --force-recreate --build
 
 pg_wait:
 	@count=0; \
