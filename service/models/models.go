@@ -1,15 +1,11 @@
 package models
 
 import (
-	"encoding/json"
-	"errors"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/service"
 	"github.com/pitabwire/frame"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
-	"strings"
 	"time"
 )
 
@@ -45,34 +41,8 @@ type Profile struct {
 	frame.BaseModel
 	Properties datatypes.JSONMap
 
-	ProfileTypeID string `gorm:"type:varchar(50)"`
-	ProfileType   *ProfileType
-}
-
-func (p *Profile) GetByID(db *gorm.DB) error {
-	modelID := strings.TrimSpace(p.GetID())
-	if err := db.Preload(clause.Associations).Where("id = ?", modelID).First(p).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return service.ErrorProfileDoesNotExist
-		}
-		return err
-	}
-	return nil
-}
-
-func (p *Profile) Create(db *gorm.DB, profileType profilev1.ProfileType, properties map[string]any) error {
-
-	stringProperties, err := json.Marshal(properties)
-	if err != nil {
-		return err
-	}
-
-	err = p.Properties.UnmarshalJSON(stringProperties)
-	if err != nil {
-		return err
-	}
-
-	return db.Save(p).Error
+	ProfileTypeID string `gorm:"type:varchar(50);index:profile_id"`
+	ProfileType   ProfileType
 }
 
 var ContactTypeUIDMap = map[profilev1.ContactType]uint{
@@ -139,7 +109,7 @@ type Contact struct {
 
 	Language string
 
-	ProfileID string `gorm:"type:varchar(50)"`
+	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
 	Profile   Profile
 }
 
@@ -158,8 +128,8 @@ func GetContactsByProfile(db *gorm.DB, p *Profile) ([]Contact, error) {
 
 type Verification struct {
 	frame.BaseModel
-	ProfileID string `gorm:"type:varchar(50)"`
-	ContactID string `gorm:"type:varchar(50)"`
+	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
+	ContactID string `gorm:"type:varchar(50);index:contact_id"`
 	Contact   Contact
 
 	Pin      string `gorm:"type:varchar(10)"`
@@ -171,7 +141,7 @@ type Verification struct {
 
 type VerificationAttempt struct {
 	frame.BaseModel
-	VerificationID string `gorm:"type:varchar(50)"`
+	VerificationID string `gorm:"type:varchar(50);index:verification_id"`
 	Verification   Verification
 
 	ContactID string `gorm:"type:varchar(50)"`
@@ -196,7 +166,7 @@ type Address struct {
 	Name      string
 	AdminUnit string
 
-	ParentID string `gorm:"type:varchar(50)"`
+	ParentID string `gorm:"type:varchar(50);index:parent_id"`
 
 	CountryID string `gorm:"type:varchar(50)"`
 	Country   *Country
@@ -208,10 +178,10 @@ type ProfileAddress struct {
 	frame.BaseModel
 	Name string
 
-	AddressID string `gorm:"type:varchar(50)"`
+	AddressID string `gorm:"type:varchar(50);index:address_id"`
 	Address   *Address
 
-	ProfileID string `gorm:"type:varchar(50)"`
+	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
 	Profile   *Profile
 }
 
@@ -235,12 +205,12 @@ type Relationship struct {
 	frame.BaseModel
 
 	ParentObject   string `gorm:"type:varchar(50)"`
-	ParentObjectID string `gorm:"type:varchar(50)"`
+	ParentObjectID string `gorm:"type:varchar(50);index:parent_obj_id"`
 
 	ChildObject   string `gorm:"type:varchar(50)"`
-	ChildObjectID string `gorm:"type:varchar(50)"`
+	ChildObjectID string `gorm:"type:varchar(50);index:child_obj_id"`
 
-	RelationshipTypeID string `gorm:"type:varchar(50)"`
+	RelationshipTypeID string `gorm:"type:varchar(50);index:relationship_type_id"`
 	RelationshipType   *RelationshipType
 
 	Properties datatypes.JSONMap

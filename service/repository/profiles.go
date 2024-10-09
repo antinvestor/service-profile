@@ -5,6 +5,7 @@ import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
+	"gorm.io/gorm/clause"
 )
 
 type profileRepository struct {
@@ -31,7 +32,7 @@ func (pr *profileRepository) GetByID(ctx context.Context, id string) (*models.Pr
 	emptyCtx := emptyClaims.ClaimsToContext(ctx)
 
 	profile := &models.Profile{}
-	err := pr.service.DB(emptyCtx, true).First(profile, "id = ?", id).Error
+	err := pr.service.DB(emptyCtx, true).Preload(clause.Associations).First(profile, "id = ?", id).Error
 	return profile, err
 }
 

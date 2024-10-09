@@ -5,36 +5,30 @@ import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
+	"github.com/stretchr/testify/suite"
 	"testing"
 )
 
-func createTestProfiles(ctx context.Context, srv *frame.Service, encryptionKey []byte, contacts []string) ([]*profilev1.ProfileObject, error) {
-
-	profBuss := business.NewProfileBusiness(ctx, srv, func() []byte {
-		return encryptionKey
-	})
-
-	var profileSlice []*profilev1.ProfileObject
-
-	for _, contact := range contacts {
-
-		prof := &profilev1.CreateRequest{
-			Contact: contact,
-		}
-		profile, err := profBuss.CreateProfile(ctx, prof)
-		if err != nil {
-			return nil, err
-		}
-
-		profileSlice = append(profileSlice, profile)
-	}
-
-	return profileSlice, nil
+type RelationshipTestSuite struct {
+	BaseTestSuite
 }
 
-func TestNewRelationshipBusiness(t *testing.T) {
+func (rts *RelationshipTestSuite) SetupSuite() {
+	rts.BaseTestSuite.SetupSuite()
 
-	ctx, srv := getTestService()
+}
+
+func TestRelationshipSuite(t *testing.T) {
+	suite.Run(t, new(RelationshipTestSuite))
+}
+
+func (rts *RelationshipTestSuite) TestNewRelationshipBusiness() {
+
+	t := rts.T()
+	ctx := rts.ctx
+
+	srv := rts.service
+	profileEncryptionKey := rts.getEncryptionKey()
 
 	type args struct {
 		ctx                  context.Context
@@ -50,7 +44,7 @@ func TestNewRelationshipBusiness(t *testing.T) {
 			args: args{
 				ctx:                  ctx,
 				service:              srv,
-				profileEncryptionKey: getEncryptionKey(),
+				profileEncryptionKey: profileEncryptionKey,
 			},
 		},
 	}
@@ -66,16 +60,19 @@ func TestNewRelationshipBusiness(t *testing.T) {
 	}
 }
 
-func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
+func (rts *RelationshipTestSuite) Test_relationshipBusiness_CreateRelationship() {
 
-	ctx, srv := getTestService()
-	profileEncryptionKey := getEncryptionKey()
+	t := rts.T()
+	ctx := rts.ctx
+
+	srv := rts.service
+	profileEncryptionKey := rts.getEncryptionKey()
 
 	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
 		return profileEncryptionKey
 	})
 
-	testProfiles, err := createTestProfiles(ctx, srv, profileEncryptionKey, []string{"new.relationship.1@ant.com", "new.relationship.2@ant.com"})
+	testProfiles, err := rts.createTestProfiles([]string{"new.relationship.1@ant.com", "new.relationship.2@ant.com"})
 	if err != nil {
 		t.Errorf(" CreateProfile failed with %+v", err)
 		return
@@ -135,17 +132,20 @@ func Test_relationshipBusiness_CreateRelationship(t *testing.T) {
 	}
 }
 
-func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
+func (rts *RelationshipTestSuite) Test_relationshipBusiness_DeleteRelationship() {
 
-	ctx, srv := getTestService()
-	profileEncryptionKey := getEncryptionKey()
+	t := rts.T()
+	ctx := rts.ctx
+
+	srv := rts.service
+	profileEncryptionKey := rts.getEncryptionKey()
 
 	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
 		return profileEncryptionKey
 	})
 	aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
 
-	testProfiles, err := createTestProfiles(ctx, srv, profileEncryptionKey, []string{"delete.relationship.1@ant.com", "delete.relationship.2@ant.com"})
+	testProfiles, err := rts.createTestProfiles([]string{"delete.relationship.1@ant.com", "delete.relationship.2@ant.com"})
 	if err != nil {
 		t.Errorf(" Delete profile failed with %+v", err)
 		return
@@ -210,10 +210,12 @@ func Test_relationshipBusiness_DeleteRelationship(t *testing.T) {
 	}
 }
 
-func Test_relationshipBusiness_ListRelationships(t *testing.T) {
+func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() {
 
-	ctx, srv := getTestService()
-	profileEncryptionKey := getEncryptionKey()
+	t := rts.T()
+	ctx := rts.ctx
+	srv := rts.service
+	profileEncryptionKey := rts.getEncryptionKey()
 
 	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
 		return profileEncryptionKey
@@ -221,7 +223,7 @@ func Test_relationshipBusiness_ListRelationships(t *testing.T) {
 
 	aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
 
-	testProfiles, err := createTestProfiles(ctx, srv, profileEncryptionKey, []string{"list.relationship.1@ant.com", "list.relationship.2@ant.com", "list.relationship.3@ant.com", "list.relationship.4@ant.com"})
+	testProfiles, err := rts.createTestProfiles([]string{"list.relationship.1@ant.com", "list.relationship.2@ant.com", "list.relationship.3@ant.com", "list.relationship.4@ant.com"})
 	if err != nil {
 		t.Errorf(" List profile failed with %+v", err)
 		return

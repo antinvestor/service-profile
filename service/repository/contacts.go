@@ -37,7 +37,7 @@ func (cr *contactRepository) GetByID(ctx context.Context, id string) (*models.Co
 
 func (cr *contactRepository) GetByProfileID(ctx context.Context, profileID string) ([]*models.Contact, error) {
 	contactList := make([]*models.Contact, 0)
-	err := cr.service.DB(ctx, true).Find(&contactList, "profile_id = ?", profileID).Error
+	err := cr.service.DB(ctx, true).Where("profile_id = ?", profileID).Find(&contactList).Error
 	return contactList, err
 }
 

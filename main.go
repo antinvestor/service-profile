@@ -94,14 +94,14 @@ func main() {
 
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
-			protovalidateinterceptor.UnaryServerInterceptor(validator),
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
-			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)),
-		grpc.ChainStreamInterceptor(
+			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
+			protovalidateinterceptor.UnaryServerInterceptor(validator)),
 
-			protovalidateinterceptor.StreamServerInterceptor(validator),
+		grpc.ChainStreamInterceptor(
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
 			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
+			protovalidateinterceptor.StreamServerInterceptor(validator),
 		),
 	)
 

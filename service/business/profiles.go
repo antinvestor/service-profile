@@ -68,11 +68,7 @@ func (pb *profileBusiness) ProfileToAPI(ctx context.Context,
 	profileObject := profilev1.ProfileObject{}
 	profileObject.Id = p.ID
 
-	profileType, err := pb.profileRepo.GetTypeByID(ctx, p.ProfileTypeID)
-	if err != nil {
-		return nil, err
-	}
-	profileObject.Type = models.ProfileTypeIDToEnum(profileType.UID)
+	profileObject.Type = models.ProfileTypeIDToEnum(p.ProfileType.UID)
 	profileObject.Properties = frame.DBPropertiesToMap(p.Properties)
 
 	var contactObjects []*profilev1.ContactObject
@@ -131,15 +127,14 @@ func (pb *profileBusiness) GetByID(
 	ctx context.Context,
 	profileID string) (*profilev1.ProfileObject, error) {
 
-	emptyClaims := &frame.AuthenticationClaims{}
-	emptyCtx := emptyClaims.ClaimsToContext(ctx)
+	ctx = frame.RemoveClaimsFromContext(ctx)
 
-	profile, err := pb.profileRepo.GetByID(emptyCtx, profileID)
+	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
 		return nil, err
 	}
 
-	return pb.ProfileToAPI(emptyCtx, profile)
+	return pb.ProfileToAPI(ctx, profile)
 
 }
 
@@ -253,7 +248,7 @@ func (pb *profileBusiness) CreateProfile(
 			return nil, err
 		}
 
-		p.ProfileType = pt
+		p.ProfileType = *pt
 		p.ProfileTypeID = pt.ID
 
 		err = pb.profileRepo.Save(ctx, &p)

@@ -2,60 +2,31 @@ package business_test
 
 import (
 	"context"
-	"crypto/sha256"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/business"
-	"github.com/antinvestor/service-profile/service/events"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/pbkdf2"
-	"os"
+	"github.com/stretchr/testify/suite"
 	"reflect"
 	"testing"
 )
 
-func getTestService() (context.Context, *frame.Service) {
-
-	_ = os.Setenv("CONTACT_ENCRYPTION_KEY", "")
-	_ = os.Setenv("CONTACT_ENCRYPTION_SALT", "")
-
-	ctx := context.Background()
-	dbURL := frame.GetEnv("TEST_DATABASE_URL",
-		"postgres://ant:secret@localhost:5434/service_profile?sslmode=disable")
-
-	mainDB := frame.DatastoreConnection(ctx, dbURL, false)
-
-	var configProfile config.ProfileConfig
-	err := frame.ConfigProcess("", &configProfile)
-	if err != nil {
-		logrus.WithError(err).Fatal("could not process configs")
-	}
-
-	verificationQueuePublisher := frame.RegisterPublisher(configProfile.QueueVerificationName, configProfile.QueueVerification)
-
-	ctx, service := frame.NewServiceWithContext(ctx,
-		"profile tests", mainDB,
-		frame.Config(&configProfile), frame.NoopDriver())
-
-	service.Init(verificationQueuePublisher,
-		frame.RegisterEvents(
-			&events.ClientConnectedSetupQueue{
-				Service: service,
-			},
-		))
-
-	_ = service.Run(ctx, "")
-	return ctx, service
+type AddressTestSuite struct {
+	BaseTestSuite
 }
 
-func getEncryptionKey() []byte {
-	return pbkdf2.Key([]byte("ualgJEcb4GNXLn3jYV9TUGtgYrdTMg"), []byte("VufLmnycUCgz"), 4096, 32, sha256.New)
+func (ats *AddressTestSuite) SetupSuite() {
+	ats.BaseTestSuite.SetupSuite()
+
 }
 
-func TestNewAddressBusiness(t *testing.T) {
-	ctx, srv := getTestService()
+func TestAddressSuite(t *testing.T) {
+	suite.Run(t, new(AddressTestSuite))
+}
+
+func (ats *AddressTestSuite) TestNewAddressBusiness() {
+	t := ats.T()
+
 	type args struct {
 		ctx     context.Context
 		service *frame.Service
@@ -69,8 +40,8 @@ func TestNewAddressBusiness(t *testing.T) {
 		{
 			name: "New Address Business test",
 			args: args{
-				ctx:     ctx,
-				service: srv,
+				ctx:     ats.ctx,
+				service: ats.service,
 			},
 		},
 	}
@@ -83,8 +54,8 @@ func TestNewAddressBusiness(t *testing.T) {
 	}
 }
 
-func Test_addressBusiness_CreateAddress(t *testing.T) {
-	ctx, srv := getTestService()
+func (ats *AddressTestSuite) Test_addressBusiness_CreateAddress() {
+	t := ats.T()
 
 	adObj := &profilev1.AddressObject{
 		Name:    "test address",
@@ -109,10 +80,10 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 		{
 			name: "Create Address test",
 			fields: fields{
-				service: srv,
+				service: ats.service,
 			},
 			args: args{
-				ctx:     ctx,
+				ctx:     ats.ctx,
 				request: adObj,
 			},
 			want:    nil,
@@ -121,7 +92,7 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			aB := business.NewAddressBusiness(ctx, tt.fields.service)
+			aB := business.NewAddressBusiness(ats.ctx, tt.fields.service)
 			got, err := aB.CreateAddress(tt.args.ctx, tt.args.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateAddress() error = %v, wantErr %+v", err, tt.wantErr)
@@ -134,12 +105,13 @@ func Test_addressBusiness_CreateAddress(t *testing.T) {
 	}
 }
 
-func Test_addressBusiness_GetByProfile(t *testing.T) {
+func (ats *AddressTestSuite) Test_addressBusiness_GetByProfile() {
 
-	ctx, srv := getTestService()
-	encryptionKey := getEncryptionKey()
+	t := ats.T()
 
-	testProfiles, err := createTestProfiles(ctx, srv, encryptionKey, []string{"testing@ant.com"})
+	ctx := ats.ctx
+
+	testProfiles, err := ats.createTestProfiles([]string{"testing@ant.com"})
 	if err != nil {
 		t.Errorf(" CreateProfile failed with %+v", err)
 		return
@@ -147,7 +119,7 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 
 	profile := testProfiles[0]
 
-	addBuss := business.NewAddressBusiness(ctx, srv)
+	addBuss := business.NewAddressBusiness(ctx, ats.service)
 
 	adObj := &profilev1.AddressObject{
 		Name:    "Linked address",
@@ -178,7 +150,8 @@ func Test_addressBusiness_GetByProfile(t *testing.T) {
 	}
 }
 
-func Test_addressBusiness_LinkAddressToProfile(t *testing.T) {
+func (ats *AddressTestSuite) Test_addressBusiness_LinkAddressToProfile() {
+	t := ats.T()
 	ctx := context.Background()
 
 	type fields struct {
@@ -208,7 +181,8 @@ func Test_addressBusiness_LinkAddressToProfile(t *testing.T) {
 	}
 }
 
-func Test_addressBusiness_ToAPI(t *testing.T) {
+func (ats *AddressTestSuite) Test_addressBusiness_ToAPI() {
+	t := ats.T()
 	ctx := context.Background()
 	type fields struct {
 		service *frame.Service

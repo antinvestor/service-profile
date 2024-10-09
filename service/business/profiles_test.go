@@ -3,14 +3,28 @@ package business_test
 import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
+	"github.com/stretchr/testify/suite"
 	"reflect"
 	"testing"
 )
 
-func Test_profileBusiness_CreateProfile(t *testing.T) {
+type ProfileTestSuite struct {
+	BaseTestSuite
+}
 
-	ctx, srv := getTestService()
-	encryptionKey := getEncryptionKey()
+func (pts *ProfileTestSuite) SetupSuite() {
+	pts.BaseTestSuite.SetupSuite()
+
+}
+
+func TestProfileSuite(t *testing.T) {
+	suite.Run(t, new(ProfileTestSuite))
+}
+
+func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
+
+	t := pts.T()
+	ctx := pts.ctx
 
 	tests := []struct {
 		name    string
@@ -31,7 +45,7 @@ func Test_profileBusiness_CreateProfile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pb := business.NewProfileBusiness(ctx, srv, func() []byte { return encryptionKey })
+			pb := business.NewProfileBusiness(ctx, pts.service, func() []byte { return pts.getEncryptionKey() })
 			got, err := pb.CreateProfile(ctx, tt.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateProfile() error = %v, wantErr %v", err, tt.wantErr)
@@ -49,13 +63,13 @@ func Test_profileBusiness_CreateProfile(t *testing.T) {
 	}
 }
 
-func Test_profileBusiness_GetByID(t *testing.T) {
+func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 
-	ctx, srv := getTestService()
-	encryptionKey := getEncryptionKey()
+	t := pts.T()
+	ctx := pts.ctx
 
 	var profileAvailable []string
-	pbc := business.NewProfileBusiness(ctx, srv, func() []byte { return encryptionKey })
+	pbc := business.NewProfileBusiness(ctx, pts.service, func() []byte { return pts.getEncryptionKey() })
 
 	for _, val := range []*profilev1.CreateRequest{
 		{
@@ -107,7 +121,7 @@ func Test_profileBusiness_GetByID(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			pb := business.NewProfileBusiness(ctx, srv, func() []byte { return encryptionKey })
+			pb := business.NewProfileBusiness(ctx, pts.service, func() []byte { return pts.getEncryptionKey() })
 
 			p, err := pb.GetByID(ctx, tt.profileID)
 			if (err != nil) != tt.wantErr {
