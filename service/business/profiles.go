@@ -239,7 +239,7 @@ func (pb *profileBusiness) CreateProfile(
 
 	contact, err := pb.contactBusiness.GetByDetail(ctx, contactDetail)
 	if err != nil {
-		if !errors.Is(service.ErrorContactDoesNotExist, err) {
+		if !errors.Is(err, service.ErrorContactDoesNotExist) {
 			return nil, err
 		}
 
