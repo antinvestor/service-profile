@@ -3,7 +3,7 @@ module github.com/antinvestor/service-profile
 go 1.23.0
 
 require (
-	github.com/antinvestor/apis/go/common v1.29.0
+	github.com/antinvestor/apis/go/common v1.29.14
 	github.com/antinvestor/apis/go/notification v1.29.14
 	github.com/antinvestor/apis/go/profile v1.29.1
 	github.com/bufbuild/protovalidate-go v0.7.2
@@ -105,7 +105,7 @@ require (
 	gocloud.dev v0.40.0 // indirect
 	golang.org/x/exp v0.0.0-20240325151524-a685a6edb6d8 // indirect
 	golang.org/x/net v0.31.0 // indirect
-	golang.org/x/oauth2 v0.23.0 // indirect
+	golang.org/x/oauth2 v0.24.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/sys v0.27.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
