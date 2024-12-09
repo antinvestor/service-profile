@@ -7,7 +7,7 @@ require (
 	github.com/antinvestor/apis/go/notification v1.29.20
 	github.com/antinvestor/apis/go/profile v1.29.20
 	github.com/bufbuild/protovalidate-go v0.7.3
-	github.com/docker/docker v27.3.1+incompatible
+	github.com/docker/docker v27.4.0+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
