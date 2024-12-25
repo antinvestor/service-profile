@@ -127,7 +127,7 @@ func (pb *profileBusiness) GetByID(
 	ctx context.Context,
 	profileID string) (*profilev1.ProfileObject, error) {
 
-	ctx = frame.RemoveClaimsFromContext(ctx)
+	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 
 	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
