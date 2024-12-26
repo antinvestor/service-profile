@@ -169,6 +169,8 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 func (pb *profileBusiness) MergeProfile(ctx context.Context,
 	request *profilev1.MergeRequest) (*profilev1.ProfileObject, error) {
 
+	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+
 	target, err := pb.profileRepo.GetByID(ctx, request.GetId())
 	if err != nil {
 		return nil, err
@@ -226,6 +228,8 @@ func (pb *profileBusiness) UpdateProfile(
 func (pb *profileBusiness) CreateProfile(
 	ctx context.Context,
 	request *profilev1.CreateRequest) (*profilev1.ProfileObject, error) {
+
+	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 
 	contactDetail := strings.TrimSpace(request.GetContact())
 
