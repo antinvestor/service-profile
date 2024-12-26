@@ -17,23 +17,17 @@ type ProfileBusiness interface {
 	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, error)
 	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, error)
 
-	SearchProfile(ctx context.Context,
-		request *profilev1.SearchRequest, stream profilev1.ProfileService_SearchServer) error
+	SearchProfile(ctx context.Context, request *profilev1.SearchRequest, stream profilev1.ProfileService_SearchServer) error
 
-	CreateProfile(ctx context.Context,
-		request *profilev1.CreateRequest) (*profilev1.ProfileObject, error)
+	CreateProfile(ctx context.Context, request *profilev1.CreateRequest) (*profilev1.ProfileObject, error)
 
-	UpdateProfile(ctx context.Context,
-		request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error)
+	UpdateProfile(ctx context.Context, request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error)
 
-	MergeProfile(ctx context.Context,
-		request *profilev1.MergeRequest) (*profilev1.ProfileObject, error)
+	MergeProfile(ctx context.Context, request *profilev1.MergeRequest) (*profilev1.ProfileObject, error)
 
-	AddAddress(ctx context.Context,
-		address *profilev1.AddAddressRequest) (*profilev1.ProfileObject, error)
+	AddAddress(ctx context.Context, address *profilev1.AddAddressRequest) (*profilev1.ProfileObject, error)
 
-	AddContact(ctx context.Context,
-		contact *profilev1.AddContactRequest) (*profilev1.ProfileObject, error)
+	AddContact(ctx context.Context, contact *profilev1.AddContactRequest) (*profilev1.ProfileObject, error)
 
 	EncryptionKeyFunc() []byte
 }
@@ -104,6 +98,8 @@ func (pb *profileBusiness) GetByContact(
 	ctx context.Context,
 	contactData string) (*profilev1.ProfileObject, error) {
 
+	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+
 	var contact *models.Contact
 
 	_, err := xid.FromString(contactData)
@@ -140,6 +136,9 @@ func (pb *profileBusiness) GetByID(
 
 func (pb *profileBusiness) SearchProfile(ctx context.Context,
 	request *profilev1.SearchRequest, stream profilev1.ProfileService_SearchServer) error {
+
+	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+
 	var profileList []*models.Profile
 	//// creating WHERE clause to query by properties JSONB
 	scope := pb.service.DB(ctx, true)
