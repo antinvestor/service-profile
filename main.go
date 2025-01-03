@@ -123,6 +123,7 @@ func main() {
 	proxyOptions := apis.ProxyOptions{
 		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", profileConfig.GrpcServerPort),
 		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
+		ProxyAPIPath:       "/v1",
 	}
 
 	proxyMux := proxyOptions.Mux()
