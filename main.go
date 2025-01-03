@@ -125,16 +125,18 @@ func main() {
 		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	}
 
-	proxyMux, err := profilev1.CreateProxyHandler(ctx, proxyOptions)
-	if err != nil {
-		log.WithError(err).Fatal("could not create the proxy handler")
-		return
-	}
+	proxyMux := proxyOptions.Mux()
 
 	profileServiceRestHandlers := service.AuthenticationMiddleware(
 		implementation.NewRouterV1(), jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
 
 	proxyMux.Handle("/public", profileServiceRestHandlers)
+
+	proxyMux, err = profilev1.CreateProxyHandler(ctx, proxyOptions)
+	if err != nil {
+		log.WithError(err).Fatal("could not create the proxy handler")
+		return
+	}
 
 	serviceOptions = append(serviceOptions, frame.HttpHandler(proxyMux))
 

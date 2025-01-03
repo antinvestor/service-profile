@@ -24,6 +24,8 @@ func (vq *VerificationsQueueHandler) Handle(ctx context.Context, _ map[string]st
 		return err
 	}
 
+	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+
 	contact, err := vq.ContactRepo.GetByID(ctx, verification.ContactID)
 	if err != nil {
 		return err
