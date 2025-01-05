@@ -3,6 +3,9 @@ package main
 import (
 	"crypto/sha256"
 	"fmt"
+	apis "github.com/antinvestor/apis/go/common"
+	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service/events"
 	"github.com/antinvestor/service-profile/service/handlers"
@@ -12,16 +15,13 @@ import (
 	"github.com/bufbuild/protovalidate-go"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	"github.com/pitabwire/frame"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/pbkdf2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"net/http"
 	"strings"
-
-	apis "github.com/antinvestor/apis/go/common"
-	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
 )
 
 func main() {
@@ -123,21 +123,18 @@ func main() {
 	proxyOptions := apis.ProxyOptions{
 		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", profileConfig.GrpcServerPort),
 		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
-		ProxyAPIPath:       "/v1",
 	}
 
-	proxyMux := proxyOptions.Mux()
-
-	profileServiceRestHandlers := service.AuthenticationMiddleware(
-		implementation.NewRouterV1(), jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
-
-	proxyMux.Handle("/public", profileServiceRestHandlers)
-
-	proxyMux, err = profilev1.CreateProxyHandler(ctx, proxyOptions)
+	proxyMux, err := profilev1.CreateProxyHandler(ctx, proxyOptions)
 	if err != nil {
 		log.WithError(err).Fatal("could not create the proxy handler")
 		return
 	}
+
+	profileServiceRestHandlers := service.AuthenticationMiddleware(
+		implementation.NewRouterV1(), jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
+
+	proxyMux.Handle("/public/", http.StripPrefix("/public", profileServiceRestHandlers))
 
 	serviceOptions = append(serviceOptions, frame.HttpHandler(proxyMux))
 

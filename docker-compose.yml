@@ -20,3 +20,19 @@ services:
       - CONTACT_ENCRYPTION_KEY=ualgJEcb4GNXLn3jYV9TUGtgYrdTMg
       - CONTACT_ENCRYPTION_SALT=VufLmnycUCgz
     restart: on-failure
+#
+#  profile:
+#    build: ./
+#    depends_on:
+#      - profile_database
+#      - profile_migration
+#    environment:
+#      - LOG_LEVEL=debug
+#      - DATABASE_URL=postgres://ant:secret@profile_database:5434/service_profile?sslmode=disable
+#      - CONTACT_ENCRYPTION_KEY=ualgJEcb4GNXLn3jYV9TUGtgYrdTMg
+#      - CONTACT_ENCRYPTION_SALT=VufLmnycUCgz
+#      - RUN_SERVICE_SECURELY=false
+#      - PORT=8080
+#    restart: on-failure
+#    ports:
+#      - "8080:8080"

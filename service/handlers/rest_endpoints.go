@@ -8,7 +8,6 @@ import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/antinvestor/service-profile/service/models"
-	"github.com/gorilla/mux"
 	"github.com/pitabwire/frame"
 	"net/http"
 	"strconv"
@@ -154,18 +153,13 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	_ = json.NewEncoder(rw).Encode(response)
 }
 
-func (ps *ProfileServer) NewRouterV1() *mux.Router {
-	router := mux.NewRouter().StrictSlash(true)
+func (ps *ProfileServer) NewRouterV1() *http.ServeMux {
 
-	router.Path("/user/info").
-		Name("UserInfoEndpoint").
-		HandlerFunc(ps.RestUserInfo).
-		Methods("GET")
+	userServeMux := http.NewServeMux()
 
-	router.Path("/user/relations").
-		Name("UserRelationsEndpoint").
-		HandlerFunc(ps.RestListRelationshipsEndpoint).
-		Methods("GET")
+	userServeMux.HandleFunc("/user/info", ps.RestUserInfo)
 
-	return router
+	userServeMux.HandleFunc("/user/relations", ps.RestListRelationshipsEndpoint)
+
+	return userServeMux
 }
