@@ -36,6 +36,11 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	log := ps.Service.L(ctx).
 		WithField("method", "RestListRelationshipsEndpoint")
 
+	if claims == nil {
+		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusInternalServerError)
+		return
+	}
+
 	urlQuery := req.URL.Query()
 	log.WithField("url params", urlQuery).Debug("listing relationships request")
 
@@ -84,7 +89,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	if err != nil {
 
 		if !frame.DBErrorIsRecordNotFound(err) {
-			ps.writeError(ctx, rw, err, 500)
+			ps.writeError(ctx, rw, err, http.StatusInternalServerError)
 			return
 		}
 		relationships = []*models.Relationship{}
@@ -97,7 +102,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 		relationshipObject, err1 := relationshipBusiness.ToAPI(ctx, relationship, request.GetInvertRelation())
 		if err1 != nil {
-			ps.writeError(ctx, rw, err, 500)
+			ps.writeError(ctx, rw, err, http.StatusInternalServerError)
 			return
 		}
 
@@ -114,10 +119,8 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 		"LastRelationshipID": lastRelationshipID,
 	}
 
-	if claims != nil {
-		response["tenant_id"] = claims.GetTenantId()
-		response["partition_id"] = claims.GetPartitionId()
-	}
+	response["tenant_id"] = claims.GetTenantId()
+	response["partition_id"] = claims.GetPartitionId()
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
@@ -129,7 +132,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	claims := frame.ClaimsFromContext(ctx)
 
 	if claims == nil {
-		ps.writeError(ctx, rw, errors.New("claims can not be empty"), 500)
+		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusInternalServerError)
 		return
 	}
 
