@@ -21,7 +21,7 @@ require (
 	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.32.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.1
+	google.golang.org/protobuf v1.36.2
 	gorm.io/datatypes v1.2.5
 	gorm.io/gorm v1.25.12
 )
