@@ -175,6 +175,7 @@ func (ps *ProfileServer) NewInSecureRouterV1() *http.ServeMux {
 
 	userServeMux := http.NewServeMux()
 	userServeMux.HandleFunc("/device/log", ps.RestLogDeviceData)
+	userServeMux.HandleFunc("/device/link", ps.RestDeviceLinkProfile)
 
 	return userServeMux
 }

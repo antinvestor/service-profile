@@ -18,6 +18,12 @@ func (dr *deviceRepository) GetByID(ctx context.Context, id string) (*models.Dev
 	return device, err
 }
 
+func (dr *deviceRepository) GetByLinkID(ctx context.Context, linkId string) (*models.Device, error) {
+	device := &models.Device{}
+	err := dr.service.DB(ctx, true).First(device, "link_id = ?", linkId).Error
+	return device, err
+}
+
 func (dr *deviceRepository) List(ctx context.Context, profileId string) ([]*models.Device, error) {
 	var deviceList []*models.Device
 

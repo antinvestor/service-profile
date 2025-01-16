@@ -13,6 +13,7 @@ type DeviceBusiness interface {
 	GetByID(ctx context.Context, deviceID string) (*models.Device, error)
 	GetByLinkID(ctx context.Context, linkID string) (*models.Device, error)
 	GetByProfileID(ctx context.Context, linkID string) ([]*models.Device, error)
+	UpdateProfileID(ctx context.Context, linkID, profileID string) (*models.Device, error)
 	LogDevice(ctx context.Context, logData *models.DeviceLog) error
 	GetDeviceLogByID(ctx context.Context, deviceLogID string) (*models.DeviceLog, error)
 	GetDeviceLogByDeviceID(ctx context.Context, deviceID string) ([]*models.DeviceLog, error)
@@ -39,6 +40,18 @@ func (dB *deviceBusiness) GetByID(ctx context.Context, deviceID string) (*models
 }
 
 func (dB *deviceBusiness) GetByLinkID(ctx context.Context, linkID string) (*models.Device, error) {
+	device, err := dB.deviceRepository.GetByLinkID(ctx, linkID)
+	if err != nil {
+
+		if !frame.DBErrorIsRecordNotFound(err) {
+			return nil, err
+		}
+	}
+
+	if device != nil {
+		return device, nil
+	}
+
 	deviceLog, err := dB.deviceLogRepository.GetByLinkID(ctx, linkID)
 	if err != nil {
 		return nil, err
@@ -49,6 +62,24 @@ func (dB *deviceBusiness) GetByLinkID(ctx context.Context, linkID string) (*mode
 	}
 
 	return dB.deviceRepository.GetByID(ctx, deviceLog.DeviceID)
+}
+
+func (dB *deviceBusiness) UpdateProfileID(ctx context.Context, linkID, profileID string) (*models.Device, error) {
+	device, err := dB.GetByLinkID(ctx, linkID)
+	if err != nil {
+		return nil, err
+	}
+
+	if device.ProfileID == "" {
+		device.ProfileID = profileID
+		err = dB.deviceRepository.Save(ctx, device)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return device, nil
+
 }
 
 func (dB *deviceBusiness) GetByProfileID(ctx context.Context, profileID string) ([]*models.Device, error) {

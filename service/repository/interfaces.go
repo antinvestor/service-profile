@@ -60,6 +60,7 @@ type RelationshipRepository interface {
 type DeviceRepository interface {
 	Save(ctx context.Context, device *models.Device) error
 	GetByID(ctx context.Context, id string) (*models.Device, error)
+	GetByLinkID(ctx context.Context, linkId string) (*models.Device, error)
 	List(ctx context.Context, profileId string) ([]*models.Device, error)
 	ListByEmbedding(ctx context.Context, embedding []float32) ([]*models.Device, error)
 }
