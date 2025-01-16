@@ -2,6 +2,7 @@ package models
 
 import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pgvector/pgvector-go"
 	"github.com/pitabwire/frame"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
@@ -234,4 +235,25 @@ func (r *Relationship) ToAPI() *profilev1.RelationshipObject {
 
 	return relationshipObj
 
+}
+
+type Device struct {
+	frame.BaseModel
+	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
+	Name      string `gorm:"type:varchar(50)"`
+	Browser   string `gorm:"type:varchar(50)"`
+	OS        string `gorm:"type:varchar(50)"`
+	IP        string `gorm:"type:varchar(50)"`
+	Locale    datatypes.JSONMap
+	Location  datatypes.JSONMap
+	LastSeen  time.Time
+	Embedding *pgvector.Vector `gorm:"type:vector(512)"`
+}
+
+type DeviceLog struct {
+	frame.BaseModel
+	DeviceID  string `gorm:"type:varchar(50)"`
+	LinkID    string `gorm:"type:varchar(255)"`
+	Data      datatypes.JSONMap
+	Embedding *pgvector.Vector `gorm:"type:vector(512)"`
 }

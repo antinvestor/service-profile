@@ -156,13 +156,25 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	_ = json.NewEncoder(rw).Encode(response)
 }
 
-func (ps *ProfileServer) NewRouterV1() *http.ServeMux {
+func (ps *ProfileServer) NewSecureRouterV1() *http.ServeMux {
 
 	userServeMux := http.NewServeMux()
 
 	userServeMux.HandleFunc("/user/info", ps.RestUserInfo)
 
 	userServeMux.HandleFunc("/user/relations", ps.RestListRelationshipsEndpoint)
+	userServeMux.HandleFunc("/user/device/by_id", ps.RestGetDeviceByID)
+	userServeMux.HandleFunc("/user/device/by_profile_id", ps.RestGetDevicesByProfileID)
+	userServeMux.HandleFunc("/user/device/by_device_log_id/{deviceLogId}", ps.RestGetDeviceByDeviceLogID)
+	userServeMux.HandleFunc("/user/device/log/{deviceLogId}", ps.RestGetDeviceLogByID)
+
+	return userServeMux
+}
+
+func (ps *ProfileServer) NewInSecureRouterV1() *http.ServeMux {
+
+	userServeMux := http.NewServeMux()
+	userServeMux.HandleFunc("/device/log", ps.RestLogDeviceData)
 
 	return userServeMux
 }

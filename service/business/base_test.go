@@ -27,7 +27,7 @@ import (
 	"time"
 )
 
-const PostgresqlDbImage = "postgres:17"
+const PostgresqlDbImage = "pgvector/pgvector:pg17"
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
 type StdoutLogConsumer struct{}

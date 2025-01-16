@@ -1,7 +1,7 @@
 
 services:
   profile_database:
-    image: postgres:17.2
+    image: pgvector/pgvector:pg17
     environment:
       - POSTGRES_USER=ant
       - POSTGRES_PASSWORD=secret
@@ -20,7 +20,7 @@ services:
       - CONTACT_ENCRYPTION_KEY=ualgJEcb4GNXLn3jYV9TUGtgYrdTMg
       - CONTACT_ENCRYPTION_SALT=VufLmnycUCgz
     restart: on-failure
-#
+
 #  profile:
 #    build: ./
 #    depends_on:
