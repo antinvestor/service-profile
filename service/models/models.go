@@ -239,22 +239,22 @@ func (r *Relationship) ToAPI() *profilev1.RelationshipObject {
 
 type Device struct {
 	frame.BaseModel
-	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
-	LinkID    string `gorm:"type:varchar(50);index:link_id"`
-	Name      string `gorm:"type:varchar(50)"`
-	Browser   string `gorm:"type:varchar(50)"`
-	OS        string `gorm:"type:varchar(50)"`
-	IP        string `gorm:"type:varchar(50)"`
-	Locale    datatypes.JSONMap
-	Location  datatypes.JSONMap
-	LastSeen  time.Time
-	Embedding *pgvector.Vector `gorm:"type:vector(512)"`
+	ProfileID string            `json:"profile_id" gorm:"type:varchar(50);index:profile_id"`
+	LinkID    string            `json:"link_id" gorm:"type:varchar(50);index:link_id"`
+	Name      string            `json:"name" gorm:"type:varchar(50)"`
+	Browser   string            `json:"browser" gorm:"type:varchar(50)"`
+	OS        string            `json:"os" gorm:"type:varchar(50)"`
+	IP        string            `json:"ip" gorm:"type:varchar(50)"`
+	Locale    datatypes.JSONMap `json:"locale"`
+	Location  datatypes.JSONMap `json:"location"`
+	LastSeen  time.Time         `json:"last_seen"`
+	Embedding *pgvector.Vector  `json:"-" gorm:"type:vector(512)"`
 }
 
 type DeviceLog struct {
 	frame.BaseModel
-	DeviceID  string `gorm:"type:varchar(50)"`
-	LinkID    string `gorm:"type:varchar(255)"`
-	Data      datatypes.JSONMap
-	Embedding *pgvector.Vector `gorm:"type:vector(512)"`
+	DeviceID  string            `json:"device_id" gorm:"type:varchar(50)"`
+	LinkID    string            `json:"link_id" gorm:"type:varchar(255)"`
+	Data      datatypes.JSONMap `json:"data"`
+	Embedding *pgvector.Vector  `json:"-" gorm:"type:vector(512)"`
 }
