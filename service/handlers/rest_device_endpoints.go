@@ -43,6 +43,44 @@ func (ps *ProfileServer) RestLogDeviceData(rw http.ResponseWriter, req *http.Req
 	_ = json.NewEncoder(rw).Encode(response)
 }
 
+func (ps *ProfileServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http.Request) {
+	ctx := req.Context()
+
+	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
+
+	var linkData map[string]string
+	err := json.NewDecoder(req.Body).Decode(&linkData)
+	if err != nil {
+		ps.writeError(ctx, rw, err, http.StatusBadRequest)
+		return
+	}
+
+	linkId, ok := linkData["link_id"]
+	if !ok {
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(rw).Encode("missing parameters")
+		return
+	}
+	profileId, ok := linkData["profile_id"]
+	if !ok {
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(rw).Encode("missing parameters")
+		return
+	}
+
+	device, err := deviceBusiness.UpdateProfileID(ctx, linkId, profileId)
+	if err != nil {
+		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
+		return
+	}
+
+	rw.Header().Set("Content-Type", "application/json")
+	rw.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(rw).Encode(device)
+}
+
 func (ps *ProfileServer) RestGetDeviceLogByID(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)

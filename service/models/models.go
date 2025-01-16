@@ -240,6 +240,7 @@ func (r *Relationship) ToAPI() *profilev1.RelationshipObject {
 type Device struct {
 	frame.BaseModel
 	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
+	LinkID    string `gorm:"type:varchar(50);index:link_id"`
 	Name      string `gorm:"type:varchar(50)"`
 	Browser   string `gorm:"type:varchar(50)"`
 	OS        string `gorm:"type:varchar(50)"`

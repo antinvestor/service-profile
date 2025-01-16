@@ -52,6 +52,11 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]s
 		if err != nil {
 			return err
 		}
+	} else {
+		device, err0 := dq.DeviceRepository.GetByLinkID(ctx, deviceLog.LinkID)
+		if err0 == nil {
+			deviceList = []*models.Device{device}
+		}
 	}
 
 	var device *models.Device
@@ -97,6 +102,10 @@ func narrowSimilarityChecks(ctx context.Context, list []*models.Device, deviceLo
 
 func updateDeviceProperties(ctx context.Context, device *models.Device, deviceLog *models.DeviceLog) error {
 	device.LastSeen = deviceLog.CreatedAt
+
+	if device.LinkID == "" {
+		device.LinkID = deviceLog.LinkID
+	}
 
 	device.IP, _ = deviceLog.Data["ip"].(string)
 
