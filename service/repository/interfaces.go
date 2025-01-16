@@ -56,3 +56,17 @@ type RelationshipRepository interface {
 	RelationshipType(ctx context.Context, relationshipType profilev1.RelationshipType) (*models.RelationshipType, error)
 	RelationshipTypeByID(ctx context.Context, relationshipTypeID string) (*models.RelationshipType, error)
 }
+
+type DeviceRepository interface {
+	Save(ctx context.Context, device *models.Device) error
+	GetByID(ctx context.Context, id string) (*models.Device, error)
+	List(ctx context.Context, profileId string) ([]*models.Device, error)
+	ListByEmbedding(ctx context.Context, embedding []float32) ([]*models.Device, error)
+}
+
+type DeviceLogRepository interface {
+	Save(ctx context.Context, deviceLog *models.DeviceLog) error
+	GetByID(ctx context.Context, id string) (*models.DeviceLog, error)
+	GetByLinkID(ctx context.Context, linkID string) (*models.DeviceLog, error)
+	ListByDeviceID(ctx context.Context, deviceLogID string) ([]*models.DeviceLog, error)
+}

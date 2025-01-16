@@ -45,11 +45,14 @@ func main() {
 
 		service.Init(serviceOptions...)
 
+		service.DB(ctx, false).Exec("CREATE EXTENSION IF NOT EXISTS vector")
+
 		err := service.MigrateDatastore(ctx, profileConfig.GetDatabaseMigrationPath(),
 			&models.ProfileType{}, &models.Profile{}, &models.ContactType{},
 			&models.CommunicationLevel{}, &models.Contact{}, &models.Country{},
 			&models.Address{}, &models.ProfileAddress{}, &models.Verification{},
-			&models.VerificationAttempt{}, &models.RelationshipType{}, &models.Relationship{})
+			&models.VerificationAttempt{}, &models.RelationshipType{}, &models.Relationship{},
+			&models.Device{}, &models.DeviceLog{})
 
 		if err != nil {
 			log.Fatalf("main -- Could not migrate successfully because : %+v", err)
@@ -132,9 +135,10 @@ func main() {
 	}
 
 	profileServiceRestHandlers := service.AuthenticationMiddleware(
-		implementation.NewRouterV1(), jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
+		implementation.NewSecureRouterV1(), jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
 
 	proxyMux.Handle("/public/", http.StripPrefix("/public", profileServiceRestHandlers))
+	proxyMux.Handle("/_public/", http.StripPrefix("/_public", implementation.NewInSecureRouterV1()))
 
 	serviceOptions = append(serviceOptions, frame.HttpHandler(proxyMux))
 
@@ -146,11 +150,22 @@ func main() {
 
 	verificationQueue := frame.RegisterSubscriber(profileConfig.QueueVerificationName, profileConfig.QueueVerification, 2, &verificationQueueHandler)
 	verificationQueuePublisher := frame.RegisterPublisher(profileConfig.QueueVerificationName, profileConfig.QueueVerification)
+
+	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
+		Service:             service,
+		DeviceRepository:    repository.NewDeviceRepository(service),
+		DeviceLogRepository: repository.NewDeviceLogRepository(service),
+	}
+
+	deviceAnalysisQueue := frame.RegisterSubscriber(profileConfig.QueueDeviceAnalysisName, profileConfig.QueueDeviceAnalysis, 2, &deviceAnalysisQueueHandler)
+	deviceAnalysisQueuePublisher := frame.RegisterPublisher(profileConfig.QueueDeviceAnalysisName, profileConfig.QueueDeviceAnalysis)
+
 	relationshipConnectQueuePublisher := frame.RegisterPublisher(profileConfig.QueueRelationshipConnectName, profileConfig.QueueRelationshipConnectURI)
 	relationshipDisConnectQueuePublisher := frame.RegisterPublisher(profileConfig.QueueRelationshipDisConnectName, profileConfig.QueueRelationshipDisConnectURI)
 
 	serviceOptions = append(serviceOptions,
 		verificationQueue, verificationQueuePublisher,
+		deviceAnalysisQueue, deviceAnalysisQueuePublisher,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.RegisterEvents(
 			&events.ClientConnectedSetupQueue{Service: service},

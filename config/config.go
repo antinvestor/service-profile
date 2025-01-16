@@ -21,6 +21,9 @@ type ProfileConfig struct {
 	QueueRelationshipDisConnectName string `default:"relationships.disconnect" envconfig:"QUEUE_RELATIONSHIP_DISCONNECT_NAME"`
 	QueueRelationshipDisConnectURI  string `default:"mem://default.relationships.disconnect" envconfig:"QUEUE_RELATIONSHIP_DISCONNECT_URI"`
 
+	QueueDeviceAnalysis     string `default:"mem://device_analysis_queue" envconfig:"QUEUE_DEVICE_ANALYSIS_URI"`
+	QueueDeviceAnalysisName string `default:"device_analysis_queue" envconfig:"QUEUE_DEVICE_ANALYSIS_NAME"`
+
 	LengthOfVerificationPin        int `default:"5" envconfig:"LENGTH_OF_VERIFICATION_PIN"`
 	LengthOfVerificationLinkHash   int `default:"70" envconfig:"LENGTH_OF_VERIFICATION_LINK_HASH"`
 	VerificationPinExpiryTimeInSec int `default:"86400" envconfig:"VERIFICATION_PIN_EXPIRY_TIME_IN_SEC"`
