@@ -7,7 +7,7 @@ require (
 	github.com/antinvestor/apis/go/notification v1.30.1
 	github.com/antinvestor/apis/go/profile v1.30.1
 	github.com/bufbuild/protovalidate-go v0.8.2
-	github.com/docker/docker v27.4.1+incompatible
+	github.com/docker/docker v27.5.0+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
 	github.com/pgvector/pgvector-go v0.2.2
@@ -15,13 +15,13 @@ require (
 	github.com/rs/xid v1.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.10.0
-	github.com/testcontainers/testcontainers-go v0.34.0
-	github.com/testcontainers/testcontainers-go/modules/postgres v0.34.0
+	github.com/testcontainers/testcontainers-go v0.35.0
+	github.com/testcontainers/testcontainers-go/modules/postgres v0.35.0
 	github.com/ttacon/libphonenumber v1.2.1
 	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.32.0
 	google.golang.org/grpc v1.69.4
-	google.golang.org/protobuf v1.36.2
+	google.golang.org/protobuf v1.36.3
 	gorm.io/datatypes v1.2.5
 	gorm.io/gorm v1.25.12
 )

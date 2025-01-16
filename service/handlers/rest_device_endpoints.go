@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/antinvestor/service-profile/service/models"
-	"github.com/gorilla/mux"
 	"github.com/pitabwire/frame"
 	"net/http"
 	"strings"
@@ -53,8 +52,7 @@ func (ps *ProfileServer) RestGetDeviceLogByID(rw http.ResponseWriter, req *http.
 		return
 	}
 
-	params := mux.Vars(req)
-	deviceLogID := params["deviceLogId"]
+	deviceLogID := req.PathValue("deviceLogId")
 
 	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
 
@@ -78,8 +76,7 @@ func (ps *ProfileServer) RestGetDeviceByDeviceLogID(rw http.ResponseWriter, req 
 		return
 	}
 
-	params := mux.Vars(req)
-	deviceLogID := params["deviceLogId"]
+	deviceLogID := req.PathValue("deviceLogId")
 
 	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
 
