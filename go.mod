@@ -3,7 +3,7 @@ module github.com/antinvestor/service-profile
 go 1.23.0
 
 require (
-	github.com/antinvestor/apis/go/common v1.30.0
+	github.com/antinvestor/apis/go/common v1.30.5
 	github.com/antinvestor/apis/go/notification v1.30.1
 	github.com/antinvestor/apis/go/profile v1.30.1
 	github.com/bufbuild/protovalidate-go v0.8.2
@@ -27,7 +27,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.1-20241127180247-a33202765966.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.3-20241127180247-a33202765966.1 // indirect
 	cel.dev/expr v0.18.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
