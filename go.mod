@@ -5,7 +5,7 @@ go 1.23.0
 require (
 	github.com/antinvestor/apis/go/common v1.30.5
 	github.com/antinvestor/apis/go/notification v1.30.5
-	github.com/antinvestor/apis/go/profile v1.30.5
+	github.com/antinvestor/apis/go/profile v1.31.0
 	github.com/bufbuild/protovalidate-go v0.8.2
 	github.com/docker/docker v27.5.0+incompatible
 	github.com/docker/go-connections v0.5.0
