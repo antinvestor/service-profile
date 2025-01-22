@@ -45,7 +45,6 @@ type profileBusiness struct {
 	service *frame.Service
 
 	contactBusiness ContactBusiness
-	rosterBusiness  RosterBusiness
 	addressBusiness AddressBusiness
 
 	profileRepo repository.ProfileRepository
@@ -249,7 +248,7 @@ func (pb *profileBusiness) CreateProfile(
 		return nil, err
 	}
 
-	return pb.GetByID(ctx, p.GetID())
+	return pb.GetByID(ctx, contact.ProfileID)
 
 }
 

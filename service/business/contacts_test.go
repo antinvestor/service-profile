@@ -335,6 +335,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 
 			var got []*models.Contact
 			got, err = cb.GetByProfile(cts.ctx, tt.args.profileID)
+			assert.NoError(t, err)
 
 			assert.Equalf(t, len(tt.want), len(got), "GetByProfile(%v, %v)", cts.ctx, tt.args.profileID)
 		})
