@@ -7,7 +7,7 @@ require (
 	github.com/antinvestor/apis/go/notification v1.32.0
 	github.com/antinvestor/apis/go/profile v1.32.0
 	github.com/bufbuild/protovalidate-go v0.8.2
-	github.com/docker/docker v27.5.0+incompatible
+	github.com/docker/docker v27.5.1+incompatible
 	github.com/docker/go-connections v0.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
 	github.com/pgvector/pgvector-go v0.2.3
