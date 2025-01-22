@@ -2,7 +2,6 @@ package business_test
 
 import (
 	"context"
-	"crypto/sha256"
 	"fmt"
 	"github.com/antinvestor/apis/go/common"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
@@ -21,13 +20,11 @@ import (
 	tcPostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"go.uber.org/mock/gomock"
-	"golang.org/x/crypto/pbkdf2"
 	"net"
-	"os"
 	"time"
 )
 
-const PostgresqlDbImage = "pgvector/pgvector:pg17"
+const PostgresqlDbImage = "paradedb/paradedb:v0.14.1"
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
 type StdoutLogConsumer struct{}
@@ -68,9 +65,6 @@ func (bs *BaseTestSuite) SetupSuite() {
 
 	databaseUriStr, err := postgresContainer.ConnectionString(ctx, "sslmode=disable")
 	assert.NoError(bs.T(), err)
-
-	_ = os.Setenv("CONTACT_ENCRYPTION_KEY", "ualgJEcb4GNXLn3jYV9TUGtgYrdTMg")
-	_ = os.Setenv("CONTACT_ENCRYPTION_SALT", "VufLmnycUCgz")
 
 	err = bs.setupMigrations(ctx)
 	assert.NoError(bs.T(), err)
@@ -129,17 +123,11 @@ func (bs *BaseTestSuite) getNotificationCli(_ context.Context) *notificationv1.N
 	return notificationCli
 }
 
-func (bs *BaseTestSuite) getEncryptionKey() []byte {
-	return pbkdf2.Key([]byte("ualgJEcb4GNXLn3jYV9TUGtgYrdTMg"), []byte("VufLmnycUCgz"), 4096, 32, sha256.New)
-}
-
 func (bs *BaseTestSuite) createTestProfiles(contacts []string) ([]*profilev1.ProfileObject, error) {
 
 	ctx := bs.ctx
 
-	profBuss := business.NewProfileBusiness(ctx, bs.service, func() []byte {
-		return bs.getEncryptionKey()
-	})
+	profBuss := business.NewProfileBusiness(ctx, bs.service)
 
 	var profileSlice []*profilev1.ProfileObject
 
@@ -168,7 +156,7 @@ func (bs *BaseTestSuite) setupPostgres(ctx context.Context) (*tcPostgres.Postgre
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
-				WithStartupTimeout(5*time.Second)),
+				WithStartupTimeout(20*time.Second)),
 	)
 	if err != nil {
 		return nil, err
@@ -190,8 +178,6 @@ func (bs *BaseTestSuite) setupMigrations(ctx context.Context) error {
 				"LOG_LEVEL=debug",
 				"DO_MIGRATION=true",
 				fmt.Sprintf("DATABASE_URL=%s", bs.postgresUri),
-				"CONTACT_ENCRYPTION_KEY=ualgJEcb4GNXLn3jYV9TUGtgYrdTMg",
-				"CONTACT_ENCRYPTION_SALT=VufLmnycUCgz",
 			}
 		},
 		Networks:   bs.networks,
@@ -217,9 +203,16 @@ func (bs *BaseTestSuite) setupMigrations(ctx context.Context) error {
 func (bs *BaseTestSuite) TearDownSuite() {
 
 	t := bs.T()
+
+	if bs.service != nil {
+		bs.service.Stop(bs.ctx)
+	}
+
 	if bs.pgContainer != nil {
-		if err := bs.pgContainer.Terminate(bs.ctx); err != nil {
+		if err := bs.pgContainer.Terminate(context.Background()); err != nil {
 			t.Fatalf("failed to terminate container: %s", err)
 		}
 	}
+
+	t.Cleanup(func() {})
 }

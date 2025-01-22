@@ -2,12 +2,12 @@ package business
 
 import (
 	"context"
+	"errors"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/config"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/antinvestor/service-profile/service/repository"
-	"github.com/antinvestor/service-profile/utils"
 	"github.com/pitabwire/frame"
 	"github.com/ttacon/libphonenumber"
 	"math/rand"
@@ -25,130 +25,143 @@ type ContactBusiness interface {
 	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
 	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
-	CreateContact(ctx context.Context, key []byte, profileID string, detail string) error
-
+	CreateContact(ctx context.Context, detail string, extra map[string]string) (*models.Contact, error)
+	UpdateContact(ctx context.Context, contactID string, profileID string, extra map[string]string) (*models.Contact, error)
+	RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error)
 	GetVerification(ctx context.Context, contactID string) (*models.Verification, error)
 
-	ToAPI(ctx context.Context, contact *models.Contact, key []byte) (*profilev1.ContactObject, error)
+	ToAPI(ctx context.Context, contact *models.Contact, partial bool) (*profilev1.ContactObject, error)
 }
 
-func NewContactBusiness(ctx context.Context, service *frame.Service) ContactBusiness {
+func NewContactBusiness(_ context.Context, service *frame.Service) ContactBusiness {
 	contactRepo := repository.NewContactRepository(service)
 	return &contactBusiness{
-		service:    service,
-		contactRep: contactRepo,
+		service:           service,
+		contactRepository: contactRepo,
 	}
 }
 
 type contactBusiness struct {
-	service    *frame.Service
-	contactRep repository.ContactRepository
+	service           *frame.Service
+	contactRepository repository.ContactRepository
 }
 
-func (cb *contactBusiness) ToAPI(ctx context.Context, contact *models.Contact, key []byte) (*profilev1.ContactObject, error) {
-
-	detail, err := utils.AesDecrypt(key, contact.Nonce, contact.Detail)
-	if err != nil {
-		return nil, err
-	}
-
-	contactType, err := cb.contactRep.ContactTypeByID(ctx, contact.ContactTypeID)
-	if err != nil {
-		return nil, err
-	}
-
-	communicationLevel, err := cb.contactRep.CommunicationLevelByID(ctx, contact.CommunicationLevelID)
-	if err != nil {
-		return nil, err
-	}
-
-	isVerified := false
-	verification, _ := cb.GetVerification(ctx, contact.GetID())
-
-	isVerified = verification != nil
+func (cb *contactBusiness) ToAPI(ctx context.Context, contact *models.Contact, partial bool) (*profilev1.ContactObject, error) {
 
 	contactObject := profilev1.ContactObject{
-		Id:                 contact.ID,
-		Detail:             detail,
-		Verified:           isVerified,
-		Type:               profilev1.ContactType(contactType.UID),
-		CommunicationLevel: profilev1.CommunicationLevel(communicationLevel.UID),
+		Id:     contact.ID,
+		Detail: contact.Detail,
 	}
 
-	return &contactObject, err
+	contactTypeID, ok := profilev1.ContactType_value[contact.ContactType]
+	if !ok {
+		return nil, service.ErrorContactTypeNotValid
+	}
+	contactObject.Type = profilev1.ContactType(contactTypeID)
+
+	communicationLevel, ok := profilev1.CommunicationLevel_value[contact.CommunicationLevel]
+	if !ok {
+		communicationLevel = int32(profilev1.CommunicationLevel_ALL)
+	}
+	contactObject.CommunicationLevel = profilev1.CommunicationLevel(communicationLevel)
+
+	contactObject.Verified = false
+	if !partial {
+
+		verification, _ := cb.GetVerification(ctx, contact.GetID())
+		contactObject.Verified = verification != nil
+
+	}
+
+	return &contactObject, nil
 
 }
 
-func (cb *contactBusiness) FromDetail(ctx context.Context, detail string) (*models.ContactType, error) {
+func (cb *contactBusiness) ContactTypeFromDetail(_ context.Context, detail string) (string, error) {
 
 	if EmailPattern.MatchString(detail) {
-		ct, err := cb.contactRep.ContactType(ctx, profilev1.ContactType_EMAIL)
-		return ct, err
+		return profilev1.ContactType_EMAIL.String(), nil
 
 	} else {
-
 		possibleNumber, err := libphonenumber.Parse(detail, "")
 
 		if err == nil && libphonenumber.IsValidNumber(possibleNumber) {
-			ct, err := cb.contactRep.ContactType(ctx, profilev1.ContactType_PHONE)
-			return ct, err
-
+			return profilev1.ContactType_MSISDN.String(), err
 		}
 	}
 
-	return nil, service.ErrorContactDetailsNotValid
+	return "", service.ErrorContactDetailsNotValid
 }
 
 func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*models.Contact, error) {
-	return cb.contactRep.GetByID(ctx, contactID)
+	return cb.contactRepository.GetByID(ctx, contactID)
 }
 
 func (cb *contactBusiness) GetByDetail(ctx context.Context, detail string) (*models.Contact, error) {
-	return cb.contactRep.GetByDetail(ctx, detail)
+	return cb.contactRepository.GetByDetail(ctx, detail)
 }
 
 func (cb *contactBusiness) GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error) {
-	return cb.contactRep.GetByProfileID(ctx, profileID)
+
+	if profileID == "" {
+		return nil, errors.New("profile ID is empty")
+	}
+
+	return cb.contactRepository.GetByProfileID(ctx, profileID)
 }
 
 func (cb *contactBusiness) GetVerification(ctx context.Context, contactID string) (*models.Verification, error) {
-	return cb.contactRep.GetVerificationByContactID(ctx, contactID)
+	return cb.contactRepository.GetVerificationByContactID(ctx, contactID)
 }
-func (cb *contactBusiness) CreateContact(ctx context.Context, key []byte, profileID string, detail string) error {
+func (cb *contactBusiness) UpdateContact(ctx context.Context, contactID string, profileID string, extra map[string]string) (*models.Contact, error) {
+
+	contact, err := cb.contactRepository.GetByID(ctx, contactID)
+	if err != nil {
+		return nil, err
+	}
+	if contact.ProfileID == "" {
+		contact.ProfileID = profileID
+	}
+
+	properties := frame.DBPropertiesFromMap(extra)
+	for key, value := range properties {
+		if value != contact.Properties[key] {
+			contact.Properties[key] = value
+		}
+	}
+
+	return cb.contactRepository.Save(ctx, contact)
+}
+
+func (cb *contactBusiness) CreateContact(ctx context.Context, detail string, extra map[string]string) (*models.Contact, error) {
 
 	contact := &models.Contact{}
 
 	detail = strings.ToLower(strings.TrimSpace(detail))
 
-	ct, err := cb.FromDetail(ctx, detail)
+	var err error
+	contact.ContactType, err = cb.ContactTypeFromDetail(ctx, detail)
 	if err != nil {
-		return err
-	}
-	contact.ContactTypeID = ct.ID
-	contact.ContactType = ct
-
-	cl, err := cb.contactRep.CommunicationLevel(ctx, profilev1.CommunicationLevel_ALL)
-	if err != nil {
-		return err
-	}
-	contact.CommunicationLevelID = cl.ID
-	contact.CommunicationLevel = cl
-
-	contact.ProfileID = profileID
-
-	contact.Detail, contact.Nonce, err = utils.AesEncrypt(key, detail)
-	if err != nil {
-		return err
-	}
-	contact.Tokens = detail
-
-	contact, err = cb.contactRep.Save(ctx, contact)
-	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return cb.VerifyContact(ctx, contact)
+	contact.Detail = detail
+	contact.Properties = frame.DBPropertiesFromMap(extra)
 
+	contact, err = cb.contactRepository.Save(ctx, contact)
+	if err != nil {
+		return nil, err
+	}
+
+	err = cb.VerifyContact(ctx, contact)
+	if err != nil {
+		return nil, err
+	}
+	return contact, nil
+}
+
+func (cb *contactBusiness) RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error) {
+	return cb.contactRepository.DelinkFromProfile(ctx, contactID, profileID)
 }
 
 func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Contact) error {
@@ -174,6 +187,10 @@ func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Co
 // number generator fails to function correctly, in which
 // case the caller should not continue.
 func GeneratePin(n int) string {
+
+	if n <= 0 {
+		return ""
+	}
 
 	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 

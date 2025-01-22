@@ -5,8 +5,6 @@ import (
 	"github.com/pgvector/pgvector-go"
 	"github.com/pitabwire/frame"
 	"gorm.io/datatypes"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"time"
 )
 
@@ -46,85 +44,29 @@ type Profile struct {
 	ProfileType   ProfileType
 }
 
-var ContactTypeUIDMap = map[profilev1.ContactType]uint{
-	profilev1.ContactType_EMAIL: 0,
-	profilev1.ContactType_PHONE: 1,
-}
-
-var CommunicationLevelUIDMap = map[profilev1.CommunicationLevel]uint{
-	profilev1.CommunicationLevel_ALL:           0,
-	profilev1.CommunicationLevel_SYSTEM_ALERTS: 1,
-	profilev1.CommunicationLevel_NO_CONTACT:    2,
-}
-
-type ContactType struct {
-	frame.BaseModel
-	UID uint `sql:"unique"`
-
-	Name        string
-	Description string
-}
-
-func ContactTypeIDToEnum(contactTypeID uint) profilev1.ContactType {
-	for key, val := range ContactTypeUIDMap {
-		if val == contactTypeID {
-			return key
-		}
-	}
-	return profilev1.ContactType_EMAIL
-}
-
-type CommunicationLevel struct {
-	frame.BaseModel
-	UID uint `sql:"unique"`
-
-	Name        string
-	Description string
-}
-
-func (cl *CommunicationLevel) From(db *gorm.DB, communicationLevel profilev1.CommunicationLevel) {
-	cl.UID = CommunicationLevelUIDMap[communicationLevel]
-	db.First(cl)
-}
-
-func CommunicationLevelIDToEnum(communicationLevelID uint) profilev1.CommunicationLevel {
-	for key, val := range CommunicationLevelUIDMap {
-		if val == communicationLevelID {
-			return key
-		}
-	}
-	return profilev1.CommunicationLevel_ALL
-}
-
 type Contact struct {
 	frame.BaseModel
-	Detail []byte `gorm:"type:bytea;unique"`
-	Nonce  []byte `gorm:"type:bytea"`
-	Tokens string `gorm:"type:tsvector"`
+	Detail string `gorm:"type:varchar(50);unique"`
 
-	ContactTypeID string `gorm:"type:varchar(50)"`
-	ContactType   *ContactType
-
-	CommunicationLevelID string `gorm:"type:varchar(50)"`
-	CommunicationLevel   *CommunicationLevel
+	ContactType        string `gorm:"type:varchar(50)"`
+	CommunicationLevel string `gorm:"type:varchar(50)"`
 
 	Language string
 
 	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
-	Profile   Profile
+
+	Properties datatypes.JSONMap
 }
 
-func GetContactsByProfile(db *gorm.DB, p *Profile) ([]Contact, error) {
+type Roster struct {
+	frame.BaseModel
 
-	var profileContacts []Contact
+	ProfileID string `gorm:"type:varchar(50);uniqueIndex:roster_composite_index;index:profile_id"`
 
-	err := db.Preload(clause.Associations).Where("profile_id = ?", p.GetID()).Find(&profileContacts).Error
+	ContactID string `gorm:"type:varchar(50);uniqueIndex:roster_composite_index;"`
+	Contact   *Contact
 
-	if err != nil {
-		return nil, err
-	}
-
-	return profileContacts, nil
+	Properties datatypes.JSONMap
 }
 
 type Verification struct {

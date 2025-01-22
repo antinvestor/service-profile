@@ -4,10 +4,89 @@ import (
 	"context"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/models"
+	"github.com/pitabwire/frame"
+	"time"
 )
+
+const defaultBatchSize = 30
+
+type SearchQuery struct {
+	ProfileID            string
+	Query                string
+	PropertiesToSearchOn []string
+	StartAt              *time.Time
+	EndAt                *time.Time
+
+	Pagination *Paginator
+}
+
+func NewSearchQuery(ctx context.Context, query string, props []string, startAt, endAt string, resultPage, resultCount int) (*SearchQuery, error) {
+
+	if resultCount == 0 {
+		resultCount = defaultBatchSize
+	}
+
+	profileID := ""
+	claims := frame.ClaimsFromContext(ctx)
+	if claims != nil {
+		profileID, _ = claims.GetSubject()
+	}
+
+	sq := &SearchQuery{
+		ProfileID:            profileID,
+		Query:                query,
+		PropertiesToSearchOn: props,
+		Pagination: &Paginator{
+			offset:    resultPage * resultCount,
+			limit:     resultCount,
+			batchSize: defaultBatchSize,
+		},
+	}
+
+	if startAt != "" {
+
+		parsedTime, err := time.Parse(time.DateTime, startAt)
+		if err != nil {
+			return nil, err
+		}
+		sq.StartAt = &parsedTime
+	}
+
+	if endAt != "" {
+
+		parsedTime, err := time.Parse(time.DateTime, endAt)
+		if err != nil {
+			return nil, err
+		}
+		sq.EndAt = &parsedTime
+	}
+
+	return sq, nil
+}
+
+type Paginator struct {
+	offset int
+	limit  int
+
+	batchSize int
+}
+
+func (sq *Paginator) canLoad() bool {
+	return sq.offset < sq.limit
+}
+
+func (sq *Paginator) stop(loadedCount int) bool {
+	sq.offset += loadedCount
+	if sq.offset+sq.batchSize > sq.limit {
+		sq.batchSize = sq.limit - sq.offset
+	}
+
+	return loadedCount < sq.batchSize
+}
 
 type ProfileRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Profile, error)
+	Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe, error)
 	Save(ctx context.Context, profile *models.Profile) error
 	Delete(ctx context.Context, id string) error
 
@@ -21,15 +100,19 @@ type ContactRepository interface {
 	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
 	Save(ctx context.Context, contact *models.Contact) (*models.Contact, error)
 	Delete(ctx context.Context, id string) error
-
-	ContactType(ctx context.Context, contactType profilev1.ContactType) (*models.ContactType, error)
-	ContactTypeByID(ctx context.Context, contactTypeID string) (*models.ContactType, error)
-	CommunicationLevel(ctx context.Context, communicationLevel profilev1.CommunicationLevel) (*models.CommunicationLevel, error)
-	CommunicationLevelByID(ctx context.Context, communicationLevelID string) (*models.CommunicationLevel, error)
+	DelinkFromProfile(ctx context.Context, id, profileID string) (*models.Contact, error)
 
 	GetVerificationByContactID(ctx context.Context, contactID string) (*models.Verification, error)
 	VerificationSave(ctx context.Context, verification *models.Verification) error
 	VerificationAttemptSave(ctx context.Context, attempt *models.VerificationAttempt) error
+}
+
+type RosterRepository interface {
+	GetByID(ctx context.Context, id string) (*models.Roster, error)
+	GetByContactAndProfileID(ctx context.Context, profileID, contactID string) (*models.Roster, error)
+	Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe, error)
+	Save(ctx context.Context, contact *models.Roster) (*models.Roster, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type AddressRepository interface {

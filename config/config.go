@@ -8,9 +8,6 @@ type ProfileConfig struct {
 	NotificationServiceURI string `default:"127.0.0.1:7020" envconfig:"NOTIFICATION_SERVICE_URI"`
 	PartitionServiceURI    string `default:"127.0.0.1:7003" envconfig:"PARTITION_SERVICE_URI"`
 
-	ContactEncryptionKey  string `required:"true" envconfig:"CONTACT_ENCRYPTION_KEY"`
-	ContactEncryptionSalt string `required:"true" envconfig:"CONTACT_ENCRYPTION_SALT"`
-
 	SystemAccessID        string `default:"c8cf0ldstmdlinc3eva0" envconfig:"STATIC_SYSTEM_ACCESS_ID"`
 	QueueVerification     string `default:"mem://contact_verification_queue" envconfig:"QUEUE_VERIFICATION_URI"`
 	QueueVerificationName string `default:"contact_verification_queue" envconfig:"QUEUE_VERIFICATION_NAME"`

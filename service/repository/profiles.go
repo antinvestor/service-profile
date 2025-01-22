@@ -2,14 +2,78 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
 	"gorm.io/gorm/clause"
+	"strings"
 )
 
 type profileRepository struct {
 	service *frame.Service
+}
+
+func (pr *profileRepository) Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe, error) {
+	service := pr.service
+	job := service.NewJob(func(ctx context.Context, jobResult frame.JobResultPipe) error {
+
+		paginator := query.Pagination
+		for paginator.canLoad() {
+
+			var profileList []*models.Profile
+
+			db := service.DB(ctx, true).
+				Limit(paginator.limit).Offset(paginator.offset)
+
+			if query.StartAt != nil && query.EndAt != nil {
+				startDate := query.StartAt.Format("2020-01-31T00:00:00Z")
+				endDate := query.EndAt.Format("2020-01-31T00:00:00Z")
+				db = db.Where("created_at @@@ '[ ? TO ?]'", startDate, endDate)
+			}
+
+			if query.Query != "" {
+
+				var whereConditionParams []any
+				var whereQueryStrings []string
+
+				for _, property := range query.PropertiesToSearchOn {
+					whereConditionParams = append(whereConditionParams, query.Query)
+					searchTerm := fmt.Sprintf(" id  @@@ paradedb.fuzzy_phrase( field => 'properties.%s', value => ?, match_all_terms => false, distance => 0) ", property)
+					whereQueryStrings = append(whereQueryStrings, searchTerm)
+				}
+
+				if len(whereQueryStrings) > 0 {
+					whereQueryStr := strings.Join(whereQueryStrings, " OR ")
+					db = db.Where(whereQueryStr, whereConditionParams...)
+				}
+
+			}
+
+			err := db.Find(&profileList).Error
+			if err != nil {
+				return jobResult.WriteResult(ctx, err)
+			}
+
+			err = jobResult.WriteResult(ctx, profileList)
+			if err != nil {
+				return err
+			}
+
+			if paginator.stop(len(profileList)) {
+				break
+			}
+		}
+		return nil
+
+	})
+
+	err := service.SubmitJob(ctx, job)
+	if err != nil {
+		return nil, err
+	}
+
+	return job, nil
 }
 
 func (pr *profileRepository) GetTypeByID(ctx context.Context, profileTypeId string) (*models.ProfileType, error) {

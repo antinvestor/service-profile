@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service"
 	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
@@ -45,7 +44,7 @@ func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*m
 	contact := &models.Contact{}
 
 	detail = strings.ToLower(strings.TrimSpace(detail))
-	if err := cr.service.DB(ctx, true).First(contact, " tokens @@ to_tsquery(?)", detail).Error; err != nil {
+	if err := cr.service.DB(ctx, true).First(contact, " detail @@@ ?", detail).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, service.ErrorContactDoesNotExist
 		}
@@ -59,18 +58,32 @@ func (cr *contactRepository) Save(ctx context.Context, contact *models.Contact) 
 	if contact.ID == "" {
 		contact.GenID(ctx)
 		err := cr.service.DB(ctx, false).Model(contact).Create(map[string]any{
-			"ID":                   contact.ID,
-			"ContactTypeID":        contact.ContactTypeID,
-			"CommunicationLevelID": contact.CommunicationLevelID,
-			"ProfileID":            contact.ProfileID,
-			"Detail":               contact.Detail,
-			"Nonce":                contact.Nonce,
-			"Tokens":               gorm.Expr("to_tsvector(?)", contact.Tokens),
+			"ID":                 contact.ID,
+			"ContactType":        contact.ContactType,
+			"CommunicationLevel": contact.CommunicationLevel,
+			"ProfileID":          contact.ProfileID,
+			"Detail":             contact.Detail,
 		}).Error
 		return contact, err
 	}
 
 	err := cr.service.DB(ctx, false).Save(contact).Error
+	return contact, err
+}
+
+func (cr *contactRepository) DelinkFromProfile(ctx context.Context, id, profileID string) (*models.Contact, error) {
+	contact, err := cr.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if profileID != contact.ProfileID {
+		return nil, service.ErrorContactProfileNotValid
+	}
+
+	contact.ProfileID = ""
+
+	err = cr.service.DB(ctx, false).Save(contact).Error
 	return contact, err
 }
 
@@ -80,41 +93,6 @@ func (cr *contactRepository) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return cr.service.DB(ctx, false).Delete(contact).Error
-}
-
-func (cr *contactRepository) ContactType(ctx context.Context,
-	contactType profilev1.ContactType) (*models.ContactType, error) {
-	uid := models.ContactTypeUIDMap[contactType]
-	ct := &models.ContactType{}
-	err := cr.service.DB(ctx, true).First(ct, "uid = ?", uid).Error
-	return ct, err
-
-}
-
-func (cr *contactRepository) ContactTypeByID(ctx context.Context, contactTypeID string) (*models.ContactType, error) {
-	ct := &models.ContactType{}
-	err := cr.service.DB(ctx, true).First(ct, "id = ?", contactTypeID).Error
-	return ct, err
-
-}
-
-func (cr *contactRepository) CommunicationLevel(ctx context.Context,
-	communicationLevel profilev1.CommunicationLevel) (*models.CommunicationLevel, error) {
-
-	uid := models.CommunicationLevelUIDMap[communicationLevel]
-	cl := &models.CommunicationLevel{}
-	err := cr.service.DB(ctx, true).First(cl, "uid = ?", uid).Error
-	return cl, err
-
-}
-
-func (cr *contactRepository) CommunicationLevelByID(ctx context.Context,
-	communicationLevelID string) (*models.CommunicationLevel, error) {
-
-	cl := &models.CommunicationLevel{}
-	err := cr.service.DB(ctx, true).First(cl, "id = ?", communicationLevelID).Error
-	return cl, err
-
 }
 
 func NewContactRepository(service *frame.Service) ContactRepository {

@@ -13,11 +13,6 @@ type RelationshipTestSuite struct {
 	BaseTestSuite
 }
 
-func (rts *RelationshipTestSuite) SetupSuite() {
-	rts.BaseTestSuite.SetupSuite()
-
-}
-
 func TestRelationshipSuite(t *testing.T) {
 	suite.Run(t, new(RelationshipTestSuite))
 }
@@ -28,12 +23,10 @@ func (rts *RelationshipTestSuite) TestNewRelationshipBusiness() {
 	ctx := rts.ctx
 
 	srv := rts.service
-	profileEncryptionKey := rts.getEncryptionKey()
 
 	type args struct {
-		ctx                  context.Context
-		service              *frame.Service
-		profileEncryptionKey []byte
+		ctx     context.Context
+		service *frame.Service
 	}
 	tests := []struct {
 		name string
@@ -42,17 +35,14 @@ func (rts *RelationshipTestSuite) TestNewRelationshipBusiness() {
 		{
 			name: "New relationship business test",
 			args: args{
-				ctx:                  ctx,
-				service:              srv,
-				profileEncryptionKey: profileEncryptionKey,
+				ctx:     ctx,
+				service: srv,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
-				return tt.args.profileEncryptionKey
-			})
+			profileBusiness := business.NewProfileBusiness(ctx, srv)
 			if got := business.NewRelationshipBusiness(tt.args.ctx, tt.args.service, profileBusiness); got == nil {
 				t.Errorf("NewRelationshipBusiness() = %v, is nil", got)
 			}
@@ -66,11 +56,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_CreateRelationship()
 	ctx := rts.ctx
 
 	srv := rts.service
-	profileEncryptionKey := rts.getEncryptionKey()
-
-	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
-		return profileEncryptionKey
-	})
+	profileBusiness := business.NewProfileBusiness(ctx, srv)
 
 	testProfiles, err := rts.createTestProfiles([]string{"new.relationship.1@ant.com", "new.relationship.2@ant.com"})
 	if err != nil {
@@ -138,11 +124,8 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_DeleteRelationship()
 	ctx := rts.ctx
 
 	srv := rts.service
-	profileEncryptionKey := rts.getEncryptionKey()
 
-	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
-		return profileEncryptionKey
-	})
+	profileBusiness := business.NewProfileBusiness(ctx, srv)
 	aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
 
 	testProfiles, err := rts.createTestProfiles([]string{"delete.relationship.1@ant.com", "delete.relationship.2@ant.com"})
@@ -215,11 +198,8 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 	t := rts.T()
 	ctx := rts.ctx
 	srv := rts.service
-	profileEncryptionKey := rts.getEncryptionKey()
 
-	profileBusiness := business.NewProfileBusiness(ctx, srv, func() []byte {
-		return profileEncryptionKey
-	})
+	profileBusiness := business.NewProfileBusiness(ctx, srv)
 
 	aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
 

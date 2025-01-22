@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
 	"fmt"
 	apis "github.com/antinvestor/apis/go/common"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
@@ -17,7 +16,6 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/pitabwire/frame"
 	"github.com/sirupsen/logrus"
-	"golang.org/x/crypto/pbkdf2"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"net/http"
@@ -45,14 +43,25 @@ func main() {
 
 		service.Init(serviceOptions...)
 
-		service.DB(ctx, false).Exec("CREATE EXTENSION IF NOT EXISTS vector")
+		err = service.DB(ctx, false).Exec(`
+			CREATE EXTENSION IF NOT EXISTS pg_search;
+			CREATE EXTENSION IF NOT EXISTS pg_analytics;
+			CREATE EXTENSION IF NOT EXISTS pg_ivm;
+			CREATE EXTENSION IF NOT EXISTS vector;
+			CREATE EXTENSION IF NOT EXISTS postgis;
+			CREATE EXTENSION IF NOT EXISTS postgis_topology;
+			CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
+			CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
+		`).Error
+		if err != nil {
+			log.Fatalf("main -- Failed to create extensions: %v", err)
+		}
 
 		err := service.MigrateDatastore(ctx, profileConfig.GetDatabaseMigrationPath(),
-			&models.ProfileType{}, &models.Profile{}, &models.ContactType{},
-			&models.CommunicationLevel{}, &models.Contact{}, &models.Country{},
+			&models.ProfileType{}, &models.Profile{}, &models.Contact{}, &models.Country{},
 			&models.Address{}, &models.ProfileAddress{}, &models.Verification{},
 			&models.VerificationAttempt{}, &models.RelationshipType{}, &models.Relationship{},
-			&models.Device{}, &models.DeviceLog{})
+			&models.Device{}, &models.DeviceLog{}, &models.Roster{})
 
 		if err != nil {
 			log.Fatalf("main -- Could not migrate successfully because : %+v", err)
@@ -108,15 +117,9 @@ func main() {
 		),
 	)
 
-	encryptionFunction := func() []byte {
-		return pbkdf2.Key([]byte(profileConfig.ContactEncryptionKey),
-			[]byte(profileConfig.ContactEncryptionSalt), 4096, 32, sha256.New)
-	}
-
 	implementation := &handlers.ProfileServer{
-		Service:           service,
-		NotificationCli:   notificationCli,
-		EncryptionKeyFunc: encryptionFunction,
+		Service:         service,
+		NotificationCli: notificationCli,
 	}
 	profilev1.RegisterProfileServiceServer(grpcServer, implementation)
 

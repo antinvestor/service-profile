@@ -74,7 +74,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	invertRelationship, _ := strconv.ParseBool(invertRelationshipStr)
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
 	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
 
 	request := &profilev1.ListRelationshipRequest{
@@ -136,7 +136,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service, ps.EncryptionKeyFunc)
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
 	subject, _ := claims.GetSubject()
 	profile, err := profileBusiness.GetByID(ctx, subject)
 	if err != nil {

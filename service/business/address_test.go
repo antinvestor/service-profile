@@ -15,11 +15,6 @@ type AddressTestSuite struct {
 	BaseTestSuite
 }
 
-func (ats *AddressTestSuite) SetupSuite() {
-	ats.BaseTestSuite.SetupSuite()
-
-}
-
 func TestAddressSuite(t *testing.T) {
 	suite.Run(t, new(AddressTestSuite))
 }

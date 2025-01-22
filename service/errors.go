@@ -10,7 +10,9 @@ var (
 	ErrorEmptyValueSupplied     = status.Error(codes.InvalidArgument, "Empty value supplied")
 	ErrorItemExist              = status.Error(codes.AlreadyExists, "Specified item already exists")
 	ErrorItemDoesNotExist       = status.Error(codes.NotFound, "Specified item does not exist")
+	ErrorContactTypeNotValid    = status.Error(codes.InvalidArgument, "Contact type is not known ")
 	ErrorContactDetailsNotValid = status.Error(codes.InvalidArgument, "Contact details are invalid ")
+	ErrorContactProfileNotValid = status.Error(codes.InvalidArgument, "Contact profile is invalid ")
 
 	ErrorProfileDoesNotExist = status.Error(codes.NotFound, "Specified profile does not exist")
 	ErrorContactDoesNotExist = status.Error(codes.NotFound, "Specified contact does not exist")

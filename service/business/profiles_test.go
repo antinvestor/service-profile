@@ -12,11 +12,6 @@ type ProfileTestSuite struct {
 	BaseTestSuite
 }
 
-func (pts *ProfileTestSuite) SetupSuite() {
-	pts.BaseTestSuite.SetupSuite()
-
-}
-
 func TestProfileSuite(t *testing.T) {
 	suite.Run(t, new(ProfileTestSuite))
 }
@@ -45,7 +40,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			pb := business.NewProfileBusiness(ctx, pts.service, func() []byte { return pts.getEncryptionKey() })
+			pb := business.NewProfileBusiness(ctx, pts.service)
 			got, err := pb.CreateProfile(ctx, tt.request)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("CreateProfile() error = %v, wantErr %v", err, tt.wantErr)
@@ -69,7 +64,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 	ctx := pts.ctx
 
 	var profileAvailable []string
-	pbc := business.NewProfileBusiness(ctx, pts.service, func() []byte { return pts.getEncryptionKey() })
+	pbc := business.NewProfileBusiness(ctx, pts.service)
 
 	for _, val := range []*profilev1.CreateRequest{
 		{
@@ -121,7 +116,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			pb := business.NewProfileBusiness(ctx, pts.service, func() []byte { return pts.getEncryptionKey() })
+			pb := business.NewProfileBusiness(ctx, pts.service)
 
 			p, err := pb.GetByID(ctx, tt.profileID)
 			if (err != nil) != tt.wantErr {
