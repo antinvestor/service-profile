@@ -118,7 +118,7 @@ func (bs *BaseTestSuite) getNotificationCli(_ context.Context) *notificationv1.N
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	mockNotificationService := notificationv1.NewMockNotificationServiceClient(ctrl)
-	mockNotificationService.EXPECT().Search(gomock.Any(), gomock.Any(), gomock.Any()).AnyTimes()
+	mockNotificationService.EXPECT().Send(gomock.Any(), gomock.Any()).AnyTimes()
 	notificationCli := notificationv1.Init(&common.GrpcClientBase{}, mockNotificationService)
 
 	return notificationCli
@@ -171,7 +171,6 @@ func (bs *BaseTestSuite) setupMigrations(ctx context.Context) error {
 	g := StdoutLogConsumer{}
 
 	cRequest := testcontainers.ContainerRequest{
-		Name: "profile_tests_migrations",
 		FromDockerfile: testcontainers.FromDockerfile{
 			Context: "../../",
 		},
