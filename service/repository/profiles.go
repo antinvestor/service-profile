@@ -14,9 +14,9 @@ type profileRepository struct {
 	service *frame.Service
 }
 
-func (pr *profileRepository) Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe, error) {
+func (pr *profileRepository) Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe[[]*models.Profile], error) {
 	service := pr.service
-	job := service.NewJob(func(ctx context.Context, jobResult frame.JobResultPipe) error {
+	job := frame.NewJob(func(ctx context.Context, jobResult frame.JobResultPipe[[]*models.Profile]) error {
 
 		paginator := query.Pagination
 		for paginator.canLoad() {
@@ -52,7 +52,7 @@ func (pr *profileRepository) Search(ctx context.Context, query *SearchQuery) (fr
 
 			err := db.Find(&profileList).Error
 			if err != nil {
-				return jobResult.WriteResult(ctx, err)
+				return jobResult.WriteError(ctx, err)
 			}
 
 			err = jobResult.WriteResult(ctx, profileList)
@@ -68,7 +68,7 @@ func (pr *profileRepository) Search(ctx context.Context, query *SearchQuery) (fr
 
 	})
 
-	err := service.SubmitJob(ctx, job)
+	err := frame.SubmitJob(ctx, service, job)
 	if err != nil {
 		return nil, err
 	}

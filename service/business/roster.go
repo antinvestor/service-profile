@@ -10,7 +10,7 @@ import (
 )
 
 type RosterBusiness interface {
-	Search(ctx context.Context, request *profilev1.SearchRosterRequest) (frame.JobResultPipe, error)
+	Search(ctx context.Context, request *profilev1.SearchRosterRequest) (frame.JobResultPipe[[]*models.Roster], error)
 	GetByID(ctx context.Context, rosterID string) (*models.Roster, error)
 	CreateRoster(ctx context.Context, request *profilev1.AddRosterRequest) ([]*profilev1.RosterObject, error)
 	RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, error)
@@ -57,7 +57,7 @@ func (rb *rosterBusiness) GetByID(ctx context.Context, rosterID string) (*models
 }
 
 func (rb *rosterBusiness) Search(ctx context.Context,
-	request *profilev1.SearchRosterRequest) (frame.JobResultPipe, error) {
+	request *profilev1.SearchRosterRequest) (frame.JobResultPipe[[]*models.Roster], error) {
 
 	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 

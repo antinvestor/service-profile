@@ -305,20 +305,23 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 				{Detail: "+256757546200"},
 				{Detail: "testGet@example.com"},
 			},
+			wantErr: assert.NoError,
 		},
 		{
 			name: "Get contacts by invalid profile ID",
 			args: args{
 				profileID: "invalid-profile-id",
 			},
-			want: []*models.Contact{},
+			want:    []*models.Contact{},
+			wantErr: assert.NoError,
 		},
 		{
 			name: "Get contacts by empty profile ID",
 			args: args{
 				profileID: "",
 			},
-			want: []*models.Contact{},
+			want:    []*models.Contact{},
+			wantErr: assert.Error,
 		},
 	}
 	for _, tt := range tests {
@@ -335,7 +338,9 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 
 			var got []*models.Contact
 			got, err = cb.GetByProfile(cts.ctx, tt.args.profileID)
-			assert.NoError(t, err)
+			if tt.wantErr(t, err, fmt.Sprintf("GetByProfile(%v, %v)", cts.ctx, tt.args.profileID)) {
+				return
+			}
 
 			assert.Equalf(t, len(tt.want), len(got), "GetByProfile(%v, %v)", cts.ctx, tt.args.profileID)
 		})

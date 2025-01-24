@@ -16,7 +16,7 @@ type ProfileBusiness interface {
 	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, error)
 	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, error)
 
-	SearchProfile(ctx context.Context, request *profilev1.SearchRequest) (frame.JobResultPipe, error)
+	SearchProfile(ctx context.Context, request *profilev1.SearchRequest) (frame.JobResultPipe[[]*models.Profile], error)
 
 	CreateProfile(ctx context.Context, request *profilev1.CreateRequest) (*profilev1.ProfileObject, error)
 
@@ -128,7 +128,7 @@ func (pb *profileBusiness) GetByID(
 }
 
 func (pb *profileBusiness) SearchProfile(ctx context.Context,
-	request *profilev1.SearchRequest) (frame.JobResultPipe, error) {
+	request *profilev1.SearchRequest) (frame.JobResultPipe[[]*models.Profile], error) {
 
 	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 

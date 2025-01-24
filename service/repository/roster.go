@@ -12,9 +12,9 @@ type rosterRepository struct {
 	service *frame.Service
 }
 
-func (cr *rosterRepository) Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe, error) {
+func (cr *rosterRepository) Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe[[]*models.Roster], error) {
 	service := cr.service
-	job := service.NewJob(func(ctx context.Context, jobResult frame.JobResultPipe) error {
+	job := frame.NewJob[[]*models.Roster](func(ctx context.Context, jobResult frame.JobResultPipe[[]*models.Roster]) error {
 
 		paginator := query.Pagination
 		for paginator.canLoad() {
@@ -53,7 +53,7 @@ func (cr *rosterRepository) Search(ctx context.Context, query *SearchQuery) (fra
 
 			err := db.Find(&rosterList).Error
 			if err != nil {
-				return jobResult.WriteResult(ctx, err)
+				return jobResult.WriteError(ctx, err)
 			}
 
 			err = jobResult.WriteResult(ctx, rosterList)
@@ -69,7 +69,7 @@ func (cr *rosterRepository) Search(ctx context.Context, query *SearchQuery) (fra
 
 	})
 
-	err := service.SubmitJob(ctx, job)
+	err := frame.SubmitJob(ctx, service, job)
 	if err != nil {
 		return nil, err
 	}

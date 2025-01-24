@@ -86,7 +86,7 @@ func (sq *Paginator) stop(loadedCount int) bool {
 
 type ProfileRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Profile, error)
-	Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe, error)
+	Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe[[]*models.Profile], error)
 	Save(ctx context.Context, profile *models.Profile) error
 	Delete(ctx context.Context, id string) error
 
@@ -110,7 +110,7 @@ type ContactRepository interface {
 type RosterRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Roster, error)
 	GetByContactAndProfileID(ctx context.Context, profileID, contactID string) (*models.Roster, error)
-	Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe, error)
+	Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe[[]*models.Roster], error)
 	Save(ctx context.Context, contact *models.Roster) (*models.Roster, error)
 	Delete(ctx context.Context, id string) error
 }

@@ -2,11 +2,9 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
-	"github.com/antinvestor/service-profile/service/models"
 	"github.com/pitabwire/frame"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -73,34 +71,26 @@ func (ps *ProfileServer) Search(request *profilev1.SearchRequest, stream profile
 
 	for {
 
-		result, ok, err0 := jobResult.ReadResult(ctx)
-		if err0 != nil {
-			return err0
+		result, ok := jobResult.ReadResult(ctx)
+		if result.IsError() {
+			return ps.toApiError(result.Error())
 		}
 
 		if !ok {
 			return nil
 		}
 
-		switch v := result.(type) {
-		case []*models.Profile:
-
-			for _, profile := range v {
-				profileObject, err1 := profileBusiness.ToAPI(ctx, profile)
-				if err1 != nil {
-					return err1
-				}
-				err1 = stream.Send(&profilev1.SearchResponse{Data: []*profilev1.ProfileObject{profileObject}})
-				if err1 != nil {
-					return err1
-				}
+		for _, profile := range result.Item() {
+			profileObject, err1 := profileBusiness.ToAPI(ctx, profile)
+			if err1 != nil {
+				return err1
 			}
-
-		case error:
-			return v
-		default:
-			return fmt.Errorf(" unsupported type supplied %v", v)
+			err1 = stream.Send(&profilev1.SearchResponse{Data: []*profilev1.ProfileObject{profileObject}})
+			if err1 != nil {
+				return err1
+			}
 		}
+
 	}
 }
 
@@ -191,44 +181,31 @@ func (ps *ProfileServer) SearchRoster(request *profilev1.SearchRosterRequest, st
 
 	for {
 
-		result, ok, err0 := jobResult.ReadResult(ctx)
-		if err0 != nil {
-			return ps.toApiError(err0)
+		result, ok := jobResult.ReadResult(ctx)
+		if result.IsError() {
+			return ps.toApiError(result.Error())
 		}
 
 		if !ok {
 			return nil
 		}
 
-		switch v := result.(type) {
-		case []*models.Roster:
-
-			if len(v) == 0 {
-				// Handle empty roster lists gracefully.
-				continue
+		// Preallocate slice to optimize memory allocation.
+		rosterList := make([]*profilev1.RosterObject, 0, len(result.Item()))
+		for _, roster := range result.Item() {
+			rosterObject, err1 := rosterBusiness.ToApi(ctx, roster)
+			if err1 != nil {
+				return ps.toApiError(err1)
 			}
 
-			// Preallocate slice to optimize memory allocation.
-			rosterList := make([]*profilev1.RosterObject, 0, len(v))
-			for _, roster := range v {
-				rosterObject, err1 := rosterBusiness.ToApi(ctx, roster)
-				if err1 != nil {
-					return ps.toApiError(err1)
-				}
-
-				rosterList = append(rosterList, rosterObject)
-			}
-
-			err = stream.Send(&profilev1.SearchRosterResponse{Data: rosterList})
-			if err != nil {
-				return ps.toApiError(err)
-			}
-
-		case error:
-			return v
-		default:
-			return ps.toApiError(fmt.Errorf(" unsupported type supplied %v", v))
+			rosterList = append(rosterList, rosterObject)
 		}
+
+		err = stream.Send(&profilev1.SearchRosterResponse{Data: rosterList})
+		if err != nil {
+			return ps.toApiError(err)
+		}
+
 	}
 }
 func (ps *ProfileServer) AddRoster(ctx context.Context, request *profilev1.AddRosterRequest) (*profilev1.AddRosterResponse, error) {

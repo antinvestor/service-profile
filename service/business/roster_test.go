@@ -71,8 +71,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 
 	result, err := rb.ToApi(rts.ctx, roster)
 
-	assert.NoError(t, err)
-	assert.Equal(t, "profile123", result.ProfileId)
+	assert.NoError(t, err, "ToApi should succeed")
+	assert.Equal(t, "profile123", result.ProfileId, "Profile ID should match")
 
 }
 
@@ -92,8 +92,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 	result, err := rb.GetByID(rts.ctx, rosterID)
 
 	assert.NoError(t, err)
-	assert.Equal(t, expectedRoster.GetProfileId(), result.ProfileID)
-	assert.Equal(t, expectedRoster.GetContact().GetId(), result.ContactID)
+	assert.Equal(t, expectedRoster.GetProfileId(), result.ProfileID, "Profile ID should match")
+	assert.Equal(t, expectedRoster.GetContact().GetId(), result.ContactID, "Contact ID should match")
 }
 
 func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
@@ -116,7 +116,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
 	_, err = rb.GetByID(rts.ctx, rosterID)
 
 	assert.Error(t, err)
-	assert.True(t, errors.Is(err, gorm.ErrRecordNotFound))
+	assert.True(t, errors.Is(err, gorm.ErrRecordNotFound), "Error should be 'gorm.ErrRecordNotFound'")
 }
 
 func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
@@ -127,9 +127,9 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
 
 	result, err := rb.RemoveRoster(rts.ctx, rosterID)
 
-	assert.Error(t, err)
-	assert.Nil(t, result)
-	assert.True(t, errors.Is(err, gorm.ErrRecordNotFound))
+	assert.Error(t, err, "A not found error should be returned")
+	assert.Nil(t, result, "Result should be nil")
+	assert.True(t, errors.Is(err, gorm.ErrRecordNotFound), "Error should be 'gorm.ErrRecordNotFound'")
 }
 
 func (rts *RosterTestSuite) TestRosterBusiness_Search() {
@@ -242,16 +242,15 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 
 			var rosterList []*models.Roster
 			for {
-				result, ok, err1 := jobResult.ReadResult(rts.ctx)
-				if err1 != nil || !ok {
+				result, ok := jobResult.ReadResult(rts.ctx)
+				if result == nil || result.IsError() || !ok {
 					break
 				}
-				if v, ok0 := result.([]*models.Roster); ok0 {
-					rosterList = append(rosterList, v...)
-				}
+				rosterList = append(rosterList, result.Item()...)
+
 			}
 
-			assert.Equal(t, tt.resultCount, len(rosterList))
+			assert.Equal(t, tt.resultCount, len(rosterList), "Roster count mismatch")
 		})
 	}
 }
