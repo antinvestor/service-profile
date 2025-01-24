@@ -72,12 +72,13 @@ func (ps *ProfileServer) Search(request *profilev1.SearchRequest, stream profile
 	for {
 
 		result, ok := jobResult.ReadResult(ctx)
-		if result.IsError() {
-			return ps.toApiError(result.Error())
-		}
 
 		if !ok {
 			return nil
+		}
+
+		if result.IsError() {
+			return ps.toApiError(result.Error())
 		}
 
 		for _, profile := range result.Item() {
@@ -182,12 +183,13 @@ func (ps *ProfileServer) SearchRoster(request *profilev1.SearchRosterRequest, st
 	for {
 
 		result, ok := jobResult.ReadResult(ctx)
-		if result.IsError() {
-			return ps.toApiError(result.Error())
-		}
 
 		if !ok {
 			return nil
+		}
+
+		if result.IsError() {
+			return ps.toApiError(result.Error())
 		}
 
 		// Preallocate slice to optimize memory allocation.
