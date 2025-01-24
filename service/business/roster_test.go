@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"testing"
 
@@ -71,8 +72,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 
 	result, err := rb.ToApi(rts.ctx, roster)
 
-	assert.NoError(t, err, "ToApi should succeed")
-	assert.Equal(t, "profile123", result.ProfileId, "Profile ID should match")
+	require.NoError(t, err, "ToApi should succeed")
+	require.Equal(t, "profile123", result.ProfileId, "Profile ID should match")
 
 }
 
@@ -127,9 +128,9 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
 
 	result, err := rb.RemoveRoster(rts.ctx, rosterID)
 
-	assert.Error(t, err, "A not found error should be returned")
-	assert.Nil(t, result, "Result should be nil")
-	assert.True(t, errors.Is(err, gorm.ErrRecordNotFound), "Error should be 'gorm.ErrRecordNotFound'")
+	require.Error(t, err, "A not found error should be returned")
+	require.Nil(t, result, "Result should be nil")
+	require.True(t, errors.Is(err, gorm.ErrRecordNotFound), "Error should be 'gorm.ErrRecordNotFound'")
 }
 
 func (rts *RosterTestSuite) TestRosterBusiness_Search() {
@@ -145,12 +146,12 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 		"+256755718293":                {"name": "Mary Osogo", "age": "21"},
 		"+256755718291":                {"name": "Julius Search Best", "age": "51"},
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tests := []struct {
 		name        string
 		request     *profilev1.SearchRosterRequest
-		wantError   assert.ErrorAssertionFunc
+		wantError   require.ErrorAssertionFunc
 		profileId   string
 		resultCount int
 	}{
@@ -161,7 +162,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				Properties: []string{"name", "age"},
 			},
 			profileId:   profileID,
-			wantError:   assert.NoError,
+			wantError:   require.NoError,
 			resultCount: 1,
 		},
 		{
@@ -171,7 +172,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				Properties: []string{"name", "age"},
 			},
 			profileId:   profileID,
-			wantError:   assert.NoError,
+			wantError:   require.NoError,
 			resultCount: 2,
 		},
 		{
@@ -181,7 +182,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				Properties: []string{"name", "age"},
 			},
 			profileId:   profileID,
-			wantError:   assert.NoError,
+			wantError:   require.NoError,
 			resultCount: 2,
 		},
 		{
@@ -191,7 +192,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				Properties: []string{"name", "age"},
 			},
 			profileId:   profileID,
-			wantError:   assert.NoError,
+			wantError:   require.NoError,
 			resultCount: 3,
 		},
 		{
@@ -201,7 +202,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				Properties: []string{"name", "age"},
 			},
 			profileId:   "nonExistentProfileId",
-			wantError:   assert.NoError,
+			wantError:   require.NoError,
 			resultCount: 0,
 		},
 		{
@@ -211,7 +212,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				Properties: []string{"name", "age"},
 			},
 			profileId:   profileID,
-			wantError:   assert.NoError,
+			wantError:   require.NoError,
 			resultCount: 4,
 		},
 		{
@@ -221,7 +222,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				Properties: []string{"name", "age"},
 			},
 			profileId:   "funnyProfileId",
-			wantError:   assert.NoError,
+			wantError:   require.NoError,
 			resultCount: 0,
 		},
 	}
@@ -238,7 +239,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			ctx := claims.ClaimsToContext(rts.ctx)
 
 			jobResult, err0 := rb.Search(ctx, tt.request)
-			assert.NoError(t, err0)
+			require.NoError(t, err0)
 
 			var rosterList []*models.Roster
 			for {
@@ -250,7 +251,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 
 			}
 
-			assert.Equal(t, tt.resultCount, len(rosterList), "Roster count mismatch")
+			require.Equal(t, tt.resultCount, len(rosterList), "Roster count mismatch")
 		})
 	}
 }

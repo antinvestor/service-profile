@@ -5,6 +5,7 @@ import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/service/business"
 	"github.com/pitabwire/frame"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"testing"
 )
@@ -234,7 +235,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 		name      string
 		args      args
 		wantCount int
-		wantErr   bool
+		wantErr   assert.ErrorAssertionFunc
 	}{
 		{
 			name: "None existent relationships",
@@ -246,7 +247,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 				},
 			},
 			wantCount: 0,
-			wantErr:   true,
+			wantErr:   assert.Error,
 		},
 		{
 			name: "Existent relationships",
@@ -258,7 +259,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 				},
 			},
 			wantCount: 3,
-			wantErr:   false,
+			wantErr:   assert.NoError,
 		},
 		{
 			name: "Limited existent relationships",
@@ -271,7 +272,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 				},
 			},
 			wantCount: 2,
-			wantErr:   false,
+			wantErr:   assert.NoError,
 		},
 		{
 			name: "Specific existent relationships",
@@ -284,16 +285,15 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 				},
 			},
 			wantCount: 1,
-			wantErr:   false,
+			wantErr:   assert.NoError,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
 			aB := business.NewRelationshipBusiness(ctx, srv, profileBusiness)
-			got, err := aB.ListRelationships(tt.args.ctx, tt.args.request)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("ListRelationships() error = %v, wantErr %v", err, tt.wantErr)
+			got, err0 := aB.ListRelationships(tt.args.ctx, tt.args.request)
+			if tt.wantErr(t, err0) {
 				return
 			}
 			if len(got) != tt.wantCount {
