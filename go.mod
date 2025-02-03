@@ -3,8 +3,8 @@ module github.com/antinvestor/service-profile
 go 1.23.0
 
 require (
-	github.com/antinvestor/apis/go/common v1.30.5
-	github.com/antinvestor/apis/go/notification v1.32.0
+	github.com/antinvestor/apis/go/common v1.32.4
+	github.com/antinvestor/apis/go/notification v1.33.0
 	github.com/antinvestor/apis/go/profile v1.32.0
 	github.com/bufbuild/protovalidate-go v0.8.2
 	github.com/docker/docker v27.5.1+incompatible
@@ -26,7 +26,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.3-20241127180247-a33202765966.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.4-20250130201111-63bb56e20495.1 // indirect
 	cel.dev/expr v0.19.1 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -112,8 +112,8 @@ require (
 	golang.org/x/text v0.21.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.218.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20250122153221-138b5a5a4fd4 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250122153221-138b5a5a4fd4 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20250127172529-29210b9bc287 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250124145028-65684f501c47 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/mysql v1.5.7 // indirect
 	gorm.io/driver/postgres v1.5.11 // indirect

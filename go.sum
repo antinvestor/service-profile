@@ -1,5 +1,7 @@
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.3-20241127180247-a33202765966.1 h1:cQZXKoQ+eB0kykzfJe80RP3nc+3PWbbBrUBm8XNYAQY=
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.3-20241127180247-a33202765966.1/go.mod h1:6VPKM8zbmgf9qsmkmKeH49a36Vtmidw3rG53B5mTenc=
+buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.4-20250130201111-63bb56e20495.1 h1:4erM3WLgEG/HIBrpBDmRbs1puhd7p0z7kNXDuhHthwM=
+buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.4-20250130201111-63bb56e20495.1/go.mod h1:novQBstnxcGpfKf8qGRATqn1anQKwMJIbH5Q581jibU=
 cel.dev/expr v0.19.1 h1:NciYrtDRIR0lNCnH1LFJegdjspNx9fI59O7TWcua/W4=
 cel.dev/expr v0.19.1/go.mod h1:MrpN08Q+lEBs+bGYdLxxHkZoUSsCp0nSKTs0nTymJgw=
 cloud.google.com/go v0.26.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMTw=
@@ -45,8 +47,12 @@ github.com/alecthomas/units v0.0.0-20190717042225-c3de453c63f4/go.mod h1:ybxpYRF
 github.com/alecthomas/units v0.0.0-20190924025748-f65c72e2690d/go.mod h1:rBZYJk541a8SKzHPHnH3zbiI+7dagKZ0cgpgrD7Fyho=
 github.com/antinvestor/apis/go/common v1.30.5 h1:HsCLzUPfxZD3ubDjvhh8FHdUqITQk/MmAXKqUtSksbc=
 github.com/antinvestor/apis/go/common v1.30.5/go.mod h1:+WjXS9JuxIQjdgF/8G9Qub9HhWsZzyqVZqY0IneURMM=
+github.com/antinvestor/apis/go/common v1.32.4 h1:V1x8nPgtjmnwrgWIQiBnhklY7dPNBnUnmGVnrAZIDtg=
+github.com/antinvestor/apis/go/common v1.32.4/go.mod h1:S/5tXexauJQsSea4MjDdBCBRJRsl31U04PCsDPGiZMw=
 github.com/antinvestor/apis/go/notification v1.32.0 h1:trn8+k4vowX2Jjh5yxLXyqiD1nevJraGDbql6rdgwJo=
 github.com/antinvestor/apis/go/notification v1.32.0/go.mod h1:JE42rDimfWRSJ2bv24F50cKluZeaqLpZBSh9RVWghuY=
+github.com/antinvestor/apis/go/notification v1.33.0 h1:z+7yVnSycFAqp+gWW1mQQCQTMDjlu06iyR1G8cpMUmE=
+github.com/antinvestor/apis/go/notification v1.33.0/go.mod h1:VDK5YeyiAD7Z4TXpbVAOwH+2cBNOrs6dM9447AFpjN8=
 github.com/antinvestor/apis/go/profile v1.32.0 h1:1b26iVWwS3mmnXH1J8I5mAsw51WFpIB0Wr3DTb30Vh0=
 github.com/antinvestor/apis/go/profile v1.32.0/go.mod h1:zMUUKQ4oHIzsFGMqzR25ooIyqOixhem0P+eD9N9Jwh4=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
@@ -729,8 +735,12 @@ google.golang.org/genproto v0.0.0-20240812133136-8ffd90a71988 h1:CT2Thj5AuPV9phr
 google.golang.org/genproto v0.0.0-20240812133136-8ffd90a71988/go.mod h1:7uvplUBj4RjHAxIZ//98LzOvrQ04JBkaixRmCMI29hc=
 google.golang.org/genproto/googleapis/api v0.0.0-20250122153221-138b5a5a4fd4 h1://y4MHaM7tNLqTeWKyfBIeoAMxwKwRm/nODb5IKA3BE=
 google.golang.org/genproto/googleapis/api v0.0.0-20250122153221-138b5a5a4fd4/go.mod h1:AfA77qWLcidQWywD0YgqfpJzf50w2VjzBml3TybHeJU=
+google.golang.org/genproto/googleapis/api v0.0.0-20250127172529-29210b9bc287 h1:A2ni10G3UlplFrWdCDJTl7D7mJ7GSRm37S+PDimaKRw=
+google.golang.org/genproto/googleapis/api v0.0.0-20250127172529-29210b9bc287/go.mod h1:iYONQfRdizDB8JJBybql13nArx91jcUk7zCXEsOofM4=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250122153221-138b5a5a4fd4 h1:yrTuav+chrF0zF/joFGICKTzYv7mh/gr9AgEXrVU8ao=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250122153221-138b5a5a4fd4/go.mod h1:+2Yz8+CLJbIfL9z73EW45avw8Lmge3xVElCP9zEKi50=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250124145028-65684f501c47 h1:91mG8dNTpkC0uChJUQ9zCiRqx3GEEFOWaRZ0mI6Oj2I=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20250124145028-65684f501c47/go.mod h1:+2Yz8+CLJbIfL9z73EW45avw8Lmge3xVElCP9zEKi50=
 google.golang.org/grpc v1.17.0/go.mod h1:6QZJwpn2B+Zp71q/5VxRsJ6NXXVCE5NRUHRo+f3cWCs=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
 google.golang.org/grpc v1.20.0/go.mod h1:chYK+tFQF0nDUGJgXMSgLCQk3phJEuONr2DCgLDdAQM=
