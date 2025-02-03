@@ -132,7 +132,13 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 
 	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 
-	query, err := repository.NewSearchQuery(ctx, request.GetQuery(), request.GetProperties(), request.GetStartDate(), request.GetEndDate(), int(request.GetCount()), int(request.GetPage()))
+	profileID := ""
+	claims := frame.ClaimsFromContext(ctx)
+	if claims != nil {
+		profileID, _ = claims.GetSubject()
+	}
+
+	query, err := repository.NewSearchQuery(ctx, profileID, request.GetQuery(), request.GetProperties(), request.GetStartDate(), request.GetEndDate(), int(request.GetCount()), int(request.GetPage()))
 	if err != nil {
 		return nil, err
 	}

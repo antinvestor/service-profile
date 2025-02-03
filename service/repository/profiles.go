@@ -39,7 +39,7 @@ func (pr *profileRepository) Search(ctx context.Context, query *SearchQuery) (fr
 
 				for _, property := range query.PropertiesToSearchOn {
 					whereConditionParams = append(whereConditionParams, query.Query)
-					searchTerm := fmt.Sprintf(" id  @@@ paradedb.fuzzy_phrase( field => 'properties.%s', value => ?, match_all_terms => false, distance => 0) ", property)
+					searchTerm := fmt.Sprintf(" id  @@@ paradedb.match( field => 'properties.%s', value => ?, distance => 0) ", property)
 					whereQueryStrings = append(whereQueryStrings, searchTerm)
 				}
 

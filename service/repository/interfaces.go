@@ -20,16 +20,10 @@ type SearchQuery struct {
 	Pagination *Paginator
 }
 
-func NewSearchQuery(ctx context.Context, query string, props []string, startAt, endAt string, resultPage, resultCount int) (*SearchQuery, error) {
+func NewSearchQuery(ctx context.Context, profileID, query string, props []string, startAt, endAt string, resultPage, resultCount int) (*SearchQuery, error) {
 
 	if resultCount == 0 {
 		resultCount = defaultBatchSize
-	}
-
-	profileID := ""
-	claims := frame.ClaimsFromContext(ctx)
-	if claims != nil {
-		profileID, _ = claims.GetSubject()
 	}
 
 	sq := &SearchQuery{

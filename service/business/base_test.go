@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const PostgresqlDbImage = "paradedb/paradedb:v0.14.1"
+const PostgresqlDbImage = "paradedb/paradedb"
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
 type StdoutLogConsumer struct{}
