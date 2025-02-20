@@ -1,10 +1,10 @@
 
 services:
   profile_database:
-    image: paradedb/paradedb:v0.15.0
+    image: paradedb/paradedb:v0.15.2
     environment:
       - POSTGRES_USER=ant
-      - POSTGRES_PASSWORD=secret
+      - POSTGRES_PASSWORD=s3cr3t
       - POSTGRES_DB=service_profile
     ports:
       - "5434:5432"
@@ -16,7 +16,7 @@ services:
     environment:
       - LOG_LEVEL=debug
       - DO_MIGRATION=true
-      - DATABASE_URL=postgres://ant:secret@profile_database:5432/service_profile?sslmode=disable
+      - DATABASE_URL=postgres://ant:s3cr3t@profile_database:5432/service_profile?sslmode=disable
       - CONTACT_ENCRYPTION_KEY=ualgJEcb4GNXLn3jYV9TUGtgYrdTMg
       - CONTACT_ENCRYPTION_SALT=VufLmnycUCgz
     restart: on-failure

@@ -39,11 +39,11 @@ func (cr *rosterRepository) Search(ctx context.Context, query *SearchQuery) (fra
 			if query.Query != "" {
 
 				whereConditionParams := []any{query.Query}
-				whereQueryStr := " contacts.id  @@@ paradedb.match( field => 'detail',  value => ?, distance => 0) "
+				whereQueryStr := " contacts.detail  @@@ ? "
 
 				for _, property := range query.PropertiesToSearchOn {
 					whereConditionParams = append(whereConditionParams, query.Query)
-					searchTerm := fmt.Sprintf(" OR rosters.id  @@@ paradedb.match( field => 'properties.%s', value => ?, distance => 0) ", property)
+					searchTerm := fmt.Sprintf(" OR rosters.id  @@@ paradedb.match( 'properties.%s', ?) ", property)
 					whereQueryStr += searchTerm
 				}
 

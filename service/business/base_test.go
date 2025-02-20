@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const PostgresqlDbImage = "paradedb/paradedb"
+const PostgresqlDbImage = "paradedb/paradedb:v0.15.2"
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout
 type StdoutLogConsumer struct{}
@@ -61,7 +61,7 @@ func (bs *BaseTestSuite) SetupSuite() {
 	postgresqlIp, err := bs.pgContainer.ContainerIP(ctx)
 	assert.NoError(bs.T(), err)
 
-	bs.postgresUri = fmt.Sprintf("postgres://ant:secret@%s/service_profile?sslmode=disable", net.JoinHostPort(postgresqlIp, "5432"))
+	bs.postgresUri = fmt.Sprintf("postgres://ant:s3cr3t@%s/service_profile?sslmode=disable", net.JoinHostPort(postgresqlIp, "5432"))
 
 	databaseUriStr, err := postgresContainer.ConnectionString(ctx, "sslmode=disable")
 	assert.NoError(bs.T(), err)
@@ -104,10 +104,10 @@ func (bs *BaseTestSuite) SetupSuite() {
 	)
 
 	err = service.Run(ctx, "")
+	assert.NoError(bs.T(), err)
+
 	bs.ctx = ctx
 	bs.service = service
-
-	assert.NoError(bs.T(), err)
 }
 
 func (bs *BaseTestSuite) getNotificationCli(_ context.Context) *notificationv1.NotificationClient {
@@ -153,7 +153,7 @@ func (bs *BaseTestSuite) setupPostgres(ctx context.Context) (*tcPostgres.Postgre
 	postgresContainer, err := tcPostgres.Run(ctx, PostgresqlDbImage,
 		tcPostgres.WithDatabase("service_profile"),
 		tcPostgres.WithUsername("ant"),
-		tcPostgres.WithPassword("secret"),
+		tcPostgres.WithPassword("s3cr3t"),
 		testcontainers.WithWaitStrategy(
 			wait.ForLog("database system is ready to accept connections").
 				WithOccurrence(2).
