@@ -544,6 +544,8 @@ github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9de
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yusufpapurcu/wmi v1.2.4 h1:zFUKzehAFReQwLys1b/iSMl+JQGSCSjtVqQn9bBrPo0=
 github.com/yusufpapurcu/wmi v1.2.4/go.mod h1:SBZ9tNy3G9/m5Oi98Zks0QjeHVDvuK0qfxQmPyzfmi0=
+github.com/zchee/grpc-ecosystem-go-grpc-middleware/v2 v2.2.1-0.20250113160540-ed865db82ac3 h1:+SR1nrZ6MZJYt4WSMXFR5kFac/iwukys7gRUYdJz3lU=
+github.com/zchee/grpc-ecosystem-go-grpc-middleware/v2 v2.2.1-0.20250113160540-ed865db82ac3/go.mod h1:zrT2dxOAjNFPRGjTUe2Xmb4q4YdUwVvQFV6xiCSf+z0=
 github.com/zchee/grpc-ecosystem-go-grpc-middleware/v2 v2.2.1-0.20250203123950-d89418ee8965 h1:05+dwNK6ySQEoFnngRhoZ5MMRpYThAqH5Hz/bwt1PlA=
 github.com/zchee/grpc-ecosystem-go-grpc-middleware/v2 v2.2.1-0.20250203123950-d89418ee8965/go.mod h1:4b4P7I6byH65Pir6HSHhTICI03H1u6MGVxzi4ef7yrA=
 go.etcd.io/bbolt v1.3.3/go.mod h1:IbVyRI1SCnLcuJnV2u8VeU0CEYM7e686BmAb1XKL+uU=

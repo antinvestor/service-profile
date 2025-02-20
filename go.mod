@@ -2,7 +2,7 @@ module github.com/antinvestor/service-profile
 
 go 1.23.0
 
-replace github.com/grpc-ecosystem/go-grpc-middleware/v2 => github.com/zchee/grpc-ecosystem-go-grpc-middleware/v2 v2.2.1-0.20250203123950-d89418ee8965
+replace github.com/grpc-ecosystem/go-grpc-middleware/v2 => github.com/zchee/grpc-ecosystem-go-grpc-middleware/v2 v2.2.1-0.20250113160540-ed865db82ac3
 
 require (
 	github.com/antinvestor/apis/go/common v1.33.0
