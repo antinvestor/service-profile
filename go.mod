@@ -11,7 +11,7 @@ require (
 	github.com/bufbuild/protovalidate-go v0.9.1
 	github.com/docker/docker v28.0.0+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.2.0
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.0
 	github.com/pgvector/pgvector-go v0.2.3
 	github.com/pitabwire/frame v1.29.1
 	github.com/rs/xid v1.6.0
