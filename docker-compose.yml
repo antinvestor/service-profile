@@ -1,7 +1,7 @@
 
 services:
   profile_database:
-    image: paradedb/paradedb:v0.15.0
+    image: paradedb/paradedb:0.15.2
     environment:
       - POSTGRES_USER=ant
       - POSTGRES_PASSWORD=secret
