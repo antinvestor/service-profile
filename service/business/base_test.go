@@ -69,9 +69,7 @@ func (bs *BaseTestSuite) SetupSuite() {
 	err = bs.setupMigrations(ctx)
 	assert.NoError(bs.T(), err)
 
-	profileConfig := config.ProfileConfig{}
-
-	err = frame.ConfigProcess("", &profileConfig)
+	profileConfig, err := frame.ConfigFromEnv[config.ProfileConfig]()
 	assert.NoError(bs.T(), err)
 
 	profileConfig.LogLevel = "debug"

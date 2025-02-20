@@ -26,8 +26,7 @@ func main() {
 
 	serviceName := "service_profile"
 
-	var profileConfig config.ProfileConfig
-	err := frame.ConfigProcess("", &profileConfig)
+	profileConfig, err := frame.ConfigFromEnv[config.ProfileConfig]()
 	if err != nil {
 		logrus.WithError(err).Fatal("could not process configs")
 		return
