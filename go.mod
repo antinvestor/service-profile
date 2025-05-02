@@ -9,7 +9,7 @@ require (
 	github.com/bufbuild/protovalidate-go v0.9.2
 	github.com/docker/docker v28.0.1+incompatible
 	github.com/docker/go-connections v0.5.0
-	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.0
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/pgvector/pgvector-go v0.2.3
 	github.com/pitabwire/frame v1.30.4
 	github.com/rs/xid v1.6.0
@@ -20,14 +20,15 @@ require (
 	github.com/ttacon/libphonenumber v1.2.1
 	go.uber.org/mock v0.5.0
 	google.golang.org/grpc v1.70.0
-	google.golang.org/protobuf v1.36.5
+	google.golang.org/protobuf v1.36.6
 	gorm.io/datatypes v1.2.5
 	gorm.io/gorm v1.25.12
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.5-20250130201111-63bb56e20495.1 // indirect
-	cel.dev/expr v0.19.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250425153114-8976f5be98c1.1 // indirect
+	buf.build/go/protovalidate v0.12.0 // indirect
+	cel.dev/expr v0.23.1 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
@@ -53,7 +54,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/cel-go v0.23.2 // indirect
+	github.com/google/cel-go v0.25.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.14.1 // indirect
 	github.com/gorilla/handlers v1.5.2 // indirect
@@ -107,9 +108,9 @@ require (
 	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8 // indirect
 	golang.org/x/net v0.35.0 // indirect
 	golang.org/x/oauth2 v0.25.0 // indirect
-	golang.org/x/sync v0.11.0 // indirect
+	golang.org/x/sync v0.12.0 // indirect
 	golang.org/x/sys v0.30.0 // indirect
-	golang.org/x/text v0.22.0 // indirect
+	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.218.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250127172529-29210b9bc287 // indirect
