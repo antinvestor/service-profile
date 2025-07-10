@@ -1,11 +1,11 @@
 package business_test
 
 import (
-	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"reflect"
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/pitabwire/frame/tests/testdef"

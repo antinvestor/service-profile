@@ -3,16 +3,16 @@ package business
 import (
 	"context"
 	"errors"
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	repository2 "github.com/antinvestor/service-profile/apps/default/service/repository"
 	"math/rand"
 	"regexp"
 	"strings"
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/ttacon/libphonenumber"
 
 	"github.com/pitabwire/frame"
@@ -42,7 +42,7 @@ type ContactBusiness interface {
 }
 
 func NewContactBusiness(_ context.Context, service *frame.Service) ContactBusiness {
-	contactRepo := repository2.NewContactRepository(service)
+	contactRepo := repository.NewContactRepository(service)
 	return &contactBusiness{
 		service:           service,
 		contactRepository: contactRepo,
@@ -51,7 +51,7 @@ func NewContactBusiness(_ context.Context, service *frame.Service) ContactBusine
 
 type contactBusiness struct {
 	service           *frame.Service
-	contactRepository repository2.ContactRepository
+	contactRepository repository.ContactRepository
 }
 
 func (cb *contactBusiness) ToAPI(
@@ -66,7 +66,7 @@ func (cb *contactBusiness) ToAPI(
 
 	contactTypeID, ok := profilev1.ContactType_value[contact.ContactType]
 	if !ok {
-		return nil, service.ErrorContactTypeNotValid
+		return nil, service.ErrContactTypeNotValid
 	}
 	contactObject.Type = profilev1.ContactType(contactTypeID)
 
@@ -96,7 +96,7 @@ func (cb *contactBusiness) ContactTypeFromDetail(_ context.Context, detail strin
 		}
 	}
 
-	return "", service.ErrorContactDetailsNotValid
+	return "", service.ErrContactDetailsNotValid
 }
 
 func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*models.Contact, error) {

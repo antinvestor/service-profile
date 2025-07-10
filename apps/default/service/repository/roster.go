@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"gorm.io/gorm/clause"
 
 	"github.com/pitabwire/frame"

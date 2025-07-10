@@ -3,9 +3,10 @@ package business
 import (
 	"context"
 	"errors"
+
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
-	repository2 "github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 
 	"github.com/pitabwire/frame"
 )
@@ -21,8 +22,8 @@ type DeviceBusiness interface {
 }
 
 func NewDeviceBusiness(_ context.Context, service *frame.Service) DeviceBusiness {
-	deviceRepo := repository2.NewDeviceRepository(service)
-	deviceLogRepo := repository2.NewDeviceLogRepository(service)
+	deviceRepo := repository.NewDeviceRepository(service)
+	deviceLogRepo := repository.NewDeviceLogRepository(service)
 	return &deviceBusiness{
 		service:             service,
 		deviceRepository:    deviceRepo,
@@ -32,8 +33,8 @@ func NewDeviceBusiness(_ context.Context, service *frame.Service) DeviceBusiness
 
 type deviceBusiness struct {
 	service             *frame.Service
-	deviceRepository    repository2.DeviceRepository
-	deviceLogRepository repository2.DeviceLogRepository
+	deviceRepository    repository.DeviceRepository
+	deviceLogRepository repository.DeviceLogRepository
 }
 
 func (dB *deviceBusiness) GetByID(ctx context.Context, deviceID string) (*models.Device, error) {

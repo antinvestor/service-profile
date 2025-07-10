@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"fmt"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"strings"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"gorm.io/gorm/clause"
 
 	"github.com/pitabwire/frame"
@@ -79,9 +79,9 @@ func (pr *profileRepository) Search(
 	return job, nil
 }
 
-func (pr *profileRepository) GetTypeByID(ctx context.Context, profileTypeId string) (*models.ProfileType, error) {
+func (pr *profileRepository) GetTypeByID(ctx context.Context, profileTypeID string) (*models.ProfileType, error) {
 	profileType := &models.ProfileType{}
-	err := pr.service.DB(ctx, true).First(profileType, "id = ?", profileTypeId).Error
+	err := pr.service.DB(ctx, true).First(profileType, "id = ?", profileTypeID).Error
 	return profileType, err
 }
 

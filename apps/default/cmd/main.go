@@ -2,12 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/handlers"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	queue2 "github.com/antinvestor/service-profile/apps/default/service/queue"
-	repository2 "github.com/antinvestor/service-profile/apps/default/service/repository"
 	"net/http"
 	"strings"
 
@@ -15,6 +9,12 @@ import (
 	apis "github.com/antinvestor/apis/go/common"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/handlers"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/queue"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/sirupsen/logrus"
@@ -42,21 +42,7 @@ func main() {
 	if profileConfig.DoDatabaseMigrate() {
 		service.Init(ctx, serviceOptions...)
 
-		err = service.DB(ctx, false).Exec(`
-			CREATE EXTENSION IF NOT EXISTS pg_search;
-			CREATE EXTENSION IF NOT EXISTS pg_analytics;
-			CREATE EXTENSION IF NOT EXISTS pg_ivm;
-			CREATE EXTENSION IF NOT EXISTS vector;
-			CREATE EXTENSION IF NOT EXISTS postgis;
-			CREATE EXTENSION IF NOT EXISTS postgis_topology;
-			CREATE EXTENSION IF NOT EXISTS fuzzystrmatch;
-			CREATE EXTENSION IF NOT EXISTS postgis_tiger_geocoder;
-		`).Error
-		if err != nil {
-			log.WithError(err).Fatal("main -- Failed to create extensions: %v", err)
-		}
-
-		err := service.MigrateDatastore(ctx, profileConfig.GetDatabaseMigrationPath(),
+		err = service.MigrateDatastore(ctx, profileConfig.GetDatabaseMigrationPath(),
 			&models.ProfileType{}, &models.Profile{}, &models.Contact{}, &models.Country{},
 			&models.Address{}, &models.ProfileAddress{}, &models.Verification{},
 			&models.VerificationAttempt{}, &models.RelationshipType{}, &models.Relationship{},
@@ -144,9 +130,9 @@ func main() {
 
 	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
 
-	verificationQueueHandler := queue2.VerificationsQueueHandler{
+	verificationQueueHandler := queue.VerificationsQueueHandler{
 		Service:         service,
-		ContactRepo:     repository2.NewContactRepository(service),
+		ContactRepo:     repository.NewContactRepository(service),
 		NotificationCli: notificationCli,
 	}
 
@@ -160,10 +146,10 @@ func main() {
 		profileConfig.QueueVerification,
 	)
 
-	deviceAnalysisQueueHandler := queue2.DeviceAnalysisQueueHandler{
+	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
 		Service:             service,
-		DeviceRepository:    repository2.NewDeviceRepository(service),
-		DeviceLogRepository: repository2.NewDeviceLogRepository(service),
+		DeviceRepository:    repository.NewDeviceRepository(service),
+		DeviceLogRepository: repository.NewDeviceLogRepository(service),
 	}
 
 	deviceAnalysisQueue := frame.WithRegisterSubscriber(

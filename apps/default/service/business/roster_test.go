@@ -2,18 +2,17 @@ package business_test
 
 import (
 	"context"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"testing"
 
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"gorm.io/gorm"
 
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/tests/testdef"
-
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"gorm.io/gorm"
 )
 
 type RosterTestSuite struct {
@@ -172,7 +171,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			name        string
 			request     *profilev1.SearchRosterRequest
 			wantError   require.ErrorAssertionFunc
-			profileId   string
+			profileID   string
 			resultCount int
 		}{
 			{
@@ -181,7 +180,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 					Query:      "searchrostercontact@test.com",
 					Properties: []string{"name", "age"},
 				},
-				profileId:   profileID,
+				profileID:   profileID,
 				wantError:   require.NoError,
 				resultCount: 1,
 			},
@@ -191,7 +190,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 					Query:      "+25675571829",
 					Properties: []string{"name", "age"},
 				},
-				profileId:   profileID,
+				profileID:   profileID,
 				wantError:   require.NoError,
 				resultCount: 2,
 			},
@@ -201,7 +200,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 					Query:      "Osogo",
 					Properties: []string{"name", "age"},
 				},
-				profileId:   profileID,
+				profileID:   profileID,
 				wantError:   require.NoError,
 				resultCount: 2,
 			},
@@ -211,7 +210,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 					Query:      "search",
 					Properties: []string{"name", "age"},
 				},
-				profileId:   profileID,
+				profileID:   profileID,
 				wantError:   require.NoError,
 				resultCount: 3,
 			},
@@ -221,7 +220,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 					Query:      "non existent profile",
 					Properties: []string{"name", "age"},
 				},
-				profileId:   "nonExistentProfileId",
+				profileID:   "nonExistentProfileId",
 				wantError:   require.NoError,
 				resultCount: 0,
 			},
@@ -231,7 +230,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 					Query:      "",
 					Properties: []string{"name", "age"},
 				},
-				profileId:   profileID,
+				profileID:   profileID,
 				wantError:   require.NoError,
 				resultCount: 4,
 			},
@@ -241,7 +240,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 					Query:      "",
 					Properties: []string{"name", "age"},
 				},
-				profileId:   "funnyProfileId",
+				profileID:   "funnyProfileId",
 				wantError:   require.NoError,
 				resultCount: 0,
 			},
@@ -250,7 +249,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				claims := frame.ClaimsFromMap(map[string]string{
-					"sub":          tt.profileId,
+					"sub":          tt.profileID,
 					"tenant_id":    "tenantx",
 					"partition_id": "party",
 				})

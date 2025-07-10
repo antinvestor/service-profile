@@ -3,9 +3,9 @@ package events
 import (
 	"context"
 	"errors"
+
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
-
 	"google.golang.org/protobuf/proto"
 
 	"github.com/pitabwire/frame"

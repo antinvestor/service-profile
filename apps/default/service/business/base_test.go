@@ -3,16 +3,16 @@ package business_test
 import (
 	"context"
 	"fmt"
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/queue"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"testing"
 
 	"github.com/antinvestor/apis/go/common"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/queue"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
@@ -24,7 +24,7 @@ import (
 	"github.com/pitabwire/frame/tests/testdef"
 )
 
-const PostgresqlDbImage = "paradedb/paradedb:latest"
+const PostgresqlDBImage = "paradedb/paradedb:latest"
 
 // StdoutLogConsumer is a LogConsumer that prints the log to stdout.
 type StdoutLogConsumer struct{}
@@ -39,7 +39,7 @@ type BaseTestSuite struct {
 }
 
 func initResources(_ context.Context) []testdef.TestResource {
-	pg := testpostgres.NewPGDepWithCred(PostgresqlDbImage, "ant", "s3cr3t", "service_profile")
+	pg := testpostgres.NewPGDepWithCred(PostgresqlDBImage, "ant", "s3cr3t", "service_profile")
 	resources := []testdef.TestResource{pg}
 	return resources
 }

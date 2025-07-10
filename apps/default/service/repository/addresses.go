@@ -2,10 +2,10 @@ package repository
 
 import (
 	"context"
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"strings"
 
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"gorm.io/gorm/clause"
 
 	"github.com/pitabwire/frame"
@@ -73,7 +73,7 @@ func (ar *addressRepository) CountryGetByISO3(ctx context.Context, countryISO3 s
 
 func (ar *addressRepository) CountryGetByAny(ctx context.Context, c string) (*models.Country, error) {
 	if c == "" {
-		return nil, service.ErrorCountryDoesNotExist
+		return nil, service.ErrCountryDoesNotExist
 	}
 
 	country := &models.Country{}

@@ -3,12 +3,12 @@ package business
 import (
 	"context"
 	"errors"
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	repository2 "github.com/antinvestor/service-profile/apps/default/service/repository"
 	"strings"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/rs/xid"
 
 	"github.com/pitabwire/frame"
@@ -39,7 +39,7 @@ func NewProfileBusiness(ctx context.Context, service *frame.Service) ProfileBusi
 		service:         service,
 		contactBusiness: NewContactBusiness(ctx, service),
 		addressBusiness: NewAddressBusiness(ctx, service),
-		profileRepo:     repository2.NewProfileRepository(service),
+		profileRepo:     repository.NewProfileRepository(service),
 	}
 }
 
@@ -49,7 +49,7 @@ type profileBusiness struct {
 	contactBusiness ContactBusiness
 	addressBusiness AddressBusiness
 
-	profileRepo repository2.ProfileRepository
+	profileRepo repository.ProfileRepository
 }
 
 func (pb *profileBusiness) ToAPI(ctx context.Context,
@@ -135,7 +135,7 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 		profileID, _ = claims.GetSubject()
 	}
 
-	query, err := repository2.NewSearchQuery(
+	query, err := repository.NewSearchQuery(
 		ctx,
 		profileID,
 		request.GetQuery(),
@@ -217,7 +217,7 @@ func (pb *profileBusiness) CreateProfile(
 	contactDetail := strings.TrimSpace(request.GetContact())
 
 	if contactDetail == "" {
-		return nil, service.ErrorContactDetailsNotValid
+		return nil, service.ErrContactDetailsNotValid
 	}
 
 	p := models.Profile{}
@@ -228,7 +228,7 @@ func (pb *profileBusiness) CreateProfile(
 		return pb.GetByID(ctx, contact.ProfileID)
 	}
 
-	if !errors.Is(err, service.ErrorContactDoesNotExist) {
+	if !errors.Is(err, service.ErrContactDoesNotExist) {
 		return nil, err
 	}
 

@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 
 	"github.com/pitabwire/frame"
@@ -23,10 +24,10 @@ func (dr *deviceRepository) GetByLinkID(ctx context.Context, linkId string) (*mo
 	return device, err
 }
 
-func (dr *deviceRepository) List(ctx context.Context, profileId string) ([]*models.Device, error) {
+func (dr *deviceRepository) List(ctx context.Context, profileID string) ([]*models.Device, error) {
 	var deviceList []*models.Device
 
-	database := dr.service.DB(ctx, true).Where(" profile_id = ? ", profileId)
+	database := dr.service.DB(ctx, true).Where(" profile_id = ? ", profileID)
 
 	err := database.Find(&deviceList).Error
 	return deviceList, err

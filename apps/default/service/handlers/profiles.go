@@ -3,10 +3,9 @@ package handlers
 import (
 	"context"
 
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

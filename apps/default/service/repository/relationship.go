@@ -2,9 +2,9 @@ package repository
 
 import (
 	"context"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"gorm.io/gorm/clause"
 
 	"github.com/pitabwire/frame"
@@ -22,10 +22,10 @@ func (ar *relationshipRepository) GetByID(ctx context.Context, id string) (*mode
 
 func (ar *relationshipRepository) List(
 	ctx context.Context,
-	peerName, peerId string,
+	peerName, peerID string,
 	inverseRelation bool,
-	childrenIds []string,
-	lastRelationshipId string,
+	childrenIDs []string,
+	lastRelationshipID string,
 	count int,
 ) ([]*models.Relationship, error) {
 	var relationshipList []*models.Relationship
@@ -39,18 +39,18 @@ func (ar *relationshipRepository) List(
 	if inverseRelation {
 		database = database.Where(
 			" child_object = ? AND child_object_id = ? ",
-			peerName, peerId)
+			peerName, peerID)
 	} else {
 		database = database.Where(
 			" parent_object = ? AND parent_object_id = ? ",
-			peerName, peerId)
+			peerName, peerID)
 	}
-	if lastRelationshipId != "" {
-		database = database.Where("id > ?", lastRelationshipId)
+	if lastRelationshipID != "" {
+		database = database.Where("id > ?", lastRelationshipID)
 	}
 
-	if len(childrenIds) > 0 {
-		database = database.Where("child_object_id IN ?", childrenIds)
+	if len(childrenIDs) > 0 {
+		database = database.Where("child_object_id IN ?", childrenIDs)
 	}
 
 	err := database.Find(&relationshipList).Error
@@ -71,10 +71,10 @@ func (ar *relationshipRepository) Delete(ctx context.Context, id string) error {
 
 func (ar *relationshipRepository) RelationshipTypeByID(
 	ctx context.Context,
-	profileTypeId string,
+	profileTypeID string,
 ) (*models.RelationshipType, error) {
 	relationshipType := &models.RelationshipType{}
-	err := ar.service.DB(ctx, true).First(relationshipType, "id = ?", profileTypeId).Error
+	err := ar.service.DB(ctx, true).First(relationshipType, "id = ?", profileTypeID).Error
 	return relationshipType, err
 }
 
@@ -82,9 +82,9 @@ func (ar *relationshipRepository) RelationshipType(
 	ctx context.Context,
 	profileType profilev1.RelationshipType,
 ) (*models.RelationshipType, error) {
-	relationshipTypeUId := models.RelationshipTypeIDMap[profileType]
+	relationshipTypeUID := models.RelationshipTypeIDMap[profileType]
 	relationshipTypeM := &models.RelationshipType{}
-	err := ar.service.DB(ctx, true).First(relationshipTypeM, "uid = ?", relationshipTypeUId).Error
+	err := ar.service.DB(ctx, true).First(relationshipTypeM, "uid = ?", relationshipTypeUID).Error
 	return relationshipTypeM, err
 }
 

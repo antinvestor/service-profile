@@ -2,10 +2,11 @@ package repository
 
 import (
 	"context"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+
 	"github.com/pitabwire/frame"
 )
 
@@ -22,7 +23,7 @@ type SearchQuery struct {
 }
 
 func NewSearchQuery(
-	ctx context.Context,
+	_ context.Context,
 	profileID, query string,
 	props []string,
 	startAt, endAt string,
@@ -88,13 +89,13 @@ type ProfileRepository interface {
 	Save(ctx context.Context, profile *models.Profile) error
 	Delete(ctx context.Context, id string) error
 
-	GetTypeByID(ctx context.Context, profileTypeId string) (*models.ProfileType, error)
+	GetTypeByID(ctx context.Context, profileTypeID string) (*models.ProfileType, error)
 	GetTypeByUID(ctx context.Context, profileType profilev1.ProfileType) (*models.ProfileType, error)
 }
 
 type ContactRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Contact, error)
-	GetByProfileID(ctx context.Context, profileId string) ([]*models.Contact, error)
+	GetByProfileID(ctx context.Context, profileID string) ([]*models.Contact, error)
 	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
 	Save(ctx context.Context, contact *models.Contact) (*models.Contact, error)
 	Delete(ctx context.Context, id string) error
@@ -124,7 +125,7 @@ type AddressRepository interface {
 	Save(ctx context.Context, address *models.Address) error
 	Delete(ctx context.Context, id string) error
 
-	GetByProfileID(ctx context.Context, profileId string) ([]*models.ProfileAddress, error)
+	GetByProfileID(ctx context.Context, profileID string) ([]*models.ProfileAddress, error)
 	SaveLink(ctx context.Context, profileAddress *models.ProfileAddress) error
 	DeleteLink(ctx context.Context, id string) error
 
@@ -140,10 +141,10 @@ type RelationshipRepository interface {
 	List(
 		ctx context.Context,
 		peerName string,
-		peerId string,
+		peerID string,
 		inverseRelation bool,
 		relatedChildrenIds []string,
-		lastRelationshipId string,
+		lastRelationshipID string,
 		count int,
 	) ([]*models.Relationship, error)
 
@@ -155,7 +156,7 @@ type DeviceRepository interface {
 	Save(ctx context.Context, device *models.Device) error
 	GetByID(ctx context.Context, id string) (*models.Device, error)
 	GetByLinkID(ctx context.Context, linkId string) (*models.Device, error)
-	List(ctx context.Context, profileId string) ([]*models.Device, error)
+	List(ctx context.Context, profileID string) ([]*models.Device, error)
 }
 
 type DeviceLogRepository interface {

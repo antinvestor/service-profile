@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"strings"
 
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"gorm.io/gorm"
 
 	"github.com/pitabwire/frame"
@@ -51,7 +51,7 @@ func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*m
 	detail = strings.ToLower(strings.TrimSpace(detail))
 	if err := cr.service.DB(ctx, true).First(contact, " detail @@@ ?", detail).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, service.ErrorContactDoesNotExist
+			return nil, service.ErrContactDoesNotExist
 		}
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (cr *contactRepository) DelinkFromProfile(ctx context.Context, id, profileI
 	}
 
 	if profileID != contact.ProfileID {
-		return nil, service.ErrorContactProfileNotValid
+		return nil, service.ErrContactProfileNotValid
 	}
 
 	contact.ProfileID = ""

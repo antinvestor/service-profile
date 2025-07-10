@@ -3,12 +3,13 @@ package queue
 import (
 	"context"
 	"encoding/json"
+
+	commonv1 "github.com/antinvestor/apis/go/common/v1"
+	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 
-	commonv1 "github.com/antinvestor/apis/go/common/v1"
-	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	"github.com/pitabwire/frame"
 )
 

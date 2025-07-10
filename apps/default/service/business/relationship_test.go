@@ -2,10 +2,10 @@ package business_test
 
 import (
 	"context"
-	business2 "github.com/antinvestor/service-profile/apps/default/service/business"
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -36,8 +36,8 @@ func (rts *RelationshipTestSuite) TestNewRelationshipBusiness() {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := rts.CreateService(t, dep)
 
-				profileBusiness := business2.NewProfileBusiness(ctx, svc)
-				if got := business2.NewRelationshipBusiness(ctx, svc, profileBusiness); got == nil {
+				profileBusiness := business.NewProfileBusiness(ctx, svc)
+				if got := business.NewRelationshipBusiness(ctx, svc, profileBusiness); got == nil {
 					t.Errorf("NewRelationshipBusiness() = %v, is nil", got)
 				}
 			})
@@ -49,7 +49,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_CreateRelationship()
 	t := rts.T()
 	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := rts.CreateService(t, dep)
-		profileBusiness := business2.NewProfileBusiness(ctx, svc)
+		profileBusiness := business.NewProfileBusiness(ctx, svc)
 
 		testProfiles, err := rts.CreateTestProfiles(
 			ctx,
@@ -93,7 +93,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_CreateRelationship()
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				aB := business2.NewRelationshipBusiness(ctx, svc, profileBusiness)
+				aB := business.NewRelationshipBusiness(ctx, svc, profileBusiness)
 				got, err1 := aB.CreateRelationship(ctx, tt.args.request)
 				if (err1 != nil) != tt.wantErr {
 					t.Errorf("CreateRelationship() error = %v, wantErr %v", err1, tt.wantErr)
@@ -121,8 +121,8 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_DeleteRelationship()
 	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 
-		profileBusiness := business2.NewProfileBusiness(ctx, svc)
-		aB := business2.NewRelationshipBusiness(ctx, svc, profileBusiness)
+		profileBusiness := business.NewProfileBusiness(ctx, svc)
+		aB := business.NewRelationshipBusiness(ctx, svc, profileBusiness)
 
 		testProfiles, err := rts.CreateTestProfiles(
 			ctx,
@@ -193,9 +193,9 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 	t := rts.T()
 	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := rts.CreateService(t, dep)
-		profileBusiness := business2.NewProfileBusiness(ctx, svc)
+		profileBusiness := business.NewProfileBusiness(ctx, svc)
 
-		aB := business2.NewRelationshipBusiness(ctx, svc, profileBusiness)
+		aB := business.NewRelationshipBusiness(ctx, svc, profileBusiness)
 
 		testProfiles, err := rts.CreateTestProfiles(
 			ctx,
@@ -291,7 +291,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 		}
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				aB := business2.NewRelationshipBusiness(ctx, svc, profileBusiness)
+				aB := business.NewRelationshipBusiness(ctx, svc, profileBusiness)
 				got, err0 := aB.ListRelationships(ctx, tt.args.request)
 				tt.wantErr(t, err0)
 				if len(got) != tt.wantCount {

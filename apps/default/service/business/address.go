@@ -2,10 +2,11 @@ package business
 
 import (
 	"context"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	repository2 "github.com/antinvestor/service-profile/apps/default/service/repository"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+
 	"github.com/pitabwire/frame"
 )
 
@@ -18,7 +19,7 @@ type AddressBusiness interface {
 }
 
 func NewAddressBusiness(_ context.Context, service *frame.Service) AddressBusiness {
-	addressRepo := repository2.NewAddressRepository(service)
+	addressRepo := repository.NewAddressRepository(service)
 	return &addressBusiness{
 		service:     service,
 		addressRepo: addressRepo,
@@ -27,7 +28,7 @@ func NewAddressBusiness(_ context.Context, service *frame.Service) AddressBusine
 
 type addressBusiness struct {
 	service     *frame.Service
-	addressRepo repository2.AddressRepository
+	addressRepo repository.AddressRepository
 }
 
 func (aB *addressBusiness) ToAPI(address *models.Address) *profilev1.AddressObject {

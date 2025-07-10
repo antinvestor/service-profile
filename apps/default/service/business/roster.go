@@ -3,10 +3,11 @@ package business
 import (
 	"context"
 	"errors"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	repository2 "github.com/antinvestor/service-profile/apps/default/service/repository"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+
 	"github.com/pitabwire/frame"
 )
 
@@ -20,7 +21,7 @@ type RosterBusiness interface {
 }
 
 func NewRosterBusiness(ctx context.Context, service *frame.Service) RosterBusiness {
-	rosterRepo := repository2.NewRosterRepository(service)
+	rosterRepo := repository.NewRosterRepository(service)
 	return &rosterBusiness{
 		service:          service,
 		rosterRepository: rosterRepo,
@@ -30,7 +31,7 @@ func NewRosterBusiness(ctx context.Context, service *frame.Service) RosterBusine
 
 type rosterBusiness struct {
 	service          *frame.Service
-	rosterRepository repository2.RosterRepository
+	rosterRepository repository.RosterRepository
 	contactBusiness  ContactBusiness
 }
 
@@ -67,7 +68,7 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 		}
 	}
 
-	query, err := repository2.NewSearchQuery(
+	query, err := repository.NewSearchQuery(
 		ctx,
 		profileID,
 		request.GetQuery(),

@@ -3,10 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"net/http"
 	"strings"
+
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 
 	"github.com/pitabwire/frame"
 )
@@ -63,7 +64,7 @@ func (ps *ProfileServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http
 		_ = json.NewEncoder(rw).Encode("missing parameters")
 		return
 	}
-	profileId, ok := linkData["profile_id"]
+	profileID, ok := linkData["profile_id"]
 	if !ok {
 		rw.Header().Set("Content-Type", "application/json")
 		rw.WriteHeader(http.StatusBadRequest)
@@ -71,7 +72,7 @@ func (ps *ProfileServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http
 		return
 	}
 
-	device, err := deviceBusiness.UpdateProfileID(ctx, linkId, profileId)
+	device, err := deviceBusiness.UpdateProfileID(ctx, linkId, profileID)
 	if err != nil {
 		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
 		return

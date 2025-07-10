@@ -2,11 +2,12 @@ package business
 
 import (
 	"context"
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	repository2 "github.com/antinvestor/service-profile/apps/default/service/repository"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+
 	"github.com/pitabwire/frame"
 )
 
@@ -33,7 +34,7 @@ func NewRelationshipBusiness(
 	service *frame.Service,
 	profileBiz ProfileBusiness,
 ) RelationshipBusiness {
-	relationshipRepo := repository2.NewRelationshipRepository(service)
+	relationshipRepo := repository.NewRelationshipRepository(service)
 
 	return &relationshipBusiness{
 		service:          service,
@@ -45,7 +46,7 @@ func NewRelationshipBusiness(
 type relationshipBusiness struct {
 	service          *frame.Service
 	profileBusiness  ProfileBusiness
-	relationshipRepo repository2.RelationshipRepository
+	relationshipRepo repository.RelationshipRepository
 }
 
 func (rb *relationshipBusiness) ListRelationships(
@@ -59,7 +60,7 @@ func (rb *relationshipBusiness) ListRelationships(
 		}
 
 		if profileObj == nil {
-			return nil, service.ErrorProfileDoesNotExist
+			return nil, service.ErrProfileDoesNotExist
 		}
 	}
 

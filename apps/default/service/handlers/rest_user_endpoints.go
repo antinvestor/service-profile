@@ -5,12 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	business2 "github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"net/http"
 	"strconv"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+
 	"github.com/pitabwire/frame"
 )
 
@@ -74,8 +75,8 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	invertRelationship, _ := strconv.ParseBool(invertRelationshipStr)
 
-	profileBusiness := business2.NewProfileBusiness(ctx, ps.Service)
-	relationshipBusiness := business2.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
 
 	request := &profilev1.ListRelationshipRequest{
 		PeerName:           peerObject,
@@ -134,7 +135,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	profileBusiness := business2.NewProfileBusiness(ctx, ps.Service)
+	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
 	subject, _ := claims.GetSubject()
 	profile, err := profileBusiness.GetByID(ctx, subject)
 	if err != nil {
