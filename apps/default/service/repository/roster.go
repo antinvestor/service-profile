@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/dbutil"
 	"gorm.io/gorm/clause"
 
 	"github.com/pitabwire/frame"
@@ -16,19 +17,19 @@ type rosterRepository struct {
 
 func (cr *rosterRepository) Search(
 	ctx context.Context,
-	query *SearchQuery,
+	query *dbutil.SearchQuery,
 ) (frame.JobResultPipe[[]*models.Roster], error) {
 	service := cr.service
 	job := frame.NewJob[[]*models.Roster](
 		func(ctx context.Context, jobResult frame.JobResultPipe[[]*models.Roster]) error {
 			paginator := query.Pagination
-			for paginator.canLoad() {
+			for paginator.CanLoad() {
 				var rosterList []*models.Roster
 
 				db := service.DB(ctx, true).
 					Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
 					Preload("Contact").
-					Limit(paginator.limit).Offset(paginator.offset)
+					Limit(paginator.Limit).Offset(paginator.Offset)
 
 				if query.ProfileID != "" {
 					db = db.Where("rosters.profile_id = ?", query.ProfileID)
@@ -63,7 +64,7 @@ func (cr *rosterRepository) Search(
 					return err
 				}
 
-				if paginator.stop(len(rosterList)) {
+				if paginator.Stop(len(rosterList)) {
 					break
 				}
 			}

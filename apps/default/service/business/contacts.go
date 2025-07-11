@@ -179,7 +179,6 @@ func (cb *contactBusiness) RemoveContact(ctx context.Context, contactID, profile
 }
 
 func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Contact) error {
-
 	if contact.ProfileID == "" {
 		return nil
 	}

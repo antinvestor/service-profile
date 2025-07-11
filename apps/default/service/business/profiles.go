@@ -9,6 +9,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/internal/dbutil"
 	"github.com/rs/xid"
 
 	"github.com/pitabwire/frame"
@@ -135,7 +136,7 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 		profileID, _ = claims.GetSubject()
 	}
 
-	query, err := repository.NewSearchQuery(
+	query, err := dbutil.NewSearchQuery(
 		ctx,
 		profileID,
 		request.GetQuery(),

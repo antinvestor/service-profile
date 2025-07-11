@@ -61,7 +61,6 @@ func (bs *BaseTestSuite) CreateService(
 
 		profileConfig.DatabasePrimaryURL = []string{testDS.String()}
 		profileConfig.DatabaseReplicaURL = []string{testDS.String()}
-
 	}
 
 	ctx, svc := frame.NewServiceWithContext(t.Context(), "profile tests",

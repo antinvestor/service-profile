@@ -7,6 +7,7 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/dbutil"
 	"gorm.io/gorm/clause"
 
 	"github.com/pitabwire/frame"
@@ -18,16 +19,16 @@ type profileRepository struct {
 
 func (pr *profileRepository) Search(
 	ctx context.Context,
-	query *SearchQuery,
+	query *dbutil.SearchQuery,
 ) (frame.JobResultPipe[[]*models.Profile], error) {
 	service := pr.service
 	job := frame.NewJob(func(ctx context.Context, jobResult frame.JobResultPipe[[]*models.Profile]) error {
 		paginator := query.Pagination
-		for paginator.canLoad() {
+		for paginator.CanLoad() {
 			var profileList []*models.Profile
 
 			db := service.DB(ctx, true).
-				Limit(paginator.limit).Offset(paginator.offset)
+				Limit(paginator.Limit).Offset(paginator.Offset)
 
 			if query.StartAt != nil && query.EndAt != nil {
 				startDate := query.StartAt.Format("2020-01-31T00:00:00Z")
@@ -64,7 +65,7 @@ func (pr *profileRepository) Search(
 				return err
 			}
 
-			if paginator.stop(len(profileList)) {
+			if paginator.Stop(len(profileList)) {
 				break
 			}
 		}

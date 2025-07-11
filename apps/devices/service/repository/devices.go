@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 
 	"github.com/pitabwire/frame"
 )

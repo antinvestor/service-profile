@@ -2,12 +2,12 @@ package business_test
 
 import (
 	"context"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -103,7 +103,11 @@ func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 		result, err := rb.GetByID(ctx, rosterID)
 
 		require.NoError(t, err)
-		require.Equal(t, "", expectedRoster.GetProfileId(), "Profile ID should be empty as the contact belongs to another not in the system")
+		require.Empty(
+			t,
+			expectedRoster.GetProfileId(),
+			"Profile ID should be empty as the contact belongs to another not in the system",
+		)
 		require.Equal(t, "profile123", result.ProfileID, "Profile ID should match")
 		require.Equal(t, expectedRoster.GetContact().GetId(), result.ContactID, "Contact ID should match")
 	})

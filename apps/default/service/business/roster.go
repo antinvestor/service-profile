@@ -7,6 +7,7 @@ import (
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/internal/dbutil"
 
 	"github.com/pitabwire/frame"
 )
@@ -68,7 +69,7 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 		}
 	}
 
-	query, err := repository.NewSearchQuery(
+	query, err := dbutil.NewSearchQuery(
 		ctx,
 		profileID,
 		request.GetQuery(),

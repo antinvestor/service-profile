@@ -2,11 +2,11 @@ package business_test
 
 import (
 	"context"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 

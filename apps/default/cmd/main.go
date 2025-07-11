@@ -120,7 +120,6 @@ func main() {
 		implementation.NewSecureRouterV1(), jwtAudience, cfg.Oauth2JwtVerifyIssuer)
 
 	proxyMux.Handle("/public/", http.StripPrefix("/public", profileServiceRestHandlers))
-	proxyMux.Handle("/_public/", http.StripPrefix("/_public", implementation.NewInSecureRouterV1()))
 
 	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
 
@@ -140,22 +139,6 @@ func main() {
 		cfg.QueueVerification,
 	)
 
-	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
-		Service:             svc,
-		DeviceRepository:    repository.NewDeviceRepository(svc),
-		DeviceLogRepository: repository.NewDeviceLogRepository(svc),
-	}
-
-	deviceAnalysisQueue := frame.WithRegisterSubscriber(
-		cfg.QueueDeviceAnalysisName,
-		cfg.QueueDeviceAnalysis,
-		&deviceAnalysisQueueHandler,
-	)
-	deviceAnalysisQueuePublisher := frame.WithRegisterPublisher(
-		cfg.QueueDeviceAnalysisName,
-		cfg.QueueDeviceAnalysis,
-	)
-
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueRelationshipConnectName,
 		cfg.QueueRelationshipConnectURI,
@@ -167,7 +150,6 @@ func main() {
 
 	serviceOptions = append(serviceOptions,
 		verificationQueue, verificationQueuePublisher,
-		deviceAnalysisQueue, deviceAnalysisQueuePublisher,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.WithRegisterEvents(
 			&events.ClientConnectedSetupQueue{Service: svc},

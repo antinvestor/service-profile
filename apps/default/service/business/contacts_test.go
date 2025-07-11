@@ -3,11 +3,11 @@ package business_test
 import (
 	"context"
 	"fmt"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"testing"
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 

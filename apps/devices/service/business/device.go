@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 
 	"github.com/pitabwire/frame"
 )
@@ -89,7 +89,7 @@ func (dB *deviceBusiness) GetByProfileID(ctx context.Context, profileID string) 
 func (dB *deviceBusiness) LogDevice(ctx context.Context, logData *models.DeviceLog) error {
 	logData.GenID(ctx)
 
-	profileConfig := dB.service.Config().(*config.ProfileConfig)
+	cfg := dB.service.Config().(*config.DevicesConfig)
 
 	err := dB.deviceLogRepository.Save(ctx, logData)
 	if err != nil {
@@ -100,7 +100,7 @@ func (dB *deviceBusiness) LogDevice(ctx context.Context, logData *models.DeviceL
 		"id": logData.GetID(),
 	}
 
-	return dB.service.Publish(ctx, profileConfig.QueueDeviceAnalysisName, payload)
+	return dB.service.Publish(ctx, cfg.QueueDeviceAnalysisName, payload)
 }
 
 func (dB *deviceBusiness) GetDeviceLogByID(ctx context.Context, deviceLogID string) (*models.DeviceLog, error) {

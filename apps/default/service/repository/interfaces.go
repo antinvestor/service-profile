@@ -2,90 +2,17 @@ package repository
 
 import (
 	"context"
-	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/dbutil"
 
 	"github.com/pitabwire/frame"
 )
 
-const defaultBatchSize = 30
-
-type SearchQuery struct {
-	ProfileID            string
-	Query                string
-	PropertiesToSearchOn []string
-	StartAt              *time.Time
-	EndAt                *time.Time
-
-	Pagination *Paginator
-}
-
-func NewSearchQuery(
-	_ context.Context,
-	profileID, query string,
-	props []string,
-	startAt, endAt string,
-	resultPage, resultCount int,
-) (*SearchQuery, error) {
-	if resultCount == 0 {
-		resultCount = defaultBatchSize
-	}
-
-	sq := &SearchQuery{
-		ProfileID:            profileID,
-		Query:                query,
-		PropertiesToSearchOn: props,
-		Pagination: &Paginator{
-			offset:    resultPage * resultCount,
-			limit:     resultCount,
-			batchSize: defaultBatchSize,
-		},
-	}
-
-	if startAt != "" {
-		parsedTime, err := time.Parse(time.DateTime, startAt)
-		if err != nil {
-			return nil, err
-		}
-		sq.StartAt = &parsedTime
-	}
-
-	if endAt != "" {
-		parsedTime, err := time.Parse(time.DateTime, endAt)
-		if err != nil {
-			return nil, err
-		}
-		sq.EndAt = &parsedTime
-	}
-
-	return sq, nil
-}
-
-type Paginator struct {
-	offset int
-	limit  int
-
-	batchSize int
-}
-
-func (sq *Paginator) canLoad() bool {
-	return sq.offset < sq.limit
-}
-
-func (sq *Paginator) stop(loadedCount int) bool {
-	sq.offset += loadedCount
-	if sq.offset+sq.batchSize > sq.limit {
-		sq.batchSize = sq.limit - sq.offset
-	}
-
-	return loadedCount < sq.batchSize
-}
-
 type ProfileRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Profile, error)
-	Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe[[]*models.Profile], error)
+	Search(ctx context.Context, query *dbutil.SearchQuery) (frame.JobResultPipe[[]*models.Profile], error)
 	Save(ctx context.Context, profile *models.Profile) error
 	Delete(ctx context.Context, id string) error
 
@@ -109,7 +36,7 @@ type ContactRepository interface {
 type RosterRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Roster, error)
 	GetByContactAndProfileID(ctx context.Context, profileID, contactID string) (*models.Roster, error)
-	Search(ctx context.Context, query *SearchQuery) (frame.JobResultPipe[[]*models.Roster], error)
+	Search(ctx context.Context, query *dbutil.SearchQuery) (frame.JobResultPipe[[]*models.Roster], error)
 	Save(ctx context.Context, contact *models.Roster) (*models.Roster, error)
 	Delete(ctx context.Context, id string) error
 }
@@ -150,18 +77,4 @@ type RelationshipRepository interface {
 
 	RelationshipType(ctx context.Context, relationshipType profilev1.RelationshipType) (*models.RelationshipType, error)
 	RelationshipTypeByID(ctx context.Context, relationshipTypeID string) (*models.RelationshipType, error)
-}
-
-type DeviceRepository interface {
-	Save(ctx context.Context, device *models.Device) error
-	GetByID(ctx context.Context, id string) (*models.Device, error)
-	GetByLinkID(ctx context.Context, linkId string) (*models.Device, error)
-	List(ctx context.Context, profileID string) ([]*models.Device, error)
-}
-
-type DeviceLogRepository interface {
-	Save(ctx context.Context, deviceLog *models.DeviceLog) error
-	GetByID(ctx context.Context, id string) (*models.DeviceLog, error)
-	GetByLinkID(ctx context.Context, linkID string) (*models.DeviceLog, error)
-	ListByDeviceID(ctx context.Context, deviceLogID string) ([]*models.DeviceLog, error)
 }

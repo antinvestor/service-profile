@@ -1,18 +1,39 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 
 	"github.com/pitabwire/frame"
 )
 
-func (ps *ProfileServer) RestLogDeviceData(rw http.ResponseWriter, req *http.Request) {
+type DevicesServer struct {
+	Service *frame.Service
+}
+
+func (ps *DevicesServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {
+	w.Header().Set("Content-Type", "application/json")
+
+	log := ps.Service.Log(ctx).
+		WithField("code", code)
+
+	log.WithError(err).Error("internal service error")
+	w.WriteHeader(code)
+
+	err = json.NewEncoder(w).Encode(fmt.Sprintf(" internal processing err message: %v", err))
+	if err != nil {
+		log.WithError(err).Error("could not write error to response")
+	}
+}
+
+func (ps *DevicesServer) RestLogDeviceData(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
@@ -45,7 +66,7 @@ func (ps *ProfileServer) RestLogDeviceData(rw http.ResponseWriter, req *http.Req
 	_ = json.NewEncoder(rw).Encode(response)
 }
 
-func (ps *ProfileServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http.Request) {
+func (ps *DevicesServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 
 	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
@@ -83,7 +104,7 @@ func (ps *ProfileServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http
 	_ = json.NewEncoder(rw).Encode(device)
 }
 
-func (ps *ProfileServer) RestGetDeviceLogByID(rw http.ResponseWriter, req *http.Request) {
+func (ps *DevicesServer) RestGetDeviceLogByID(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
 
@@ -107,7 +128,7 @@ func (ps *ProfileServer) RestGetDeviceLogByID(rw http.ResponseWriter, req *http.
 	_ = json.NewEncoder(rw).Encode(deviceLog)
 }
 
-func (ps *ProfileServer) RestGetDeviceByDeviceLogID(rw http.ResponseWriter, req *http.Request) {
+func (ps *DevicesServer) RestGetDeviceByDeviceLogID(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
 
@@ -142,7 +163,7 @@ func (ps *ProfileServer) RestGetDeviceByDeviceLogID(rw http.ResponseWriter, req 
 	_ = json.NewEncoder(rw).Encode(device)
 }
 
-func (ps *ProfileServer) RestGetDeviceByID(rw http.ResponseWriter, req *http.Request) {
+func (ps *DevicesServer) RestGetDeviceByID(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
 
@@ -166,7 +187,7 @@ func (ps *ProfileServer) RestGetDeviceByID(rw http.ResponseWriter, req *http.Req
 	_ = json.NewEncoder(rw).Encode(device)
 }
 
-func (ps *ProfileServer) RestGetDevicesByProfileID(rw http.ResponseWriter, req *http.Request) {
+func (ps *DevicesServer) RestGetDevicesByProfileID(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
 	claims := frame.ClaimsFromContext(ctx)
 
@@ -191,4 +212,23 @@ func (ps *ProfileServer) RestGetDevicesByProfileID(rw http.ResponseWriter, req *
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(rw).Encode(deviceList)
+}
+
+func (ps *DevicesServer) NewSecureRouterV1() *http.ServeMux {
+	userServeMux := http.NewServeMux()
+
+	userServeMux.HandleFunc("/user/device/by_id", ps.RestGetDeviceByID)
+	userServeMux.HandleFunc("/user/device/by_profile_id", ps.RestGetDevicesByProfileID)
+	userServeMux.HandleFunc("/user/device/by_device_log_id/{deviceLogId}", ps.RestGetDeviceByDeviceLogID)
+	userServeMux.HandleFunc("/user/device/log/{deviceLogId}", ps.RestGetDeviceLogByID)
+
+	return userServeMux
+}
+
+func (ps *DevicesServer) NewInSecureRouterV1() *http.ServeMux {
+	userServeMux := http.NewServeMux()
+	userServeMux.HandleFunc("/device/log", ps.RestLogDeviceData)
+	userServeMux.HandleFunc("/device/link", ps.RestDeviceLinkProfile)
+
+	return userServeMux
 }
