@@ -27,7 +27,7 @@ help:   ## show this help
 format:
 	find . -name '*.go' -not -path './.git/*' -exec sed -i '/^import (/,/^)/{/^$$/d}' {} +
 	find . -name '*.go' -not -path './.git/*' -exec goimports -w {} +
-	golangci-lint run --fix
+	golangci-lint run --fix -c .golangci.yaml
 
 clean:  ## go clean
 	go clean
@@ -71,4 +71,4 @@ tests: ## runs all system tests
 	fi;\
 	go tool cover -html=coverage.out -o coverage.html
 
-build: clean fmt vet apps/default/tests ## run all preliminary steps and tests the setup
+build: clean fmt vet internal/tests ## run all preliminary steps and tests the setup

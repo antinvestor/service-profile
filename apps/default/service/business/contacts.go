@@ -3,19 +3,19 @@ package business
 import (
 	"context"
 	"errors"
-	"math/rand"
 	"regexp"
 	"strings"
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/util"
+	"github.com/ttacon/libphonenumber"
+
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/ttacon/libphonenumber"
-
-	"github.com/pitabwire/frame"
 )
 
 var (
@@ -88,12 +88,11 @@ func (cb *contactBusiness) ToAPI(
 func (cb *contactBusiness) ContactTypeFromDetail(_ context.Context, detail string) (string, error) {
 	if EmailPattern.MatchString(detail) {
 		return profilev1.ContactType_EMAIL.String(), nil
-	} else {
-		possibleNumber, err := libphonenumber.Parse(detail, "")
+	}
 
-		if err == nil && libphonenumber.IsValidNumber(possibleNumber) {
-			return profilev1.ContactType_MSISDN.String(), err
-		}
+	possibleNumber, err := libphonenumber.Parse(detail, "")
+	if err == nil && libphonenumber.IsValidNumber(possibleNumber) {
+		return profilev1.ContactType_MSISDN.String(), nil
 	}
 
 	return "", service.ErrContactDetailsNotValid
@@ -179,43 +178,26 @@ func (cb *contactBusiness) RemoveContact(ctx context.Context, contactID, profile
 }
 
 func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Contact) error {
-	if contact.ProfileID == "" {
+	if contact == nil {
 		return nil
 	}
 
-	cfg := cb.service.Config().(*config.ProfileConfig)
+	cfg, ok := cb.service.Config().(*config.ProfileConfig)
+	if !ok {
+		return errors.New("invalid service configuration")
+	}
+
 	expiryTime := time.Now().Add(time.Duration(cfg.VerificationPinExpiryTimeInSec))
 
 	verification := &models.Verification{
 		ProfileID: contact.ProfileID,
 		ContactID: contact.ID,
-		Pin:       GeneratePin(cfg.LengthOfVerificationPin),
-		LinkHash:  GeneratePin(cfg.LengthOfVerificationLinkHash),
+		Pin:       util.RandomString(cfg.LengthOfVerificationPin),
+		LinkHash:  util.RandomString(cfg.LengthOfVerificationLinkHash),
 		ExpiresAt: &expiryTime,
 	}
 
 	verification.GenID(ctx)
 
 	return cb.service.Publish(ctx, cfg.QueueVerificationName, verification)
-}
-
-// GeneratePin returns securely generated random bytes.
-// It will return an error if the system's secure random
-// number generator fails to function correctly, in which
-// case the caller should not continue.
-func GeneratePin(n int) string {
-	if n <= 0 {
-		return ""
-	}
-
-	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-
-	var seededRand = rand.New(
-		rand.NewSource(time.Now().UnixNano()))
-
-	b := make([]byte, n)
-	for i := range b {
-		b[i] = charset[seededRand.Intn(len(charset))]
-	}
-	return string(b)
 }

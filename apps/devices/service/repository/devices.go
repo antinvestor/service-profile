@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
-
 	"github.com/pitabwire/frame"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 )
 
 type deviceRepository struct {
@@ -18,19 +18,32 @@ func (dr *deviceRepository) GetByID(ctx context.Context, id string) (*models.Dev
 	return device, err
 }
 
-func (dr *deviceRepository) GetByLinkID(ctx context.Context, linkId string) (*models.Device, error) {
-	device := &models.Device{}
-	err := dr.service.DB(ctx, true).First(device, "link_id = ?", linkId).Error
-	return device, err
+// GetByLinkID retrieves a device by its link ID.
+func (dr *deviceRepository) GetByLinkID(ctx context.Context, linkID string) (*models.Device, error) {
+	db := dr.service.DB(ctx, true) // true for read-only
+
+	var device models.Device
+	result := db.Where("link_id = ?", linkID).First(&device)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &device, nil
 }
 
+// List retrieves devices based on the provided filter.
 func (dr *deviceRepository) List(ctx context.Context, profileID string) ([]*models.Device, error) {
-	var deviceList []*models.Device
+	db := dr.service.DB(ctx, true) // true for read-only
 
-	database := dr.service.DB(ctx, true).Where(" profile_id = ? ", profileID)
+	var devices []*models.Device
+	query := db.Where(" profile_id = ?", profileID)
 
-	err := database.Find(&deviceList).Error
-	return deviceList, err
+	result := query.Find(&devices)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return devices, nil
 }
 
 func (dr *deviceRepository) Save(ctx context.Context, device *models.Device) error {
@@ -63,7 +76,7 @@ func (dlr *deviceLogRepository) GetByLinkID(ctx context.Context, linkID string) 
 func (dlr *deviceLogRepository) ListByDeviceID(ctx context.Context, deviceID string) ([]*models.DeviceLog, error) {
 	var deviceLogs []*models.DeviceLog
 
-	err := dlr.service.DB(ctx, true).Where("device_id = ?", deviceID).Find(deviceLogs).Error
+	err := dlr.service.DB(ctx, true).Where(" device_id = ?", deviceID).Find(&deviceLogs).Error
 	return deviceLogs, err
 }
 

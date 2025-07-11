@@ -4,13 +4,12 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	repository2 "github.com/antinvestor/service-profile/apps/devices/service/repository"
-
-	"github.com/pitabwire/frame"
 )
 
 func main() {
@@ -65,8 +64,8 @@ func main() {
 
 	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
 		Service:             svc,
-		DeviceRepository:    repository2.NewDeviceRepository(svc),
-		DeviceLogRepository: repository2.NewDeviceLogRepository(svc),
+		DeviceRepository:    repository.NewDeviceRepository(svc),
+		DeviceLogRepository: repository.NewDeviceLogRepository(svc),
 	}
 
 	deviceAnalysisQueue := frame.WithRegisterSubscriber(

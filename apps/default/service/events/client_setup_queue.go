@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/pitabwire/frame"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/pitabwire/frame"
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 type ClientConnectedSetupQueue struct {
@@ -25,15 +25,20 @@ func (csq *ClientConnectedSetupQueue) PayloadType() any {
 }
 
 func (csq *ClientConnectedSetupQueue) Validate(_ context.Context, payload any) error {
-	if _, ok := payload.(*string); !ok {
-		return errors.New(" payload is not of type string")
+	_, ok := payload.(*string)
+	if !ok {
+		return errors.New("invalid payload type, expected *string")
 	}
 
 	return nil
 }
 
 func (csq *ClientConnectedSetupQueue) Execute(ctx context.Context, payload any) error {
-	relationshipID := *payload.(*string)
+	relationshipIDPtr, ok := payload.(*string)
+	if !ok {
+		return errors.New("invalid payload type, expected *string")
+	}
+	relationshipID := *relationshipIDPtr
 
 	logger := csq.Service.Log(ctx).WithField("payload", relationshipID).WithField("type", csq.Name())
 	logger.Debug("handling csq")

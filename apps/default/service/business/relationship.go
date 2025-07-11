@@ -2,13 +2,20 @@ package business
 
 import (
 	"context"
+	"errors"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+)
 
-	"github.com/pitabwire/frame"
+// Constants for pagination and limits.
+const (
+	// MaxRelationshipsToCheck is the maximum number of relationships to check when creating a new relationship.
+	MaxRelationshipsToCheck = 2
 )
 
 type RelationshipBusiness interface {
@@ -88,7 +95,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 		false,
 		[]string{request.GetChildId()},
 		"",
-		2,
+		MaxRelationshipsToCheck,
 	)
 	if err != nil {
 		logger.WithError(err).Warn("get existing relationship error")
@@ -137,24 +144,25 @@ func (rb *relationshipBusiness) DeleteRelationship(
 	ctx context.Context,
 	request *profilev1.DeleteRelationshipRequest,
 ) (*profilev1.RelationshipObject, error) {
-	logger := rb.service.Log(ctx).WithField("request", request)
-
 	relationship, err := rb.relationshipRepo.GetByID(ctx, request.GetId())
-	if err != nil || relationship == nil {
+	if err != nil {
+		if frame.ErrorIsNoRows(err) {
+			return nil, errors.New("relationship not found")
+		}
 		return nil, err
 	}
 
-	if request.GetParentId() == "" || request.GetParentId() == relationship.ParentObjectID {
-		err = rb.relationshipRepo.Delete(ctx, request.GetId())
-		if err != nil {
-			logger.WithError(err).Warn("could not delete relationship")
-			return nil, err
-		}
-
-		return relationship.ToAPI(), nil
+	relationshipObject, err := rb.ToAPI(ctx, relationship, false)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	err = rb.relationshipRepo.Delete(ctx, request.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	return relationshipObject, nil
 }
 
 func (rb *relationshipBusiness) ToAPI(
@@ -168,20 +176,20 @@ func (rb *relationshipBusiness) ToAPI(
 
 	relationshipObj := relationship.ToAPI()
 
-	peerProfileId := ""
+	peerProfileID := ""
 
 	if !invertRelationship {
 		if relationship.ChildObject == "Profile" {
-			peerProfileId = relationship.ChildObjectID
+			peerProfileID = relationship.ChildObjectID
 		}
 	} else {
 		if relationship.ParentObject == "Profile" {
-			peerProfileId = relationship.ParentObjectID
+			peerProfileID = relationship.ParentObjectID
 		}
 	}
 
-	if peerProfileId != "" {
-		profileObj, err := rb.profileBusiness.GetByID(ctx, peerProfileId)
+	if peerProfileID != "" {
+		profileObj, err := rb.profileBusiness.GetByID(ctx, peerProfileID)
 		if err == nil {
 			relationshipObj.PeerProfile = profileObj
 		}

@@ -4,11 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/pitabwire/frame"
 	"gorm.io/gorm/clause"
 
-	"github.com/pitabwire/frame"
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type addressRepository struct {
@@ -93,8 +93,8 @@ func (ar *addressRepository) CountryGetByName(ctx context.Context, name string) 
 }
 
 func NewAddressRepository(service *frame.Service) AddressRepository {
-	addressRepository := addressRepository{
+	repo := addressRepository{
 		service: service,
 	}
-	return &addressRepository
+	return &repo
 }

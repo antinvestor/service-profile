@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/internal/dbutil"
+	"github.com/pitabwire/frame"
 	"gorm.io/gorm/clause"
 
-	"github.com/pitabwire/frame"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/dbutil"
 )
 
 type profileRepository struct {
@@ -90,9 +90,9 @@ func (pr *profileRepository) GetTypeByUID(
 	ctx context.Context,
 	profileType profilev1.ProfileType,
 ) (*models.ProfileType, error) {
-	profileTypeUId := models.ProfileTypeIDMap[profileType]
+	profileTypeUID := models.ProfileTypeIDMap[profileType]
 	profileTypeM := &models.ProfileType{}
-	err := pr.service.DB(ctx, true).First(profileTypeM, "uid = ?", profileTypeUId).Error
+	err := pr.service.DB(ctx, true).First(profileTypeM, "uid = ?", profileTypeUID).Error
 	return profileTypeM, err
 }
 
@@ -117,9 +117,23 @@ func (pr *profileRepository) Delete(ctx context.Context, id string) error {
 	return pr.service.DB(ctx, false).Delete(profile).Error
 }
 
+func (pr *profileRepository) FilterByType(
+	ctx context.Context,
+	profileType profilev1.ProfileType,
+) ([]*models.Profile, error) {
+	var profiles []*models.Profile
+
+	profileTypeUID := models.ProfileTypeIDMap[profileType]
+
+	database := pr.service.DB(ctx, true).Where(" profile_type_id = ? ", profileTypeUID)
+
+	err := database.Find(&profiles).Error
+	return profiles, err
+}
+
 func NewProfileRepository(service *frame.Service) ProfileRepository {
-	profileRepository := profileRepository{
+	repo := profileRepository{
 		service: service,
 	}
-	return &profileRepository
+	return &repo
 }

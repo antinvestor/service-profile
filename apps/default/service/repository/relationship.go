@@ -4,10 +4,10 @@ import (
 	"context"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/pitabwire/frame"
 	"gorm.io/gorm/clause"
 
-	"github.com/pitabwire/frame"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type relationshipRepository struct {

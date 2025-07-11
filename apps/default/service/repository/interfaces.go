@@ -4,10 +4,10 @@ import (
 	"context"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/internal/dbutil"
-
-	"github.com/pitabwire/frame"
 )
 
 type ProfileRepository interface {
@@ -65,14 +65,10 @@ type RelationshipRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Relationship, error)
 	Save(ctx context.Context, relationship *models.Relationship) error
 	Delete(ctx context.Context, id string) error
-	List(
-		ctx context.Context,
-		peerName string,
-		peerID string,
-		inverseRelation bool,
-		relatedChildrenIds []string,
-		lastRelationshipID string,
-		count int,
+	List(ctx context.Context,
+		peerName string, peerID string,
+		inverseRelation bool, relatedChildrenIds []string,
+		lastRelationshipID string, count int,
 	) ([]*models.Relationship, error)
 
 	RelationshipType(ctx context.Context, relationshipType profilev1.RelationshipType) (*models.RelationshipType, error)

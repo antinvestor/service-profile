@@ -1,23 +1,38 @@
 package models
 
 import (
+	"math"
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-
 	"github.com/pitabwire/frame"
 )
 
+// Profile type and relationship type constants.
+const (
+	// Profile type IDs.
+	ProfileTypePersonID      uint = 1
+	ProfileTypeBotID         uint = 2
+	ProfileTypeInstitutionID uint = 3
+
+	// Relationship type IDs.
+	RelationshipTypeMemberID      uint = 1
+	RelationshipTypeAffiliatedID  uint = 2
+	RelationshipTypeBlackListedID uint = 3
+)
+
+// ProfileTypeIDMap maps profile types to their respective IDs.
 var ProfileTypeIDMap = map[profilev1.ProfileType]uint{
-	profilev1.ProfileType_PERSON:      0,
-	profilev1.ProfileType_INSTITUTION: 1,
-	profilev1.ProfileType_BOT:         2,
+	profilev1.ProfileType_PERSON:      ProfileTypePersonID,
+	profilev1.ProfileType_BOT:         ProfileTypeBotID,
+	profilev1.ProfileType_INSTITUTION: ProfileTypeInstitutionID,
 }
 
+// RelationshipTypeIDMap maps relationship types to their respective IDs.
 var RelationshipTypeIDMap = map[profilev1.RelationshipType]uint{
-	profilev1.RelationshipType_MEMBER:       0,
-	profilev1.RelationshipType_AFFILIATED:   1,
-	profilev1.RelationshipType_BLACK_LISTED: 1,
+	profilev1.RelationshipType_MEMBER:       RelationshipTypeMemberID,
+	profilev1.RelationshipType_AFFILIATED:   RelationshipTypeAffiliatedID,
+	profilev1.RelationshipType_BLACK_LISTED: RelationshipTypeBlackListedID,
 }
 
 func ProfileTypeIDToEnum(profileTypeID uint) profilev1.ProfileType {
@@ -160,9 +175,17 @@ type Relationship struct {
 }
 
 func (r *Relationship) ToAPI() *profilev1.RelationshipObject {
+	// Safe conversion from uint to int32
+	var relationshipTypeValue int32
+	if r.RelationshipType.UID <= uint(math.MaxInt32) {
+		relationshipTypeValue = int32(r.RelationshipType.UID)
+	} else {
+		relationshipTypeValue = math.MaxInt32
+	}
+
 	relationshipObj := &profilev1.RelationshipObject{
 		Id:         r.GetID(),
-		Type:       profilev1.RelationshipType(r.RelationshipType.UID),
+		Type:       profilev1.RelationshipType(relationshipTypeValue),
 		Properties: frame.DBPropertiesToMap(r.Properties),
 		ChildEntry: &profilev1.EntryItem{
 			ObjectName: r.ChildObject,

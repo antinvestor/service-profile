@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
-
-	"github.com/pitabwire/frame"
 )
 
 func (ps *ProfileServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {
@@ -49,9 +50,10 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	count, err := strconv.Atoi(countStr)
 	if err != nil {
-		count = 100
+		count = 20
 	}
 
+	// Safe casting with bounds check
 	lastRelationshipID := ""
 	if urlQuery.Has("LastRelationshipID") {
 		lastRelationshipID = urlQuery.Get("LastRelationshipID")
@@ -83,7 +85,13 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 		PeerId:             peerObjectID,
 		InvertRelation:     invertRelationship,
 		LastRelationshipId: lastRelationshipID,
-		Count:              int32(count),
+	}
+
+	// Apply count limits with bounds checking
+	if count > math.MaxInt32 {
+		request.Count = math.MaxInt32
+	} else {
+		request.Count = int32(count)
 	}
 
 	relationships, err := relationshipBusiness.ListRelationships(ctx, request)
@@ -131,7 +139,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	claims := frame.ClaimsFromContext(ctx)
 
 	if claims == nil {
-		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusInternalServerError)
+		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusForbidden)
 		return
 	}
 
@@ -139,7 +147,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	subject, _ := claims.GetSubject()
 	profile, err := profileBusiness.GetByID(ctx, subject)
 	if err != nil {
-		ps.writeError(ctx, rw, err, 500)
+		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
 		return
 	}
 

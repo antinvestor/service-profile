@@ -30,4 +30,4 @@ README.md
 LICENSE
 *.md
 docs
-apps/default/tests
+internal/tests

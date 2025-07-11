@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
-
-	"github.com/pitabwire/frame"
 )
 
 type DevicesServer struct {
@@ -27,9 +27,9 @@ func (ps *DevicesServer) writeError(ctx context.Context, w http.ResponseWriter, 
 	log.WithError(err).Error("internal service error")
 	w.WriteHeader(code)
 
-	err = json.NewEncoder(w).Encode(fmt.Sprintf(" internal processing err message: %v", err))
-	if err != nil {
-		log.WithError(err).Error("could not write error to response")
+	encodeErr := json.NewEncoder(w).Encode(fmt.Sprintf(" internal processing err message: %v", err))
+	if encodeErr != nil {
+		log.WithError(encodeErr).Error("error encoding error response")
 	}
 }
 
@@ -45,8 +45,8 @@ func (ps *DevicesServer) RestLogDeviceData(rw http.ResponseWriter, req *http.Req
 		return
 	}
 
-	rawIpData := frame.GetIP(req)
-	clientIPList := strings.Split(rawIpData, ",")
+	rawIPData := frame.GetIP(req)
+	clientIPList := strings.Split(rawIPData, ",")
 	clientIP := strings.TrimSpace(clientIPList[0])
 
 	deviceLog.Data["ip"] = clientIP
@@ -78,7 +78,7 @@ func (ps *DevicesServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http
 		return
 	}
 
-	linkId, ok := linkData["link_id"]
+	linkID, ok := linkData["link_id"]
 	if !ok {
 		rw.Header().Set("Content-Type", "application/json")
 		rw.WriteHeader(http.StatusBadRequest)
@@ -93,7 +93,7 @@ func (ps *DevicesServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http
 		return
 	}
 
-	device, err := deviceBusiness.UpdateProfileID(ctx, linkId, profileID)
+	device, err := deviceBusiness.UpdateProfileID(ctx, linkID, profileID)
 	if err != nil {
 		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
 		return

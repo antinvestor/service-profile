@@ -5,11 +5,11 @@ import (
 	"errors"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/internal/dbutil"
-
-	"github.com/pitabwire/frame"
 )
 
 type RosterBusiness interface {
@@ -18,7 +18,7 @@ type RosterBusiness interface {
 	CreateRoster(ctx context.Context, request *profilev1.AddRosterRequest) ([]*profilev1.RosterObject, error)
 	RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, error)
 
-	ToApi(ctx context.Context, roster *models.Roster) (*profilev1.RosterObject, error)
+	ToAPI(ctx context.Context, roster *models.Roster) (*profilev1.RosterObject, error)
 }
 
 func NewRosterBusiness(ctx context.Context, service *frame.Service) RosterBusiness {
@@ -36,7 +36,11 @@ type rosterBusiness struct {
 	contactBusiness  ContactBusiness
 }
 
-func (rb *rosterBusiness) ToApi(ctx context.Context, roster *models.Roster) (*profilev1.RosterObject, error) {
+func (rb *rosterBusiness) ToAPI(ctx context.Context, roster *models.Roster) (*profilev1.RosterObject, error) {
+	if roster == nil {
+		return nil, errors.New("roster is nil")
+	}
+
 	contact := roster.Contact
 	contactObject, err := rb.contactBusiness.ToAPI(ctx, contact, true)
 	if err != nil {
@@ -130,7 +134,7 @@ func (rb *rosterBusiness) CreateRoster(
 				return nil, err
 			}
 		}
-		rosterObject, err := rb.ToApi(ctx, roster)
+		rosterObject, err := rb.ToAPI(ctx, roster)
 		if err != nil {
 			return nil, err
 		}
@@ -151,5 +155,5 @@ func (rb *rosterBusiness) RemoveRoster(ctx context.Context, rosterID string) (*p
 		return nil, err
 	}
 
-	return rb.ToApi(ctx, roster)
+	return rb.ToAPI(ctx, roster)
 }

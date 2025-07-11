@@ -6,10 +6,11 @@ import (
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 )
 
+// DeviceRepository defines the operations for managing devices in storage.
 type DeviceRepository interface {
 	Save(ctx context.Context, device *models.Device) error
 	GetByID(ctx context.Context, id string) (*models.Device, error)
-	GetByLinkID(ctx context.Context, linkId string) (*models.Device, error)
+	GetByLinkID(ctx context.Context, linkID string) (*models.Device, error)
 	List(ctx context.Context, profileID string) ([]*models.Device, error)
 }
 

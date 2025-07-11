@@ -7,19 +7,19 @@ import (
 	"github.com/antinvestor/apis/go/common"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/tests"
+	"github.com/pitabwire/frame/tests/deps/testpostgres"
+	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/util"
+	"github.com/stretchr/testify/require"
+	"go.uber.org/mock/gomock"
+
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/queue"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/pitabwire/util"
-	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
-
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests"
-	"github.com/pitabwire/frame/tests/deps/testpostgres"
-	"github.com/pitabwire/frame/tests/testdef"
 )
 
 const PostgresqlDBImage = "paradedb/paradedb:latest"

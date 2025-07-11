@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/tests"
 )
 
 type ContactTestSuite struct {
@@ -62,7 +63,7 @@ func (cts *ContactTestSuite) TestGeneratePin() {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			newPin := business.GeneratePin(tt.args.n)
+			newPin := util.RandomString(tt.args.n)
 			require.Lenf(t, newPin, tt.want, "GeneratePin(%v)", tt.args.n)
 		})
 	}

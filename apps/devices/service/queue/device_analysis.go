@@ -2,13 +2,12 @@ package queue
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+
+	"github.com/pitabwire/frame"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-
-	"github.com/pitabwire/frame"
 )
 
 type DeviceAnalysisQueueHandler struct {
@@ -17,18 +16,16 @@ type DeviceAnalysisQueueHandler struct {
 	DeviceLogRepository repository.DeviceLogRepository
 }
 
-func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]string, payload []byte) error {
-	var idPayload map[string]string
-	err := json.Unmarshal(payload, &idPayload)
-	if err != nil {
-		return err
+func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, idPayload map[string]string, _ []byte) error {
+	deviceLogID := idPayload["id"]
+	if deviceLogID == "" {
+		dq.Service.Log(ctx).WithField("payload", idPayload).Warn("no device log id found in payload")
+		return nil
 	}
-
-	deviceLogId := idPayload["id"]
 
 	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 
-	deviceLog, err := dq.DeviceLogRepository.GetByID(ctx, deviceLogId)
+	deviceLog, err := dq.DeviceLogRepository.GetByID(ctx, deviceLogID)
 	if err != nil {
 		if frame.ErrorIsNoRows(err) {
 			return nil
@@ -41,34 +38,11 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]s
 		return nil
 	}
 
-	deviceLog = enrichDeviceLog(ctx, deviceLog)
-
-	var deviceList []*models.Device
-
-	device, err0 := dq.DeviceRepository.GetByLinkID(ctx, deviceLog.LinkID)
-	if err0 == nil {
-		deviceList = []*models.Device{device}
-	}
-
-	if len(deviceList) == 0 {
-		device = &models.Device{}
-		device.GenID(ctx)
-	} else if len(deviceList) == 1 {
-		device = deviceList[0]
-	} else {
-		device = narrowSimilarityChecks(ctx, deviceList, deviceLog)
-	}
-
-	err = updateDeviceProperties(ctx, device, deviceLog)
-	if err != nil {
-		return err
-	}
-	err = dq.DeviceRepository.Save(ctx, device)
+	deviceLog, err = dq.processDeviceLog(ctx, deviceLog)
 	if err != nil {
 		return err
 	}
 
-	deviceLog.DeviceID = device.ID
 	err = dq.DeviceLogRepository.Save(ctx, deviceLog)
 	if err != nil {
 		return err
@@ -77,17 +51,41 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]s
 	return err
 }
 
-func enrichDeviceLog(ctx context.Context, deviceLog *models.DeviceLog) *models.DeviceLog {
-	// Add geo location information
+func (dq *DeviceAnalysisQueueHandler) processDeviceLog(
+	ctx context.Context,
+	deviceLog *models.DeviceLog,
+) (*models.DeviceLog, error) {
+	var device *models.Device
 
-	return deviceLog
+	if deviceLog.DeviceID != "" {
+		var err error
+		device, err = dq.DeviceRepository.GetByID(ctx, deviceLog.DeviceID)
+		if err != nil {
+			if !frame.ErrorIsNoRows(err) {
+				return deviceLog, err
+			}
+		}
+	}
+
+	if device == nil {
+		device = &models.Device{}
+		device.GenID(ctx)
+	}
+
+	err := updateDeviceProperties(ctx, device, deviceLog)
+	if err != nil {
+		return deviceLog, err
+	}
+	err = dq.DeviceRepository.Save(ctx, device)
+	if err != nil {
+		return deviceLog, err
+	}
+	deviceLog.DeviceID = device.ID
+
+	return deviceLog, nil
 }
 
-func narrowSimilarityChecks(ctx context.Context, list []*models.Device, deviceLog *models.DeviceLog) *models.Device {
-	return list[0]
-}
-
-func updateDeviceProperties(ctx context.Context, device *models.Device, deviceLog *models.DeviceLog) error {
+func updateDeviceProperties(_ context.Context, device *models.Device, deviceLog *models.DeviceLog) error {
 	device.LastSeen = deviceLog.CreatedAt
 
 	if device.LinkID == "" {
@@ -95,6 +93,7 @@ func updateDeviceProperties(ctx context.Context, device *models.Device, deviceLo
 	}
 
 	device.IP, _ = deviceLog.Data["ip"].(string)
+	device.Location, _ = deviceLog.Data["location"].(map[string]any)
 
 	system, _ := deviceLog.Data["system"].(map[string]any)
 	device.OS, _ = system["platform"].(string)

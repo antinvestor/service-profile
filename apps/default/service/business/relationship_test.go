@@ -5,12 +5,12 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame/tests/testdef"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/internal/tests"
 )
 
 type RelationshipTestSuite struct {
@@ -24,7 +24,7 @@ func TestRelationshipSuite(t *testing.T) {
 func (rts *RelationshipTestSuite) TestNewRelationshipBusiness() {
 	t := rts.T()
 
-	tests := []struct {
+	testcases := []struct {
 		name string
 	}{
 		{
@@ -33,7 +33,7 @@ func (rts *RelationshipTestSuite) TestNewRelationshipBusiness() {
 	}
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
-		for _, tt := range tests {
+		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := rts.CreateService(t, dep)
 
@@ -151,7 +151,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_DeleteRelationship()
 		type args struct {
 			request *profilev1.DeleteRelationshipRequest
 		}
-		tests := []struct {
+		testcases := []struct {
 			name    string
 			args    args
 			want    *profilev1.RelationshipObject
@@ -178,11 +178,11 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_DeleteRelationship()
 				wantErr: true,
 			},
 		}
-		for _, tt := range tests {
+		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
-				_, err := aB.DeleteRelationship(ctx, tt.args.request)
-				if (err != nil) != tt.wantErr {
-					t.Errorf("DeleteRelationship() error = %v, wantErr %v", err, tt.wantErr)
+				_, deleteErr := aB.DeleteRelationship(ctx, tt.args.request)
+				if (deleteErr != nil) != tt.wantErr {
+					t.Errorf("DeleteRelationship() error = %v, wantErr %v", deleteErr, tt.wantErr)
 					return
 				}
 			})
@@ -196,7 +196,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 		svc, ctx := rts.CreateService(t, dep)
 		profileBusiness := business.NewProfileBusiness(ctx, svc)
 
-		aB := business.NewRelationshipBusiness(ctx, svc, profileBusiness)
+		relationshipBusiness := business.NewRelationshipBusiness(ctx, svc, profileBusiness)
 
 		testProfiles, err := rts.CreateTestProfiles(
 			ctx,
@@ -214,7 +214,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 		}
 
 		for i := range 3 {
-			_, err = aB.CreateRelationship(ctx, &profilev1.AddRelationshipRequest{
+			_, err = relationshipBusiness.CreateRelationship(ctx, &profilev1.AddRelationshipRequest{
 				Parent:     "Profile",
 				ParentId:   testProfiles[0].GetId(),
 				Child:      "Profile",
@@ -233,7 +233,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 			ctx     context.Context
 			request *profilev1.ListRelationshipRequest
 		}
-		tests := []struct {
+		testcases := []struct {
 			name      string
 			args      args
 			wantCount int
@@ -290,10 +290,9 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() 
 				wantErr:   require.NoError,
 			},
 		}
-		for _, tt := range tests {
+		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
-				aB := business.NewRelationshipBusiness(ctx, svc, profileBusiness)
-				got, err0 := aB.ListRelationships(ctx, tt.args.request)
+				got, err0 := relationshipBusiness.ListRelationships(ctx, tt.args.request)
 				tt.wantErr(t, err0)
 				if len(got) != tt.wantCount {
 					t.Errorf("ListRelationships() got = %v, want %v", len(got), tt.wantCount)

@@ -6,13 +6,13 @@ import (
 	"strings"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
+	"github.com/rs/xid"
+
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/internal/dbutil"
-	"github.com/rs/xid"
-
-	"github.com/pitabwire/frame"
 )
 
 type ProfileBusiness interface {
@@ -67,9 +67,9 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 		return nil, err
 	}
 	for _, c := range contactList {
-		ctObj, err := pb.contactBusiness.ToAPI(ctx, c, true)
-		if err != nil {
-			return nil, err
+		ctObj, ctErr := pb.contactBusiness.ToAPI(ctx, c, true)
+		if ctErr != nil {
+			return nil, ctErr
 		}
 
 		contactObjects = append(contactObjects, ctObj)

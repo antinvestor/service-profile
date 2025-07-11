@@ -5,15 +5,15 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/tests/testdef"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
 
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/tests"
 )
 
 type RosterTestSuite struct {
@@ -78,7 +78,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 			Properties: map[string]interface{}{"key1": "value1"},
 		}
 
-		result, err := rb.ToApi(ctx, roster)
+		result, err := rb.ToAPI(ctx, roster)
 
 		require.NoError(t, err, "ToApi should succeed")
 		require.Equal(t, "ownersId123", result.GetProfileId(), "Profile ID should match")
@@ -261,9 +261,9 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 					"partition_id": "party",
 				})
 
-				ctx := claims.ClaimsToContext(ctx)
+				ctxWithClaims := claims.ClaimsToContext(ctx)
 
-				jobResult, err0 := rb.Search(ctx, tt.request)
+				jobResult, err0 := rb.Search(ctxWithClaims, tt.request)
 				require.NoError(t, err0)
 
 				var rosterList []*models.Roster

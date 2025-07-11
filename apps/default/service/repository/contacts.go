@@ -5,11 +5,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/pitabwire/frame"
 	"gorm.io/gorm"
 
-	"github.com/pitabwire/frame"
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type contactRepository struct {
@@ -101,8 +101,8 @@ func (cr *contactRepository) Delete(ctx context.Context, id string) error {
 }
 
 func NewContactRepository(service *frame.Service) ContactRepository {
-	contactRepository := contactRepository{
+	repo := contactRepository{
 		service: service,
 	}
-	return &contactRepository
+	return &repo
 }

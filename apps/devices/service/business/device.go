@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-
-	"github.com/pitabwire/frame"
 )
 
 type DeviceBusiness interface {
@@ -89,7 +89,10 @@ func (dB *deviceBusiness) GetByProfileID(ctx context.Context, profileID string) 
 func (dB *deviceBusiness) LogDevice(ctx context.Context, logData *models.DeviceLog) error {
 	logData.GenID(ctx)
 
-	cfg := dB.service.Config().(*config.DevicesConfig)
+	cfg, ok := dB.service.Config().(*config.DevicesConfig)
+	if !ok {
+		return errors.New("invalid service configuration")
+	}
 
 	err := dB.deviceLogRepository.Save(ctx, logData)
 	if err != nil {

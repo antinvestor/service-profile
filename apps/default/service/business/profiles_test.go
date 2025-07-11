@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame/tests/testdef"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/internal/tests"
 )
 
 type ProfileTestSuite struct {
@@ -23,7 +23,7 @@ func TestProfileSuite(t *testing.T) {
 func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 	t := pts.T()
 
-	tests := []struct {
+	testcases := []struct {
 		name    string
 		request *profilev1.CreateRequest
 		wantErr bool
@@ -42,7 +42,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 	}
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
-		for _, tt := range tests {
+		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := pts.CreateService(t, dep)
 				pb := business.NewProfileBusiness(ctx, svc)
