@@ -134,9 +134,9 @@ func (rb *rosterBusiness) CreateRoster(
 				return nil, err
 			}
 		}
-		rosterObject, err := rb.ToAPI(ctx, roster)
-		if err != nil {
-			return nil, err
+		rosterObject, apiErr := rb.ToAPI(ctx, roster)
+		if apiErr != nil {
+			return nil, apiErr
 		}
 		rosterObjectList = append(rosterObjectList, rosterObject)
 	}

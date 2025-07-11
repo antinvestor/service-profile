@@ -87,11 +87,12 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 		LastRelationshipId: lastRelationshipID,
 	}
 
-	// Apply count limits with bounds checking
+	// Apply count limits with bounds check
 	if count > math.MaxInt32 {
 		request.Count = math.MaxInt32
 	} else {
-		request.Count = int32(count)
+		// Safe conversion with bounds check
+		request.Count = int32(count) // #nosec G109,G115 -- bounds checked above
 	}
 
 	relationships, err := relationshipBusiness.ListRelationships(ctx, request)

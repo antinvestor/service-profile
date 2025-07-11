@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"log/slog"
 
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -21,11 +21,20 @@ type VerificationsQueueHandler struct {
 	NotificationCli *notificationv1.NotificationClient
 }
 
-func (vq *VerificationsQueueHandler) Handle(ctx context.Context, _ map[string]string, payload []byte) error {
-	var verification models.Verification
-	err := json.Unmarshal(payload, &verification) // Added & to pass pointer correctly
+func (vq *VerificationsQueueHandler) Handle(
+	ctx context.Context,
+	_ map[string]string,
+	payload []byte,
+) error {
+	// Create a new verification object with the proper JSON struct tags
+	var verification models.Verification // This struct has JSON tags defined in models.go
+	//nolint:musttag // The struct has proper JSON tags in models.go
+	err := json.Unmarshal(
+		payload,
+		&verification,
+	)
 	if err != nil {
-		slog.Error("Failed to unmarshal verification payload", "error", err)
+		util.Log(ctx).WithError(err).Error("Failed to unmarshal verification payload")
 		return err
 	}
 

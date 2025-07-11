@@ -16,6 +16,9 @@ import (
 const (
 	// MaxRelationshipsToCheck is the maximum number of relationships to check when creating a new relationship.
 	MaxRelationshipsToCheck = 2
+	DefaultListLimit        = 20
+	MaxListLimit            = 100
+	ProfilePeerName         = "Profile"
 )
 
 type RelationshipBusiness interface {
@@ -60,7 +63,7 @@ func (rb *relationshipBusiness) ListRelationships(
 	ctx context.Context,
 	request *profilev1.ListRelationshipRequest,
 ) ([]*models.Relationship, error) {
-	if request.GetPeerName() == "Profile" {
+	if request.GetPeerName() == ProfilePeerName {
 		profileObj, err := rb.profileBusiness.GetByID(ctx, request.GetPeerId())
 		if err != nil {
 			return nil, err
@@ -165,13 +168,18 @@ func (rb *relationshipBusiness) DeleteRelationship(
 	return relationshipObject, nil
 }
 
+// Define sentinel errors.
+var (
+	ErrNilRelationship = errors.New("relationship is nil")
+)
+
 func (rb *relationshipBusiness) ToAPI(
 	ctx context.Context,
 	relationship *models.Relationship,
 	invertRelationship bool,
 ) (*profilev1.RelationshipObject, error) {
 	if relationship == nil {
-		return nil, nil
+		return nil, ErrNilRelationship
 	}
 
 	relationshipObj := relationship.ToAPI()
@@ -179,11 +187,11 @@ func (rb *relationshipBusiness) ToAPI(
 	peerProfileID := ""
 
 	if !invertRelationship {
-		if relationship.ChildObject == "Profile" {
+		if relationship.ChildObject == ProfilePeerName {
 			peerProfileID = relationship.ChildObjectID
 		}
 	} else {
-		if relationship.ParentObject == "Profile" {
+		if relationship.ParentObject == ProfilePeerName {
 			peerProfileID = relationship.ParentObjectID
 		}
 	}

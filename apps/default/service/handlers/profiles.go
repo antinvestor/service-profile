@@ -287,11 +287,12 @@ func (ps *ProfileServer) ListRelationships(
 		if remainingCount > MaxBatchSize {
 			remainingCount = MaxBatchSize
 		}
-		// Apply count limits
+		// Apply count limits with bounds check
 		if remainingCount > math.MaxInt32 {
 			request.Count = math.MaxInt32
 		} else {
-			request.Count = int32(remainingCount)
+			// Safe conversion with bounds check
+			request.Count = int32(remainingCount) // #nosec G115 -- bounds checked above
 		}
 
 		relationships, err := relationshipBusiness.ListRelationships(ctx, request)

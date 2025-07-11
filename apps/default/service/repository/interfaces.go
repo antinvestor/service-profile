@@ -67,7 +67,7 @@ type RelationshipRepository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context,
 		peerName string, peerID string,
-		inverseRelation bool, relatedChildrenIds []string,
+		inverseRelation bool, relatedChildrenIDs []string,
 		lastRelationshipID string, count int,
 	) ([]*models.Relationship, error)
 

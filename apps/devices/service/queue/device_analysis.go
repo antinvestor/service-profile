@@ -11,9 +11,9 @@ import (
 )
 
 type DeviceAnalysisQueueHandler struct {
-	Service             *frame.Service
 	DeviceRepository    repository.DeviceRepository
 	DeviceLogRepository repository.DeviceLogRepository
+	Service             *frame.Service
 }
 
 func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, idPayload map[string]string, _ []byte) error {
@@ -25,12 +25,13 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, idPayload map[
 
 	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 
+	// Fetch the device log
 	deviceLog, err := dq.DeviceLogRepository.GetByID(ctx, deviceLogID)
 	if err != nil {
 		if frame.ErrorIsNoRows(err) {
+			dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log not found")
 			return nil
 		}
-
 		return err
 	}
 
@@ -43,12 +44,13 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, idPayload map[
 		return err
 	}
 
+	// Update device log with device ID
 	err = dq.DeviceLogRepository.Save(ctx, deviceLog)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update device log: %w", err)
 	}
 
-	return err
+	return nil
 }
 
 func (dq *DeviceAnalysisQueueHandler) processDeviceLog(
@@ -72,23 +74,11 @@ func (dq *DeviceAnalysisQueueHandler) processDeviceLog(
 		device.GenID(ctx)
 	}
 
-	err := updateDeviceProperties(ctx, device, deviceLog)
-	if err != nil {
-		return deviceLog, err
-	}
-	err = dq.DeviceRepository.Save(ctx, device)
-	if err != nil {
-		return deviceLog, err
-	}
-	deviceLog.DeviceID = device.ID
-
-	return deviceLog, nil
-}
-
-func updateDeviceProperties(_ context.Context, device *models.Device, deviceLog *models.DeviceLog) error {
+	// Update device properties
 	device.LastSeen = deviceLog.CreatedAt
 
-	if device.LinkID == "" {
+	// Check if link ID is available in device log
+	if device.LinkID == "" && deviceLog.LinkID != "" {
 		device.LinkID = deviceLog.LinkID
 	}
 
@@ -97,19 +87,24 @@ func updateDeviceProperties(_ context.Context, device *models.Device, deviceLog 
 
 	system, _ := deviceLog.Data["system"].(map[string]any)
 	device.OS, _ = system["platform"].(string)
-
-	browser, _ := system["browser"].(map[string]any)
+	browser, _ := deviceLog.Data["browser"].(map[string]any)
 	device.Browser, _ = browser["name"].(string)
 	browserVersion, _ := browser["version"].(string)
 
 	device.Name = fmt.Sprintf("%s_%s", browser["name"], browserVersion)
 
-	locales, _ := deviceLog.Data["locales"].(map[string]any)
+	locale, _ := deviceLog.Data["locale"].(map[string]any)
 	device.Locale = frame.JSONMap{}
-	for k, v := range locales {
+	for k, v := range locale {
 		device.Locale[k] = v
 	}
-	device.Location = frame.JSONMap{}
 
-	return nil
+	// Save the device
+	err := dq.DeviceRepository.Save(ctx, device)
+	if err != nil {
+		return deviceLog, err
+	}
+	deviceLog.DeviceID = device.ID
+
+	return deviceLog, nil
 }

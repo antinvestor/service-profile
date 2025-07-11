@@ -22,6 +22,8 @@ const (
 )
 
 // ProfileTypeIDMap maps profile types to their respective IDs.
+//
+//nolint:gochecknoglobals // This is a mapping table that needs to be global
 var ProfileTypeIDMap = map[profilev1.ProfileType]uint{
 	profilev1.ProfileType_PERSON:      ProfileTypePersonID,
 	profilev1.ProfileType_BOT:         ProfileTypeBotID,
@@ -29,6 +31,8 @@ var ProfileTypeIDMap = map[profilev1.ProfileType]uint{
 }
 
 // RelationshipTypeIDMap maps relationship types to their respective IDs.
+//
+//nolint:gochecknoglobals // This is a mapping table that needs to be global
 var RelationshipTypeIDMap = map[profilev1.RelationshipType]uint{
 	profilev1.RelationshipType_MEMBER:       RelationshipTypeMemberID,
 	profilev1.RelationshipType_AFFILIATED:   RelationshipTypeAffiliatedID,
@@ -86,15 +90,15 @@ type Roster struct {
 
 type Verification struct {
 	frame.BaseModel
-	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
-	ContactID string `gorm:"type:varchar(50);index:contact_id"`
-	Contact   Contact
+	ProfileID string  `gorm:"type:varchar(50);index:profile_id" json:"profile_id"`
+	ContactID string  `gorm:"type:varchar(50);index:contact_id" json:"contact_id"`
+	Contact   Contact `                                         json:"contact"`
 
-	Pin      string `gorm:"type:varchar(10)"`
-	LinkHash string `gorm:"type:varchar(100)"`
+	Pin      string `gorm:"type:varchar(10)"  json:"pin"`
+	LinkHash string `gorm:"type:varchar(100)" json:"link_hash"`
 
-	ExpiresAt  *time.Time
-	VerifiedAt *time.Time
+	ExpiresAt  *time.Time `json:"expires_at"`
+	VerifiedAt *time.Time `json:"verified_at"`
 }
 
 type VerificationAttempt struct {
@@ -178,7 +182,7 @@ func (r *Relationship) ToAPI() *profilev1.RelationshipObject {
 	// Safe conversion from uint to int32
 	var relationshipTypeValue int32
 	if r.RelationshipType.UID <= uint(math.MaxInt32) {
-		relationshipTypeValue = int32(r.RelationshipType.UID)
+		relationshipTypeValue = int32(r.RelationshipType.UID) // #nosec G115 -- bounds checked above
 	} else {
 		relationshipTypeValue = math.MaxInt32
 	}

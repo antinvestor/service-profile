@@ -24,6 +24,11 @@ import (
 
 const PostgresqlDBImage = "paradedb/paradedb:latest"
 
+// Constants used in tests.
+const (
+	DefaultRandomStringLength = 8
+)
+
 type BaseTestSuite struct {
 	tests.FrameBaseTestSuite
 }
@@ -149,7 +154,7 @@ func (bs *BaseTestSuite) TearDownSuite() {
 // WithTestDependancies Creates subtests with each known DependancyOption.
 func (bs *BaseTestSuite) WithTestDependancies(t *testing.T, testFn func(t *testing.T, dep *testdef.DependancyOption)) {
 	options := []*testdef.DependancyOption{
-		testdef.NewDependancyOption("default", util.RandomString(8), bs.Resources()),
+		testdef.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
 	}
 
 	tests.WithTestDependancies(t, options, testFn)
