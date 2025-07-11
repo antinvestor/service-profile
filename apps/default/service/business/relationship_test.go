@@ -2,6 +2,7 @@ package business_test
 
 import (
 	"context"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
@@ -13,7 +14,7 @@ import (
 )
 
 type RelationshipTestSuite struct {
-	BaseTestSuite
+	tests.BaseTestSuite
 }
 
 func TestRelationshipSuite(t *testing.T) {

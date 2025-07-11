@@ -1,6 +1,7 @@
 package business_test
 
 import (
+	"github.com/antinvestor/service-profile/apps/default/tests"
 	"reflect"
 	"testing"
 
@@ -12,7 +13,7 @@ import (
 )
 
 type ProfileTestSuite struct {
-	BaseTestSuite
+	tests.BaseTestSuite
 }
 
 func TestProfileSuite(t *testing.T) {

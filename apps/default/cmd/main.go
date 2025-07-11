@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -12,12 +13,10 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/handlers"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/queue"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -27,27 +26,22 @@ import (
 func main() {
 	serviceName := "service_profile"
 
-	profileConfig, err := frame.ConfigFromEnv[config.ProfileConfig]()
+	cfg, err := frame.ConfigFromEnv[config.ProfileConfig]()
 	if err != nil {
-		logrus.WithError(err).Fatal("could not process configs")
+		slog.With("err", err).Error("could not process configs")
 		return
 	}
 
-	ctx, service := frame.NewService(serviceName, frame.WithConfig(&profileConfig))
-	defer service.Stop(ctx)
-	log := service.Log(ctx)
+	ctx, svc := frame.NewService(serviceName, frame.WithConfig(&cfg))
+	defer svc.Stop(ctx)
+	log := svc.Log(ctx)
 
 	serviceOptions := []frame.Option{frame.WithDatastore()}
 
-	if profileConfig.DoDatabaseMigrate() {
-		service.Init(ctx, serviceOptions...)
+	if cfg.DoDatabaseMigrate() {
+		svc.Init(ctx, serviceOptions...)
 
-		err = service.MigrateDatastore(ctx, profileConfig.GetDatabaseMigrationPath(),
-			&models.ProfileType{}, &models.Profile{}, &models.Contact{}, &models.Country{},
-			&models.Address{}, &models.ProfileAddress{}, &models.Verification{},
-			&models.VerificationAttempt{}, &models.RelationshipType{}, &models.Relationship{},
-			&models.Device{}, &models.DeviceLog{}, &models.Roster{})
-
+		err = repository.Migrate(ctx, svc, cfg.GetDatabaseMigrationPath())
 		if err != nil {
 			log.WithError(err).Fatal("main -- Could not migrate successfully because : %+v", err)
 		}
@@ -55,31 +49,31 @@ func main() {
 		return
 	}
 
-	err = service.RegisterForJwt(ctx)
+	err = svc.RegisterForJwt(ctx)
 	if err != nil {
 		log.WithError(err).Fatal("main -- could not register fo jwt")
 	}
 
-	oauth2ServiceHost := profileConfig.GetOauth2ServiceURI()
+	oauth2ServiceHost := cfg.GetOauth2ServiceURI()
 	oauth2ServiceURL := fmt.Sprintf("%s/oauth2/token", oauth2ServiceHost)
 
 	audienceList := make([]string, 0)
-	oauth2ServiceAudience := profileConfig.Oauth2ServiceAudience
+	oauth2ServiceAudience := cfg.Oauth2ServiceAudience
 	if oauth2ServiceAudience != "" {
 		audienceList = strings.Split(oauth2ServiceAudience, ",")
 	}
 
 	notificationCli, err := notificationv1.NewNotificationClient(ctx,
-		apis.WithEndpoint(profileConfig.NotificationServiceURI),
+		apis.WithEndpoint(cfg.NotificationServiceURI),
 		apis.WithTokenEndpoint(oauth2ServiceURL),
-		apis.WithTokenUsername(service.JwtClientID()),
-		apis.WithTokenPassword(profileConfig.Oauth2ServiceClientSecret),
+		apis.WithTokenUsername(svc.JwtClientID()),
+		apis.WithTokenPassword(cfg.Oauth2ServiceClientSecret),
 		apis.WithAudiences(audienceList...))
 	if err != nil {
-		log.WithError(err).Fatal("main -- Could not setup notification service : %+v", err)
+		log.WithError(err).Fatal("main -- Could not setup notification svc : %+v", err)
 	}
 
-	jwtAudience := profileConfig.Oauth2JwtVerifyAudience
+	jwtAudience := cfg.Oauth2JwtVerifyAudience
 	if jwtAudience == "" {
 		jwtAudience = serviceName
 	}
@@ -92,18 +86,18 @@ func main() {
 	grpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
-			service.UnaryAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
+			svc.UnaryAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer),
 			protovalidateinterceptor.UnaryServerInterceptor(validator)),
 
 		grpc.ChainStreamInterceptor(
 			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
-			service.StreamAuthInterceptor(jwtAudience, profileConfig.Oauth2JwtVerifyIssuer),
+			svc.StreamAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer),
 			protovalidateinterceptor.StreamServerInterceptor(validator),
 		),
 	)
 
 	implementation := &handlers.ProfileServer{
-		Service:         service,
+		Service:         svc,
 		NotificationCli: notificationCli,
 	}
 	profilev1.RegisterProfileServiceServer(grpcServer, implementation)
@@ -112,7 +106,7 @@ func main() {
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
 	proxyOptions := apis.ProxyOptions{
-		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", profileConfig.GrpcServerPort),
+		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", cfg.GrpcServerPort),
 		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	}
 
@@ -122,8 +116,8 @@ func main() {
 		return
 	}
 
-	profileServiceRestHandlers := service.AuthenticationMiddleware(
-		implementation.NewSecureRouterV1(), jwtAudience, profileConfig.Oauth2JwtVerifyIssuer)
+	profileServiceRestHandlers := svc.AuthenticationMiddleware(
+		implementation.NewSecureRouterV1(), jwtAudience, cfg.Oauth2JwtVerifyIssuer)
 
 	proxyMux.Handle("/public/", http.StripPrefix("/public", profileServiceRestHandlers))
 	proxyMux.Handle("/_public/", http.StripPrefix("/_public", implementation.NewInSecureRouterV1()))
@@ -131,44 +125,44 @@ func main() {
 	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
 
 	verificationQueueHandler := queue.VerificationsQueueHandler{
-		Service:         service,
-		ContactRepo:     repository.NewContactRepository(service),
+		Service:         svc,
+		ContactRepo:     repository.NewContactRepository(svc),
 		NotificationCli: notificationCli,
 	}
 
 	verificationQueue := frame.WithRegisterSubscriber(
-		profileConfig.QueueVerificationName,
-		profileConfig.QueueVerification,
+		cfg.QueueVerificationName,
+		cfg.QueueVerification,
 		&verificationQueueHandler,
 	)
 	verificationQueuePublisher := frame.WithRegisterPublisher(
-		profileConfig.QueueVerificationName,
-		profileConfig.QueueVerification,
+		cfg.QueueVerificationName,
+		cfg.QueueVerification,
 	)
 
 	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
-		Service:             service,
-		DeviceRepository:    repository.NewDeviceRepository(service),
-		DeviceLogRepository: repository.NewDeviceLogRepository(service),
+		Service:             svc,
+		DeviceRepository:    repository.NewDeviceRepository(svc),
+		DeviceLogRepository: repository.NewDeviceLogRepository(svc),
 	}
 
 	deviceAnalysisQueue := frame.WithRegisterSubscriber(
-		profileConfig.QueueDeviceAnalysisName,
-		profileConfig.QueueDeviceAnalysis,
+		cfg.QueueDeviceAnalysisName,
+		cfg.QueueDeviceAnalysis,
 		&deviceAnalysisQueueHandler,
 	)
 	deviceAnalysisQueuePublisher := frame.WithRegisterPublisher(
-		profileConfig.QueueDeviceAnalysisName,
-		profileConfig.QueueDeviceAnalysis,
+		cfg.QueueDeviceAnalysisName,
+		cfg.QueueDeviceAnalysis,
 	)
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
-		profileConfig.QueueRelationshipConnectName,
-		profileConfig.QueueRelationshipConnectURI,
+		cfg.QueueRelationshipConnectName,
+		cfg.QueueRelationshipConnectURI,
 	)
 	relationshipDisConnectQueuePublisher := frame.WithRegisterPublisher(
-		profileConfig.QueueRelationshipDisConnectName,
-		profileConfig.QueueRelationshipDisConnectURI,
+		cfg.QueueRelationshipDisConnectName,
+		cfg.QueueRelationshipDisConnectURI,
 	)
 
 	serviceOptions = append(serviceOptions,
@@ -176,12 +170,12 @@ func main() {
 		deviceAnalysisQueue, deviceAnalysisQueuePublisher,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.WithRegisterEvents(
-			&events.ClientConnectedSetupQueue{Service: service},
+			&events.ClientConnectedSetupQueue{Service: svc},
 		))
-	service.Init(ctx, serviceOptions...)
+	svc.Init(ctx, serviceOptions...)
 
-	log.WithField("server http port", profileConfig.HTTPServerPort).
-		WithField("server grpc port", profileConfig.GrpcServerPort).
+	log.WithField("server http port", cfg.HTTPServerPort).
+		WithField("server grpc port", cfg.GrpcServerPort).
 		Info(" Initiating server operations")
 	defer implementation.Service.Stop(ctx)
 	err = implementation.Service.Run(ctx, "")

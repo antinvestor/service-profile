@@ -2,6 +2,7 @@ package business_test
 
 import (
 	"context"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
@@ -16,7 +17,7 @@ import (
 )
 
 type RosterTestSuite struct {
-	BaseTestSuite
+	tests.BaseTestSuite
 }
 
 func TestRosterSuite(t *testing.T) {
@@ -29,7 +30,6 @@ func (rts *RosterTestSuite) createRoster(
 	profileID string,
 	contacts map[string]map[string]string,
 ) (map[string]*profilev1.RosterObject, error) {
-	result := map[string]*profilev1.RosterObject{}
 	var requestData []*profilev1.AddContactRequest
 	for detail, extra := range contacts {
 		requestData = append(requestData, &profilev1.AddContactRequest{
@@ -51,6 +51,7 @@ func (rts *RosterTestSuite) createRoster(
 		return nil, err
 	}
 
+	result := map[string]*profilev1.RosterObject{}
 	for _, roster := range rosterList {
 		result[roster.GetContact().GetDetail()] = roster
 	}
@@ -67,6 +68,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 
 		contact := &models.Contact{
 			Detail:             "+256757546244",
+			ProfileID:          "ownersId123",
 			ContactType:        profilev1.ContactType_MSISDN.String(),
 			CommunicationLevel: profilev1.CommunicationLevel_ALL.String(),
 		}
@@ -79,7 +81,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 		result, err := rb.ToApi(ctx, roster)
 
 		require.NoError(t, err, "ToApi should succeed")
-		require.Equal(t, "profile123", result.GetProfileId(), "Profile ID should match")
+		require.Equal(t, "ownersId123", result.GetProfileId(), "Profile ID should match")
 	})
 }
 
@@ -101,7 +103,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 		result, err := rb.GetByID(ctx, rosterID)
 
 		require.NoError(t, err)
-		require.Equal(t, expectedRoster.GetProfileId(), result.ProfileID, "Profile ID should match")
+		require.Equal(t, "", expectedRoster.GetProfileId(), "Profile ID should be empty as the contact belongs to another not in the system")
+		require.Equal(t, "profile123", result.ProfileID, "Profile ID should match")
 		require.Equal(t, expectedRoster.GetContact().GetId(), result.ContactID, "Contact ID should match")
 	})
 }

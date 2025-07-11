@@ -7,18 +7,19 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy project files
-COPY ./apps/default/* ./
+COPY ./apps/default ./apps/default
+COPY ./internal ./internal
 
 # Build the application with optimizations
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
-    -ldflags '-extldflags "-static"' -o binary .
+    -ldflags '-extldflags "-static"' -o binary ./apps/default/cmd/main.go
 
 # Final minimal image
 FROM gcr.io/distroless/static:nonroot
 
 # Copy from builder stage
 COPY --from=builder /app/binary /profile
-COPY --from=builder /app/migrations /migrations
+COPY --from=builder /app/apps/default/migrations /migrations
 
 # Run as non-root user
 USER 65532:65532

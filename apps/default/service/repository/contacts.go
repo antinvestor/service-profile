@@ -34,9 +34,9 @@ func (cr *contactRepository) VerificationAttemptSave(ctx context.Context, attemp
 }
 
 func (cr *contactRepository) GetByID(ctx context.Context, id string) (*models.Contact, error) {
-	contact := &models.Contact{}
-	err := cr.service.DB(ctx, true).First(contact, "id = ?", id).Error
-	return contact, err
+	var contact models.Contact
+	err := cr.service.DB(ctx, true).First(&contact, "id = ?", id).Error
+	return &contact, err
 }
 
 func (cr *contactRepository) GetByProfileID(ctx context.Context, profileID string) ([]*models.Contact, error) {

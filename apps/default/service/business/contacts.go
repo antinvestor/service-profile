@@ -159,8 +159,9 @@ func (cb *contactBusiness) CreateContact(
 	}
 
 	contact.Detail = detail
-	contact.Properties = frame.DBPropertiesFromMap(extra)
-
+	if extra != nil {
+		contact.Properties = frame.DBPropertiesFromMap(extra)
+	}
 	contact, err = cb.contactRepository.Save(ctx, contact)
 	if err != nil {
 		return nil, err
@@ -178,20 +179,25 @@ func (cb *contactBusiness) RemoveContact(ctx context.Context, contactID, profile
 }
 
 func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Contact) error {
-	profileConfig := cb.service.Config().(*config.ProfileConfig)
-	expiryTime := time.Now().Add(time.Duration(profileConfig.VerificationPinExpiryTimeInSec))
+
+	if contact.ProfileID == "" {
+		return nil
+	}
+
+	cfg := cb.service.Config().(*config.ProfileConfig)
+	expiryTime := time.Now().Add(time.Duration(cfg.VerificationPinExpiryTimeInSec))
 
 	verification := &models.Verification{
 		ProfileID: contact.ProfileID,
 		ContactID: contact.ID,
-		Pin:       GeneratePin(profileConfig.LengthOfVerificationPin),
-		LinkHash:  GeneratePin(profileConfig.LengthOfVerificationLinkHash),
+		Pin:       GeneratePin(cfg.LengthOfVerificationPin),
+		LinkHash:  GeneratePin(cfg.LengthOfVerificationLinkHash),
 		ExpiresAt: &expiryTime,
 	}
 
 	verification.GenID(ctx)
 
-	return cb.service.Publish(ctx, profileConfig.QueueVerificationName, verification)
+	return cb.service.Publish(ctx, cfg.QueueVerificationName, verification)
 }
 
 // GeneratePin returns securely generated random bytes.

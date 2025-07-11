@@ -1,6 +1,8 @@
 package business_test
 
 import (
+	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
 
@@ -13,7 +15,7 @@ import (
 )
 
 type AddressTestSuite struct {
-	BaseTestSuite
+	tests.BaseTestSuite
 }
 
 func TestAddressSuite(t *testing.T) {
@@ -58,13 +60,13 @@ func (ats *AddressTestSuite) Test_addressBusiness_CreateAddress() {
 		name    string
 		request *profilev1.AddressObject
 		want    *profilev1.AddressObject
-		wantErr bool
+		wantErr require.ErrorAssertionFunc
 	}{
 		{
 			name:    "Create Address test",
 			request: adObj,
 			want:    nil,
-			wantErr: false,
+			wantErr: require.NoError,
 		},
 	}
 
@@ -75,10 +77,8 @@ func (ats *AddressTestSuite) Test_addressBusiness_CreateAddress() {
 
 				aB := business.NewAddressBusiness(ctx, svc)
 				got, err := aB.CreateAddress(ctx, tt.request)
-				if (err != nil) != tt.wantErr {
-					t.Errorf("CreateAddress() error = %v, wantErr %+v", err, tt.wantErr)
-					return
-				}
+				tt.wantErr(t, err)
+
 				if got == nil || got.GetId() == "" || got.GetName() != adObj.GetName() ||
 					got.GetArea() != adObj.GetArea() ||
 					got.GetCountry() != "Kenya" {

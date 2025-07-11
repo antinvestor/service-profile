@@ -1,8 +1,7 @@
-package business_test
+package tests
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/antinvestor/apis/go/common"
@@ -15,7 +14,6 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
-	"github.com/testcontainers/testcontainers-go"
 	"go.uber.org/mock/gomock"
 
 	"github.com/pitabwire/frame"
@@ -25,14 +23,6 @@ import (
 )
 
 const PostgresqlDBImage = "paradedb/paradedb:latest"
-
-// StdoutLogConsumer is a LogConsumer that prints the log to stdout.
-type StdoutLogConsumer struct{}
-
-// Accept prints the log to stdout.
-func (lc *StdoutLogConsumer) Accept(l testcontainers.Log) {
-	fmt.Print(string(l.Content))
-}
 
 type BaseTestSuite struct {
 	tests.FrameBaseTestSuite
@@ -45,7 +35,6 @@ func initResources(_ context.Context) []testdef.TestResource {
 }
 
 func (bs *BaseTestSuite) SetupSuite() {
-	bs.MigrationImageContext = "../../"
 	bs.InitResourceFunc = initResources
 	bs.FrameBaseTestSuite.SetupSuite()
 }
@@ -54,6 +43,7 @@ func (bs *BaseTestSuite) CreateService(
 	t *testing.T,
 	depOpts *testdef.DependancyOption,
 ) (*frame.Service, context.Context) {
+	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 	profileConfig, err := frame.ConfigFromEnv[config.ProfileConfig]()
 	require.NoError(t, err)
 
@@ -62,7 +52,7 @@ func (bs *BaseTestSuite) CreateService(
 	profileConfig.ServerPort = ""
 
 	for _, res := range depOpts.Database() {
-		testDS, cleanup, err0 := res.GetPrefixedDS(t.Context(), depOpts.Prefix())
+		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
 		require.NoError(t, err0)
 
 		t.Cleanup(func() {
@@ -72,18 +62,16 @@ func (bs *BaseTestSuite) CreateService(
 		profileConfig.DatabasePrimaryURL = []string{testDS.String()}
 		profileConfig.DatabaseReplicaURL = []string{testDS.String()}
 
-		err0 = bs.Migrate(t.Context(), testDS)
-		require.NoError(t, err0)
 	}
 
-	ctx, service := frame.NewServiceWithContext(t.Context(), "profile tests",
+	ctx, svc := frame.NewServiceWithContext(t.Context(), "profile tests",
 		frame.WithConfig(&profileConfig),
 		frame.WithDatastore(),
 		frame.WithNoopDriver())
 
 	verificationQueueHandler := queue.VerificationsQueueHandler{
-		Service:         service,
-		ContactRepo:     repository.NewContactRepository(service),
+		Service:         svc,
+		ContactRepo:     repository.NewContactRepository(svc),
 		NotificationCli: bs.GetNotificationCli(ctx),
 	}
 
@@ -105,15 +93,18 @@ func (bs *BaseTestSuite) CreateService(
 		profileConfig.QueueRelationshipDisConnectURI,
 	)
 
-	service.Init(ctx, verificationQueue, verificationQueuePublisher,
+	svc.Init(ctx, verificationQueue, verificationQueuePublisher,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
-		frame.WithRegisterEvents(&events.ClientConnectedSetupQueue{Service: service}),
+		frame.WithRegisterEvents(&events.ClientConnectedSetupQueue{Service: svc}),
 	)
 
-	err = service.Run(ctx, "")
+	err = repository.Migrate(ctx, svc, "../../migrations/0001")
 	require.NoError(t, err)
 
-	return service, ctx
+	err = svc.Run(ctx, "")
+	require.NoError(t, err)
+
+	return svc, ctx
 }
 
 func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.NotificationClient {

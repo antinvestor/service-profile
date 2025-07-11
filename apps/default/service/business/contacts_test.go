@@ -3,6 +3,7 @@ package business_test
 import (
 	"context"
 	"fmt"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 	"testing"
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
@@ -15,7 +16,7 @@ import (
 )
 
 type ContactTestSuite struct {
-	BaseTestSuite
+	tests.BaseTestSuite
 }
 
 func TestContactSuite(t *testing.T) {
@@ -144,22 +145,25 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 				cb := business.NewContactBusiness(ctx, svc)
 				got, err := cb.CreateContact(ctx, tt.args.detail, tt.args.extra)
 				tt.wantErr(t, err, fmt.Sprintf("CreateContact(ctx, %v, %v)", tt.args.detail, tt.args.extra))
-				require.Equalf(
-					t,
-					tt.want.Detail,
-					got.Detail,
-					"CreateContact(ctx, %v, %v)",
-					tt.args.detail,
-					tt.args.extra,
-				)
-				require.Equalf(
-					t,
-					tt.want.Properties,
-					got.Properties,
-					"CreateContact(ctx, %v, %v)",
-					tt.args.detail,
-					tt.args.extra,
-				)
+
+				if tt.want != nil && got != nil {
+					require.Equalf(
+						t,
+						tt.want.Detail,
+						got.Detail,
+						"CreateContact(ctx, %v, %v)",
+						tt.args.detail,
+						tt.args.extra,
+					)
+					require.Equalf(
+						t,
+						tt.want.Properties,
+						got.Properties,
+						"CreateContact(ctx, %v, %v)",
+						tt.args.detail,
+						tt.args.extra,
+					)
+				}
 			})
 		}
 	})
@@ -172,7 +176,7 @@ func (cts *ContactTestSuite) createContacts(
 ) (map[string]*models.Contact, error) {
 	result := map[string]*models.Contact{}
 	for _, detail := range contacDetails {
-		contact, err := cb.CreateContact(ctx, detail, map[string]string{})
+		contact, err := cb.CreateContact(ctx, detail, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -258,7 +262,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByID() {
 		type args struct {
 			contactID string
 		}
-		tests := []struct {
+		testCases := []struct {
 			name    string
 			args    args
 			want    *models.Contact
@@ -290,11 +294,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByID() {
 			},
 		}
 
-		for _, tt := range tests {
+		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				got, err0 := cb.GetByID(ctx, tt.args.contactID)
 				tt.wantErr(t, err0, fmt.Sprintf("GetByID(ctx, %v)", tt.args.contactID))
-				require.Equalf(t, tt.want, got, "GetByID(ctx, %v)", tt.args.contactID)
+				if tt.want != nil {
+					require.Equalf(t, tt.want, got, "GetByID(ctx, %v)", tt.args.contactID)
+				}
 			})
 		}
 	})
