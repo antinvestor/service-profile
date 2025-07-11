@@ -24,37 +24,7 @@ func (cr *rosterRepository) Search(
 		func(ctx context.Context, jobResult frame.JobResultPipe[[]*models.Roster]) error {
 			paginator := query.Pagination
 			for paginator.CanLoad() {
-				var rosterList []*models.Roster
-
-				db := service.DB(ctx, true).
-					Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
-					Preload("Contact").
-					Limit(paginator.Limit).Offset(paginator.Offset)
-
-				if query.ProfileID != "" {
-					db = db.Where("rosters.profile_id = ?", query.ProfileID)
-				}
-
-				if query.StartAt != nil && query.EndAt != nil {
-					startDate := query.StartAt.Format("2020-01-31T00:00:00Z")
-					endDate := query.EndAt.Format("2020-01-31T00:00:00Z")
-					db = db.Where("rosters.created_at @@@ '[ ? TO ?]'", startDate, endDate)
-				}
-
-				if query.Query != "" {
-					whereConditionParams := []any{query.Query}
-					whereQueryStr := " contacts.detail  @@@ ? "
-
-					for _, property := range query.PropertiesToSearchOn {
-						whereConditionParams = append(whereConditionParams, query.Query)
-						searchTerm := fmt.Sprintf(" OR rosters.id  @@@ paradedb.match( 'properties.%s', ?) ", property)
-						whereQueryStr += searchTerm
-					}
-
-					db = db.Where(whereQueryStr, whereConditionParams...)
-				}
-
-				err := db.Find(&rosterList).Error
+				rosterList, err := cr.searchWithLimits(ctx, query)
 				if err != nil {
 					return jobResult.WriteError(ctx, err)
 				}
@@ -78,6 +48,47 @@ func (cr *rosterRepository) Search(
 	}
 
 	return job, nil
+}
+
+func (cr *rosterRepository) searchWithLimits(ctx context.Context, query *dbutil.SearchQuery) ([]*models.Roster, error) {
+	var rosterList []*models.Roster
+
+	paginator := query.Pagination
+
+	db := cr.service.DB(ctx, true).
+		Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
+		Preload("Contact").
+		Limit(paginator.Limit).Offset(paginator.Offset)
+
+	if query.ProfileID != "" {
+		db = db.Where("rosters.profile_id = ?", query.ProfileID)
+	}
+
+	if query.StartAt != nil && query.EndAt != nil {
+		startDate := query.StartAt.Format("2020-01-31T00:00:00Z")
+		endDate := query.EndAt.Format("2020-01-31T00:00:00Z")
+		db = db.Where("rosters.created_at @@@ '[ ? TO ?]'", startDate, endDate)
+	}
+
+	if query.Query != "" {
+		whereConditionParams := []any{query.Query}
+		whereQueryStr := " contacts.detail  @@@ ? "
+
+		for _, property := range query.PropertiesToSearchOn {
+			whereConditionParams = append(whereConditionParams, query.Query)
+			searchTerm := fmt.Sprintf(" OR rosters.id  @@@ paradedb.match( 'properties.%s', ?) ", property)
+			whereQueryStr += searchTerm
+		}
+
+		db = db.Where(whereQueryStr, whereConditionParams...)
+	}
+
+	err := db.Find(&rosterList).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return rosterList, nil
 }
 
 func (cr *rosterRepository) GetByID(ctx context.Context, id string) (*models.Roster, error) {

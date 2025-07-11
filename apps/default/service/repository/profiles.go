@@ -25,37 +25,7 @@ func (pr *profileRepository) Search(
 	job := frame.NewJob(func(ctx context.Context, jobResult frame.JobResultPipe[[]*models.Profile]) error {
 		paginator := query.Pagination
 		for paginator.CanLoad() {
-			var profileList []*models.Profile
-
-			db := service.DB(ctx, true).
-				Limit(paginator.Limit).Offset(paginator.Offset)
-
-			if query.StartAt != nil && query.EndAt != nil {
-				startDate := query.StartAt.Format("2020-01-31T00:00:00Z")
-				endDate := query.EndAt.Format("2020-01-31T00:00:00Z")
-				db = db.Where("created_at @@@ '[ ? TO ?]'", startDate, endDate)
-			}
-
-			if query.Query != "" {
-				var whereConditionParams []any
-				var whereQueryStrings []string
-
-				for _, property := range query.PropertiesToSearchOn {
-					whereConditionParams = append(whereConditionParams, query.Query)
-					searchTerm := fmt.Sprintf(
-						" id  @@@ paradedb.match( field => 'properties.%s', value => ?, distance => 0) ",
-						property,
-					)
-					whereQueryStrings = append(whereQueryStrings, searchTerm)
-				}
-
-				if len(whereQueryStrings) > 0 {
-					whereQueryStr := strings.Join(whereQueryStrings, " OR ")
-					db = db.Where(whereQueryStr, whereConditionParams...)
-				}
-			}
-
-			err := db.Find(&profileList).Error
+			profileList, err := pr.searchWithLimits(ctx, query)
 			if err != nil {
 				return jobResult.WriteError(ctx, err)
 			}
@@ -78,6 +48,50 @@ func (pr *profileRepository) Search(
 	}
 
 	return job, nil
+}
+
+func (pr *profileRepository) searchWithLimits(
+	ctx context.Context,
+	query *dbutil.SearchQuery,
+) ([]*models.Profile, error) {
+	var profileList []*models.Profile
+
+	paginator := query.Pagination
+
+	db := pr.service.DB(ctx, true).
+		Limit(paginator.Limit).Offset(paginator.Offset)
+
+	if query.StartAt != nil && query.EndAt != nil {
+		startDate := query.StartAt.Format("2020-01-31T00:00:00Z")
+		endDate := query.EndAt.Format("2020-01-31T00:00:00Z")
+		db = db.Where("created_at @@@ '[ ? TO ?]'", startDate, endDate)
+	}
+
+	if query.Query != "" {
+		var whereConditionParams []any
+		var whereQueryStrings []string
+
+		for _, property := range query.PropertiesToSearchOn {
+			whereConditionParams = append(whereConditionParams, query.Query)
+			searchTerm := fmt.Sprintf(
+				" id  @@@ paradedb.match( field => 'properties.%s', value => ?, distance => 0) ",
+				property,
+			)
+			whereQueryStrings = append(whereQueryStrings, searchTerm)
+		}
+
+		if len(whereQueryStrings) > 0 {
+			whereQueryStr := strings.Join(whereQueryStrings, " OR ")
+			db = db.Where(whereQueryStr, whereConditionParams...)
+		}
+	}
+
+	err := db.Find(&profileList).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return profileList, nil
 }
 
 func (pr *profileRepository) GetTypeByID(ctx context.Context, profileTypeID string) (*models.ProfileType, error) {
@@ -115,20 +129,6 @@ func (pr *profileRepository) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return pr.service.DB(ctx, false).Delete(profile).Error
-}
-
-func (pr *profileRepository) FilterByType(
-	ctx context.Context,
-	profileType profilev1.ProfileType,
-) ([]*models.Profile, error) {
-	var profiles []*models.Profile
-
-	profileTypeUID := models.ProfileTypeIDMap[profileType]
-
-	database := pr.service.DB(ctx, true).Where(" profile_type_id = ? ", profileTypeUID)
-
-	err := database.Find(&profiles).Error
-	return profiles, err
 }
 
 func NewProfileRepository(service *frame.Service) ProfileRepository {

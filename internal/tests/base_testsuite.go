@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/antinvestor/apis/go/common"
+	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
@@ -24,7 +25,6 @@ import (
 
 const PostgresqlDBImage = "paradedb/paradedb:latest"
 
-// Constants used in tests.
 const (
 	DefaultRandomStringLength = 8
 )
@@ -112,12 +112,22 @@ func (bs *BaseTestSuite) CreateService(
 }
 
 func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.NotificationClient {
-	t := bs.T()
-
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
-	mockNotificationService := notificationv1.NewMockNotificationServiceClient(ctrl)
-	mockNotificationService.EXPECT().Send(gomock.Any(), gomock.Any()).AnyTimes()
+	mockNotificationService := notificationv1.NewMockNotificationServiceClient(bs.Ctrl)
+	mockNotificationService.EXPECT().Send(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(_ context.Context, _ *notificationv1.SendRequest) (*notificationv1.SendResponse, error) {
+			// Return a successful response with a generated message ID
+			const randomIDLength = 6
+			return &notificationv1.SendResponse{
+				Data: []*commonv1.StatusResponse{
+					{
+						Id:         util.IDString(),
+						State:      commonv1.STATE_ACTIVE,
+						Status:     commonv1.STATUS_SUCCESSFUL,
+						ExternalId: util.RandomString(randomIDLength),
+					},
+				},
+			}, nil
+		}).AnyTimes()
 	notificationCli := notificationv1.Init(&common.GrpcClientBase{}, mockNotificationService)
 
 	return notificationCli
