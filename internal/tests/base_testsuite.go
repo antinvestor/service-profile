@@ -2,11 +2,10 @@ package tests
 
 import (
 	"context"
-	"github.com/antinvestor/apis/go/common/mocks"
-	"google.golang.org/grpc"
 	"testing"
 
 	"github.com/antinvestor/apis/go/common"
+	"github.com/antinvestor/apis/go/common/mocks"
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
@@ -17,6 +16,7 @@ import (
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
+	"google.golang.org/grpc"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
@@ -116,7 +116,7 @@ func (bs *BaseTestSuite) CreateService(
 func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.NotificationClient {
 	mockNotificationService := notificationv1.NewMockNotificationServiceClient(bs.Ctrl)
 	mockNotificationService.EXPECT().Send(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, _ *notificationv1.SendRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[notificationv1.SendResponse], error) {
+		func(ctx context.Context, _ *notificationv1.SendRequest, _ ...grpc.CallOption) (grpc.ServerStreamingClient[notificationv1.SendResponse], error) {
 			// Return a successful response with a generated message ID
 			const randomIDLength = 6
 			resp := &notificationv1.SendResponse{
@@ -138,7 +138,8 @@ func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.N
 			}
 
 			return mockStream, nil
-		}).AnyTimes()
+		}).
+		AnyTimes()
 	notificationCli := notificationv1.Init(&common.GrpcClientBase{}, mockNotificationService)
 
 	return notificationCli

@@ -71,4 +71,4 @@ tests: ## runs all system tests
 	fi;\
 	go tool cover -html=coverage.out -o coverage.html
 
-build: clean format tests ## run all preliminary steps and tests the setup
+build: clean fmt vet tests ## run all preliminary steps and tests the setup
