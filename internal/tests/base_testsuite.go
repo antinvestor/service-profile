@@ -2,6 +2,8 @@ package tests
 
 import (
 	"context"
+	"github.com/antinvestor/apis/go/common/mocks"
+	"google.golang.org/grpc"
 	"testing"
 
 	"github.com/antinvestor/apis/go/common"
@@ -114,10 +116,10 @@ func (bs *BaseTestSuite) CreateService(
 func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.NotificationClient {
 	mockNotificationService := notificationv1.NewMockNotificationServiceClient(bs.Ctrl)
 	mockNotificationService.EXPECT().Send(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(_ context.Context, _ *notificationv1.SendRequest) (*notificationv1.SendResponse, error) {
+		func(ctx context.Context, _ *notificationv1.SendRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[notificationv1.SendResponse], error) {
 			// Return a successful response with a generated message ID
 			const randomIDLength = 6
-			return &notificationv1.SendResponse{
+			resp := &notificationv1.SendResponse{
 				Data: []*commonv1.StatusResponse{
 					{
 						Id:         util.IDString(),
@@ -126,7 +128,16 @@ func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.N
 						ExternalId: util.RandomString(randomIDLength),
 					},
 				},
-			}, nil
+			}
+
+			// Create a custom mock implementation
+			mockStream := mocks.NewMockServerStreamingClient[notificationv1.SendResponse](ctx)
+			err := mockStream.SendMsg(resp)
+			if err != nil {
+				return nil, err
+			}
+
+			return mockStream, nil
 		}).AnyTimes()
 	notificationCli := notificationv1.Init(&common.GrpcClientBase{}, mockNotificationService)
 

@@ -1,5 +1,5 @@
-buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250613105001-9f2d3c737feb.1 h1:AUL6VF5YWL01j/1H/DQbPUSDkEwYqwVCNw7yhbpOxSQ=
-buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250613105001-9f2d3c737feb.1/go.mod h1:avRlCjnFzl98VPaeCtJ24RrV/wwHFzB8sWXhj26+n/U=
+buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250625184727-c923a0c2a132.1 h1:6tCo3lsKNLqUjRPhyc8JuYWYUiQkulufxSDOfG1zgWQ=
+buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250625184727-c923a0c2a132.1/go.mod h1:avRlCjnFzl98VPaeCtJ24RrV/wwHFzB8sWXhj26+n/U=
 buf.build/go/protovalidate v0.13.1 h1:6loHDTWdY/1qmqmt1MijBIKeN4T9Eajrqb9isT1W1s8=
 buf.build/go/protovalidate v0.13.1/go.mod h1:C/QcOn/CjXRn5udUwYBiLs8y1TGy7RS+GOSKqjS77aU=
 cel.dev/expr v0.23.1 h1:K4KOtPCJQjVggkARsjG9RWXP6O4R73aHeJMa/dmCQQg=
@@ -29,12 +29,12 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/XSAM/otelsql v0.39.0 h1:4o374mEIMweaeevL7fd8Q3C710Xi2Jh/c8G4Qy9bvCY=
 github.com/XSAM/otelsql v0.39.0/go.mod h1:uMOXLUX+wkuAuP0AR3B45NXX7E9lJS2mERa8gqdU8R0=
-github.com/antinvestor/apis/go/common v1.35.2 h1:rDQIo1T3IK4QQzGh4qBgD2+0VCUjh0FLVc7qjNQ8h5c=
-github.com/antinvestor/apis/go/common v1.35.2/go.mod h1:WPCnhJSJgilXI7jGQyu01DU/eE2dD3drUoiLFK0haPk=
-github.com/antinvestor/apis/go/notification v1.35.3 h1:uO0vbqgKoV5qlGy7h6fbsMdniFalAo4C4oYlcmt2b14=
-github.com/antinvestor/apis/go/notification v1.35.3/go.mod h1:Q3j30l0pXJT8T448wV6UxDKM28ep8KTjav04Sn+jRjc=
-github.com/antinvestor/apis/go/profile v1.35.3 h1:e9jsDSQeVp8febmcAVNNhQj3Ad0HMabkTTu4ed+VvOQ=
-github.com/antinvestor/apis/go/profile v1.35.3/go.mod h1:sfUZNZh+smRPQp0t1a0kjDMc4f5RAF13vMbQ5nkze44=
+github.com/antinvestor/apis/go/common v1.36.1 h1:CyjI5bCMLfZbvcxOsKzRh5DAamyVMAzz0t34hNmQrjk=
+github.com/antinvestor/apis/go/common v1.36.1/go.mod h1:2M5k+pWER94YrkzM7BE4moiZKNUZUFOd5GWXC8eP9YM=
+github.com/antinvestor/apis/go/notification v1.36.2 h1:gtlWFCzNkgowEahcZYzFUoUSeZiI51BlUIwZDTWlncQ=
+github.com/antinvestor/apis/go/notification v1.36.2/go.mod h1:HvE3TW6BCsz+zOwqBkzaF1CghTFf9GrHURyKqcIwDCg=
+github.com/antinvestor/apis/go/profile v1.36.2 h1:dqf2lz+XczdJ8PBYwKPuD5c3jvGjhrVRUd/kNbBbLz8=
+github.com/antinvestor/apis/go/profile v1.36.2/go.mod h1:ZNWbBDWpnVIxfvK7uPYn/+JKEpgTt7/13A2y7N+G8u0=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
 github.com/antlr4-go/antlr/v4 v4.13.1/go.mod h1:GKmUxMtwp6ZgGwZSva4eWPC5mS6vUAmOABFgjdkM7Nw=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
@@ -420,8 +420,8 @@ google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55/go.mod h1:DMBHOl98
 google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013/go.mod h1:NbSheEEYHJ7i3ixzK3sjbqSGDJWnxyFXZblF3eUsNvo=
 google.golang.org/genproto v0.0.0-20250603155806-513f23925822 h1:rHWScKit0gvAPuOnu87KpaYtjK5zBMLcULh7gxkCXu4=
 google.golang.org/genproto v0.0.0-20250603155806-513f23925822/go.mod h1:HubltRL7rMh0LfnQPkMH4NPDFEWp0jw3vixw7jEM53s=
-google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822 h1:oWVWY3NzT7KJppx2UKhKmzPq4SRe0LdCijVRwvGeikY=
-google.golang.org/genproto/googleapis/api v0.0.0-20250603155806-513f23925822/go.mod h1:h3c4v36UTKzUiuaOKQ6gr3S+0hovBtUrXzTG/i3+XEc=
+google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7 h1:FiusG7LWj+4byqhbvmB+Q93B/mOxJLN2DTozDuZm4EU=
+google.golang.org/genproto/googleapis/api v0.0.0-20250707201910-8d1bb00bc6a7/go.mod h1:kXqgZtrWaf6qS3jZOCnCH7WYfrvFjkC51bM8fz3RsCA=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822 h1:fc6jSaCT0vBduLYZHYrBBNY4dsWuvgyff9noRNDdBeE=
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250603155806-513f23925822/go.mod h1:qQ0YXyHHx3XkvlzUtpXDkS29lDSafHMZBAZDc03LQ3A=
 google.golang.org/grpc v1.19.0/go.mod h1:mqu4LbDTu4XGKhr4mRzUsmM4RtVoemTSY81AxZiDr8c=
