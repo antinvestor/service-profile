@@ -213,6 +213,8 @@ github.com/panjf2000/ants/v2 v2.11.3 h1:AfI0ngBoXJmYOpDh9m516vjqoUu2sLrIVgppI9TZ
 github.com/panjf2000/ants/v2 v2.11.3/go.mod h1:8u92CYMUc6gyvTIw8Ru7Mt7+/ESnJahz5EVtqfrilek=
 github.com/pitabwire/frame v1.50.15 h1:KfD+a+ifE+LoowGHe7vjrgALffDGXEeEcPzB1pvfFbE=
 github.com/pitabwire/frame v1.50.15/go.mod h1:X7YL6JoUinXwVOatG8KE9aaBCuzvxUSIXqwYHDTL+S4=
+github.com/pitabwire/frame v1.50.17 h1:LmlkYC565ttcohlquEAtOEQ2IXkhCWV2sYJ2O+S+mVw=
+github.com/pitabwire/frame v1.50.17/go.mod h1:X7YL6JoUinXwVOatG8KE9aaBCuzvxUSIXqwYHDTL+S4=
 github.com/pitabwire/natspubsub v0.6.10 h1:DjuWfSR6nNabhKY08XWCLpAq65qC29N9xBbcUskRmpk=
 github.com/pitabwire/natspubsub v0.6.10/go.mod h1:+YoN+m8L8x61n7gleWRa07QAKxY3grT01jxYatbRaNQ=
 github.com/pitabwire/util v0.3.1 h1:tMwVZ3kbGQSQdK7ogRrqbCx/FdvCIaFaELR74atJOys=
