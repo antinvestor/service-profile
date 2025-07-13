@@ -8,7 +8,7 @@ require (
 	github.com/antinvestor/apis/go/notification v1.36.2
 	github.com/antinvestor/apis/go/profile v1.36.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
-	github.com/pitabwire/frame v1.50.13
+	github.com/pitabwire/frame v1.50.15
 	github.com/pitabwire/util v0.3.1
 	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.10.0
