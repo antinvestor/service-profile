@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/internal/tests"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type RelationshipTestSuite struct {

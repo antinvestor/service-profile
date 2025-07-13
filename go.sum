@@ -29,12 +29,14 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/XSAM/otelsql v0.39.0 h1:4o374mEIMweaeevL7fd8Q3C710Xi2Jh/c8G4Qy9bvCY=
 github.com/XSAM/otelsql v0.39.0/go.mod h1:uMOXLUX+wkuAuP0AR3B45NXX7E9lJS2mERa8gqdU8R0=
-github.com/antinvestor/apis/go/common v1.36.1 h1:CyjI5bCMLfZbvcxOsKzRh5DAamyVMAzz0t34hNmQrjk=
-github.com/antinvestor/apis/go/common v1.36.1/go.mod h1:2M5k+pWER94YrkzM7BE4moiZKNUZUFOd5GWXC8eP9YM=
+github.com/antinvestor/apis/go/common v1.36.3 h1:059riP/1wPFvZ7gaAgTvGcIZOiFCGreRVoBZfXelrQc=
+github.com/antinvestor/apis/go/common v1.36.3/go.mod h1:2M5k+pWER94YrkzM7BE4moiZKNUZUFOd5GWXC8eP9YM=
 github.com/antinvestor/apis/go/notification v1.36.2 h1:gtlWFCzNkgowEahcZYzFUoUSeZiI51BlUIwZDTWlncQ=
 github.com/antinvestor/apis/go/notification v1.36.2/go.mod h1:HvE3TW6BCsz+zOwqBkzaF1CghTFf9GrHURyKqcIwDCg=
 github.com/antinvestor/apis/go/profile v1.36.2 h1:dqf2lz+XczdJ8PBYwKPuD5c3jvGjhrVRUd/kNbBbLz8=
 github.com/antinvestor/apis/go/profile v1.36.2/go.mod h1:ZNWbBDWpnVIxfvK7uPYn/+JKEpgTt7/13A2y7N+G8u0=
+github.com/antinvestor/apis/go/settings v1.36.4 h1:NheaLaEBTMgsWJ+4IarEdt9dezD89t6O9SqCV9uTfGw=
+github.com/antinvestor/apis/go/settings v1.36.4/go.mod h1:N/VqmXQ009e2d1R31xHJE+gKgyC8qbCUaaQDnqrA0Rc=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
 github.com/antlr4-go/antlr/v4 v4.13.1/go.mod h1:GKmUxMtwp6ZgGwZSva4eWPC5mS6vUAmOABFgjdkM7Nw=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=

@@ -13,7 +13,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/internal/tests"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type ContactTestSuite struct {
