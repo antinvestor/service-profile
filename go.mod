@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	buf.build/go/protovalidate v0.13.1
 	github.com/antinvestor/apis/go/common v1.36.3
-	github.com/antinvestor/apis/go/notification v1.36.2
+	github.com/antinvestor/apis/go/notification v1.36.4
 	github.com/antinvestor/apis/go/profile v1.36.2
 	github.com/antinvestor/apis/go/settings v1.36.4
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
