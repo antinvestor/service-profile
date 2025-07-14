@@ -12,13 +12,13 @@ COPY ./internal ./internal
 
 # Build the application with optimizations
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
-    -ldflags '-extldflags "-static"' -o binary ./apps/default/cmd/main.go
+    -ldflags '-extldflags "-static"' -o binary ./apps/devices/cmd/main.go
 
 # Final minimal image
 FROM gcr.io/distroless/static:nonroot
 
 # Copy from builder stage
-COPY --from=builder /app/binary /devices
+COPY --from=builder /app/binary /binary
 COPY --from=builder /app/apps/devices/migrations /migrations
 
 # Run as non-root user
@@ -32,4 +32,4 @@ EXPOSE 50051
 WORKDIR /
 
 # Run the binary
-ENTRYPOINT ["/devices"]
+ENTRYPOINT ["/binary"]
