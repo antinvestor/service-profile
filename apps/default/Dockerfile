@@ -18,7 +18,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo \
 FROM gcr.io/distroless/static:nonroot
 
 # Copy from builder stage
-COPY --from=builder /app/binary /binary
+COPY --from=builder /app/binary /default
 COPY --from=builder /app/apps/default/migrations /migrations
 
 # Run as non-root user
@@ -32,4 +32,4 @@ EXPOSE 50051
 WORKDIR /
 
 # Run the binary
-ENTRYPOINT ["/binary"]
+ENTRYPOINT ["/default"]
