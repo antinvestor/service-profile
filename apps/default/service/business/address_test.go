@@ -23,8 +23,6 @@ func TestAddressSuite(t *testing.T) {
 }
 
 func (ats *AddressTestSuite) TestNewAddressBusiness() {
-	t := ats.T()
-
 	tests := []struct {
 		name string
 		want business.AddressBusiness
@@ -34,7 +32,7 @@ func (ats *AddressTestSuite) TestNewAddressBusiness() {
 		},
 	}
 
-	ats.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	ats.WithTestDependancies(ats.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)

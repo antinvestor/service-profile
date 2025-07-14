@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"strings"
 
@@ -27,16 +26,17 @@ import (
 
 func main() {
 	serviceName := "service_profile"
+	ctx := context.Background()
 
 	// Initialize configuration
 	cfg, err := frame.ConfigFromEnv[config.ProfileConfig]()
 	if err != nil {
-		slog.With("err", err).Error("could not process configs")
+		util.Log(ctx).With("err", err).Error("could not process configs")
 		return
 	}
 
 	// Create service
-	ctx, svc := frame.NewService(serviceName, frame.WithConfig(&cfg))
+	ctx, svc := frame.NewServiceWithContext(ctx, serviceName, frame.WithConfig(&cfg))
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
