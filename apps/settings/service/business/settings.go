@@ -4,9 +4,10 @@ import (
 	"context"
 
 	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
-	"github.com/pitabwire/frame"
 )
 
 type settingsBusiness struct {

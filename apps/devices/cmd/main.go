@@ -3,13 +3,14 @@ package main
 import (
 	"net/http"
 
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/util"
+	"golang.org/x/net/context"
+
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/util"
-	"golang.org/x/net/context"
 )
 
 func main() {

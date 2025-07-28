@@ -4,8 +4,9 @@ import (
 	"context"
 
 	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
-	"github.com/antinvestor/service-profile/apps/settings/service/business"
 	"github.com/pitabwire/frame"
+
+	"github.com/antinvestor/service-profile/apps/settings/service/business"
 )
 
 type SettingsServer struct {

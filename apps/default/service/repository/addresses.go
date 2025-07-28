@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/pitabwire/frame"
 	"gorm.io/gorm/clause"
+
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type addressRepository struct {

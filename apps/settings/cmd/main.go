@@ -5,14 +5,15 @@ import (
 
 	"buf.build/go/protovalidate"
 	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
-	"github.com/antinvestor/service-profile/apps/settings/config"
-	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
-	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/util"
 	"google.golang.org/grpc"
+
+	"github.com/antinvestor/service-profile/apps/settings/config"
+	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 )
 
 func main() {

@@ -11,9 +11,10 @@ import (
 	"strconv"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
+
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/pitabwire/frame"
 )
 
 func (ps *ProfileServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {

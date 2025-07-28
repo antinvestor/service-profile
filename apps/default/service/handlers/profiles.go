@@ -6,11 +6,12 @@ import (
 
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/pitabwire/frame"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/antinvestor/service-profile/apps/default/service/business"
 )
 
 // Constants for pagination and batch sizes.

@@ -5,10 +5,11 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/antinvestor/service-profile/apps/default/service"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/pitabwire/frame"
 	"gorm.io/gorm"
+
+	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type contactRepository struct {

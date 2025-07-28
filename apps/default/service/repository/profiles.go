@@ -6,10 +6,11 @@ import (
 	"strings"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/internal/dbutil"
 	"github.com/pitabwire/frame"
 	"gorm.io/gorm/clause"
+
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/dbutil"
 )
 
 type profileRepository struct {
