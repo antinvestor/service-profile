@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/pitabwire/frame"
-	"google.golang.org/protobuf/proto"
-
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/pitabwire/frame"
+	"google.golang.org/protobuf/proto"
 )
 
 type ClientConnectedSetupQueue struct {

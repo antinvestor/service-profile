@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pitabwire/frame"
-
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/pitabwire/frame"
 )
 
 type DeviceAnalysisQueueHandler struct {

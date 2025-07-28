@@ -4,9 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pitabwire/frame"
-
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
+	"github.com/pitabwire/frame"
 )
 
 type ReferenceRepository interface {

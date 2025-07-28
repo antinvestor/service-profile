@@ -4,15 +4,14 @@ import (
 	"context"
 	"testing"
 
+	"github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/tests"
 	"github.com/pitabwire/frame/tests/deps/testpostgres"
 	"github.com/pitabwire/frame/tests/testdef"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
-
-	"github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
 const PostgresqlDBImage = "paradedb/paradedb:latest"

@@ -8,10 +8,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/pitabwire/frame"
-
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/pitabwire/frame"
 )
 
 type DevicesServer struct {

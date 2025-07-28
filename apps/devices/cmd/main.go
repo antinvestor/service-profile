@@ -1,27 +1,28 @@
 package main
 
 import (
-	"log/slog"
 	"net/http"
-
-	"github.com/pitabwire/frame"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/util"
+	"golang.org/x/net/context"
 )
 
 func main() {
 	serviceName := "service_devices"
 
+	ctx := context.Background()
 	cfg, err := frame.ConfigFromEnv[config.DevicesConfig]()
 	if err != nil {
-		slog.With("err", err).Error("could not process configs")
+		util.Log(ctx).With("err", err).Error("could not process configs")
 		return
 	}
 
-	ctx, svc := frame.NewService(serviceName, frame.WithConfig(&cfg))
+	ctx, svc := frame.NewServiceWithContext(ctx, serviceName, frame.WithConfig(&cfg))
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 

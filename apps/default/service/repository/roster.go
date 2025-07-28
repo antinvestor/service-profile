@@ -4,11 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/pitabwire/frame"
-	"gorm.io/gorm/clause"
-
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/internal/dbutil"
+	"github.com/pitabwire/frame"
+	"gorm.io/gorm/clause"
 )
 
 type rosterRepository struct {
