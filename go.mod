@@ -9,7 +9,7 @@ require (
 	github.com/antinvestor/apis/go/profile v1.37.3
 	github.com/antinvestor/apis/go/settings v1.37.3
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
-	github.com/pitabwire/frame v1.50.20
+	github.com/pitabwire/frame v1.50.21
 	github.com/pitabwire/util v0.3.1
 	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.10.0
@@ -51,7 +51,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.3 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/cel-go v0.25.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
