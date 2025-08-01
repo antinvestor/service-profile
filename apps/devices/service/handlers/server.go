@@ -128,7 +128,10 @@ func (ds *DevicesServer) Remove(ctx context.Context, req *devicev1.RemoveRequest
 }
 
 func (ds *DevicesServer) Log(ctx context.Context, req *devicev1.LogRequest) (*devicev1.LogResponse, error) {
-	deviceLog, err := ds.Biz.LogDeviceActivity(ctx, req.GetDeviceId(), req.GetSessionId(), req.GetExtras())
+	data := req.GetExtras()
+
+	data["ip"] = getClientIP(ctx)
+	deviceLog, err := ds.Biz.LogDeviceActivity(ctx, req.GetDeviceId(), req.GetSessionId(), data)
 	if err != nil {
 		return nil, err
 	}

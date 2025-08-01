@@ -130,43 +130,28 @@ func (b *deviceBusiness) SaveDevice(
 	name string,
 	data map[string]string,
 ) (*devicev1.DeviceObject, error) {
-	// Extract data from the map
-	profileID := data["profile_id"]
-	os := data["os"]
-	userAgent := data["user_agent"]
-	ip := data["ip"]
-	locale := data["locale"]
-	location := data["location"]
 
-	device := &models.Device{
-		ProfileID: profileID,
-		Name:      name,
-		OS:        os,
-	}
+	sessionID := data["session_id"]
 
-	// Set ID if provided
-	if id != "" {
-		device.ID = id
-	}
-
-	if err := b.deviceRepo.Save(ctx, device); err != nil {
+	_, err := b.LogDeviceActivity(ctx, id, sessionID, data)
+	if err != nil {
 		return nil, err
 	}
 
-	session := &models.DeviceSession{
-		DeviceID:  device.GetID(),
-		UserAgent: userAgent,
-		IP:        ip,
-		Locale:    frame.DBPropertiesFromMap(map[string]string{"name": locale}),
-		Location:  frame.DBPropertiesFromMap(map[string]string{"name": location}),
+	if id == "" {
+		return nil, nil
 	}
 
-	if err := b.sessionRepo.Save(ctx, session); err != nil {
-		// Potentially roll back device creation or handle inconsistency
+	dev, err := b.deviceRepo.GetByID(ctx, id)
+	if err != nil {
 		return nil, err
 	}
-
-	return device.ToAPI(session), nil
+	dev.Name = name
+	err = b.deviceRepo.Save(ctx, dev)
+	if err != nil {
+		return nil, err
+	}
+	return b.GetDeviceByID(ctx, id)
 }
 
 func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev1.DeviceObject, error) {

@@ -6,11 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/gorilla/mux"
-	"github.com/pitabwire/frame"
-
-	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/pitabwire/util"
 )
 
 func (ds *DevicesServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {
@@ -28,101 +24,31 @@ func (ds *DevicesServer) writeError(ctx context.Context, w http.ResponseWriter, 
 	}
 }
 
-func (ds *DevicesServer) LogDevice(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	vars := mux.Vars(r)
-	deviceID := vars["deviceId"]
-	sessionID := vars["sessionId"]
-
-	var data map[string]string
-	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
-		ds.writeError(ctx, w, err, http.StatusBadRequest)
-		return
-	}
-
-	log, err := ds.Biz.LogDeviceActivity(ctx, deviceID, sessionID, data)
-	if err != nil {
-		ds.writeError(ctx, w, err, http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(log)
-}
-
-func (ds *DevicesServer) GetDevice(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	deviceBusiness := business.NewDeviceBusiness(ctx, ds.Service)
-
-	vars := mux.Vars(r)
-	deviceID := vars["id"]
-
-	device, err := deviceBusiness.GetDeviceByID(ctx, deviceID)
-	if err != nil {
-		if frame.ErrorIsNoRows(err) {
-			ds.writeError(ctx, w, err, http.StatusNotFound)
-			return
-		}
-		ds.writeError(ctx, w, err, http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(device)
-}
-
-func (ds *DevicesServer) SearchDevices(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var query devicev1.SearchRequest
-
-	err := json.NewDecoder(r.Body).Decode(&query)
-	if err != nil {
-		ds.writeError(ctx, w, err, http.StatusBadRequest)
-		return
-	}
-
-	devicesChan, err := ds.Biz.SearchDevices(ctx, &query)
-	if err != nil {
-		ds.writeError(ctx, w, err, http.StatusInternalServerError)
-		return
-	}
-
-	// Collect all devices from the channel
-	var allDevices []*devicev1.DeviceObject
-	for result := range devicesChan {
-		if result.IsError() {
-			ds.writeError(ctx, w, result.Error(), http.StatusInternalServerError)
-			return
-		}
-		allDevices = append(allDevices, result.Item()...)
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(allDevices)
-}
-
 func (ds *DevicesServer) RestLogDeviceData(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var deviceData []byte
-	_, err := r.Body.Read(deviceData)
+	var deviceLogData map[string]string
+	err := json.NewDecoder(r.Body).Decode(&deviceLogData)
 	if err != nil {
 		ds.writeError(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
-	data := make(map[string]string)
-	for k, v := range r.Header {
-		data[k] = v[0]
+	sessionID, ok := deviceLogData["session_id"]
+	if !ok {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode("missing parameters")
+		return
 	}
-	data["data"] = string(deviceData)
 
-	devLog, err := ds.Biz.LogDeviceActivity(ctx, "", "", data)
+	for k, v := range r.Header {
+		deviceLogData[k] = v[0]
+	}
+
+	deviceLogData["ip"] = util.GetIP(r)
+
+	devLog, err := ds.Biz.LogDeviceActivity(ctx, "", sessionID, deviceLogData)
 	if err != nil {
 		ds.writeError(ctx, w, err, http.StatusInternalServerError)
 		return
@@ -140,21 +66,21 @@ func (ds *DevicesServer) RestLogDeviceData(w http.ResponseWriter, r *http.Reques
 func (ds *DevicesServer) RestDeviceLinkProfile(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	var linkData map[string]string
-	err := json.NewDecoder(r.Body).Decode(&linkData)
+	var sessionData map[string]string
+	err := json.NewDecoder(r.Body).Decode(&sessionData)
 	if err != nil {
 		ds.writeError(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
-	sessionID, ok := linkData["session_id"]
+	sessionID, ok := sessionData["session_id"]
 	if !ok {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		_ = json.NewEncoder(w).Encode("missing parameters")
 		return
 	}
-	profileID, ok := linkData["profile_id"]
+	profileID, ok := sessionData["profile_id"]
 	if !ok {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
@@ -162,7 +88,7 @@ func (ds *DevicesServer) RestDeviceLinkProfile(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	device, err := ds.Biz.LinkDeviceToProfile(ctx, sessionID, profileID, linkData)
+	device, err := ds.Biz.LinkDeviceToProfile(ctx, sessionID, profileID, sessionData)
 	if err != nil {
 		ds.writeError(ctx, w, err, http.StatusInternalServerError)
 		return
