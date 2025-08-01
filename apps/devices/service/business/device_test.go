@@ -1,4 +1,4 @@
-package business
+package business_test
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
@@ -147,18 +148,18 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		biz := NewDeviceBusiness(ctx, svc)
+		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				device, err := biz.SaveDevice(ctx, tc.id, tc.deviceName, tc.data)
 
 				if tc.expectError {
-					assert.Error(t, err)
+					require.Error(t, err)
 					assert.Contains(t, err.Error(), tc.errorMsg)
 					assert.Nil(t, device)
 				} else {
-					assert.NoError(t, err)
+					require.NoError(t, err)
 					assert.NotNil(t, device)
 					assert.Equal(t, tc.deviceName, device.GetName())
 					if tc.id != "" {
@@ -203,7 +204,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		biz := NewDeviceBusiness(ctx, svc)
+		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -225,10 +226,10 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 				device, err := biz.GetDeviceByID(ctx, deviceID)
 
 				if tc.expectError {
-					assert.Error(t, err)
+					require.Error(t, err)
 					assert.Nil(t, device)
 				} else {
-					assert.NoError(t, err)
+					require.NoError(t, err)
 					assert.NotNil(t, device)
 					assert.Equal(t, deviceID, device.GetId())
 					assert.Equal(t, "Test Device", device.GetName())
@@ -260,7 +261,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		biz := NewDeviceBusiness(ctx, svc)
+		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -282,10 +283,10 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 				device, err := biz.GetDeviceBySessionID(ctx, sessionID)
 
 				if tc.expectError {
-					assert.Error(t, err)
+					require.Error(t, err)
 					assert.Nil(t, device)
 				} else {
-					assert.NoError(t, err)
+					require.NoError(t, err)
 					assert.NotNil(t, device)
 					assert.Equal(t, sessionID, device.GetSessionId())
 				}
@@ -322,7 +323,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		biz := NewDeviceBusiness(ctx, svc)
+		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -343,10 +344,10 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 				log, err := biz.LogDeviceActivity(ctx, deviceID, sessionID, tc.data)
 
 				if tc.expectError {
-					assert.Error(t, err)
+					require.Error(t, err)
 					assert.Nil(t, log)
 				} else {
-					assert.NoError(t, err)
+					require.NoError(t, err)
 					assert.NotNil(t, log)
 					assert.Equal(t, deviceID, log.GetDeviceId())
 					assert.Equal(t, sessionID, log.GetSessionId())
@@ -388,7 +389,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		biz := NewDeviceBusiness(ctx, svc)
+		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -407,10 +408,10 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 				keyObj, err := biz.AddKey(ctx, deviceID, tc.keyType, tc.key, tc.extra)
 
 				if tc.expectError {
-					assert.Error(t, err)
+					require.Error(t, err)
 					assert.Nil(t, keyObj)
 				} else {
-					assert.NoError(t, err)
+					require.NoError(t, err)
 					assert.NotNil(t, keyObj)
 					assert.Equal(t, deviceID, keyObj.GetDeviceId())
 					assert.Equal(t, tc.key, keyObj.GetKey())
@@ -442,7 +443,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		biz := NewDeviceBusiness(ctx, svc)
+		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -461,13 +462,13 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 				err := biz.RemoveDevice(ctx, deviceID)
 
 				if tc.expectError {
-					assert.Error(t, err)
+					require.Error(t, err)
 				} else {
-					assert.NoError(t, err)
+					require.NoError(t, err)
 
 					// Verify device is removed
 					_, err = biz.GetDeviceByID(ctx, deviceID)
-					assert.Error(t, err)
+					require.Error(t, err)
 				}
 			})
 		}

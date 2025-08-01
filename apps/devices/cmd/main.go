@@ -54,10 +54,7 @@ func main() {
 	grpcServer, implementation := setupGRPCServer(ctx, svc, cfg, serviceName, log)
 
 	// Setup HTTP handlers and proxy
-	serviceOptions, httpErr := setupHTTPHandlers(ctx, implementation, grpcServer)
-	if err != nil {
-		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
-	}
+	serviceOptions = setupHTTPHandlers(ctx, implementation, grpcServer)
 
 	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
 		Service:             svc,
@@ -129,7 +126,7 @@ func setupHTTPHandlers(
 	_ context.Context,
 	implementation *handlers.DevicesServer,
 	grpcServer *grpc.Server,
-) ([]frame.Option, error) {
+) []frame.Option {
 	// Start with datastore option
 	serviceOptions := []frame.Option{frame.WithDatastore()}
 
@@ -141,5 +138,5 @@ func setupHTTPHandlers(
 	proxyMux.Handle("/_public/", http.StripPrefix("/_public", implementation.NewInSecureRouterV1()))
 	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
 
-	return serviceOptions, nil
+	return serviceOptions
 }

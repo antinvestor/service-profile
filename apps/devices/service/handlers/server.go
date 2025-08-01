@@ -25,7 +25,7 @@ func NewDeviceServer(ctx context.Context, svc *frame.Service) *DevicesServer {
 	}
 }
 
-func (ds *DevicesServer) GetById(ctx context.Context, req *devicev1.GetByIdRequest) (*devicev1.GetByIdResponse, error) {
+func (ds *DevicesServer) GetByID(ctx context.Context, req *devicev1.GetByIdRequest) (*devicev1.GetByIdResponse, error) {
 	var devicesList []*devicev1.DeviceObject
 
 	for _, idStr := range req.GetId() {
@@ -41,7 +41,7 @@ func (ds *DevicesServer) GetById(ctx context.Context, req *devicev1.GetByIdReque
 	}, nil
 }
 
-func (ds *DevicesServer) GetBySessionId(
+func (ds *DevicesServer) GetBySessionID(
 	ctx context.Context,
 	req *devicev1.GetBySessionIdRequest,
 ) (*devicev1.GetBySessionIdResponse, error) {

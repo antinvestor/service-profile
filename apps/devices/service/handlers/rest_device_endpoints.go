@@ -32,8 +32,8 @@ func (ds *DevicesServer) LogDevice(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	vars := mux.Vars(r)
-	deviceId := vars["deviceId"]
-	sessionId := vars["sessionId"]
+	deviceID := vars["deviceId"]
+	sessionID := vars["sessionId"]
 
 	var data map[string]string
 	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
@@ -41,7 +41,7 @@ func (ds *DevicesServer) LogDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log, err := ds.Biz.LogDeviceActivity(ctx, deviceId, sessionId, data)
+	log, err := ds.Biz.LogDeviceActivity(ctx, deviceID, sessionID, data)
 	if err != nil {
 		ds.writeError(ctx, w, err, http.StatusInternalServerError)
 		return
@@ -57,9 +57,9 @@ func (ds *DevicesServer) GetDevice(w http.ResponseWriter, r *http.Request) {
 	deviceBusiness := business.NewDeviceBusiness(ctx, ds.Service)
 
 	vars := mux.Vars(r)
-	deviceId := vars["id"]
+	deviceID := vars["id"]
 
-	device, err := deviceBusiness.GetDeviceByID(ctx, deviceId)
+	device, err := deviceBusiness.GetDeviceByID(ctx, deviceID)
 	if err != nil {
 		if frame.ErrorIsNoRows(err) {
 			ds.writeError(ctx, w, err, http.StatusNotFound)
@@ -85,15 +85,25 @@ func (ds *DevicesServer) SearchDevices(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	devices, err := ds.Biz.SearchDevices(ctx, &query)
+	devicesChan, err := ds.Biz.SearchDevices(ctx, &query)
 	if err != nil {
 		ds.writeError(ctx, w, err, http.StatusInternalServerError)
 		return
 	}
 
+	// Collect all devices from the channel
+	var allDevices []*devicev1.DeviceObject
+	for result := range devicesChan {
+		if result.IsError() {
+			ds.writeError(ctx, w, result.Error(), http.StatusInternalServerError)
+			return
+		}
+		allDevices = append(allDevices, result.Item()...)
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(devices)
+	_ = json.NewEncoder(w).Encode(allDevices)
 }
 
 func (ds *DevicesServer) RestLogDeviceData(w http.ResponseWriter, r *http.Request) {

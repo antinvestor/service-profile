@@ -33,14 +33,14 @@ type DeviceBusiness interface {
 	AddKey(
 		ctx context.Context,
 		deviceID string,
-		keyType devicev1.KeyType,
+		_ devicev1.KeyType,
 		key []byte,
 		extra map[string]string,
 	) (*devicev1.KeyObject, error)
 	GetKeys(
 		ctx context.Context,
 		deviceID string,
-		keyType devicev1.KeyType,
+		_ devicev1.KeyType,
 	) (<-chan frame.JobResult[[]*devicev1.KeyObject], error)
 	RemoveKeys(ctx context.Context, id ...string) (<-chan frame.JobResult[[]*devicev1.KeyObject], error)
 
@@ -201,8 +201,8 @@ func (b *deviceBusiness) SearchDevices(
 		var apiDevices []*devicev1.DeviceObject
 		for _, device := range devices {
 			// Get last session for each device
-			sess, err := b.sessionRepo.GetLastByDeviceID(ctx, device.GetID())
-			if err != nil {
+			sess, sessionErr := b.sessionRepo.GetLastByDeviceID(ctx, device.GetID())
+			if sessionErr != nil {
 				// Continue with nil session if not found
 				sess = nil
 			}
@@ -265,7 +265,7 @@ func (b *deviceBusiness) RemoveDevice(ctx context.Context, id string) error {
 func (b *deviceBusiness) AddKey(
 	ctx context.Context,
 	deviceID string,
-	keyType devicev1.KeyType,
+	_ devicev1.KeyType,
 	key []byte,
 	extra map[string]string,
 ) (*devicev1.KeyObject, error) {
@@ -285,7 +285,7 @@ func (b *deviceBusiness) AddKey(
 func (b *deviceBusiness) GetKeys(
 	ctx context.Context,
 	deviceID string,
-	keyType devicev1.KeyType,
+	_ devicev1.KeyType,
 ) (<-chan frame.JobResult[[]*devicev1.KeyObject], error) {
 	out := make(chan frame.JobResult[[]*devicev1.KeyObject])
 

@@ -1,4 +1,4 @@
-package repository
+package repository_test
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
 const (
@@ -67,7 +68,7 @@ func (suite *DeviceRepositoryTestSuite) CreateService(
 
 	svc.Init(ctx)
 
-	err = Migrate(ctx, svc, "../../migrations/0001")
+	err = repository.Migrate(ctx, svc, "../../migrations/0001")
 	require.NoError(t, err)
 
 	err = svc.Run(ctx, "")
@@ -129,7 +130,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		deviceRepo := NewDeviceRepository(svc)
+		deviceRepo := repository.NewDeviceRepository(svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -201,7 +202,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceSessionRepository() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		sessionRepo := NewDeviceSessionRepository(svc)
+		sessionRepo := repository.NewDeviceSessionRepository(svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -260,7 +261,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		logRepo := NewDeviceLogRepository(svc)
+		logRepo := repository.NewDeviceLogRepository(svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -325,7 +326,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-		keyRepo := NewDeviceKeyRepository(svc)
+		keyRepo := repository.NewDeviceKeyRepository(svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
