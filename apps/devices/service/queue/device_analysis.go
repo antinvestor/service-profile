@@ -115,7 +115,7 @@ func (dq *DeviceAnalysisQueueHandler) createSessionFromLog(ctx context.Context, 
 	}
 	sess.GenID(ctx)
 
-	geoIp, _ := QueryIPGeo(ctx, data["ip"])
+	geoIp, _ := QueryIPGeo(ctx, dq.Service, data["ip"])
 
 	locale, err0 := dq.extractLocaleData(ctx, data, geoIp)
 	if err0 != nil {

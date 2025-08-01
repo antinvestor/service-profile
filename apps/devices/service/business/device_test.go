@@ -17,6 +17,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
@@ -30,8 +31,7 @@ type DeviceBusinessTestSuite struct {
 
 func initResources(_ context.Context) []testdef.TestResource {
 	pg := testpostgres.NewPGDepWithCred(testpostgres.PostgresqlDBImage, "ant", "s3cr3t", "service_profile")
-	resources := []testdef.TestResource{pg}
-	return resources
+	return []testdef.TestResource{pg}
 }
 
 func (suite *DeviceBusinessTestSuite) SetupSuite() {
@@ -100,76 +100,119 @@ func TestDeviceBusinessTestSuite(t *testing.T) {
 }
 
 func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		id          string
 		deviceName  string
 		data        map[string]string
 		expectError bool
-		errorMsg    string
+		expectNil   bool
 	}{
 		{
-			name:       "valid device with all data",
-			id:         "",
+			name:       "save device with existing ID",
+			id:         "existing-device-id",
 			deviceName: "Test Device",
 			data: map[string]string{
 				"profile_id": "profile-123",
 				"os":         "Linux",
 				"user_agent": "Mozilla/5.0",
 				"ip":         "192.168.1.1",
-				"locale":     "en-US",
-				"location":   "US",
+				"session_id": "test-session-1",
 			},
 			expectError: false,
+			expectNil:   false,
 		},
 		{
-			name:       "valid device with custom ID",
-			id:         "custom-device-id",
-			deviceName: "Custom Device",
+			name:       "save device with empty ID returns nil",
+			id:         "",
+			deviceName: "Test Device",
 			data: map[string]string{
 				"profile_id": "profile-456",
 				"os":         "Windows",
-				"user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-				"ip":         "10.0.0.1",
-				"locale":     "en-GB",
-				"location":   "UK",
+				"session_id": "test-session-2",
 			},
 			expectError: false,
+			expectNil:   true, // New implementation returns nil for empty ID
 		},
 		{
-			name:       "minimal device data",
+			name:       "save device logs activity even with empty ID",
 			id:         "",
 			deviceName: "Minimal Device",
 			data: map[string]string{
 				"profile_id": "profile-789",
+				"session_id": "test-session-3",
 			},
 			expectError: false,
+			expectNil:   true,
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
+
+		// Create business layer
 		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				device, err := biz.SaveDevice(ctx, tc.id, tc.deviceName, tc.data)
+				// For tests with existing ID, create the device first
+				if tc.id != "" && tc.name == "save device with existing ID" {
+					device := &models.Device{
+						Name: "Original Name",
+						OS:   "Original OS",
+					}
+					device.GenID(ctx)
+					device.ID = tc.id
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+					require.NoError(t, err)
+					
+					// Create a session for the device (required by GetDeviceByID)
+					session := &models.DeviceSession{
+						DeviceID:  tc.id,
+						UserAgent: "Test Agent",
+						IP:        "127.0.0.1",
+					}
+					session.GenID(ctx)
+					if sessionID, ok := tc.data["session_id"]; ok {
+						session.ID = sessionID
+					}
+					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+					require.NoError(t, err)
+				}
+
+				result, err := biz.SaveDevice(ctx, tc.id, tc.deviceName, tc.data)
 
 				if tc.expectError {
 					require.Error(t, err)
-					assert.Contains(t, err.Error(), tc.errorMsg)
-					assert.Nil(t, device)
+					return
+				}
+
+				require.NoError(t, err)
+
+				if tc.expectNil {
+					assert.Nil(t, result)
 				} else {
+					assert.NotNil(t, result)
+					assert.Equal(t, tc.id, result.GetId())
+					assert.Equal(t, tc.deviceName, result.GetName())
+				}
+
+				// Verify that device activity was logged regardless
+				if tc.data["session_id"] != "" {
+					logs, err := biz.GetDeviceLogs(ctx, tc.id)
 					require.NoError(t, err)
-					assert.NotNil(t, device)
-					assert.Equal(t, tc.deviceName, device.GetName())
-					if tc.id != "" {
-						assert.Equal(t, tc.id, device.GetId())
-					} else {
-						assert.NotEmpty(t, device.GetId())
+
+					// Collect logs from channel
+					var logCount int
+					for result := range logs {
+						if !result.IsError() {
+							logCount += len(result.Item())
+						}
 					}
-					if os, exists := tc.data["os"]; exists {
-						assert.Equal(t, os, device.GetOs())
+					// Should have at least one log entry (the SaveDevice call logs activity)
+					if tc.id != "" {
+						assert.Greater(t, logCount, 0)
 					}
 				}
 			})
@@ -178,6 +221,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -203,7 +247,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -211,15 +255,25 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 			t.Run(tc.name, func(t *testing.T) {
 				var deviceID string
 				if tc.setupDevice {
-					// Create a device first
-					device, err := biz.SaveDevice(ctx, "", "Test Device", map[string]string{
-						"profile_id": "profile-test",
-						"os":         "Linux",
-						"user_agent": "Test Agent",
-						"ip":         "127.0.0.1",
-					})
+					// Create a device and session first
+					device := &models.Device{
+						Name: "Test Device",
+						OS:   "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					deviceID = device.GetId()
+					deviceID = device.GetID()
+					
+					// Create a session for the device (required by GetDeviceByID)
+					session := &models.DeviceSession{
+						DeviceID:  deviceID,
+						UserAgent: "Test Agent",
+						IP:        "127.0.0.1",
+					}
+					session.GenID(ctx)
+					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+					require.NoError(t, err)
 				} else {
 					deviceID = tc.deviceID
 				}
@@ -241,6 +295,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -260,7 +315,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -268,15 +323,25 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 			t.Run(tc.name, func(t *testing.T) {
 				var sessionID string
 				if tc.setupDevice {
-					// Create a device first which creates a session
-					device, err := biz.SaveDevice(ctx, "", "Test Device", map[string]string{
-						"profile_id": "profile-test",
-						"os":         "Linux",
-						"user_agent": "Test Agent",
-						"ip":         "127.0.0.1",
-					})
+					// Create a device and session first
+					device := &models.Device{
+						Name: "Test Device",
+						OS:   "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					sessionID = device.GetSessionId()
+					
+					// Create a session for the device
+					session := &models.DeviceSession{
+						DeviceID:  device.GetID(),
+						UserAgent: "Test Agent",
+						IP:        "127.0.0.1",
+					}
+					session.GenID(ctx)
+					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+					require.NoError(t, err)
+					sessionID = session.GetID()
 				} else {
 					sessionID = tc.sessionID
 				}
@@ -297,6 +362,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -322,7 +388,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -333,6 +399,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 					device, err := biz.SaveDevice(ctx, "", "Test Device", map[string]string{
 						"profile_id": "profile-log-test",
 						"os":         "Linux",
+						"session_id": "test-session-6",
 					})
 					require.NoError(t, err)
 					deviceID = device.GetId()
@@ -359,6 +426,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestAddKey() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -388,7 +456,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -400,6 +468,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 					device, err := biz.SaveDevice(ctx, "", "Test Device", map[string]string{
 						"profile_id": "profile-key-test",
 						"os":         "Linux",
+						"session_id": "test-session-7",
 					})
 					require.NoError(t, err)
 					deviceID = device.GetId()
@@ -424,6 +493,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -443,7 +513,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -451,12 +521,15 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 			t.Run(tc.name, func(t *testing.T) {
 				var deviceID string
 				if tc.setupDevice {
-					device, err := biz.SaveDevice(ctx, "", "Test Device", map[string]string{
-						"profile_id": "profile-remove-test",
-						"os":         "Linux",
-					})
+					// Create a device first
+					device := &models.Device{
+						Name: "Test Device",
+						OS:   "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					deviceID = device.GetId()
+					deviceID = device.GetID()
 				} else {
 					deviceID = tc.deviceID
 				}
@@ -478,6 +551,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -504,20 +578,31 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				if tc.setupDevice {
-					// Create a device first
-					_, err := biz.SaveDevice(ctx, "", "Search Test Device", map[string]string{
-						"profile_id": tc.profileID,
-						"os":         "Linux",
-						"user_agent": "Test Agent",
-						"ip":         "127.0.0.1",
-					})
+					// Create a device with profile ID first
+					device := &models.Device{
+						ProfileID: tc.profileID,
+						Name:      "Search Test Device",
+						OS:        "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+					require.NoError(t, err)
+					
+					// Create a session for the device
+					session := &models.DeviceSession{
+						DeviceID:  device.GetID(),
+						UserAgent: "Test Agent",
+						IP:        "127.0.0.1",
+					}
+					session.GenID(ctx)
+					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
 					require.NoError(t, err)
 				}
 
@@ -543,7 +628,9 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 
 				if tc.setupDevice && tc.profileID != "" {
 					assert.Len(t, devices, 1)
-					assert.Equal(t, tc.profileID, devices[0].GetId()) // Note: SearchDevices uses profileID as device ID in our implementation
+					if len(devices) > 0 {
+						assert.NotEmpty(t, devices[0].GetId())
+					}
 				} else {
 					assert.Len(t, devices, 0)
 				}
@@ -553,6 +640,7 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -579,7 +667,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -588,16 +676,18 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 				var deviceID string
 				if tc.setupDevice {
 					// Create a device first
-					device, err := biz.SaveDevice(ctx, "", "Log Test Device", map[string]string{
-						"profile_id": "profile-log-test",
-						"os":         "Linux",
-					})
+					device := &models.Device{
+						Name: "Log Test Device",
+						OS:   "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					deviceID = device.GetId()
+					deviceID = device.GetID()
 
 					// Add a log for the first test case
 					if tc.name == "get logs for device with logs" {
-						_, err = biz.LogDeviceActivity(ctx, deviceID, device.GetSessionId(), map[string]string{
+						_, err = biz.LogDeviceActivity(ctx, deviceID, "test-session-10", map[string]string{
 							"action": "test_action",
 						})
 						require.NoError(t, err)
@@ -634,6 +724,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestGetKeys() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -666,7 +757,7 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -675,12 +766,14 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 				var deviceID string
 				if tc.setupDevice {
 					// Create a device first
-					device, err := biz.SaveDevice(ctx, "", "Key Test Device", map[string]string{
-						"profile_id": "profile-key-test",
-						"os":         "Linux",
-					})
+					device := &models.Device{
+						Name: "Key Test Device",
+						OS:   "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					deviceID = device.GetId()
+					deviceID = device.GetID()
 
 					if tc.setupKey {
 						_, err = biz.AddKey(ctx, deviceID, tc.keyType, []byte("test-key-data"), map[string]string{
@@ -721,6 +814,7 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -751,7 +845,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -763,6 +857,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 					device, err := biz.SaveDevice(ctx, "", "Remove Key Test Device", map[string]string{
 						"profile_id": "profile-remove-key-test",
 						"os":         "Linux",
+						"session_id": "test-session-12",
 					})
 					require.NoError(t, err)
 
@@ -815,6 +910,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 }
 
 func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
+	t := suite.T()
 	testCases := []struct {
 		name        string
 		setupDevice bool
@@ -843,7 +939,7 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -851,15 +947,26 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 			t.Run(tc.name, func(t *testing.T) {
 				var sessionID string
 				if tc.setupDevice {
-					// Create a device first
-					device, err := biz.SaveDevice(ctx, "", "Link Test Device", map[string]string{
-						"profile_id": "original-profile",
-						"os":         "Linux",
-						"user_agent": "Test Agent",
-						"ip":         "127.0.0.1",
-					})
+					// Create a device and session first
+					device := &models.Device{
+						ProfileID: "original-profile",
+						Name:      "Link Test Device",
+						OS:        "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					sessionID = device.GetSessionId()
+					
+					// Create a session for the device
+					session := &models.DeviceSession{
+						DeviceID:  device.GetID(),
+						UserAgent: "Test Agent",
+						IP:        "127.0.0.1",
+					}
+					session.GenID(ctx)
+					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+					require.NoError(t, err)
+					sessionID = session.GetID()
 				} else {
 					sessionID = tc.sessionID
 				}

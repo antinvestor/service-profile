@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/pitabwire/util"
+	"github.com/pitabwire/frame"
 )
 
 type GeoIP struct {
@@ -39,17 +39,15 @@ type GeoIP struct {
 	Org                string  `json:"org"`
 }
 
-func QueryIPGeo(ctx context.Context, ip string) (*GeoIP, error) {
+func QueryIPGeo(ctx context.Context, svc *frame.Service, ip string) (*GeoIP, error) {
 	url := fmt.Sprintf("https://ipapi.co/%s/json/", ip)
-	resp, err := http.Get(url)
+	_, resp, err := svc.InvokeRestService(ctx, http.MethodGet, url, nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer util.CloseAndLogOnError(ctx, resp.Body)
 
 	var data GeoIP
-
-	err = json.NewDecoder(resp.Body).Decode(&data)
+	err = json.Unmarshal(resp, &data)
 	if err != nil {
 		return nil, err
 	}

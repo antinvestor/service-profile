@@ -5,6 +5,7 @@ import (
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/util"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -84,7 +85,7 @@ func (ds *DevicesServer) Search(req *devicev1.SearchRequest, stream devicev1.Dev
 }
 
 func (ds *DevicesServer) Create(ctx context.Context, req *devicev1.CreateRequest) (*devicev1.CreateResponse, error) {
-	deviceID := frame.GenerateID(ctx)
+	deviceID := util.IDString()
 
 	device, err := ds.Biz.SaveDevice(
 		ctx, deviceID, req.GetName(), req.GetProperties(),
