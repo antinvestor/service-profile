@@ -3,9 +3,14 @@ package main
 import (
 	"net/http"
 
+	"buf.build/go/protovalidate"
+	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/util"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
@@ -45,29 +50,20 @@ func main() {
 		log.WithError(err).Fatal("main -- could not register fo jwt")
 	}
 
-	jwtAudience := cfg.Oauth2JwtVerifyAudience
-	if jwtAudience == "" {
-		jwtAudience = serviceName
+	// Setup GRPC server
+	grpcServer, implementation := setupGRPCServer(ctx, svc, cfg, serviceName, log)
+
+	// Setup HTTP handlers and proxy
+	serviceOptions, httpErr := setupHTTPHandlers(ctx, implementation, grpcServer)
+	if err != nil {
+		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
 	}
-
-	implementation := &handlers.DevicesServer{
-		Service: svc,
-	}
-
-	profileServiceRestHandlers := svc.AuthenticationMiddleware(
-		implementation.NewSecureRouterV1(), jwtAudience, cfg.Oauth2JwtVerifyIssuer)
-
-	proxyMux := http.NewServeMux()
-
-	proxyMux.Handle("/public/", http.StripPrefix("/public", profileServiceRestHandlers))
-	proxyMux.Handle("/_public/", http.StripPrefix("/_public", implementation.NewInSecureRouterV1()))
-
-	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
 
 	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
 		Service:             svc,
 		DeviceRepository:    repository.NewDeviceRepository(svc),
 		DeviceLogRepository: repository.NewDeviceLogRepository(svc),
+		SessionRepository:   repository.NewDeviceSessionRepository(svc),
 	}
 
 	deviceAnalysisQueue := frame.WithRegisterSubscriber(
@@ -92,4 +88,58 @@ func main() {
 	if err != nil {
 		log.WithError(err).Fatal("could not run Server ")
 	}
+}
+
+// setupGRPCServer initializes and configures the gRPC server.
+func setupGRPCServer(ctx context.Context, svc *frame.Service,
+	cfg config.DevicesConfig,
+	serviceName string,
+	log *util.LogEntry) (*grpc.Server, *handlers.DevicesServer) {
+	jwtAudience := cfg.Oauth2JwtVerifyAudience
+	if jwtAudience == "" {
+		jwtAudience = serviceName
+	}
+
+	validator, err := protovalidate.New()
+	if err != nil {
+		log.WithError(err).Fatal("could not load validator for proto messages")
+	}
+
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
+			svc.UnaryAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer),
+			protovalidateinterceptor.UnaryServerInterceptor(validator)),
+
+		grpc.ChainStreamInterceptor(
+			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
+			svc.StreamAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer),
+			protovalidateinterceptor.StreamServerInterceptor(validator),
+		),
+	)
+
+	implementation := handlers.NewDeviceServer(ctx, svc)
+	devicev1.RegisterDeviceServiceServer(grpcServer, implementation)
+
+	return grpcServer, implementation
+}
+
+// setupHTTPHandlers configures HTTP handlers and proxy.
+func setupHTTPHandlers(
+	_ context.Context,
+	implementation *handlers.DevicesServer,
+	grpcServer *grpc.Server,
+) ([]frame.Option, error) {
+	// Start with datastore option
+	serviceOptions := []frame.Option{frame.WithDatastore()}
+
+	// Add GRPC server option
+	grpcServerOpt := frame.WithGRPCServer(grpcServer)
+	serviceOptions = append(serviceOptions, grpcServerOpt)
+
+	proxyMux := http.NewServeMux()
+	proxyMux.Handle("/_public/", http.StripPrefix("/_public", implementation.NewInSecureRouterV1()))
+	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
+
+	return serviceOptions, nil
 }

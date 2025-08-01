@@ -2,8 +2,8 @@ package business
 
 import (
 	"context"
-	"errors"
 
+	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
@@ -11,105 +11,328 @@ import (
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
+// DeviceBusiness defines the interface for device-related business logic.
+// It abstracts the underlying data storage and provides methods for interacting
+// with device data in a consistent and transactional manner.
 type DeviceBusiness interface {
-	GetByID(ctx context.Context, deviceID string) (*models.Device, error)
-	GetByLinkID(ctx context.Context, linkID string) (*models.Device, error)
-	GetByProfileID(ctx context.Context, linkID string) ([]*models.Device, error)
-	UpdateProfileID(ctx context.Context, linkID, profileID string) (*models.Device, error)
-	LogDevice(ctx context.Context, logData *models.DeviceLog) error
-	GetDeviceLogByID(ctx context.Context, deviceLogID string) (*models.DeviceLog, error)
-	GetDeviceLogByDeviceID(ctx context.Context, deviceID string) ([]*models.DeviceLog, error)
-}
+	GetDeviceByID(ctx context.Context, id string) (*devicev1.DeviceObject, error)
+	GetDeviceBySessionID(ctx context.Context, id string) (*devicev1.DeviceObject, error)
+	SearchDevices(
+		ctx context.Context,
+		query *devicev1.SearchRequest,
+	) (<-chan frame.JobResult[[]*devicev1.DeviceObject], error)
+	SaveDevice(ctx context.Context, id string, name string, data map[string]string) (*devicev1.DeviceObject, error)
+	LinkDeviceToProfile(
+		ctx context.Context,
+		sessionID string,
+		profileID string,
+		data map[string]string,
+	) (*devicev1.DeviceObject, error)
+	RemoveDevice(ctx context.Context, id string) error
 
-func NewDeviceBusiness(_ context.Context, service *frame.Service) DeviceBusiness {
-	deviceRepo := repository.NewDeviceRepository(service)
-	deviceLogRepo := repository.NewDeviceLogRepository(service)
-	return &deviceBusiness{
-		service:             service,
-		deviceRepository:    deviceRepo,
-		deviceLogRepository: deviceLogRepo,
-	}
+	AddKey(
+		ctx context.Context,
+		deviceID string,
+		keyType devicev1.KeyType,
+		key []byte,
+		extra map[string]string,
+	) (*devicev1.KeyObject, error)
+	GetKeys(
+		ctx context.Context,
+		deviceID string,
+		keyType devicev1.KeyType,
+	) (<-chan frame.JobResult[[]*devicev1.KeyObject], error)
+	RemoveKeys(ctx context.Context, id ...string) (<-chan frame.JobResult[[]*devicev1.KeyObject], error)
+
+	LogDeviceActivity(
+		ctx context.Context,
+		deviceID, sessionID string,
+		data map[string]string,
+	) (*devicev1.DeviceLog, error)
+	GetDeviceLogs(ctx context.Context, deviceID string) (<-chan frame.JobResult[[]*devicev1.DeviceLog], error)
 }
 
 type deviceBusiness struct {
-	service             *frame.Service
-	deviceRepository    repository.DeviceRepository
-	deviceLogRepository repository.DeviceLogRepository
+	cfg           *config.DevicesConfig
+	deviceRepo    repository.DeviceRepository
+	deviceLogRepo repository.DeviceLogRepository
+	sessionRepo   repository.DeviceSessionRepository
+	deviceKeyRepo repository.DeviceKeyRepository
+	service       *frame.Service
 }
 
-func (dB *deviceBusiness) GetByID(ctx context.Context, deviceID string) (*models.Device, error) {
-	return dB.deviceRepository.GetByID(ctx, deviceID)
+// NewDeviceBusiness creates a new instance of DeviceBusiness.
+func NewDeviceBusiness(_ context.Context, service *frame.Service) DeviceBusiness {
+	cfg, _ := service.Config().(*config.DevicesConfig)
+	return &deviceBusiness{
+		cfg:           cfg,
+		deviceRepo:    repository.NewDeviceRepository(service),
+		deviceLogRepo: repository.NewDeviceLogRepository(service),
+		sessionRepo:   repository.NewDeviceSessionRepository(service),
+		deviceKeyRepo: repository.NewDeviceKeyRepository(service),
+		service:       service,
+	}
 }
 
-func (dB *deviceBusiness) GetByLinkID(ctx context.Context, linkID string) (*models.Device, error) {
-	device, err := dB.deviceRepository.GetByLinkID(ctx, linkID)
-	if err != nil {
-		if !frame.ErrorIsNoRows(err) {
-			return nil, err
+func (b *deviceBusiness) LogDeviceActivity(
+	ctx context.Context,
+	deviceID, sessionID string,
+	extra map[string]string,
+) (*devicev1.DeviceLog, error) {
+	log := &models.DeviceLog{
+		DeviceID:        deviceID,
+		DeviceSessionID: sessionID,
+		Data:            frame.DBPropertiesFromMap(extra),
+	}
+
+	if err := b.deviceLogRepo.Save(ctx, log); err != nil {
+		return nil, err
+	}
+
+	// Publish to queue for further analysis
+	if b.cfg.QueueDeviceAnalysisName != "" {
+		payload := map[string]string{"id": log.GetID()}
+		_ = b.service.Publish(ctx, b.cfg.QueueDeviceAnalysisName, payload, nil)
+	}
+
+	return log.ToAPI(), nil
+}
+
+func (b *deviceBusiness) GetDeviceLogs(
+	ctx context.Context,
+	deviceID string,
+) (<-chan frame.JobResult[[]*devicev1.DeviceLog], error) {
+	out := make(chan frame.JobResult[[]*devicev1.DeviceLog])
+
+	go func() {
+		defer close(out)
+
+		logs, err := b.deviceLogRepo.GetByDeviceID(ctx, deviceID)
+		if err != nil {
+			out <- frame.ErrorResult[[]*devicev1.DeviceLog](err)
+			return
 		}
+
+		apiLogs := make([]*devicev1.DeviceLog, len(logs))
+		for i, log := range logs {
+			apiLogs[i] = log.ToAPI()
+		}
+
+		out <- frame.Result[[]*devicev1.DeviceLog](apiLogs)
+	}()
+
+	return out, nil
+}
+
+func (b *deviceBusiness) SaveDevice(
+	ctx context.Context,
+	id string,
+	name string,
+	data map[string]string,
+) (*devicev1.DeviceObject, error) {
+	// Extract data from the map
+	profileID := data["profile_id"]
+	os := data["os"]
+	userAgent := data["user_agent"]
+	ip := data["ip"]
+	locale := data["locale"]
+	location := data["location"]
+
+	device := &models.Device{
+		ProfileID: profileID,
+		Name:      name,
+		OS:        os,
 	}
 
-	if device != nil {
-		return device, nil
+	// Set ID if provided
+	if id != "" {
+		device.ID = id
 	}
 
-	deviceLog, err := dB.deviceLogRepository.GetByLinkID(ctx, linkID)
+	if err := b.deviceRepo.Save(ctx, device); err != nil {
+		return nil, err
+	}
+
+	session := &models.DeviceSession{
+		DeviceID:  device.GetID(),
+		UserAgent: userAgent,
+		IP:        ip,
+		Locale:    frame.DBPropertiesFromMap(map[string]string{"name": locale}),
+		Location:  frame.DBPropertiesFromMap(map[string]string{"name": location}),
+	}
+
+	if err := b.sessionRepo.Save(ctx, session); err != nil {
+		// Potentially roll back device creation or handle inconsistency
+		return nil, err
+	}
+
+	return device.ToAPI(session), nil
+}
+
+func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev1.DeviceObject, error) {
+	dev, err := b.deviceRepo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if deviceLog.DeviceID == "" {
-		return nil, errors.New("device log not yet successfully processed")
+	sess, err := b.sessionRepo.GetLastByDeviceID(ctx, id)
+	if err != nil {
+		return nil, err
 	}
 
-	return dB.deviceRepository.GetByID(ctx, deviceLog.DeviceID)
+	return dev.ToAPI(sess), nil
 }
 
-func (dB *deviceBusiness) UpdateProfileID(ctx context.Context, linkID, profileID string) (*models.Device, error) {
-	device, err := dB.GetByLinkID(ctx, linkID)
+func (b *deviceBusiness) SearchDevices(
+	ctx context.Context,
+	query *devicev1.SearchRequest,
+) (<-chan frame.JobResult[[]*devicev1.DeviceObject], error) {
+	out := make(chan frame.JobResult[[]*devicev1.DeviceObject])
+
+	go func() {
+		defer close(out)
+
+		devices, err := b.deviceRepo.GetByProfileID(ctx, query.GetQuery())
+		if err != nil {
+			out <- frame.ErrorResult[[]*devicev1.DeviceObject](err)
+			return
+		}
+
+		var apiDevices []*devicev1.DeviceObject
+		for _, device := range devices {
+			// Get last session for each device
+			sess, err := b.sessionRepo.GetLastByDeviceID(ctx, device.GetID())
+			if err != nil {
+				// Continue with nil session if not found
+				sess = nil
+			}
+			apiDevices = append(apiDevices, device.ToAPI(sess))
+		}
+
+		out <- frame.Result[[]*devicev1.DeviceObject](apiDevices)
+	}()
+
+	return out, nil
+}
+
+func (b *deviceBusiness) GetDeviceBySessionID(ctx context.Context, id string) (*devicev1.DeviceObject, error) {
+	sess, err := b.sessionRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	dev, err := b.deviceRepo.GetByID(ctx, sess.DeviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	return dev.ToAPI(sess), nil
+}
+
+func (b *deviceBusiness) LinkDeviceToProfile(
+	ctx context.Context,
+	sessionID string,
+	profileID string,
+	_ map[string]string,
+) (*devicev1.DeviceObject, error) {
+	session, err := b.sessionRepo.GetByID(ctx, sessionID)
+	if err != nil {
+		return nil, err
+	}
+
+	device, err := b.deviceRepo.GetByID(ctx, session.DeviceID)
 	if err != nil {
 		return nil, err
 	}
 
 	if device.ProfileID == "" {
 		device.ProfileID = profileID
-		err = dB.deviceRepository.Save(ctx, device)
+
+		err = b.deviceRepo.Save(ctx, device)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return device, nil
+	return device.ToAPI(session), nil
 }
 
-func (dB *deviceBusiness) GetByProfileID(ctx context.Context, profileID string) ([]*models.Device, error) {
-	return dB.deviceRepository.List(ctx, profileID)
+func (b *deviceBusiness) RemoveDevice(ctx context.Context, id string) error {
+	_, err := b.deviceRepo.RemoveByID(ctx, id)
+	return err
 }
 
-func (dB *deviceBusiness) LogDevice(ctx context.Context, logData *models.DeviceLog) error {
-	logData.GenID(ctx)
-
-	cfg, ok := dB.service.Config().(*config.DevicesConfig)
-	if !ok {
-		return errors.New("invalid service configuration")
+func (b *deviceBusiness) AddKey(
+	ctx context.Context,
+	deviceID string,
+	keyType devicev1.KeyType,
+	key []byte,
+	extra map[string]string,
+) (*devicev1.KeyObject, error) {
+	deviceKey := &models.DeviceKey{
+		DeviceID: deviceID,
+		Key:      key,
+		Extra:    frame.DBPropertiesFromMap(extra),
 	}
 
-	err := dB.deviceLogRepository.Save(ctx, logData)
-	if err != nil {
-		return err
+	if err := b.deviceKeyRepo.Save(ctx, deviceKey); err != nil {
+		return nil, err
 	}
 
-	payload := map[string]string{
-		"id": logData.GetID(),
-	}
-
-	return dB.service.Publish(ctx, cfg.QueueDeviceAnalysisName, payload)
+	return deviceKey.ToAPI(), nil
 }
 
-func (dB *deviceBusiness) GetDeviceLogByID(ctx context.Context, deviceLogID string) (*models.DeviceLog, error) {
-	return dB.deviceLogRepository.GetByID(ctx, deviceLogID)
+func (b *deviceBusiness) GetKeys(
+	ctx context.Context,
+	deviceID string,
+	keyType devicev1.KeyType,
+) (<-chan frame.JobResult[[]*devicev1.KeyObject], error) {
+	out := make(chan frame.JobResult[[]*devicev1.KeyObject])
+
+	go func() {
+		defer close(out)
+
+		keys, err := b.deviceKeyRepo.GetByDeviceID(ctx, deviceID)
+		if err != nil {
+			out <- frame.ErrorResult[[]*devicev1.KeyObject](err)
+			return
+		}
+
+		apiKeys := make([]*devicev1.KeyObject, len(keys))
+		for i, key := range keys {
+			apiKeys[i] = key.ToAPI()
+		}
+
+		out <- frame.Result[[]*devicev1.KeyObject](apiKeys)
+	}()
+
+	return out, nil
 }
 
-func (dB *deviceBusiness) GetDeviceLogByDeviceID(ctx context.Context, deviceID string) ([]*models.DeviceLog, error) {
-	return dB.deviceLogRepository.ListByDeviceID(ctx, deviceID)
+func (b *deviceBusiness) RemoveKeys(
+	ctx context.Context,
+	id ...string,
+) (<-chan frame.JobResult[[]*devicev1.KeyObject], error) {
+	out := make(chan frame.JobResult[[]*devicev1.KeyObject])
+
+	go func() {
+		defer close(out)
+
+		var removedKeys []*devicev1.KeyObject
+
+		for _, keyID := range id {
+			removedKey, err := b.deviceKeyRepo.RemoveByID(ctx, keyID)
+			if err != nil {
+				out <- frame.ErrorResult[[]*devicev1.KeyObject](err)
+				return
+			}
+			if removedKey != nil {
+				removedKeys = append(removedKeys, removedKey.ToAPI())
+			}
+		}
+
+		out <- frame.Result[[]*devicev1.KeyObject](removedKeys)
+	}()
+
+	return out, nil
 }

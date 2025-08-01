@@ -3,25 +3,20 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
+	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	"github.com/gorilla/mux"
 	"github.com/pitabwire/frame"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
 )
 
-type DevicesServer struct {
-	Service *frame.Service
-}
-
-func (ps *DevicesServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {
+func (ds *DevicesServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {
 	w.Header().Set("Content-Type", "application/json")
 
-	log := ps.Service.Log(ctx).
+	log := ds.Service.Log(ctx).
 		WithField("code", code)
 
 	log.WithError(err).Error("internal service error")
@@ -33,202 +28,145 @@ func (ps *DevicesServer) writeError(ctx context.Context, w http.ResponseWriter, 
 	}
 }
 
-func (ps *DevicesServer) RestLogDeviceData(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
+func (ds *DevicesServer) LogDevice(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
-	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
+	vars := mux.Vars(r)
+	deviceId := vars["deviceId"]
+	sessionId := vars["sessionId"]
 
-	var deviceLog models.DeviceLog
-	err := json.NewDecoder(req.Body).Decode(&deviceLog)
-	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusBadRequest)
+	var data map[string]string
+	if err := json.NewDecoder(r.Body).Decode(&data); err != nil {
+		ds.writeError(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
-	rawIPData := frame.GetIP(req)
-	clientIPList := strings.Split(rawIPData, ",")
-	clientIP := strings.TrimSpace(clientIPList[0])
-
-	deviceLog.Data["ip"] = clientIP
-
-	err = deviceBusiness.LogDevice(ctx, &deviceLog)
+	log, err := ds.Biz.LogDeviceActivity(ctx, deviceId, sessionId, data)
 	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
+		ds.writeError(ctx, w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(log)
+}
+
+func (ds *DevicesServer) GetDevice(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	deviceBusiness := business.NewDeviceBusiness(ctx, ds.Service)
+
+	vars := mux.Vars(r)
+	deviceId := vars["id"]
+
+	device, err := deviceBusiness.GetDeviceByID(ctx, deviceId)
+	if err != nil {
+		if frame.ErrorIsNoRows(err) {
+			ds.writeError(ctx, w, err, http.StatusNotFound)
+			return
+		}
+		ds.writeError(ctx, w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(device)
+}
+
+func (ds *DevicesServer) SearchDevices(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var query devicev1.SearchRequest
+
+	err := json.NewDecoder(r.Body).Decode(&query)
+	if err != nil {
+		ds.writeError(ctx, w, err, http.StatusBadRequest)
+		return
+	}
+
+	devices, err := ds.Biz.SearchDevices(ctx, &query)
+	if err != nil {
+		ds.writeError(ctx, w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(devices)
+}
+
+func (ds *DevicesServer) RestLogDeviceData(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var deviceData []byte
+	_, err := r.Body.Read(deviceData)
+	if err != nil {
+		ds.writeError(ctx, w, err, http.StatusBadRequest)
+		return
+	}
+
+	data := make(map[string]string)
+	for k, v := range r.Header {
+		data[k] = v[0]
+	}
+	data["data"] = string(deviceData)
+
+	devLog, err := ds.Biz.LogDeviceActivity(ctx, "", "", data)
+	if err != nil {
+		ds.writeError(ctx, w, err, http.StatusInternalServerError)
 		return
 	}
 
 	response := map[string]any{
-		"id": deviceLog.GetID(),
+		"id": devLog.GetId(),
 	}
 
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(rw).Encode(response)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
-func (ps *DevicesServer) RestDeviceLinkProfile(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-
-	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
+func (ds *DevicesServer) RestDeviceLinkProfile(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 
 	var linkData map[string]string
-	err := json.NewDecoder(req.Body).Decode(&linkData)
+	err := json.NewDecoder(r.Body).Decode(&linkData)
 	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusBadRequest)
+		ds.writeError(ctx, w, err, http.StatusBadRequest)
 		return
 	}
 
-	linkID, ok := linkData["link_id"]
+	sessionID, ok := linkData["session_id"]
 	if !ok {
-		rw.Header().Set("Content-Type", "application/json")
-		rw.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(rw).Encode("missing parameters")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode("missing parameters")
 		return
 	}
 	profileID, ok := linkData["profile_id"]
 	if !ok {
-		rw.Header().Set("Content-Type", "application/json")
-		rw.WriteHeader(http.StatusBadRequest)
-		_ = json.NewEncoder(rw).Encode("missing parameters")
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		_ = json.NewEncoder(w).Encode("missing parameters")
 		return
 	}
 
-	device, err := deviceBusiness.UpdateProfileID(ctx, linkID, profileID)
+	device, err := ds.Biz.LinkDeviceToProfile(ctx, sessionID, profileID, linkData)
 	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
+		ds.writeError(ctx, w, err, http.StatusInternalServerError)
 		return
 	}
 
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(rw).Encode(device)
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(device)
 }
 
-func (ps *DevicesServer) RestGetDeviceLogByID(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	claims := frame.ClaimsFromContext(ctx)
-
-	if claims == nil {
-		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusInternalServerError)
-		return
-	}
-
-	deviceLogID := req.PathValue("deviceLogId")
-
-	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
-
-	deviceLog, err := deviceBusiness.GetDeviceLogByID(ctx, deviceLogID)
-	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
-		return
-	}
-
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(rw).Encode(deviceLog)
-}
-
-func (ps *DevicesServer) RestGetDeviceByDeviceLogID(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	claims := frame.ClaimsFromContext(ctx)
-
-	if claims == nil {
-		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusInternalServerError)
-		return
-	}
-
-	deviceLogID := req.PathValue("deviceLogId")
-
-	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
-
-	deviceLog, err := deviceBusiness.GetDeviceLogByID(ctx, deviceLogID)
-	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
-		return
-	}
-
-	if deviceLog.DeviceID == "" {
-		ps.writeError(ctx, rw, errors.New("device id has not yet been processed"), http.StatusInternalServerError)
-		return
-	}
-
-	device, err := deviceBusiness.GetByID(ctx, deviceLog.DeviceID)
-	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
-		return
-	}
-
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(rw).Encode(device)
-}
-
-func (ps *DevicesServer) RestGetDeviceByID(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	claims := frame.ClaimsFromContext(ctx)
-
-	if claims == nil {
-		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusInternalServerError)
-		return
-	}
-
-	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
-
-	deviceID := claims.GetDeviceID()
-
-	device, err := deviceBusiness.GetByID(ctx, deviceID)
-	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
-		return
-	}
-
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(rw).Encode(device)
-}
-
-func (ps *DevicesServer) RestGetDevicesByProfileID(rw http.ResponseWriter, req *http.Request) {
-	ctx := req.Context()
-	claims := frame.ClaimsFromContext(ctx)
-
-	if claims == nil {
-		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusInternalServerError)
-		return
-	}
-
-	profileID, err := claims.GetSubject()
-	if err != nil {
-		ps.writeError(ctx, rw, errors.New("could not obtain profile Id"), http.StatusInternalServerError)
-		return
-	}
-
-	deviceBusiness := business.NewDeviceBusiness(ctx, ps.Service)
-	deviceList, err := deviceBusiness.GetByProfileID(ctx, profileID)
-	if err != nil {
-		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
-		return
-	}
-
-	rw.Header().Set("Content-Type", "application/json")
-	rw.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(rw).Encode(deviceList)
-}
-
-func (ps *DevicesServer) NewSecureRouterV1() *http.ServeMux {
+func (ds *DevicesServer) NewInSecureRouterV1() *http.ServeMux {
 	userServeMux := http.NewServeMux()
-
-	userServeMux.HandleFunc("/user/device/by_id", ps.RestGetDeviceByID)
-	userServeMux.HandleFunc("/user/device/by_profile_id", ps.RestGetDevicesByProfileID)
-	userServeMux.HandleFunc("/user/device/by_device_log_id/{deviceLogId}", ps.RestGetDeviceByDeviceLogID)
-	userServeMux.HandleFunc("/user/device/log/{deviceLogId}", ps.RestGetDeviceLogByID)
-
-	return userServeMux
-}
-
-func (ps *DevicesServer) NewInSecureRouterV1() *http.ServeMux {
-	userServeMux := http.NewServeMux()
-	userServeMux.HandleFunc("/device/log", ps.RestLogDeviceData)
-	userServeMux.HandleFunc("/device/link", ps.RestDeviceLinkProfile)
+	userServeMux.HandleFunc("/device/log", ds.RestLogDeviceData)
+	userServeMux.HandleFunc("/device/link", ds.RestDeviceLinkProfile)
 
 	return userServeMux
 }

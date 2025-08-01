@@ -9,5 +9,15 @@ import (
 )
 
 func Migrate(ctx context.Context, svc *frame.Service, migrationPath string) error {
-	return svc.MigrateDatastore(ctx, migrationPath, &models.Device{}, &models.DeviceLog{})
+	err := svc.MigrateDatastore(ctx, migrationPath,
+		&models.Device{},
+		&models.DeviceSession{},
+		&models.DeviceKey{},
+		&models.DeviceLog{},
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
