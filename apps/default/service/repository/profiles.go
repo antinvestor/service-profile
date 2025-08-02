@@ -20,7 +20,6 @@ func (pr *profileRepository) Search(
 	ctx context.Context,
 	query *datastore.SearchQuery,
 ) (frame.JobResultPipe[[]*models.Profile], error) {
-
 	return datastore.StableSearch[models.Profile](ctx, pr.service, query, func(
 		ctx context.Context,
 		query *datastore.SearchQuery,
@@ -33,13 +32,18 @@ func (pr *profileRepository) Search(
 			Limit(paginator.Limit).Offset(paginator.Offset)
 
 		if query.Fields != nil {
-
 			startAt, sok := query.Fields["start_date"]
 			stopAt, stok := query.Fields["end_date"]
 			if sok && startAt != nil && stok && stopAt != nil {
-				startDate := startAt.(*time.Time).Format("2020-01-31T00:00:00Z")
-				endDate := stopAt.(*time.Time).Format("2020-01-31T00:00:00Z")
-				db = db.Where("created_at BETWEEN ? AND ? ", startDate, endDate)
+				startDate, ok1 := startAt.(*time.Time)
+				endDate, ok2 := stopAt.(*time.Time)
+				if ok1 && ok2 {
+					db = db.Where(
+						"created_at BETWEEN ? AND ? ",
+						startDate.Format("2020-01-31T00:00:00Z"),
+						endDate.Format("2020-01-31T00:00:00Z"),
+					)
+				}
 			}
 
 			profileID, pok := query.Fields["profile_id"]
@@ -58,7 +62,6 @@ func (pr *profileRepository) Search(
 		}
 
 		return profileList, nil
-
 	})
 }
 

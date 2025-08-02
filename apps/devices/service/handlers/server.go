@@ -99,7 +99,7 @@ func (ds *DevicesServer) Search(req *devicev1.SearchRequest, stream devicev1.Dev
 func (ds *DevicesServer) Create(ctx context.Context, req *devicev1.CreateRequest) (*devicev1.CreateResponse, error) {
 	// Generate a device ID for tracking
 	deviceID := util.IDString()
-	
+
 	// Add device name to properties if provided
 	properties := req.GetProperties()
 	if properties == nil {

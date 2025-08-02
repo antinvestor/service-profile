@@ -269,7 +269,8 @@ func (b *deviceBusiness) AddKey(
 		Extra:    frame.DBPropertiesFromMap(extra),
 	}
 
-	if err := b.deviceKeyRepo.Save(ctx, deviceKey); err != nil {
+	err = b.deviceKeyRepo.Save(ctx, deviceKey)
+	if err != nil {
 		return nil, err
 	}
 

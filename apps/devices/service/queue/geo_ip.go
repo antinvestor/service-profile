@@ -47,7 +47,7 @@ func QueryIPGeo(ctx context.Context, svc *frame.Service, ip string) (*GeoIP, err
 	}
 
 	if sts != http.StatusOK {
-		return nil, nil
+		return nil, fmt.Errorf("unexpected status code: %d : %s", sts, string(resp))
 	}
 
 	var data GeoIP

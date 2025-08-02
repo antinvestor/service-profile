@@ -75,7 +75,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_GetByID() {
 					device.GenID(ctx)
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					suite.Require().NoError(err)
-					
+
 					// Create a session for the device (required by GetDeviceByID business method)
 					session := &models.DeviceSession{
 						DeviceID:  device.GetID(),
@@ -85,7 +85,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_GetByID() {
 					session.GenID(ctx)
 					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
 					suite.Require().NoError(err)
-					
+
 					deviceID = device.GetID()
 				} else {
 					deviceID = tc.deviceID
@@ -387,7 +387,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 				suite.Require().NoError(err)
 
 				if tc.expectEmpty {
-					suite.Len(stream.responses, 0)
+					suite.Empty(stream.responses)
 				} else {
 					suite.NotEmpty(stream.responses)
 				}
