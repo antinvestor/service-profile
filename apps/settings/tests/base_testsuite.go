@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	PostgresqlDBImage = "paradedb/paradedb:latest"
+	PostgresqlDBImage = "postgres:latest"
 
 	DefaultRandomStringLength = 8
 )
