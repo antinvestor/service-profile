@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/pitabwire/frame"
@@ -54,9 +55,19 @@ func (cr *rosterRepository) Search(
 		}
 
 		if query.Query != "" {
-			db = db.Where(" rosters.search_column @@ plainto_tsquery(?) ", query.Query)
+			// Use TSVector with prefix matching for partial searches
+			// Handle multi-word queries by replacing spaces with & (AND operator)
+			searchQuery := strings.ReplaceAll(query.Query, " ", " & ") + ":*"
 
-			db = db.Where(" contacts.search_column @@ plainto_tsquery(?) ", query.Query)
+			// Hybrid approach: Use indexed rosters.search_column for roster properties
+			// and LIKE search for contact details (emails/phones) since TSVector doesn't
+			// support partial matching within email tokens
+			searchTerm := "%" + query.Query + "%"
+			db = db.Where(
+				"rosters.search_properties @@ to_tsquery('simple', ?) OR "+
+					"contacts.detail ILIKE ?",
+				searchQuery, searchTerm,
+			)
 		}
 
 		err := db.Find(&rosterList).Error

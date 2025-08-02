@@ -1,4 +1,9 @@
-ALTER TABLE contacts
-    ADD COLUMN search_column tsvector GENERATED ALWAYS AS ( jsonb_to_tsv(properties) || to_tsvector('english', coalesce(detail, '')) ) STORED;
 
-CREATE INDEX idx_contacts_search_column ON contacts USING GIN (search_column);
+-- Recreate with 'simple' configuration and handle empty jsonb_to_tsv properly
+ALTER TABLE contacts
+    ADD COLUMN search_properties tsvector GENERATED ALWAYS AS (
+        jsonb_to_tsv(properties)
+        ) STORED;
+
+-- Recreate the GIN index
+CREATE INDEX idx_contacts_search_properties ON contacts USING GIN (search_properties);
