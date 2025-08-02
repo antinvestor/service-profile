@@ -27,14 +27,29 @@ func NewDeviceServer(ctx context.Context, svc *frame.Service) *DevicesServer {
 }
 
 func (ds *DevicesServer) GetByID(ctx context.Context, req *devicev1.GetByIdRequest) (*devicev1.GetByIdResponse, error) {
+	if len(req.GetId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "device ID is required")
+	}
+
 	var devicesList []*devicev1.DeviceObject
+	var lastError error
 
 	for _, idStr := range req.GetId() {
+		if idStr == "" {
+			return nil, status.Error(codes.InvalidArgument, "device ID cannot be empty")
+		}
+
 		device, err := ds.Biz.GetDeviceByID(ctx, idStr)
 		if err != nil {
+			lastError = err
 			continue
 		}
 		devicesList = append(devicesList, device)
+	}
+
+	// If no devices found and we had errors, return the last error
+	if len(devicesList) == 0 && lastError != nil {
+		return nil, status.Error(codes.NotFound, "device not found")
 	}
 
 	return &devicev1.GetByIdResponse{
@@ -59,10 +74,7 @@ func (ds *DevicesServer) GetBySessionID(
 func (ds *DevicesServer) Search(req *devicev1.SearchRequest, stream devicev1.DeviceService_SearchServer) error {
 	ctx := stream.Context()
 
-	if req.GetQuery() == "" {
-		return nil
-	}
-
+	// Always process the search, even for empty queries
 	response, err := ds.Biz.SearchDevices(ctx, req)
 	if err != nil {
 		return err
@@ -85,17 +97,31 @@ func (ds *DevicesServer) Search(req *devicev1.SearchRequest, stream devicev1.Dev
 }
 
 func (ds *DevicesServer) Create(ctx context.Context, req *devicev1.CreateRequest) (*devicev1.CreateResponse, error) {
+	// Generate a device ID for tracking
 	deviceID := util.IDString()
-
-	device, err := ds.Biz.SaveDevice(
-		ctx, deviceID, req.GetName(), req.GetProperties(),
-	)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to create device: %v", err)
+	
+	// Add device name to properties if provided
+	properties := req.GetProperties()
+	if properties == nil {
+		properties = make(map[string]string)
+	}
+	if req.GetName() != "" {
+		properties["device_name"] = req.GetName()
 	}
 
+	// Log device activity to trigger device analysis and creation
+	_, err := ds.Biz.LogDeviceActivity(ctx, deviceID, properties["session_id"], properties)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to log device activity: %v", err)
+	}
+
+	// The device will be created asynchronously by the queue handler
+	// For now, return a response indicating the device creation is in progress
 	return &devicev1.CreateResponse{
-		Data: device,
+		Data: &devicev1.DeviceObject{
+			Id:   deviceID,
+			Name: req.GetName(),
+		},
 	}, nil
 }
 

@@ -7,12 +7,12 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/rs/xid"
 
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/internal/dbutil"
 )
 
 type ProfileBusiness interface {
@@ -136,13 +136,19 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 		profileID, _ = claims.GetSubject()
 	}
 
-	query, err := dbutil.NewSearchQuery(
+	searchProperties := map[string]any{
+		"profile_id": profileID,
+		"start_date": request.GetStartDate(),
+		"end_date":   request.GetEndDate(),
+	}
+
+	for _, p := range request.GetProperties() {
+		searchProperties[p] = request.GetQuery()
+	}
+
+	query, err := datastore.NewSearchQuery(
 		ctx,
-		profileID,
-		request.GetQuery(),
-		request.GetProperties(),
-		request.GetStartDate(),
-		request.GetEndDate(),
+		request.GetQuery(), searchProperties,
 		int(request.GetCount()),
 		int(request.GetPage()),
 	)

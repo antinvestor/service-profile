@@ -177,7 +177,7 @@ func (b *deviceBusiness) SearchDevices(
 	go func() {
 		defer close(out)
 
-		devices, err := b.deviceRepo.GetByProfileID(ctx, query.GetQuery())
+		devices, err := b.deviceRepo.Search(ctx, query.GetQuery())
 		if err != nil {
 			out <- frame.ErrorResult[[]*devicev1.DeviceObject](err)
 			return
@@ -194,7 +194,10 @@ func (b *deviceBusiness) SearchDevices(
 			apiDevices = append(apiDevices, device.ToAPI(sess))
 		}
 
-		out <- frame.Result[[]*devicev1.DeviceObject](apiDevices)
+		// Only send result if we have devices to return
+		if len(apiDevices) > 0 {
+			out <- frame.Result[[]*devicev1.DeviceObject](apiDevices)
+		}
 	}()
 
 	return out, nil
@@ -254,6 +257,12 @@ func (b *deviceBusiness) AddKey(
 	key []byte,
 	extra map[string]string,
 ) (*devicev1.KeyObject, error) {
+	// Validate that the device exists before adding a key
+	_, err := b.deviceRepo.GetByID(ctx, deviceID)
+	if err != nil {
+		return nil, err
+	}
+
 	deviceKey := &models.DeviceKey{
 		DeviceID: deviceID,
 		Key:      key,

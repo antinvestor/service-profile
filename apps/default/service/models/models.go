@@ -65,7 +65,7 @@ type Profile struct {
 
 type Contact struct {
 	frame.BaseModel
-	Detail string `gorm:"type:varchar(50);unique"`
+	Detail string `gorm:"type:varchar(50);uniqueIndex"`
 
 	ContactType        string `gorm:"type:varchar(50)"`
 	CommunicationLevel string `gorm:"type:varchar(50)"`

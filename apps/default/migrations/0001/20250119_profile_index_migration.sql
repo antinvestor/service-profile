@@ -1,6 +1,4 @@
-CREATE INDEX profile_search_idx ON profiles
-    USING bm25 (id, properties, created_at)
-    WITH (
-        key_field='id',
-        json_fields = '{ "properties": {"fast": true}}'
-    );
+ALTER TABLE profiles
+    ADD COLUMN search_column tsvector GENERATED ALWAYS AS ( jsonb_to_tsv(properties) ) STORED;
+
+CREATE INDEX idx_profiles_search_column ON profiles USING GIN (search_column);

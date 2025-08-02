@@ -49,7 +49,7 @@ func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*m
 	contact := &models.Contact{}
 
 	detail = strings.ToLower(strings.TrimSpace(detail))
-	if err := cr.service.DB(ctx, true).First(contact, " detail @@@ ?", detail).Error; err != nil {
+	if err := cr.service.DB(ctx, true).First(contact, " detail = ?", detail).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, service.ErrContactDoesNotExist
 		}

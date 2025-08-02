@@ -2,15 +2,14 @@ package repository
 
 import (
 	"context"
-	"fmt"
-	"strings"
+	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/internal/dbutil"
 )
 
 type profileRepository struct {
@@ -19,79 +18,48 @@ type profileRepository struct {
 
 func (pr *profileRepository) Search(
 	ctx context.Context,
-	query *dbutil.SearchQuery,
+	query *datastore.SearchQuery,
 ) (frame.JobResultPipe[[]*models.Profile], error) {
-	service := pr.service
-	job := frame.NewJob(func(ctx context.Context, jobResult frame.JobResultPipe[[]*models.Profile]) error {
+
+	return datastore.StableSearch[models.Profile](ctx, pr.service, query, func(
+		ctx context.Context,
+		query *datastore.SearchQuery,
+	) ([]*models.Profile, error) {
+		var profileList []*models.Profile
+
 		paginator := query.Pagination
-		for paginator.CanLoad() {
-			profileList, err := pr.searchWithLimits(ctx, query)
-			if err != nil {
-				return jobResult.WriteError(ctx, err)
+
+		db := pr.service.DB(ctx, true).
+			Limit(paginator.Limit).Offset(paginator.Offset)
+
+		if query.Fields != nil {
+
+			startAt, sok := query.Fields["start_date"]
+			stopAt, stok := query.Fields["end_date"]
+			if sok && startAt != nil && stok && stopAt != nil {
+				startDate := startAt.(*time.Time).Format("2020-01-31T00:00:00Z")
+				endDate := stopAt.(*time.Time).Format("2020-01-31T00:00:00Z")
+				db = db.Where("created_at BETWEEN ? AND ? ", startDate, endDate)
 			}
 
-			err = jobResult.WriteResult(ctx, profileList)
-			if err != nil {
-				return err
-			}
-
-			if paginator.Stop(len(profileList)) {
-				break
+			profileID, pok := query.Fields["profile_id"]
+			if pok {
+				db = db.Where("id = ?", profileID)
 			}
 		}
-		return nil
+
+		if query.Query != "" {
+			db = db.Where(" search_column @@ plainto_tsquery(?) ", query.Query)
+		}
+
+		err := db.Find(&profileList).Error
+		if err != nil {
+			return nil, err
+		}
+
+		return profileList, nil
+
 	})
-
-	err := frame.SubmitJob(ctx, service, job)
-	if err != nil {
-		return nil, err
-	}
-
-	return job, nil
-}
-
-func (pr *profileRepository) searchWithLimits(
-	ctx context.Context,
-	query *dbutil.SearchQuery,
-) ([]*models.Profile, error) {
-	var profileList []*models.Profile
-
-	paginator := query.Pagination
-
-	db := pr.service.DB(ctx, true).
-		Limit(paginator.Limit).Offset(paginator.Offset)
-
-	if query.StartAt != nil && query.EndAt != nil {
-		startDate := query.StartAt.Format("2020-01-31T00:00:00Z")
-		endDate := query.EndAt.Format("2020-01-31T00:00:00Z")
-		db = db.Where("created_at @@@ '[ ? TO ?]'", startDate, endDate)
-	}
-
-	if query.Query != "" {
-		var whereConditionParams []any
-		var whereQueryStrings []string
-
-		for _, property := range query.PropertiesToSearchOn {
-			whereConditionParams = append(whereConditionParams, query.Query)
-			searchTerm := fmt.Sprintf(
-				" id  @@@ paradedb.match( field => 'properties.%s', value => ?, distance => 0) ",
-				property,
-			)
-			whereQueryStrings = append(whereQueryStrings, searchTerm)
-		}
-
-		if len(whereQueryStrings) > 0 {
-			whereQueryStr := strings.Join(whereQueryStrings, " OR ")
-			db = db.Where(whereQueryStr, whereConditionParams...)
-		}
-	}
-
-	err := db.Find(&profileList).Error
-	if err != nil {
-		return nil, err
-	}
-
-	return profileList, nil
 }
 
 func (pr *profileRepository) GetTypeByID(ctx context.Context, profileTypeID string) (*models.ProfileType, error) {

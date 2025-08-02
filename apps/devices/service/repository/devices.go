@@ -28,7 +28,7 @@ func (dr *deviceRepository) GetByID(ctx context.Context, id string) (*models.Dev
 	return &device, nil
 }
 
-func (dr *deviceRepository) GetByProfileID(ctx context.Context, profileID string) ([]*models.Device, error) {
+func (dr *deviceRepository) Search(ctx context.Context, profileID string) ([]*models.Device, error) {
 	var devices []*models.Device
 	db := dr.service.DB(ctx, true)
 	if err := db.Where("profile_id = ?", profileID).Find(&devices).Error; err != nil {

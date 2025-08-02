@@ -10,7 +10,7 @@ import (
 type DeviceRepository interface {
 	Save(ctx context.Context, device *models.Device) error
 	GetByID(ctx context.Context, id string) (*models.Device, error)
-	GetByProfileID(ctx context.Context, profileID string) ([]*models.Device, error)
+	Search(ctx context.Context, profileID string) ([]*models.Device, error)
 	RemoveByID(ctx context.Context, id string) (*models.Device, error)
 }
 

@@ -5,14 +5,14 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/internal/dbutil"
 )
 
 type ProfileRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Profile, error)
-	Search(ctx context.Context, query *dbutil.SearchQuery) (frame.JobResultPipe[[]*models.Profile], error)
+	Search(ctx context.Context, query *datastore.SearchQuery) (frame.JobResultPipe[[]*models.Profile], error)
 	Save(ctx context.Context, profile *models.Profile) error
 	Delete(ctx context.Context, id string) error
 
@@ -36,7 +36,7 @@ type ContactRepository interface {
 type RosterRepository interface {
 	GetByID(ctx context.Context, id string) (*models.Roster, error)
 	GetByContactAndProfileID(ctx context.Context, profileID, contactID string) (*models.Roster, error)
-	Search(ctx context.Context, query *dbutil.SearchQuery) (frame.JobResultPipe[[]*models.Roster], error)
+	Search(ctx context.Context, query *datastore.SearchQuery) (frame.JobResultPipe[[]*models.Roster], error)
 	Save(ctx context.Context, contact *models.Roster) (*models.Roster, error)
 	Delete(ctx context.Context, id string) error
 }

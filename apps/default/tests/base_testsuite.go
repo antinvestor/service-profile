@@ -25,7 +25,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
-const PostgresqlDBImage = "paradedb/paradedb:latest"
+const PostgresqlDBImage = "postgres:latest"
 
 const (
 	DefaultRandomStringLength = 8

@@ -41,9 +41,13 @@ type GeoIP struct {
 
 func QueryIPGeo(ctx context.Context, svc *frame.Service, ip string) (*GeoIP, error) {
 	url := fmt.Sprintf("https://ipapi.co/%s/json/", ip)
-	_, resp, err := svc.InvokeRestService(ctx, http.MethodGet, url, nil, nil)
+	sts, resp, err := svc.InvokeRestService(ctx, http.MethodGet, url, nil, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if sts != http.StatusOK {
+		return nil, nil
 	}
 
 	var data GeoIP

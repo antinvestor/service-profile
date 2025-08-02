@@ -69,13 +69,18 @@ func (bs *DeviceBaseTestSuite) CreateService(
 		DeviceRepository: repository.NewDeviceRepository(svc),
 	}
 
+	analysisQueueTopic := frame.WithRegisterPublisher(
+		deviceConfig.QueueDeviceAnalysisName,
+		deviceConfig.QueueDeviceAnalysis,
+	)
+
 	analysisQueue := frame.WithRegisterSubscriber(
 		deviceConfig.QueueDeviceAnalysisName,
 		deviceConfig.QueueDeviceAnalysis,
 		&verificationQueueHandler,
 	)
 
-	svc.Init(ctx, analysisQueue)
+	svc.Init(ctx, analysisQueueTopic, analysisQueue)
 
 	err = repository.Migrate(ctx, svc, "../../migrations/0001")
 	require.NoError(t, err)

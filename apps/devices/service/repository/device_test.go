@@ -158,7 +158,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 				assert.Equal(t, tc.os, retrievedDevice.OS)
 
 				// Retrieve by ProfileID
-				devices, err := deviceRepo.GetByProfileID(ctx, tc.profileID)
+				devices, err := deviceRepo.Search(ctx, tc.profileID)
 				require.NoError(t, err)
 				assert.Len(t, devices, 1)
 				assert.Equal(t, device.GetID(), devices[0].GetID())

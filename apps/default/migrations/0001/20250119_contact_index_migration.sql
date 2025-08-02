@@ -1,7 +1,4 @@
-CREATE INDEX contact_search_idx ON contacts
-    USING bm25 (id, detail, properties, profile_id, created_at)
-    WITH (
-        key_field='id',
-        text_fields='{"detail": {"tokenizer": {"type": "ngram", "min_gram": 3, "max_gram": 3, "prefix_only": false}}}',
-        json_fields = '{ "properties": {"fast": true}}'
-    );
+ALTER TABLE contacts
+    ADD COLUMN search_column tsvector GENERATED ALWAYS AS ( jsonb_to_tsv(properties) || to_tsvector('english', coalesce(detail, '')) ) STORED;
+
+CREATE INDEX idx_contacts_search_column ON contacts USING GIN (search_column);

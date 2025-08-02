@@ -75,6 +75,17 @@ func (suite *HandlersTestSuite) TestDevicesServer_GetByID() {
 					device.GenID(ctx)
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					suite.Require().NoError(err)
+					
+					// Create a session for the device (required by GetDeviceByID business method)
+					session := &models.DeviceSession{
+						DeviceID:  device.GetID(),
+						UserAgent: "Test Agent",
+						IP:        "127.0.0.1",
+					}
+					session.GenID(ctx)
+					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+					suite.Require().NoError(err)
+					
 					deviceID = device.GetID()
 				} else {
 					deviceID = tc.deviceID
@@ -317,24 +328,28 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 	testCases := []struct {
 		name        string
 		setupDevice bool
+		profileID   string
 		query       string
 		expectEmpty bool
 	}{
 		{
 			name:        "search with matching query",
 			setupDevice: true,
-			query:       "test-profile",
+			profileID:   "matching-profile",
+			query:       "matching-profile",
 			expectEmpty: false,
 		},
 		{
 			name:        "search with non-matching query",
 			setupDevice: true,
-			query:       "non-matching",
+			profileID:   "different-profile",
+			query:       "non-matching-query",
 			expectEmpty: true,
 		},
 		{
 			name:        "search with empty query",
 			setupDevice: false,
+			profileID:   "",
 			query:       "",
 			expectEmpty: true,
 		},
@@ -349,9 +364,9 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 		for _, tc := range testCases {
 			suite.Run(tc.name, func() {
 				if tc.setupDevice {
-					// Create a device directly using repository
+					// Create a device directly using repository with unique profile ID
 					device := &models.Device{
-						ProfileID: "test-profile",
+						ProfileID: tc.profileID,
 						Name:      "Test Device",
 						OS:        "Linux",
 					}
@@ -372,29 +387,13 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 				suite.Require().NoError(err)
 
 				if tc.expectEmpty {
-					suite.Empty(stream.responses)
+					suite.Len(stream.responses, 0)
 				} else {
 					suite.NotEmpty(stream.responses)
 				}
 			})
 		}
 	})
-}
-
-// Mock stream for testing streaming endpoints.
-type mockSearchStream struct {
-	grpc.ServerStream
-	ctx       context.Context
-	responses []*devicev1.SearchResponse
-}
-
-func (m *mockSearchStream) Send(resp *devicev1.SearchResponse) error {
-	m.responses = append(m.responses, resp)
-	return nil
-}
-
-func (m *mockSearchStream) Context() context.Context {
-	return m.ctx
 }
 
 func (suite *HandlersTestSuite) TestGetClientIP() {
@@ -546,4 +545,20 @@ func (suite *HandlersTestSuite) TestRESTEndpoints() {
 			suite.Equal(http.StatusBadRequest, w.Code)
 		})
 	})
+}
+
+// Mock stream for testing streaming endpoints.
+type mockSearchStream struct {
+	grpc.ServerStream
+	ctx       context.Context
+	responses []*devicev1.SearchResponse
+}
+
+func (m *mockSearchStream) Send(resp *devicev1.SearchResponse) error {
+	m.responses = append(m.responses, resp)
+	return nil
+}
+
+func (m *mockSearchStream) Context() context.Context {
+	return m.ctx
 }

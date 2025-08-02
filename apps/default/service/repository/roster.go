@@ -2,13 +2,13 @@ package repository
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/internal/dbutil"
 )
 
 type rosterRepository struct {
@@ -17,78 +17,52 @@ type rosterRepository struct {
 
 func (cr *rosterRepository) Search(
 	ctx context.Context,
-	query *dbutil.SearchQuery,
+	query *datastore.SearchQuery,
 ) (frame.JobResultPipe[[]*models.Roster], error) {
-	service := cr.service
-	job := frame.NewJob[[]*models.Roster](
-		func(ctx context.Context, jobResult frame.JobResultPipe[[]*models.Roster]) error {
-			paginator := query.Pagination
-			for paginator.CanLoad() {
-				rosterList, err := cr.searchWithLimits(ctx, query)
-				if err != nil {
-					return jobResult.WriteError(ctx, err)
-				}
 
-				err = jobResult.WriteResult(ctx, rosterList)
-				if err != nil {
-					return err
-				}
+	return datastore.StableSearch[models.Roster](ctx, cr.service, query, func(
+		ctx context.Context,
+		query *datastore.SearchQuery,
+	) ([]*models.Roster, error) {
 
-				if paginator.Stop(len(rosterList)) {
-					break
-				}
+		var rosterList []*models.Roster
+
+		paginator := query.Pagination
+
+		db := cr.service.DB(ctx, true).
+			Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
+			Preload("Contact").
+			Limit(paginator.Limit).Offset(paginator.Offset)
+
+		if query.Fields != nil {
+
+			startAt, sok := query.Fields["start_date"]
+			stopAt, stok := query.Fields["end_date"]
+			if sok && startAt != nil && stok && stopAt != nil {
+				startDate := startAt.(*time.Time).Format("2020-01-31T00:00:00Z")
+				endDate := stopAt.(*time.Time).Format("2020-01-31T00:00:00Z")
+				db = db.Where(" rosters.created_at BETWEEN ? AND ? ", startDate, endDate)
 			}
-			return nil
-		},
-	)
 
-	err := frame.SubmitJob(ctx, service, job)
-	if err != nil {
-		return nil, err
-	}
-
-	return job, nil
-}
-
-func (cr *rosterRepository) searchWithLimits(ctx context.Context, query *dbutil.SearchQuery) ([]*models.Roster, error) {
-	var rosterList []*models.Roster
-
-	paginator := query.Pagination
-
-	db := cr.service.DB(ctx, true).
-		Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
-		Preload("Contact").
-		Limit(paginator.Limit).Offset(paginator.Offset)
-
-	if query.ProfileID != "" {
-		db = db.Where("rosters.profile_id = ?", query.ProfileID)
-	}
-
-	if query.StartAt != nil && query.EndAt != nil {
-		startDate := query.StartAt.Format("2020-01-31T00:00:00Z")
-		endDate := query.EndAt.Format("2020-01-31T00:00:00Z")
-		db = db.Where("rosters.created_at @@@ '[ ? TO ?]'", startDate, endDate)
-	}
-
-	if query.Query != "" {
-		whereConditionParams := []any{query.Query}
-		whereQueryStr := " contacts.detail  @@@ ? "
-
-		for _, property := range query.PropertiesToSearchOn {
-			whereConditionParams = append(whereConditionParams, query.Query)
-			searchTerm := fmt.Sprintf(" OR rosters.id  @@@ paradedb.match( 'properties.%s', ?) ", property)
-			whereQueryStr += searchTerm
+			profileID, pok := query.Fields["profile_id"]
+			if pok {
+				db = db.Where(" rosters.profile_id = ?", profileID)
+			}
 		}
 
-		db = db.Where(whereQueryStr, whereConditionParams...)
-	}
+		if query.Query != "" {
+			db = db.Where(" rosters.search_column @@ plainto_tsquery(?) ", query.Query)
 
-	err := db.Find(&rosterList).Error
-	if err != nil {
-		return nil, err
-	}
+			db = db.Where(" contacts.search_column @@ plainto_tsquery(?) ", query.Query)
+		}
 
-	return rosterList, nil
+		err := db.Find(&rosterList).Error
+		if err != nil {
+			return nil, err
+		}
+
+		return rosterList, nil
+	})
 }
 
 func (cr *rosterRepository) GetByID(ctx context.Context, id string) (*models.Roster, error) {
