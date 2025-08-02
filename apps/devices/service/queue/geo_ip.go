@@ -10,7 +10,7 @@ import (
 )
 
 type GeoIP struct {
-	Ip                 string  `json:"ip"`
+	IP                 string  `json:"ip"`
 	Network            string  `json:"network"`
 	Version            string  `json:"version"`
 	City               string  `json:"city"`
@@ -34,7 +34,7 @@ type GeoIP struct {
 	CurrencyName       string  `json:"currency_name"`
 	Languages          string  `json:"languages"`
 	CountryArea        float64 `json:"country_area"`
-	CountryPopulation  int     `json:"country_population"`
+	CountryPopulation  int64   `json:"country_population"`
 	Asn                string  `json:"asn"`
 	Org                string  `json:"org"`
 }

@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/peer"
 )
 
-// getClientIP extracts the client's IP address from the context of a gRPC call.
-func getClientIP(ctx context.Context) string {
+// GetClientIP extracts the client's IP address from the context of a gRPC call.
+func GetClientIP(ctx context.Context) string {
 	// 1. Check for proxy headers in gRPC metadata
 	md, ok := metadata.FromIncomingContext(ctx)
 	if ok {
@@ -33,7 +33,8 @@ func getClientIP(ctx context.Context) string {
 		return ""
 	}
 
-	if tcpAddr, ok := p.Addr.(*net.TCPAddr); ok {
+	// 3. Check peer information from gRPC context
+	if tcpAddr, tcpOk := p.Addr.(*net.TCPAddr); tcpOk {
 		return tcpAddr.IP.String()
 	}
 

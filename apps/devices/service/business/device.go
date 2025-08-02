@@ -2,6 +2,7 @@ package business
 
 import (
 	"context"
+	"errors"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
@@ -130,7 +131,6 @@ func (b *deviceBusiness) SaveDevice(
 	name string,
 	data map[string]string,
 ) (*devicev1.DeviceObject, error) {
-
 	sessionID := data["session_id"]
 
 	_, err := b.LogDeviceActivity(ctx, id, sessionID, data)
@@ -139,7 +139,7 @@ func (b *deviceBusiness) SaveDevice(
 	}
 
 	if id == "" {
-		return nil, nil
+		return nil, errors.New("device ID is required")
 	}
 
 	dev, err := b.deviceRepo.GetByID(ctx, id)

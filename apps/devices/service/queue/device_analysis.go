@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/mssola/user_agent"
 	"github.com/pitabwire/frame"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
@@ -45,15 +45,13 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, idPayload map[
 	if deviceLog.DeviceSessionID == "" {
 		dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log has no session ID, skipping")
 
-		session, err = dq.createSessionFromLog(ctx, deviceLog)
+		session, err = dq.CreateSessionFromLog(ctx, deviceLog)
 		if err != nil {
 			dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
 				Warn("could not extract device session from log")
 			return nil
 		}
-
 	} else {
-
 		session, err = dq.SessionRepository.GetByID(ctx, deviceLog.DeviceSessionID)
 		if err != nil {
 			dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
@@ -69,23 +67,29 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, idPayload map[
 		}
 	}
 
-	deviceID := session.DeviceID
-	if deviceID == "" {
-
-		device, err0 := dq.createDeviceFromSess(ctx, session)
+	var deviceID string
+	if session.DeviceID != "" {
+		deviceID = session.DeviceID
+	} else {
+		device, err0 := dq.CreateDeviceFromSess(ctx, session)
 		if err0 != nil {
 			dq.Service.Log(ctx).WithError(err0).
-				Warn("device could not be created from session")
+				Warn("could not extract device from session")
 			return nil
 		}
 		deviceID = device.ID
 	}
 
+	// Use deviceID for any device-related operations here
+	_ = deviceID // TODO: Implement device-specific logic
+
 	return nil
 }
 
-func (dq *DeviceAnalysisQueueHandler) createDeviceFromSess(ctx context.Context, session *models.DeviceSession) (*models.Device, error) {
-
+func (dq *DeviceAnalysisQueueHandler) CreateDeviceFromSess(
+	ctx context.Context,
+	session *models.DeviceSession,
+) (*models.Device, error) {
 	ua := user_agent.New(session.UserAgent)
 
 	dev := &models.Device{
@@ -103,8 +107,10 @@ func (dq *DeviceAnalysisQueueHandler) createDeviceFromSess(ctx context.Context, 
 	return dev, nil
 }
 
-func (dq *DeviceAnalysisQueueHandler) createSessionFromLog(ctx context.Context, deviceLog *models.DeviceLog) (*models.DeviceSession, error) {
-
+func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
+	ctx context.Context,
+	deviceLog *models.DeviceLog,
+) (*models.DeviceSession, error) {
 	data := frame.DBPropertiesToMap(deviceLog.Data)
 
 	sess := &models.DeviceSession{
@@ -115,9 +121,9 @@ func (dq *DeviceAnalysisQueueHandler) createSessionFromLog(ctx context.Context, 
 	}
 	sess.GenID(ctx)
 
-	geoIp, _ := QueryIPGeo(ctx, dq.Service, data["ip"])
+	geoIP, _ := QueryIPGeo(ctx, dq.Service, data["ip"])
 
-	locale, err0 := dq.extractLocaleData(ctx, data, geoIp)
+	locale, err0 := dq.ExtractLocaleData(ctx, data, geoIP)
 	if err0 != nil {
 		return nil, err0
 	}
@@ -129,7 +135,7 @@ func (dq *DeviceAnalysisQueueHandler) createSessionFromLog(ctx context.Context, 
 
 	sess.Locale = localeBytes
 
-	sess.Location = dq.extractLocationData(ctx, data, geoIp)
+	sess.Location = dq.ExtractLocationData(ctx, data, geoIP)
 
 	err = dq.SessionRepository.Save(ctx, sess)
 	if err != nil {
@@ -139,8 +145,11 @@ func (dq *DeviceAnalysisQueueHandler) createSessionFromLog(ctx context.Context, 
 	return sess, nil
 }
 
-func (dq *DeviceAnalysisQueueHandler) extractLocaleData(_ context.Context, data map[string]string, geoIP *GeoIP) (*devicev1.Locale, error) {
-
+func (dq *DeviceAnalysisQueueHandler) ExtractLocaleData(
+	_ context.Context,
+	data map[string]string,
+	geoIP *GeoIP,
+) (*devicev1.Locale, error) {
 	var ok bool
 	locale := devicev1.Locale{}
 	locale.Timezone, ok = data["tz"]
@@ -173,8 +182,11 @@ func (dq *DeviceAnalysisQueueHandler) extractLocaleData(_ context.Context, data 
 	return &locale, nil
 }
 
-func (dq *DeviceAnalysisQueueHandler) extractLocationData(_ context.Context, data map[string]string, geoIP *GeoIP) frame.JSONMap {
-
+func (dq *DeviceAnalysisQueueHandler) ExtractLocationData(
+	_ context.Context,
+	data map[string]string,
+	geoIP *GeoIP,
+) frame.JSONMap {
 	locationData := map[string]string{}
 
 	if geoIP != nil {

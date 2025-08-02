@@ -1,4 +1,4 @@
-package handlers
+package handlers_test
 
 import (
 	"bytes"
@@ -8,19 +8,18 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	"github.com/pitabwire/frame/tests/testdef"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/antinvestor/service-profile/apps/devices/service/tests"
-	"github.com/pitabwire/frame/tests/testdef"
 )
 
 type HandlersTestSuite struct {
@@ -61,10 +60,10 @@ func (suite *HandlersTestSuite) TestDevicesServer_GetByID() {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
-		server := NewDeviceServer(ctx, svc)
+		server := handlers.NewDeviceServer(ctx, svc)
 
 		for _, tc := range testCases {
-			t.Run(tc.name, func(t *testing.T) {
+			suite.Run(tc.name, func() {
 				var deviceID string
 				if tc.setupDevice {
 					// Create a device directly using repository
@@ -75,7 +74,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_GetByID() {
 					}
 					device.GenID(ctx)
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
-					require.NoError(t, err)
+					suite.Require().NoError(err)
 					deviceID = device.GetID()
 				} else {
 					deviceID = tc.deviceID
@@ -88,15 +87,15 @@ func (suite *HandlersTestSuite) TestDevicesServer_GetByID() {
 				resp, err := server.GetByID(ctx, req)
 
 				if tc.expectedStatus == codes.OK {
-					require.NoError(t, err)
-					require.NotNil(t, resp)
-					assert.NotEmpty(t, resp.GetData())
-					assert.Equal(t, deviceID, resp.GetData()[0].GetId())
+					suite.Require().NoError(err)
+					suite.Require().NotNil(resp)
+					suite.NotEmpty(resp.GetData())
+					suite.Equal(deviceID, resp.GetData()[0].GetId())
 				} else {
-					require.Error(t, err)
+					suite.Require().Error(err)
 					st, ok := status.FromError(err)
-					require.True(t, ok)
-					assert.Equal(t, tc.expectedStatus, st.Code())
+					suite.Require().True(ok)
+					suite.Equal(tc.expectedStatus, st.Code())
 				}
 			})
 		}
@@ -139,10 +138,10 @@ func (suite *HandlersTestSuite) TestDevicesServer_Create() {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
-		server := NewDeviceServer(ctx, svc)
+		server := handlers.NewDeviceServer(ctx, svc)
 
 		for _, tc := range testCases {
-			t.Run(tc.name, func(t *testing.T) {
+			suite.Run(tc.name, func() {
 				req := &devicev1.CreateRequest{
 					Name:       tc.deviceName,
 					Properties: tc.data,
@@ -151,14 +150,14 @@ func (suite *HandlersTestSuite) TestDevicesServer_Create() {
 				resp, err := server.Create(ctx, req)
 
 				if tc.expectError {
-					require.Error(t, err)
-					assert.Nil(t, resp)
+					suite.Require().Error(err)
+					suite.Nil(resp)
 				} else {
-					require.NoError(t, err)
+					suite.Require().NoError(err)
 					// Response might be nil if device creation doesn't return a device
 					if resp != nil && resp.GetData() != nil {
-						assert.NotEmpty(t, resp.GetData().GetId())
-						assert.Equal(t, tc.deviceName, resp.GetData().GetName())
+						suite.NotEmpty(resp.GetData().GetId())
+						suite.Equal(tc.deviceName, resp.GetData().GetName())
 					}
 				}
 			})
@@ -198,10 +197,10 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
-		server := NewDeviceServer(ctx, svc)
+		server := handlers.NewDeviceServer(ctx, svc)
 
 		for _, tc := range testCases {
-			t.Run(tc.name, func(t *testing.T) {
+			suite.Run(tc.name, func() {
 				var deviceID string
 				if tc.setupDevice {
 					// Create a device directly using repository
@@ -212,7 +211,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 					}
 					device.GenID(ctx)
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
-					require.NoError(t, err)
+					suite.Require().NoError(err)
 					deviceID = device.GetID()
 				} else {
 					deviceID = tc.deviceID
@@ -227,12 +226,12 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 				resp, err := server.Log(ctx, req)
 
 				if tc.expectError {
-					require.Error(t, err)
-					assert.Nil(t, resp)
+					suite.Require().Error(err)
+					suite.Nil(resp)
 				} else {
-					require.NoError(t, err)
-					assert.NotNil(t, resp)
-					assert.NotNil(t, resp.GetData())
+					suite.Require().NoError(err)
+					suite.NotNil(resp)
+					suite.NotNil(resp.GetData())
 				}
 			})
 		}
@@ -267,10 +266,10 @@ func (suite *HandlersTestSuite) TestDevicesServer_AddKey() {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
-		server := NewDeviceServer(ctx, svc)
+		server := handlers.NewDeviceServer(ctx, svc)
 
 		for _, tc := range testCases {
-			t.Run(tc.name, func(t *testing.T) {
+			suite.Run(tc.name, func() {
 				var deviceID string
 				if tc.setupDevice {
 					// Create a device directly using repository
@@ -281,7 +280,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_AddKey() {
 					}
 					device.GenID(ctx)
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
-					require.NoError(t, err)
+					suite.Require().NoError(err)
 					deviceID = device.GetID()
 				} else {
 					deviceID = "non-existent-device"
@@ -297,16 +296,16 @@ func (suite *HandlersTestSuite) TestDevicesServer_AddKey() {
 				resp, err := server.AddKey(ctx, req)
 
 				if tc.expectError {
-					require.Error(t, err)
-					assert.Nil(t, resp)
+					suite.Require().Error(err)
+					suite.Nil(resp)
 				} else {
-					require.NoError(t, err)
-					assert.NotNil(t, resp)
-					assert.NotNil(t, resp.GetData())
+					suite.Require().NoError(err)
+					suite.NotNil(resp)
+					suite.NotNil(resp.GetData())
 					if resp.GetData() != nil {
-						assert.NotEmpty(t, resp.GetData().GetId())
-						assert.Equal(t, deviceID, resp.GetData().GetDeviceId())
-						assert.Equal(t, tc.keyData, resp.GetData().GetKey())
+						suite.NotEmpty(resp.GetData().GetId())
+						suite.Equal(deviceID, resp.GetData().GetDeviceId())
+						suite.Equal(tc.keyData, resp.GetData().GetKey())
 					}
 				}
 			})
@@ -345,10 +344,10 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
-		server := NewDeviceServer(ctx, svc)
+		server := handlers.NewDeviceServer(ctx, svc)
 
 		for _, tc := range testCases {
-			t.Run(tc.name, func(t *testing.T) {
+			suite.Run(tc.name, func() {
 				if tc.setupDevice {
 					// Create a device directly using repository
 					device := &models.Device{
@@ -358,7 +357,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 					}
 					device.GenID(ctx)
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
-					require.NoError(t, err)
+					suite.Require().NoError(err)
 				}
 
 				req := &devicev1.SearchRequest{
@@ -370,20 +369,19 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 				}
 
 				err := server.Search(req, stream)
-				require.NoError(t, err)
+				suite.Require().NoError(err)
 
 				if tc.expectEmpty {
-					assert.Empty(t, stream.responses)
+					suite.Empty(stream.responses)
 				} else {
-					// Note: responses might be empty due to implementation details
-					// The important thing is that no error occurred
+					suite.NotEmpty(stream.responses)
 				}
 			})
 		}
 	})
 }
 
-// Mock stream for testing streaming endpoints
+// Mock stream for testing streaming endpoints.
 type mockSearchStream struct {
 	grpc.ServerStream
 	ctx       context.Context
@@ -435,7 +433,7 @@ func (suite *HandlersTestSuite) TestGetClientIP() {
 	}
 
 	for _, tc := range testCases {
-		suite.T().Run(tc.name, func(t *testing.T) {
+		suite.Run(tc.name, func() {
 			ctx := context.Background()
 			if len(tc.headers) > 0 {
 				// Convert map[string][]string to map[string]string for metadata.New
@@ -449,9 +447,9 @@ func (suite *HandlersTestSuite) TestGetClientIP() {
 				ctx = metadata.NewIncomingContext(ctx, md)
 			}
 
-			ip := getClientIP(ctx)
+			ip := handlers.GetClientIP(ctx)
 			if tc.expected != "" {
-				assert.Equal(t, tc.expected, ip)
+				suite.Equal(tc.expected, ip)
 			}
 			// For empty expected, we just check it doesn't panic
 		})
@@ -463,9 +461,9 @@ func (suite *HandlersTestSuite) TestRESTEndpoints() {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
-		server := NewDeviceServer(ctx, svc)
+		server := handlers.NewDeviceServer(ctx, svc)
 
-		t.Run("RestLogDeviceData", func(t *testing.T) {
+		suite.Run("RestLogDeviceData", func() {
 			reqBody := map[string]string{
 				"session_id": "test-session-123",
 				"action":     "page_view",
@@ -473,7 +471,7 @@ func (suite *HandlersTestSuite) TestRESTEndpoints() {
 			}
 
 			body, err := json.Marshal(reqBody)
-			require.NoError(t, err)
+			suite.Require().NoError(err)
 
 			req := httptest.NewRequest(http.MethodPost, "/log", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
@@ -483,21 +481,21 @@ func (suite *HandlersTestSuite) TestRESTEndpoints() {
 			w := httptest.NewRecorder()
 			server.RestLogDeviceData(w, req)
 
-			assert.Equal(t, http.StatusOK, w.Code)
+			suite.Equal(http.StatusOK, w.Code)
 
 			var response map[string]interface{}
 			err = json.Unmarshal(w.Body.Bytes(), &response)
-			require.NoError(t, err)
-			assert.NotNil(t, response)
+			suite.Require().NoError(err)
+			suite.NotNil(response)
 		})
 
-		t.Run("RestLogDeviceData - missing session_id", func(t *testing.T) {
+		suite.Run("RestLogDeviceData - missing session_id", func() {
 			reqBody := map[string]string{
 				"action": "page_view",
 			}
 
 			body, err := json.Marshal(reqBody)
-			require.NoError(t, err)
+			suite.Require().NoError(err)
 
 			req := httptest.NewRequest(http.MethodPost, "/log", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
@@ -506,17 +504,17 @@ func (suite *HandlersTestSuite) TestRESTEndpoints() {
 			w := httptest.NewRecorder()
 			server.RestLogDeviceData(w, req)
 
-			assert.Equal(t, http.StatusBadRequest, w.Code)
+			suite.Equal(http.StatusBadRequest, w.Code)
 		})
 
-		t.Run("RestDeviceLinkProfile", func(t *testing.T) {
+		suite.Run("RestDeviceLinkProfile", func() {
 			reqBody := map[string]string{
 				"session_id": "test-session-456",
 				"profile_id": "test-profile-789",
 			}
 
 			body, err := json.Marshal(reqBody)
-			require.NoError(t, err)
+			suite.Require().NoError(err)
 
 			req := httptest.NewRequest(http.MethodPost, "/link", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
@@ -526,17 +524,17 @@ func (suite *HandlersTestSuite) TestRESTEndpoints() {
 			server.RestDeviceLinkProfile(w, req)
 
 			// This might return an error due to non-existent session, but should not panic
-			assert.True(t, w.Code == http.StatusOK || w.Code >= 400)
+			suite.True(w.Code == http.StatusOK || w.Code >= 400)
 		})
 
-		t.Run("RestDeviceLinkProfile - missing parameters", func(t *testing.T) {
+		suite.Run("RestDeviceLinkProfile - missing parameters", func() {
 			reqBody := map[string]string{
 				"session_id": "test-session-456",
 				// missing profile_id
 			}
 
 			body, err := json.Marshal(reqBody)
-			require.NoError(t, err)
+			suite.Require().NoError(err)
 
 			req := httptest.NewRequest(http.MethodPost, "/link", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
@@ -545,7 +543,7 @@ func (suite *HandlersTestSuite) TestRESTEndpoints() {
 			w := httptest.NewRecorder()
 			server.RestDeviceLinkProfile(w, req)
 
-			assert.Equal(t, http.StatusBadRequest, w.Code)
+			suite.Equal(http.StatusBadRequest, w.Code)
 		})
 	})
 }

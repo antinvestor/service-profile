@@ -2,7 +2,9 @@ package business_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
@@ -99,6 +101,112 @@ func TestDeviceBusinessTestSuite(t *testing.T) {
 	suite.Run(t, new(DeviceBusinessTestSuite))
 }
 
+func (suite *DeviceBusinessTestSuite) createTestDeviceWithSession(
+	ctx context.Context,
+	svc *frame.Service,
+	deviceID, sessionID string,
+) error {
+	device := &models.Device{
+		Name: "Original Name",
+		OS:   "Original OS",
+	}
+	device.GenID(ctx)
+	device.ID = deviceID
+	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+	if err != nil {
+		return err
+	}
+
+	session := &models.DeviceSession{
+		DeviceID:  deviceID,
+		UserAgent: "Test Agent",
+		IP:        "127.0.0.1",
+	}
+	session.GenID(ctx)
+	if sessionID != "" {
+		session.ID = sessionID
+	}
+	return repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+}
+
+func (suite *DeviceBusinessTestSuite) verifyDeviceActivityLogged(
+	ctx context.Context,
+	biz business.DeviceBusiness,
+	deviceID, sessionID string,
+) error {
+	if sessionID == "" || deviceID == "" {
+		return nil
+	}
+
+	deviceLogsChan, err := biz.GetDeviceLogs(ctx, deviceID)
+	if err != nil {
+		return err
+	}
+
+	// Process the channel to get actual logs
+	var deviceLogs []*devicev1.DeviceLog
+	for result := range deviceLogsChan {
+		if result.IsError() {
+			return result.Error()
+		}
+		deviceLogs = append(deviceLogs, result.Item()...)
+	}
+
+	logCount := len(deviceLogs)
+	if logCount == 0 {
+		return errors.New("expected device activity to be logged but found no logs")
+	}
+	return nil
+}
+
+func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
+	ctx context.Context,
+	t *testing.T,
+	svc *frame.Service,
+	biz business.DeviceBusiness,
+	tc struct {
+		name        string
+		id          string
+		deviceName  string
+		data        map[string]string
+		expectError bool
+		expectNil   bool
+	},
+) {
+	// Setup existing device if needed
+	if tc.id != "" && tc.name == "save device with existing ID" {
+		sessionID := tc.data["session_id"]
+		err := suite.createTestDeviceWithSession(ctx, svc, tc.id, sessionID)
+		require.NoError(t, err)
+	}
+
+	// Execute SaveDevice
+	result, err := biz.SaveDevice(ctx, tc.id, tc.deviceName, tc.data)
+
+	// Verify error expectations
+	if tc.expectError {
+		require.Error(t, err)
+		return
+	}
+	require.NoError(t, err)
+
+	// Verify result expectations
+	if tc.expectNil {
+		assert.Nil(t, result)
+	} else {
+		assert.NotNil(t, result)
+		assert.Equal(t, tc.id, result.GetId())
+		assert.Equal(t, tc.deviceName, result.GetName())
+	}
+
+	// Verify activity logging only for successful cases with valid device ID
+	sessionID := tc.data["session_id"]
+	if !tc.expectError && tc.id != "" && sessionID != "" {
+		err = suite.verifyDeviceActivityLogged(ctx, biz, tc.id, sessionID)
+		assert.NoError(t, err)
+	}
+}
+
 func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 	t := suite.T()
 	testCases := []struct {
@@ -124,7 +232,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 			expectNil:   false,
 		},
 		{
-			name:       "save device with empty ID returns nil",
+			name:       "save device with empty ID returns error",
 			id:         "",
 			deviceName: "Test Device",
 			data: map[string]string{
@@ -132,89 +240,29 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 				"os":         "Windows",
 				"session_id": "test-session-2",
 			},
-			expectError: false,
-			expectNil:   true, // New implementation returns nil for empty ID
+			expectError: true,
+			expectNil:   false,
 		},
 		{
-			name:       "save device logs activity even with empty ID",
+			name:       "save device with empty ID and session logs activity but returns error",
 			id:         "",
 			deviceName: "Minimal Device",
 			data: map[string]string{
 				"profile_id": "profile-789",
 				"session_id": "test-session-3",
 			},
-			expectError: false,
-			expectNil:   true,
+			expectError: true,
+			expectNil:   false,
 		},
 	}
 
 	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-
-		// Create business layer
 		biz := business.NewDeviceBusiness(ctx, svc)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				// For tests with existing ID, create the device first
-				if tc.id != "" && tc.name == "save device with existing ID" {
-					device := &models.Device{
-						Name: "Original Name",
-						OS:   "Original OS",
-					}
-					device.GenID(ctx)
-					device.ID = tc.id
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
-					require.NoError(t, err)
-					
-					// Create a session for the device (required by GetDeviceByID)
-					session := &models.DeviceSession{
-						DeviceID:  tc.id,
-						UserAgent: "Test Agent",
-						IP:        "127.0.0.1",
-					}
-					session.GenID(ctx)
-					if sessionID, ok := tc.data["session_id"]; ok {
-						session.ID = sessionID
-					}
-					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
-					require.NoError(t, err)
-				}
-
-				result, err := biz.SaveDevice(ctx, tc.id, tc.deviceName, tc.data)
-
-				if tc.expectError {
-					require.Error(t, err)
-					return
-				}
-
-				require.NoError(t, err)
-
-				if tc.expectNil {
-					assert.Nil(t, result)
-				} else {
-					assert.NotNil(t, result)
-					assert.Equal(t, tc.id, result.GetId())
-					assert.Equal(t, tc.deviceName, result.GetName())
-				}
-
-				// Verify that device activity was logged regardless
-				if tc.data["session_id"] != "" {
-					logs, err := biz.GetDeviceLogs(ctx, tc.id)
-					require.NoError(t, err)
-
-					// Collect logs from channel
-					var logCount int
-					for result := range logs {
-						if !result.IsError() {
-							logCount += len(result.Item())
-						}
-					}
-					// Should have at least one log entry (the SaveDevice call logs activity)
-					if tc.id != "" {
-						assert.Greater(t, logCount, 0)
-					}
-				}
+				suite.runSaveDeviceTestCase(ctx, t, svc, biz, tc)
 			})
 		}
 	})
@@ -264,7 +312,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
 					deviceID = device.GetID()
-					
+
 					// Create a session for the device (required by GetDeviceByID)
 					session := &models.DeviceSession{
 						DeviceID:  deviceID,
@@ -331,7 +379,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 					device.GenID(ctx)
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					
+
 					// Create a session for the device
 					session := &models.DeviceSession{
 						DeviceID:  device.GetID(),
@@ -396,14 +444,26 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 			t.Run(tc.name, func(t *testing.T) {
 				var deviceID, sessionID string
 				if tc.setupDevice {
-					device, err := biz.SaveDevice(ctx, "", "Test Device", map[string]string{
-						"profile_id": "profile-log-test",
-						"os":         "Linux",
-						"session_id": "test-session-6",
-					})
+					// Create a device directly using repository
+					device := &models.Device{
+						Name: "Test Device",
+						OS:   "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					deviceID = device.GetId()
-					sessionID = device.GetSessionId()
+					deviceID = device.GetID()
+
+					// Create a session for the device
+					session := &models.DeviceSession{
+						DeviceID:  deviceID,
+						UserAgent: "Test Agent",
+						IP:        "127.0.0.1",
+					}
+					session.GenID(ctx)
+					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+					require.NoError(t, err)
+					sessionID = session.GetID()
 				} else {
 					deviceID = tc.deviceID
 					sessionID = tc.sessionID
@@ -464,14 +524,15 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 			t.Run(tc.name, func(t *testing.T) {
 				var deviceID string
 				if tc.setupDevice {
-					// Create a device first
-					device, err := biz.SaveDevice(ctx, "", "Test Device", map[string]string{
-						"profile_id": "profile-key-test",
-						"os":         "Linux",
-						"session_id": "test-session-7",
-					})
+					// Create a device directly using repository
+					device := &models.Device{
+						Name: "Test Device",
+						OS:   "Linux",
+					}
+					device.GenID(ctx)
+					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					deviceID = device.GetId()
+					deviceID = device.GetID()
 				} else {
 					deviceID = tc.deviceID
 				}
@@ -550,6 +611,58 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 	})
 }
 
+func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
+	ctx context.Context,
+	t *testing.T,
+	svc *frame.Service,
+	biz business.DeviceBusiness,
+	tc struct {
+		name        string
+		setupDevice bool
+		profileID   string
+		expectError bool
+	},
+) {
+	if tc.setupDevice {
+		err := suite.createDeviceWithProfile(ctx, svc, tc.profileID)
+		require.NoError(t, err)
+	}
+
+	query := &devicev1.SearchRequest{
+		Query: tc.profileID,
+	}
+
+	devicesChan, err := biz.SearchDevices(ctx, query)
+	if tc.expectError {
+		require.Error(t, err)
+		return
+	}
+
+	require.NoError(t, err)
+	assert.NotNil(t, devicesChan)
+
+	devices, channelErr := suite.processSearchResults(devicesChan)
+	require.NoError(t, channelErr)
+
+	suite.verifySearchResults(t, tc, devices)
+}
+
+func (suite *DeviceBusinessTestSuite) verifySearchResults(t *testing.T, tc struct {
+	name        string
+	setupDevice bool
+	profileID   string
+	expectError bool
+}, devices []*devicev1.DeviceObject) {
+	if tc.setupDevice && tc.profileID != "" {
+		assert.Len(t, devices, 1)
+		if len(devices) > 0 {
+			assert.NotEmpty(t, devices[0].GetId())
+		}
+	} else {
+		assert.Empty(t, devices)
+	}
+}
+
 func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 	t := suite.T()
 	testCases := []struct {
@@ -568,7 +681,7 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 			name:        "search with non-existent profile ID",
 			setupDevice: false,
 			profileID:   "non-existent-profile",
-			expectError: false, // Should return empty results, not error
+			expectError: false,
 		},
 		{
 			name:        "search with empty profile ID",
@@ -584,56 +697,7 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				if tc.setupDevice {
-					// Create a device with profile ID first
-					device := &models.Device{
-						ProfileID: tc.profileID,
-						Name:      "Search Test Device",
-						OS:        "Linux",
-					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
-					require.NoError(t, err)
-					
-					// Create a session for the device
-					session := &models.DeviceSession{
-						DeviceID:  device.GetID(),
-						UserAgent: "Test Agent",
-						IP:        "127.0.0.1",
-					}
-					session.GenID(ctx)
-					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
-					require.NoError(t, err)
-				}
-
-				query := &devicev1.SearchRequest{
-					Query: tc.profileID,
-				}
-
-				devicesChan, err := biz.SearchDevices(ctx, query)
-				if tc.expectError {
-					require.Error(t, err)
-					return
-				}
-
-				require.NoError(t, err)
-				assert.NotNil(t, devicesChan)
-
-				// Collect results from channel
-				var devices []*devicev1.DeviceObject
-				for result := range devicesChan {
-					require.False(t, result.IsError(), "Unexpected error in result: %v", result.Error())
-					devices = append(devices, result.Item()...)
-				}
-
-				if tc.setupDevice && tc.profileID != "" {
-					assert.Len(t, devices, 1)
-					if len(devices) > 0 {
-						assert.NotEmpty(t, devices[0].GetId())
-					}
-				} else {
-					assert.Len(t, devices, 0)
-				}
+				suite.runSearchDevicesTestCase(ctx, t, svc, biz, tc)
 			})
 		}
 	})
@@ -676,47 +740,26 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 				var deviceID string
 				if tc.setupDevice {
 					// Create a device first
-					device := &models.Device{
-						Name: "Log Test Device",
-						OS:   "Linux",
-					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+					var err error
+					deviceID, err = suite.createDeviceForLogs(ctx, svc, tc.name == "get logs for device with logs", biz)
 					require.NoError(t, err)
-					deviceID = device.GetID()
-
-					// Add a log for the first test case
-					if tc.name == "get logs for device with logs" {
-						_, err = biz.LogDeviceActivity(ctx, deviceID, "test-session-10", map[string]string{
-							"action": "test_action",
-						})
-						require.NoError(t, err)
-					}
 				} else {
 					deviceID = tc.deviceID
 				}
 
-				logsChan, err := biz.GetDeviceLogs(ctx, deviceID)
-				if tc.expectError {
-					require.Error(t, err)
-					return
-				}
-
-				require.NoError(t, err)
+				logsChan, logErr := biz.GetDeviceLogs(ctx, deviceID)
+				require.NoError(t, logErr)
 				assert.NotNil(t, logsChan)
 
 				// Collect results from channel
-				var logs []*devicev1.DeviceLog
-				for result := range logsChan {
-					require.False(t, result.IsError(), "Unexpected error in result: %v", result.Error())
-					logs = append(logs, result.Item()...)
-				}
+				logs, err := suite.processDeviceLogsResults(logsChan)
+				require.NoError(t, err)
 
 				if tc.name == "get logs for device with logs" {
 					assert.Len(t, logs, 1)
 					assert.Equal(t, deviceID, logs[0].GetDeviceId())
 				} else {
-					assert.Len(t, logs, 0)
+					assert.Empty(t, logs)
 				}
 			})
 		}
@@ -766,21 +809,9 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 				var deviceID string
 				if tc.setupDevice {
 					// Create a device first
-					device := &models.Device{
-						Name: "Key Test Device",
-						OS:   "Linux",
-					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+					var err error
+					deviceID, err = suite.createDeviceWithKey(ctx, svc, biz, tc.setupKey, tc.keyType)
 					require.NoError(t, err)
-					deviceID = device.GetID()
-
-					if tc.setupKey {
-						_, err = biz.AddKey(ctx, deviceID, tc.keyType, []byte("test-key-data"), map[string]string{
-							"type": "test",
-						})
-						require.NoError(t, err)
-					}
 				} else {
 					deviceID = tc.deviceID
 				}
@@ -795,18 +826,15 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 				assert.NotNil(t, keysChan)
 
 				// Collect results from channel
-				var keys []*devicev1.KeyObject
-				for result := range keysChan {
-					require.False(t, result.IsError(), "Unexpected error in result: %v", result.Error())
-					keys = append(keys, result.Item()...)
-				}
+				keys, channelErr := suite.processKeysResults(keysChan)
+				require.NoError(t, channelErr)
 
 				if tc.setupKey {
 					assert.Len(t, keys, 1)
 					assert.Equal(t, deviceID, keys[0].GetDeviceId())
 					assert.Equal(t, []byte("test-key-data"), keys[0].GetKey())
 				} else {
-					assert.Len(t, keys, 0)
+					assert.Empty(t, keys)
 				}
 			})
 		}
@@ -834,7 +862,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 			setupDevice: false,
 			setupKeys:   0,
 			removeCount: 1,
-			expectError: true, // Should error when trying to remove non-existent keys
+			expectError: true,
 		},
 		{
 			name:        "remove subset of keys",
@@ -851,52 +879,27 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				var keyIDs []string
+				var keysToRemove []string
 				if tc.setupDevice {
 					// Create a device first
-					device, err := biz.SaveDevice(ctx, "", "Remove Key Test Device", map[string]string{
-						"profile_id": "profile-remove-key-test",
-						"os":         "Linux",
-						"session_id": "test-session-12",
-					})
+					_, keyIDs, err := suite.createDeviceWithKeys(ctx, svc, biz, tc.setupKeys)
 					require.NoError(t, err)
 
-					// Create keys
-					for i := 0; i < tc.setupKeys; i++ {
-						key, err := biz.AddKey(ctx, device.GetId(), devicev1.KeyType_MATRIX_KEY,
-							[]byte(fmt.Sprintf("test-key-data-%d", i)), map[string]string{
-								"index": fmt.Sprintf("%d", i),
-							})
-						require.NoError(t, err)
-						keyIDs = append(keyIDs, key.GetId())
+					// Select keys to remove
+					for i := 0; i < tc.removeCount && i < len(keyIDs); i++ {
+						keysToRemove = append(keysToRemove, keyIDs[i])
 					}
 				} else {
 					// Use non-existent key IDs
-					for i := 0; i < tc.removeCount; i++ {
-						keyIDs = append(keyIDs, fmt.Sprintf("non-existent-key-%d", i))
-					}
-				}
-
-				// Select keys to remove
-				var keysToRemove []string
-				for i := 0; i < tc.removeCount && i < len(keyIDs); i++ {
-					keysToRemove = append(keysToRemove, keyIDs[i])
+					keysToRemove = suite.generateNonExistentKeyIDs(tc.removeCount)
 				}
 
 				keysChan, err := biz.RemoveKeys(ctx, keysToRemove...)
 				require.NoError(t, err)
 				assert.NotNil(t, keysChan)
 
-				// Collect results from channel
-				var removedKeys []*devicev1.KeyObject
-				var channelError error
-				for result := range keysChan {
-					if result.IsError() {
-						channelError = result.Error()
-						break
-					}
-					removedKeys = append(removedKeys, result.Item()...)
-				}
+				// Process results from channel
+				removedKeys, channelError := suite.processRemoveKeysResults(keysChan)
 
 				if tc.expectError {
 					require.Error(t, channelError)
@@ -907,6 +910,59 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 			})
 		}
 	})
+}
+
+func (suite *DeviceBusinessTestSuite) createDeviceWithKeys(
+	ctx context.Context,
+	svc *frame.Service,
+	biz business.DeviceBusiness,
+	keyCount int,
+) (string, []string, error) {
+	// Create a device directly using repository
+	device := &models.Device{
+		Name: "Remove Key Test Device",
+		OS:   "Linux",
+	}
+	device.GenID(ctx)
+	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+	if err != nil {
+		return "", nil, err
+	}
+	deviceID := device.GetID()
+
+	var keyIDs []string
+	for i := range keyCount {
+		keyResult, keyErr := biz.AddKey(ctx, deviceID, devicev1.KeyType_MATRIX_KEY,
+			[]byte(fmt.Sprintf("test-key-data-%d", i)), map[string]string{
+				"index": strconv.Itoa(i),
+			})
+		if keyErr != nil {
+			return "", nil, keyErr
+		}
+		keyIDs = append(keyIDs, keyResult.GetId())
+	}
+	return deviceID, keyIDs, nil
+}
+
+func (suite *DeviceBusinessTestSuite) generateNonExistentKeyIDs(count int) []string {
+	var keyIDs []string
+	for i := range count {
+		keyIDs = append(keyIDs, fmt.Sprintf("non-existent-key-%d", i))
+	}
+	return keyIDs
+}
+
+func (suite *DeviceBusinessTestSuite) processRemoveKeysResults(
+	keysChan <-chan frame.JobResult[[]*devicev1.KeyObject],
+) ([]*devicev1.KeyObject, error) {
+	var removedKeys []*devicev1.KeyObject
+	for result := range keysChan {
+		if result.IsError() {
+			return nil, result.Error()
+		}
+		removedKeys = append(removedKeys, result.Item()...)
+	}
+	return removedKeys, nil
 }
 
 func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
@@ -956,7 +1012,7 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 					device.GenID(ctx)
 					err := repository.NewDeviceRepository(svc).Save(ctx, device)
 					require.NoError(t, err)
-					
+
 					// Create a session for the device
 					session := &models.DeviceSession{
 						DeviceID:  device.GetID(),
@@ -987,4 +1043,131 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 			})
 		}
 	})
+}
+
+// Helper method to create device with profile for search testing.
+func (suite *DeviceBusinessTestSuite) createDeviceWithProfile(
+	ctx context.Context,
+	svc *frame.Service,
+	profileID string,
+) error {
+	device := &models.Device{
+		ProfileID: profileID,
+		Name:      "Search Test Device",
+		OS:        "Linux",
+	}
+	device.GenID(ctx)
+	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+	if err != nil {
+		return err
+	}
+
+	session := &models.DeviceSession{
+		DeviceID:  device.GetID(),
+		UserAgent: "Test Agent",
+		IP:        "127.0.0.1",
+	}
+	session.GenID(ctx)
+	return repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+}
+
+// Helper method to process search results channel.
+func (suite *DeviceBusinessTestSuite) processSearchResults(
+	devicesChan <-chan frame.JobResult[[]*devicev1.DeviceObject],
+) ([]*devicev1.DeviceObject, error) {
+	var devices []*devicev1.DeviceObject
+	for result := range devicesChan {
+		if result.IsError() {
+			return nil, result.Error()
+		}
+		devices = append(devices, result.Item()...)
+	}
+	return devices, nil
+}
+
+// Helper method to create device for logs testing.
+func (suite *DeviceBusinessTestSuite) createDeviceForLogs(
+	ctx context.Context,
+	svc *frame.Service,
+	addLog bool,
+	biz business.DeviceBusiness,
+) (string, error) {
+	device := &models.Device{
+		Name: "Log Test Device",
+		OS:   "Linux",
+	}
+	device.GenID(ctx)
+	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+	if err != nil {
+		return "", err
+	}
+
+	deviceID := device.GetID()
+	if addLog {
+		_, logErr := biz.LogDeviceActivity(ctx, deviceID, "test-session-10", map[string]string{
+			"action": "test_action",
+		})
+		if logErr != nil {
+			return "", logErr
+		}
+	}
+	return deviceID, nil
+}
+
+// Helper method to process device logs results channel.
+func (suite *DeviceBusinessTestSuite) processDeviceLogsResults(
+	logsChan <-chan frame.JobResult[[]*devicev1.DeviceLog],
+) ([]*devicev1.DeviceLog, error) {
+	var logs []*devicev1.DeviceLog
+	for result := range logsChan {
+		if result.IsError() {
+			return nil, result.Error()
+		}
+		logs = append(logs, result.Item()...)
+	}
+	return logs, nil
+}
+
+// Helper method to create device with key for keys testing.
+func (suite *DeviceBusinessTestSuite) createDeviceWithKey(
+	ctx context.Context,
+	svc *frame.Service,
+	biz business.DeviceBusiness,
+	addKey bool,
+	keyType devicev1.KeyType,
+) (string, error) {
+	device := &models.Device{
+		Name: "Key Test Device",
+		OS:   "Linux",
+	}
+	device.GenID(ctx)
+	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+	if err != nil {
+		return "", err
+	}
+
+	deviceID := device.GetID()
+	if addKey {
+		_, keyErr := biz.AddKey(ctx, deviceID, keyType, []byte("test-key-data"), map[string]string{
+			"test": "data",
+		})
+		if keyErr != nil {
+			return "", keyErr
+		}
+	}
+	return deviceID, nil
+}
+
+// Helper method to process keys results channel.
+func (suite *DeviceBusinessTestSuite) processKeysResults(
+	keysChan <-chan frame.JobResult[[]*devicev1.KeyObject],
+) ([]*devicev1.KeyObject, error) {
+	var keys []*devicev1.KeyObject
+	for result := range keysChan {
+		if result.IsError() {
+			return nil, result.Error()
+		}
+		keys = append(keys, result.Item()...)
+	}
+	return keys, nil
 }
