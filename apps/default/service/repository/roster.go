@@ -59,7 +59,7 @@ func (cr *rosterRepository) Search(
 			// Handle multi-word queries by replacing spaces with & (AND operator)
 			searchQuery := strings.ReplaceAll(query.Query, " ", " & ") + ":*"
 
-			// Hybrid approach: Use indexed rosters.search_column for roster properties
+			// Hybrid approach: Use indexed rosters.search_properties for roster properties
 			// and LIKE search for contact details (emails/phones) since TSVector doesn't
 			// support partial matching within email tokens
 			searchTerm := "%" + query.Query + "%"

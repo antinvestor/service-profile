@@ -53,7 +53,7 @@ func (pr *profileRepository) Search(
 		}
 
 		if query.Query != "" {
-			db = db.Where(" search_column @@ plainto_tsquery(?) ", query.Query)
+			db = db.Where(" search_properties @@ plainto_tsquery(?) ", query.Query)
 		}
 
 		err := db.Find(&profileList).Error
