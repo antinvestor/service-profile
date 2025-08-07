@@ -29,7 +29,7 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize configuration
-	cfg, err := frame.ConfigFromEnv[config.ProfileConfig]()
+	cfg, err := frame.ConfigLoadWithOIDC[config.ProfileConfig](ctx)
 	if err != nil {
 		util.Log(ctx).With("err", err).Error("could not process configs")
 		return

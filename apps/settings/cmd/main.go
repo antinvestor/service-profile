@@ -20,7 +20,7 @@ func main() {
 	serviceName := "service_settings"
 	ctx := context.Background()
 
-	cfg, err := frame.ConfigFromEnv[config.SettingsConfig]()
+	cfg, err := frame.ConfigLoadWithOIDC[config.SettingsConfig](ctx)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("could not process configs")
 		return

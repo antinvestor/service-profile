@@ -22,7 +22,7 @@ func main() {
 	serviceName := "service_devices"
 
 	ctx := context.Background()
-	cfg, err := frame.ConfigFromEnv[config.DevicesConfig]()
+	cfg, err := frame.ConfigLoadWithOIDC[config.DevicesConfig](ctx)
 	if err != nil {
 		util.Log(ctx).With("err", err).Error("could not process configs")
 		return
