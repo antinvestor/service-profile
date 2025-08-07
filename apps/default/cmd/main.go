@@ -73,8 +73,8 @@ func main() {
 	svc.Init(ctx, serviceOptions...)
 
 	// Start the service
-	log.WithField("server http port", cfg.HTTPServerPort).
-		WithField("server grpc port", cfg.GrpcServerPort).
+	log.WithField("server http port", cfg.HTTPPort()).
+		WithField("server grpc port", cfg.GrpcPort()).
 		Info(" Initiating server operations")
 
 	err = implementation.Service.Run(ctx, "")

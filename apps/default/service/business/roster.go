@@ -86,8 +86,8 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 	query, err := datastore.NewSearchQuery(
 		ctx,
 		request.GetQuery(), searchProperties,
-		int(request.GetCount()),
 		int(request.GetPage()),
+		int(request.GetCount()),
 	)
 
 	if err != nil {
