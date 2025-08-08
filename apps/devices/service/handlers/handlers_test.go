@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/tests/testdef"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
@@ -336,7 +337,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 			name:        "search with matching query",
 			setupDevice: true,
 			profileID:   "matching-profile",
-			query:       "matching-profile",
+			query:       "Test", // Search for actual text in device name
 			expectEmpty: false,
 		},
 		{
@@ -357,43 +358,94 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
-
-		// Create server
 		server := handlers.NewDeviceServer(ctx, svc)
 
 		for _, tc := range testCases {
 			suite.Run(tc.name, func() {
-				if tc.setupDevice {
-					// Create a device directly using repository with unique profile ID
-					device := &models.Device{
-						ProfileID: tc.profileID,
-						Name:      "Test Device",
-						OS:        "Linux",
-					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
-					suite.Require().NoError(err)
-				}
-
-				req := &devicev1.SearchRequest{
-					Query: tc.query,
-				}
-
-				stream := &mockSearchStream{
-					ctx: ctx,
-				}
-
-				err := server.Search(req, stream)
-				suite.Require().NoError(err)
-
-				if tc.expectEmpty {
-					suite.Empty(stream.responses)
-				} else {
-					suite.NotEmpty(stream.responses)
-				}
+				suite.runSearchTestCase(ctx, svc, server, tc)
 			})
 		}
 	})
+}
+
+func (suite *HandlersTestSuite) runSearchTestCase(
+	ctx context.Context,
+	svc *frame.Service,
+	server *handlers.DevicesServer,
+	tc struct {
+		name        string
+		setupDevice bool
+		profileID   string
+		query       string
+		expectEmpty bool
+	},
+) {
+	testCtx := suite.setupTestContext(ctx, tc.profileID)
+
+	if tc.setupDevice {
+		suite.createTestDevice(testCtx, svc, tc.profileID)
+	}
+
+	stream := suite.executeSearchRequest(testCtx, server, tc.query)
+	suite.validateSearchResults(stream, tc.expectEmpty)
+}
+
+func (suite *HandlersTestSuite) setupTestContext(ctx context.Context, profileID string) context.Context {
+	if profileID == "" {
+		return ctx
+	}
+
+	claims := &frame.AuthenticationClaims{}
+	claims.Subject = profileID
+	return claims.ClaimsToContext(ctx)
+}
+
+func (suite *HandlersTestSuite) createTestDevice(ctx context.Context, svc *frame.Service, profileID string) {
+	device := &models.Device{
+		ProfileID: profileID,
+		Name:      "Test Device",
+		OS:        "Linux",
+	}
+	device.GenID(ctx)
+	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+	suite.Require().NoError(err)
+}
+
+func (suite *HandlersTestSuite) executeSearchRequest(
+	ctx context.Context,
+	server *handlers.DevicesServer,
+	query string,
+) *mockSearchStream {
+	req := &devicev1.SearchRequest{
+		Query: query,
+	}
+
+	stream := &mockSearchStream{
+		ctx: ctx,
+	}
+
+	err := server.Search(req, stream)
+	suite.Require().NoError(err)
+
+	return stream
+}
+
+func (suite *HandlersTestSuite) validateSearchResults(stream *mockSearchStream, expectEmpty bool) {
+	totalDevices := suite.countDevicesInResponses(stream.responses)
+
+	if expectEmpty {
+		suite.Equal(0, totalDevices, "Expected no devices in responses but got %d", totalDevices)
+	} else {
+		suite.Positive(totalDevices, "Expected devices in responses but got none")
+	}
+}
+
+func (suite *HandlersTestSuite) countDevicesInResponses(responses []*devicev1.SearchResponse) int {
+	totalDevices := 0
+	for _, resp := range responses {
+		totalDevices += len(resp.GetData())
+	}
+	return totalDevices
 }
 
 func (suite *HandlersTestSuite) TestGetClientIP() {

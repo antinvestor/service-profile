@@ -80,7 +80,12 @@ func (ds *DevicesServer) Search(req *devicev1.SearchRequest, stream devicev1.Dev
 		return err
 	}
 
-	for res := range response {
+	for {
+		res, ok := response.ReadResult(ctx)
+		if !ok {
+			return nil
+		}
+
 		if res.IsError() {
 			return res.Error()
 		}
@@ -92,8 +97,6 @@ func (ds *DevicesServer) Search(req *devicev1.SearchRequest, stream devicev1.Dev
 			return err
 		}
 	}
-
-	return nil
 }
 
 func (ds *DevicesServer) Create(ctx context.Context, req *devicev1.CreateRequest) (*devicev1.CreateResponse, error) {
@@ -176,7 +179,12 @@ func (ds *DevicesServer) ListLogs(req *devicev1.ListLogsRequest, stream devicev1
 		return err
 	}
 
-	for res := range response {
+	for {
+		res, ok := response.ReadResult(ctx)
+		if !ok {
+			return nil
+		}
+
 		if res.IsError() {
 			return res.Error()
 		}
@@ -188,8 +196,6 @@ func (ds *DevicesServer) ListLogs(req *devicev1.ListLogsRequest, stream devicev1
 			return err
 		}
 	}
-
-	return nil
 }
 
 func (ds *DevicesServer) AddKey(ctx context.Context, req *devicev1.AddKeyRequest) (*devicev1.AddKeyResponse, error) {

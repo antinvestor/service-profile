@@ -27,8 +27,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/XSAM/otelsql v0.39.0 h1:4o374mEIMweaeevL7fd8Q3C710Xi2Jh/c8G4Qy9bvCY=
 github.com/XSAM/otelsql v0.39.0/go.mod h1:uMOXLUX+wkuAuP0AR3B45NXX7E9lJS2mERa8gqdU8R0=
-github.com/antinvestor/apis/go/common v1.37.1 h1:c2D3xyXnoVt12VRkG6BhHD908fZoNW2HwAcyX9eijTk=
-github.com/antinvestor/apis/go/common v1.37.1/go.mod h1:F0FMSX+VM6xvCrjNjjXEhUbAhq1LAx+2UdCudI4cs5w=
+github.com/antinvestor/apis/go/common v1.37.9 h1:fxSm3yVEkzQrkY38CS7LzZ8cbEQ1OlPMPxJ/LOe/Hes=
+github.com/antinvestor/apis/go/common v1.37.9/go.mod h1:62XDxXBxRqRBgnA0PjRlNIUqLZJdfZ1xeLbrTlVkRfU=
 github.com/antinvestor/apis/go/device v1.37.9 h1:vfzNWjh74derVPtJQfSjpYAW1vbdhxCJmMFqbR+o3j4=
 github.com/antinvestor/apis/go/device v1.37.9/go.mod h1:anFyeP/d9yKt/zXxjLCVOmK1dwWKrCUxSXk4Dpu48l4=
 github.com/antinvestor/apis/go/notification v1.37.9 h1:VVPzUAfy+q/X2ia4+uB+cy7fbCCouZlXwqmu9VWj8wY=
@@ -185,8 +185,8 @@ github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJw
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
 github.com/panjf2000/ants/v2 v2.11.3 h1:AfI0ngBoXJmYOpDh9m516vjqoUu2sLrIVgppI9TZVpg=
 github.com/panjf2000/ants/v2 v2.11.3/go.mod h1:8u92CYMUc6gyvTIw8Ru7Mt7+/ESnJahz5EVtqfrilek=
-github.com/pitabwire/frame v1.51.4 h1:/jXoDPbTJNb5VCsa4b5caSu0SVMO41HBqsB1VUbrli0=
-github.com/pitabwire/frame v1.51.4/go.mod h1:pHB23g5vb7fIONA4TBOcexP+SQ6B4qksajd4sOIA7G0=
+github.com/pitabwire/frame v1.52.0 h1:xygiis3QA3PG87uNkDVZbsKBSNvzDIFN10ycR3ObMiU=
+github.com/pitabwire/frame v1.52.0/go.mod h1:OKG8HS3iwcsxFpsLcCKMNy6ZaqIkFMkiF1P27Mtqp9g=
 github.com/pitabwire/natspubsub v0.6.11 h1:7IEwgPrdzOxoyz9BWXXiUBaMXNUZS31cHxJnRwf2lQI=
 github.com/pitabwire/natspubsub v0.6.11/go.mod h1:pudFshYEmqs6jvgTfJo9HwMfwstWaNITFVLdEsFa3jo=
 github.com/pitabwire/util v0.3.4 h1:OOsNVgJlqrC4EFNBqXsTwi/GbvENKv0BuK8ZK1E+F/4=

@@ -6,11 +6,14 @@ import (
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/framedata"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
+
+const defaultMaxLogsCount = 1000
 
 // DeviceBusiness defines the interface for device-related business logic.
 // It abstracts the underlying data storage and provides methods for interacting
@@ -21,7 +24,7 @@ type DeviceBusiness interface {
 	SearchDevices(
 		ctx context.Context,
 		query *devicev1.SearchRequest,
-	) (<-chan frame.JobResult[[]*devicev1.DeviceObject], error)
+	) (frame.JobResultPipe[[]*devicev1.DeviceObject], error)
 	SaveDevice(ctx context.Context, id string, name string, data map[string]string) (*devicev1.DeviceObject, error)
 	LinkDeviceToProfile(
 		ctx context.Context,
@@ -50,7 +53,7 @@ type DeviceBusiness interface {
 		deviceID, sessionID string,
 		data map[string]string,
 	) (*devicev1.DeviceLog, error)
-	GetDeviceLogs(ctx context.Context, deviceID string) (<-chan frame.JobResult[[]*devicev1.DeviceLog], error)
+	GetDeviceLogs(ctx context.Context, deviceID string) (frame.JobResultPipe[[]*devicev1.DeviceLog], error)
 }
 
 type deviceBusiness struct {
@@ -102,27 +105,49 @@ func (b *deviceBusiness) LogDeviceActivity(
 func (b *deviceBusiness) GetDeviceLogs(
 	ctx context.Context,
 	deviceID string,
-) (<-chan frame.JobResult[[]*devicev1.DeviceLog], error) {
-	out := make(chan frame.JobResult[[]*devicev1.DeviceLog])
+) (frame.JobResultPipe[[]*devicev1.DeviceLog], error) {
+	resultPipe := frame.NewJob[[]*devicev1.DeviceLog](
+		func(ctx context.Context, result frame.JobResultPipe[[]*devicev1.DeviceLog]) error {
+			searchProperties := map[string]any{
+				"device_id": deviceID,
+			}
 
-	go func() {
-		defer close(out)
+			q := framedata.NewSearchQuery("", searchProperties, 0, defaultMaxLogsCount)
 
-		logs, err := b.deviceLogRepo.GetByDeviceID(ctx, deviceID)
-		if err != nil {
-			out <- frame.ErrorResult[[]*devicev1.DeviceLog](err)
-			return
-		}
+			logsResult, err := b.deviceLogRepo.GetByDeviceID(ctx, q)
+			if err != nil {
+				return err
+			}
 
-		apiLogs := make([]*devicev1.DeviceLog, len(logs))
-		for i, log := range logs {
-			apiLogs[i] = log.ToAPI()
-		}
+			var apiDeviceLogs []*devicev1.DeviceLog
+			for {
+				res, ok := logsResult.ReadResult(ctx)
+				if !ok {
+					return nil
+				}
 
-		out <- frame.Result[[]*devicev1.DeviceLog](apiLogs)
-	}()
+				if res.IsError() {
+					return res.Error()
+				}
 
-	return out, nil
+				for _, deviceLog := range res.Item() {
+					apiDeviceLogs = append(apiDeviceLogs, deviceLog.ToAPI())
+				}
+
+				err = result.WriteResult(ctx, apiDeviceLogs)
+				if err != nil {
+					return err
+				}
+			}
+		},
+	)
+
+	err := frame.SubmitJob(ctx, b.service, resultPipe)
+	if err != nil {
+		return nil, err
+	}
+
+	return resultPipe, nil
 }
 
 func (b *deviceBusiness) SaveDevice(
@@ -170,37 +195,98 @@ func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev
 
 func (b *deviceBusiness) SearchDevices(
 	ctx context.Context,
-	query *devicev1.SearchRequest,
-) (<-chan frame.JobResult[[]*devicev1.DeviceObject], error) {
-	out := make(chan frame.JobResult[[]*devicev1.DeviceObject])
+	request *devicev1.SearchRequest,
+) (frame.JobResultPipe[[]*devicev1.DeviceObject], error) {
+	resultPipe := frame.NewJob[[]*devicev1.DeviceObject](
+		func(ctx context.Context, result frame.JobResultPipe[[]*devicev1.DeviceObject]) error {
+			return b.processSearchRequest(ctx, request, result)
+		},
+	)
 
-	go func() {
-		defer close(out)
+	err := frame.SubmitJob(ctx, b.service, resultPipe)
+	if err != nil {
+		return nil, err
+	}
 
-		devices, err := b.deviceRepo.Search(ctx, query.GetQuery())
+	return resultPipe, nil
+}
+
+// processSearchRequest handles the main search logic.
+func (b *deviceBusiness) processSearchRequest(
+	ctx context.Context,
+	request *devicev1.SearchRequest,
+	result frame.JobResultPipe[[]*devicev1.DeviceObject],
+) error {
+	searchQuery := b.buildSearchQuery(ctx, request)
+
+	devicesResult, err := b.deviceRepo.Search(ctx, searchQuery)
+	if err != nil {
+		return err
+	}
+
+	return b.processSearchResults(ctx, devicesResult, result)
+}
+
+// buildSearchQuery creates the search query from the request.
+func (b *deviceBusiness) buildSearchQuery(ctx context.Context, request *devicev1.SearchRequest) *framedata.SearchQuery {
+	profileID := ""
+	claims := frame.ClaimsFromContext(ctx)
+	if claims != nil {
+		profileID, _ = claims.GetSubject()
+	}
+
+	searchProperties := map[string]any{
+		"profile_id": profileID,
+		"start_date": request.GetStartDate(),
+		"end_date":   request.GetEndDate(),
+	}
+
+	for _, p := range request.GetProperties() {
+		searchProperties[p] = request.GetQuery()
+	}
+
+	return framedata.NewSearchQuery(request.GetQuery(), searchProperties, int(request.GetPage()),
+		int(request.GetCount()))
+}
+
+// processSearchResults processes the search results and converts them to API objects.
+func (b *deviceBusiness) processSearchResults(
+	ctx context.Context,
+	devicesResult frame.JobResultPipe[[]*models.Device],
+	result frame.JobResultPipe[[]*devicev1.DeviceObject],
+) error {
+	var apiDevices []*devicev1.DeviceObject
+
+	for {
+		res, ok := devicesResult.ReadResult(ctx)
+		if !ok {
+			return nil
+		}
+
+		if res.IsError() {
+			return res.Error()
+		}
+
+		for _, device := range res.Item() {
+			apiDevice := b.convertDeviceToAPI(ctx, device)
+			apiDevices = append(apiDevices, apiDevice)
+		}
+
+		err := result.WriteResult(ctx, apiDevices)
 		if err != nil {
-			out <- frame.ErrorResult[[]*devicev1.DeviceObject](err)
-			return
+			return err
 		}
+	}
+}
 
-		var apiDevices []*devicev1.DeviceObject
-		for _, device := range devices {
-			// Get last session for each device
-			sess, sessionErr := b.sessionRepo.GetLastByDeviceID(ctx, device.GetID())
-			if sessionErr != nil {
-				// Continue with nil session if not found
-				sess = nil
-			}
-			apiDevices = append(apiDevices, device.ToAPI(sess))
-		}
-
-		// Only send result if we have devices to return
-		if len(apiDevices) > 0 {
-			out <- frame.Result[[]*devicev1.DeviceObject](apiDevices)
-		}
-	}()
-
-	return out, nil
+// convertDeviceToAPI converts a device model to API object with session data.
+func (b *deviceBusiness) convertDeviceToAPI(ctx context.Context, device *models.Device) *devicev1.DeviceObject {
+	sess, sessionErr := b.sessionRepo.GetLastByDeviceID(ctx, device.GetID())
+	if sessionErr != nil {
+		// Continue with nil session if not found
+		sess = nil
+	}
+	return device.ToAPI(sess)
 }
 
 func (b *deviceBusiness) GetDeviceBySessionID(ctx context.Context, id string) (*devicev1.DeviceObject, error) {

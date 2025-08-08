@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/framedata"
 	"github.com/pitabwire/frame/tests"
 	"github.com/pitabwire/frame/tests/deps/testpostgres"
 	"github.com/pitabwire/frame/tests/testdef"
@@ -158,8 +159,25 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 				assert.Equal(t, tc.os, retrievedDevice.OS)
 
 				// Retrieve by ProfileID
-				devices, err := deviceRepo.Search(ctx, tc.profileID)
+				searchProperties := map[string]any{
+					"profile_id": tc.profileID,
+				}
+				q := framedata.NewSearchQuery("", searchProperties, 0, 50)
+				devicesResult, err := deviceRepo.Search(ctx, q)
 				require.NoError(t, err)
+
+				// Read results from the pipe
+				var devices []*models.Device
+				for {
+					res, ok := devicesResult.ReadResult(ctx)
+					if !ok {
+						break
+					}
+					if res.IsError() {
+						require.NoError(t, res.Error())
+					}
+					devices = append(devices, res.Item()...)
+				}
 				assert.Len(t, devices, 1)
 				assert.Equal(t, device.GetID(), devices[0].GetID())
 
@@ -288,8 +306,25 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 				assert.Equal(t, tc.sessionID, retrievedLog.DeviceSessionID)
 
 				// Retrieve by device ID
-				logs, err := logRepo.GetByDeviceID(ctx, tc.deviceID)
+				searchProperties := map[string]any{
+					"device_id": tc.deviceID,
+				}
+				q := framedata.NewSearchQuery("", searchProperties, 0, 50)
+				logsResult, err := logRepo.GetByDeviceID(ctx, q)
 				require.NoError(t, err)
+
+				// Read results from the pipe
+				var logs []*models.DeviceLog
+				for {
+					res, ok := logsResult.ReadResult(ctx)
+					if !ok {
+						break
+					}
+					if res.IsError() {
+						require.NoError(t, res.Error())
+					}
+					logs = append(logs, res.Item()...)
+				}
 				assert.Len(t, logs, 1)
 				assert.Equal(t, log.GetID(), logs[0].GetID())
 			})

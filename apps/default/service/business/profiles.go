@@ -7,7 +7,7 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/framedata"
 	"github.com/rs/xid"
 
 	"github.com/antinvestor/service-profile/apps/default/service"
@@ -146,15 +146,11 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 		searchProperties[p] = request.GetQuery()
 	}
 
-	query, err := datastore.NewSearchQuery(
-		ctx,
+	query := framedata.NewSearchQuery(
 		request.GetQuery(), searchProperties,
 		int(request.GetPage()),
 		int(request.GetCount()),
 	)
-	if err != nil {
-		return nil, err
-	}
 
 	return pb.profileRepo.Search(ctx, query)
 }

@@ -6,7 +6,7 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/framedata"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -18,11 +18,11 @@ type profileRepository struct {
 
 func (pr *profileRepository) Search(
 	ctx context.Context,
-	query *datastore.SearchQuery,
+	query *framedata.SearchQuery,
 ) (frame.JobResultPipe[[]*models.Profile], error) {
-	return datastore.StableSearch[models.Profile](ctx, pr.service, query, func(
+	return framedata.StableSearch[models.Profile](ctx, pr.service, query, func(
 		ctx context.Context,
-		query *datastore.SearchQuery,
+		query *framedata.SearchQuery,
 	) ([]*models.Profile, error) {
 		var profileList []*models.Profile
 

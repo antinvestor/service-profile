@@ -145,7 +145,12 @@ func (suite *DeviceBusinessTestSuite) verifyDeviceActivityLogged(
 
 	// Process the channel to get actual logs
 	var deviceLogs []*devicev1.DeviceLog
-	for result := range deviceLogsChan {
+	for {
+		result, ok := deviceLogsChan.ReadResult(ctx)
+		if !ok {
+			break
+		}
+
 		if result.IsError() {
 			return result.Error()
 		}
@@ -620,19 +625,29 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 		name        string
 		setupDevice bool
 		profileID   string
+		searchQuery string
 		expectError bool
 	},
 ) {
+	// Create context with claims for the expected profile_id
+	testCtx := ctx
+	if tc.profileID != "" {
+		// Create claims with the profile_id as subject
+		claims := &frame.AuthenticationClaims{}
+		claims.Subject = tc.profileID
+		testCtx = claims.ClaimsToContext(ctx)
+	}
+
 	if tc.setupDevice {
-		err := suite.createDeviceWithProfile(ctx, svc, tc.profileID)
+		err := suite.createDeviceWithProfile(testCtx, svc, tc.profileID)
 		require.NoError(t, err)
 	}
 
 	query := &devicev1.SearchRequest{
-		Query: tc.profileID,
+		Query: tc.searchQuery,
 	}
 
-	devicesChan, err := biz.SearchDevices(ctx, query)
+	devicesChan, err := biz.SearchDevices(testCtx, query)
 	if tc.expectError {
 		require.Error(t, err)
 		return
@@ -641,7 +656,7 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	require.NoError(t, err)
 	assert.NotNil(t, devicesChan)
 
-	devices, channelErr := suite.processSearchResults(devicesChan)
+	devices, channelErr := suite.processSearchResults(testCtx, devicesChan)
 	require.NoError(t, channelErr)
 
 	suite.verifySearchResults(t, tc, devices)
@@ -651,14 +666,20 @@ func (suite *DeviceBusinessTestSuite) verifySearchResults(t *testing.T, tc struc
 	name        string
 	setupDevice bool
 	profileID   string
+	searchQuery string
 	expectError bool
 }, devices []*devicev1.DeviceObject) {
-	if tc.setupDevice && tc.profileID != "" {
+	if tc.setupDevice && tc.searchQuery != "" {
 		assert.Len(t, devices, 1)
 		if len(devices) > 0 {
 			assert.NotEmpty(t, devices[0].GetId())
 		}
 	} else {
+		// For empty profile_id tests, we expect no results because:
+		// 1. No device is created (setupDevice=false)
+		// 2. No claims context means no profile_id filter
+		// 3. Empty query means no text search
+		// 4. But we need to ensure test isolation
 		assert.Empty(t, devices)
 	}
 }
@@ -669,24 +690,28 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 		name        string
 		setupDevice bool
 		profileID   string
+		searchQuery string
 		expectError bool
 	}{
 		{
 			name:        "search with valid profile ID",
 			setupDevice: true,
 			profileID:   "profile-search-test",
+			searchQuery: "Search", // Search for actual text in device name
 			expectError: false,
 		},
 		{
 			name:        "search with non-existent profile ID",
 			setupDevice: false,
 			profileID:   "non-existent-profile",
+			searchQuery: "non-matching-query",
 			expectError: false,
 		},
 		{
 			name:        "search with empty profile ID",
 			setupDevice: false,
 			profileID:   "",
+			searchQuery: "",
 			expectError: false,
 		},
 	}
@@ -752,7 +777,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 				assert.NotNil(t, logsChan)
 
 				// Collect results from channel
-				logs, err := suite.processDeviceLogsResults(logsChan)
+				logs, err := suite.processDeviceLogsResults(ctx, logsChan)
 				require.NoError(t, err)
 
 				if tc.name == "get logs for device with logs" {
@@ -1073,10 +1098,14 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithProfile(
 
 // Helper method to process search results channel.
 func (suite *DeviceBusinessTestSuite) processSearchResults(
-	devicesChan <-chan frame.JobResult[[]*devicev1.DeviceObject],
+	ctx context.Context, devicesChan frame.JobResultPipe[[]*devicev1.DeviceObject],
 ) ([]*devicev1.DeviceObject, error) {
 	var devices []*devicev1.DeviceObject
-	for result := range devicesChan {
+	for {
+		result, ok := devicesChan.ReadResult(ctx)
+		if !ok {
+			break
+		}
 		if result.IsError() {
 			return nil, result.Error()
 		}
@@ -1116,10 +1145,14 @@ func (suite *DeviceBusinessTestSuite) createDeviceForLogs(
 
 // Helper method to process device logs results channel.
 func (suite *DeviceBusinessTestSuite) processDeviceLogsResults(
-	logsChan <-chan frame.JobResult[[]*devicev1.DeviceLog],
+	ctx context.Context, logsChan frame.JobResultPipe[[]*devicev1.DeviceLog],
 ) ([]*devicev1.DeviceLog, error) {
 	var logs []*devicev1.DeviceLog
-	for result := range logsChan {
+	for {
+		result, ok := logsChan.ReadResult(ctx)
+		if !ok {
+			break
+		}
 		if result.IsError() {
 			return nil, result.Error()
 		}

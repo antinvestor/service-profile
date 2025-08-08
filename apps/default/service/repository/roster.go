@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/framedata"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -18,11 +18,11 @@ type rosterRepository struct {
 
 func (cr *rosterRepository) Search(
 	ctx context.Context,
-	query *datastore.SearchQuery,
+	query *framedata.SearchQuery,
 ) (frame.JobResultPipe[[]*models.Roster], error) {
-	return datastore.StableSearch[models.Roster](ctx, cr.service, query, func(
+	return framedata.StableSearch[models.Roster](ctx, cr.service, query, func(
 		ctx context.Context,
-		query *datastore.SearchQuery,
+		query *framedata.SearchQuery,
 	) ([]*models.Roster, error) {
 		var rosterList []*models.Roster
 
