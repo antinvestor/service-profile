@@ -182,7 +182,7 @@ func setupHTTPHandlers(
 
 	// Setup proxy
 	proxyOptions := apis.ProxyOptions{
-		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", cfg.GrpcServerPort),
+		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", cfg.GrpcPort()),
 		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	}
 

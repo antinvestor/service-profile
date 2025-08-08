@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"buf.build/go/protovalidate"
+	apis "github.com/antinvestor/apis/go/common"
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -11,6 +13,7 @@ import (
 	"github.com/pitabwire/util"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
@@ -54,7 +57,10 @@ func main() {
 	grpcServer, implementation := setupGRPCServer(ctx, svc, cfg, serviceName, log)
 
 	// Setup HTTP handlers and proxy
-	serviceOptions = setupHTTPHandlers(ctx, implementation, grpcServer)
+	serviceOptions, httpErr := setupHTTPHandlers(ctx, implementation, cfg, grpcServer)
+	if err != nil {
+		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
+	}
 
 	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
 		Service:             svc,
@@ -123,10 +129,10 @@ func setupGRPCServer(ctx context.Context, svc *frame.Service,
 
 // setupHTTPHandlers configures HTTP handlers and proxy.
 func setupHTTPHandlers(
-	_ context.Context,
+	ctx context.Context,
 	implementation *handlers.DevicesServer,
-	grpcServer *grpc.Server,
-) []frame.Option {
+	cfg config.DevicesConfig, grpcServer *grpc.Server,
+) ([]frame.Option, error) {
 	// Start with datastore option
 	serviceOptions := []frame.Option{frame.WithDatastore()}
 
@@ -134,9 +140,20 @@ func setupHTTPHandlers(
 	grpcServerOpt := frame.WithGRPCServer(grpcServer)
 	serviceOptions = append(serviceOptions, grpcServerOpt)
 
-	proxyMux := http.NewServeMux()
+	// Setup proxy
+	proxyOptions := apis.ProxyOptions{
+		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", cfg.GrpcPort()),
+		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
+	}
+
+	proxyMux, err := devicev1.CreateProxyHandler(ctx, proxyOptions)
+	if err != nil {
+		return nil, err
+	}
+
+	// Setup REST handlers
 	proxyMux.Handle("/_public/", http.StripPrefix("/_public", implementation.NewInSecureRouterV1()))
 	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
 
-	return serviceOptions
+	return serviceOptions, nil
 }

@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
+	"fmt"
 
 	"buf.build/go/protovalidate"
+	apis "github.com/antinvestor/apis/go/common"
 	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/util"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/antinvestor/service-profile/apps/settings/config"
 	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
@@ -30,8 +33,6 @@ func main() {
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
-	serviceOptions := []frame.Option{frame.WithDatastore()}
-
 	// Handle database migration if requested
 	if handleDatabaseMigration(ctx, svc, cfg, log) {
 		return
@@ -44,58 +45,19 @@ func main() {
 		}
 	}
 
-	jwtAudience := cfg.Oauth2JwtVerifyAudience
-	if jwtAudience == "" {
-		jwtAudience = serviceName
-	}
+	// Setup GRPC server
+	grpcServer, implementation := setupGRPCServer(ctx, svc, cfg, log)
 
-	validator, err := protovalidate.New()
+	// Setup HTTP handlers and proxy
+	serviceOptions, httpErr := setupHTTPHandlers(ctx, cfg, grpcServer)
 	if err != nil {
-		log.WithError(err).Fatal("could not load validator for proto messages")
+		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
 	}
-
-	unaryInterceptors := []grpc.UnaryServerInterceptor{
-		protovalidateinterceptor.UnaryServerInterceptor(validator),
-		recovery.UnaryServerInterceptor(),
-	}
-
-	if cfg.SecurelyRunService {
-		unaryInterceptors = append(
-			[]grpc.UnaryServerInterceptor{svc.UnaryAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer)},
-			unaryInterceptors...)
-	}
-
-	streamInterceptors := []grpc.StreamServerInterceptor{
-		protovalidateinterceptor.StreamServerInterceptor(validator),
-		recovery.StreamServerInterceptor(),
-	}
-
-	if cfg.SecurelyRunService {
-		streamInterceptors = append(
-			[]grpc.StreamServerInterceptor{svc.StreamAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer)},
-			streamInterceptors...)
-	} else {
-		log.Warn("svc is running insecurely: secure by setting SECURELY_RUN_SERVICE=True")
-	}
-
-	grpcServer := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(unaryInterceptors...),
-		grpc.ChainStreamInterceptor(streamInterceptors...),
-	)
-
-	implementation := &handlers.SettingsServer{
-		Service: svc,
-	}
-
-	settingsV1.RegisterSettingsServiceServer(grpcServer, implementation)
-
-	grpcServerOpt := frame.WithGRPCServer(grpcServer)
-	serviceOptions = append(serviceOptions, grpcServerOpt)
 
 	svc.Init(ctx, serviceOptions...)
 
-	log.WithField("server http port", cfg.HTTPServerPort).
-		WithField("server grpc port", cfg.GrpcServerPort).
+	log.WithField("server http port", cfg.HTTPPort()).
+		WithField("server grpc port", cfg.GrpcPort()).
 		Info(" Initiating server operations")
 
 	defer implementation.Service.Stop(ctx)
@@ -124,4 +86,67 @@ func handleDatabaseMigration(
 		return true
 	}
 	return false
+}
+
+// setupGRPCServer initializes and configures the gRPC server.
+func setupGRPCServer(_ context.Context, svc *frame.Service,
+	cfg config.SettingsConfig, log *util.LogEntry) (*grpc.Server, *handlers.SettingsServer) {
+	jwtAudience := cfg.Oauth2JwtVerifyAudience
+	if jwtAudience == "" {
+		jwtAudience = svc.Name()
+	}
+
+	validator, err := protovalidate.New()
+	if err != nil {
+		log.WithError(err).Fatal("could not load validator for proto messages")
+	}
+
+	grpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
+			svc.UnaryAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer),
+			protovalidateinterceptor.UnaryServerInterceptor(validator)),
+
+		grpc.ChainStreamInterceptor(
+			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
+			svc.StreamAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer),
+			protovalidateinterceptor.StreamServerInterceptor(validator),
+		),
+	)
+
+	implementation := &handlers.SettingsServer{
+		Service: svc,
+	}
+
+	settingsV1.RegisterSettingsServiceServer(grpcServer, implementation)
+
+	return grpcServer, implementation
+}
+
+// setupHTTPHandlers configures HTTP handlers and proxy.
+func setupHTTPHandlers(
+	ctx context.Context,
+	cfg config.SettingsConfig,
+	grpcServer *grpc.Server,
+) ([]frame.Option, error) {
+	// Start with datastore option
+	serviceOptions := []frame.Option{frame.WithDatastore()}
+
+	// Add GRPC server option
+	grpcServerOpt := frame.WithGRPCServer(grpcServer)
+	serviceOptions = append(serviceOptions, grpcServerOpt)
+
+	// Setup proxy
+	proxyOptions := apis.ProxyOptions{
+		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", cfg.GrpcPort()),
+		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
+	}
+
+	proxyMux, err := settingsV1.CreateProxyHandler(ctx, proxyOptions)
+	if err != nil {
+		return nil, err
+	}
+	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
+
+	return serviceOptions, nil
 }
