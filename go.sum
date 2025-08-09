@@ -1,5 +1,7 @@
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250717185734-6c6e0d3c608e.1 h1:Lg6klmCi3v7VvpqeeLEER9/m5S8y9e9DjhqQnSCNy4k=
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250717185734-6c6e0d3c608e.1/go.mod h1:avRlCjnFzl98VPaeCtJ24RrV/wwHFzB8sWXhj26+n/U=
+buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.7-20250717185734-6c6e0d3c608e.1 h1:/AZH8sVB6LHv8G+hZlAMCP31NevnesHwYgnlgS5Vt14=
+buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.7-20250717185734-6c6e0d3c608e.1/go.mod h1:eva/VCrd8X7xuJw+JtwCEyrCKiRRASukFqmirnWBvFU=
 buf.build/go/protovalidate v0.14.0 h1:kr/rC/no+DtRyYX+8KXLDxNnI1rINz0imk5K44ZpZ3A=
 buf.build/go/protovalidate v0.14.0/go.mod h1:+F/oISho9MO7gJQNYC2VWLzcO1fTPmaTA08SDYJZncA=
 cel.dev/expr v0.24.0 h1:56OvJKSH3hDGL0ml5uSxZmz3/3Pq4tJ+fb1unVLAFcY=
@@ -43,6 +45,8 @@ github.com/antinvestor/apis/go/profile v1.37.9 h1:zZOeqb327H9+pBGveiT2jBXRTtfeqD
 github.com/antinvestor/apis/go/profile v1.37.9/go.mod h1:eZg3tInHTU230U6ij/hhQO4N4/vHxkNcSkJMlb1mO20=
 github.com/antinvestor/apis/go/settings v1.37.9 h1:FXIKOlByUwHGxgqICvXxC6OYSsO1zXD1/4jayYGxPGg=
 github.com/antinvestor/apis/go/settings v1.37.9/go.mod h1:jxG5zAde0pfr+YM87kUm50kx98SEtemjxnjdUFq83k0=
+github.com/antinvestor/apis/go/settings v1.38.0 h1:idTgTxafG1siCAA9hzmSR+agWQLpukihe5xLRQ0w8lI=
+github.com/antinvestor/apis/go/settings v1.38.0/go.mod h1:gvQm9m9eX41QHEu3IyKpMUCq/6arfnYFLo1isDlgg1w=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
 github.com/antlr4-go/antlr/v4 v4.13.1/go.mod h1:GKmUxMtwp6ZgGwZSva4eWPC5mS6vUAmOABFgjdkM7Nw=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
