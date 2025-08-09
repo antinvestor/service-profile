@@ -37,11 +37,11 @@ func (vaq *ContactVerificationAttemptedQueue) PayloadType() any {
 func (vaq *ContactVerificationAttemptedQueue) Validate(_ context.Context, payload any) error {
 	notification, ok := payload.(*models.VerificationAttempt)
 	if !ok {
-		return errors.New(" payload is not of type models.VerificationAttempt")
+		return errors.New("invalid payload type, expected *models.VerificationAttempt")
 	}
 
 	if notification.GetID() == "" {
-		return errors.New(" verification attempt Id should already have been set ")
+		return errors.New("invalid payload type, expected Id on *models.VerificationAttempt to have been set ")
 	}
 	return nil
 }
@@ -49,7 +49,7 @@ func (vaq *ContactVerificationAttemptedQueue) Validate(_ context.Context, payloa
 func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, payload any) error {
 	attempt, ok := payload.(*models.VerificationAttempt)
 	if !ok {
-		return errors.New(" payload is not of type models.VerificationAttempt")
+		return errors.New("invalid payload type, expected *models.VerificationAttempt")
 	}
 
 	logger := vaq.Service.Log(ctx).WithField("attempt", attempt.GetID()).WithField("type", vaq.Name())

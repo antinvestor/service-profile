@@ -32,8 +32,10 @@ func (vr *verificationRepository) GetByID(
 
 func (vr *verificationRepository) Save(ctx context.Context, verification *models.Verification) error {
 	err := vr.service.DB(ctx, false).Create(verification).Error
-	if !strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-		return err
+	if err != nil {
+		if !strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			return err
+		}
 	}
 	return nil
 }
@@ -56,8 +58,10 @@ func (vr *verificationRepository) SaveAttempt(
 	verificationAttempt *models.VerificationAttempt,
 ) error {
 	err := vr.service.DB(ctx, false).Create(verificationAttempt).Error
-	if !strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
-		return err
+	if err != nil {
+		if !strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+			return err
+		}
 	}
 	return nil
 }

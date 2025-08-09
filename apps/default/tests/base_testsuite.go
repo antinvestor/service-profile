@@ -86,8 +86,8 @@ func (bs *BaseTestSuite) CreateService(
 	svc.Init(ctx,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.WithRegisterEvents(
-			events.NewContactVerificationQueue(svc, bs.GetNotificationCli(ctx)),
 			events.NewClientConnectedSetupQueue(svc),
+			events.NewContactVerificationQueue(svc, bs.GetNotificationCli(ctx)),
 			events.NewContactVerificationAttemptedQueue(svc),
 		),
 	)

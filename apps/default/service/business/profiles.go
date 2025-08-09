@@ -375,10 +375,6 @@ func (pb *profileBusiness) CheckVerification(
 		return 0, false, err
 	}
 
-	if verification.ExpiresAt.Before(time.Now()) {
-		return 0, false, nil
-	}
-
 	attempts, err := pb.contactBusiness.GetVerificationAttempts(ctx, verificationID)
 	if err != nil {
 		return 0, false, err
@@ -414,5 +410,7 @@ func (pb *profileBusiness) CheckVerification(
 		logger.WithError(err).Error("could not emit verification attempt event")
 	}
 
-	return verificationAttempts, codeMatches, nil
+	verificationExpired := verification.ExpiresAt.Before(time.Now())
+
+	return verificationAttempts, codeMatches && !verificationExpired, nil
 }

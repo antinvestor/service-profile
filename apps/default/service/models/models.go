@@ -92,14 +92,11 @@ type Roster struct {
 
 type Verification struct {
 	frame.BaseModel
-	ProfileID string  `gorm:"type:varchar(50);index:profile_id" json:"profile_id"`
-	ContactID string  `gorm:"type:varchar(50);index:contact_id" json:"contact_id"`
-	Contact   Contact `                                         json:"contact"`
-
-	Code string `gorm:"type:varchar(255)" json:"code"`
-
-	ExpiresAt  time.Time `json:"expires_at"`
-	VerifiedAt time.Time `json:"verified_at"`
+	ProfileID  string    `gorm:"type:varchar(50);index:profile_id" json:"profile_id"`
+	ContactID  string    `gorm:"type:varchar(50);index:contact_id" json:"contact_id"`
+	Code       string    `gorm:"type:varchar(255)"                 json:"code"`
+	ExpiresAt  time.Time `                                         json:"expires_at"`
+	VerifiedAt time.Time `                                         json:"verified_at"`
 }
 
 type VerificationAttempt struct {

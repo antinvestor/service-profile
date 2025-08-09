@@ -45,11 +45,11 @@ func (vq *ContactVerificationQueue) PayloadType() any {
 func (vq *ContactVerificationQueue) Validate(_ context.Context, payload any) error {
 	notification, ok := payload.(*models.Verification)
 	if !ok {
-		return errors.New(" payload is not of type models.Verification")
+		return errors.New(" invalid payload type, expected *models.Verification")
 	}
 
 	if notification.GetID() == "" {
-		return errors.New(" verification Id should already have been set ")
+		return errors.New(" invalid payload type, expected Id on *models.Verification")
 	}
 	return nil
 }
@@ -57,10 +57,11 @@ func (vq *ContactVerificationQueue) Validate(_ context.Context, payload any) err
 func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) error {
 	verification, ok := payload.(*models.Verification)
 	if !ok {
-		return errors.New(" payload is not of type models.Verification")
+		return errors.New(" invalid payload type, expected *models.Verification")
 	}
 
 	logger := vq.Service.Log(ctx).WithField("payload", verification.GetID()).WithField("type", vq.Name())
+	logger.Info("+++++++++++++++++++++++++++++++++++++++++++++")
 
 	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 

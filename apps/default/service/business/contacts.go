@@ -51,14 +51,15 @@ type ContactBusiness interface {
 }
 
 func NewContactBusiness(_ context.Context, service *frame.Service) ContactBusiness {
-	contactRepo := repository.NewContactRepository(service)
-
 	cfg, _ := service.Config().(*config.ProfileConfig)
 
 	return &contactBusiness{
 		cfg:               cfg,
 		service:           service,
-		contactRepository: contactRepo,
+		contactRepository: repository.NewContactRepository(service),
+		verificationRepository: repository.NewVerificationRepository(
+			service,
+		),
 	}
 }
 
@@ -140,6 +141,11 @@ func (cb *contactBusiness) UpdateContact(
 	}
 	if contact.ProfileID == "" {
 		contact.ProfileID = profileID
+	}
+
+	// Initialize Properties map if nil to prevent panic
+	if contact.Properties == nil {
+		contact.Properties = make(map[string]interface{})
 	}
 
 	properties := frame.DBPropertiesFromMap(extra)

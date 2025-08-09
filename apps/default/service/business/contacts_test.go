@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/tests/testdef"
 	"github.com/pitabwire/util"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
@@ -374,76 +377,267 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 	})
 }
 
-// func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
-//
-//	t := cts.T()
-//	cb := business.NewContactBusiness(ctx, svc)
-//	existingContacts, err := cts.createContacts(ctx, cb, "+256757592215", "+254957532244", "bwireid@gmail.com")
-//	require.NoError(t, err)
-//
-//	type args struct {
-//		ctx       context.Context
-//		contactID string
-//		profileID string
-//	}
-//	tests := []struct {
-//		name    string
-//		args    args
-//		want    *models.Contact
-//		wantErr require.ErrorAssertionFunc
-//	}{
-//		{
-//			name: "Remove existing contact by valid IDs",
-//			args: args{
-//				ctx:       ctx,
-//				contactID: "valid-contact-id",
-//				profileID: "valid-profile-id",
-//			},
-//			want: &models.Contact{
-//				ID: "valid-contact-id",
-//			},
-//			wantErr: require.NoError,
-//		},
-//		{
-//			name: "Remove contact with invalid contact ID",
-//			args: args{
-//				ctx:       ctx,
-//				contactID: "invalid-contact-id",
-//				profileID: "valid-profile-id",
-//			},
-//			want:    nil,
-//			wantErr: require.Error,
-//		},
-//		{
-//			name: "Remove contact with invalid profile ID",
-//			args: args{
-//				ctx:       ctx,
-//				contactID: "valid-contact-id",
-//				profileID: "invalid-profile-id",
-//			},
-//			want:    nil,
-//			wantErr: require.Error,
-//		},
-//		{
-//			name: "Remove contact with empty IDs",
-//			args: args{
-//				ctx:       ctx,
-//				contactID: "",
-//				profileID: "",
-//			},
-//			want:    nil,
-//			wantErr: require.Error,
-//		},
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//
-//			cb := business.NewContactBusiness(ctx, srv)
-//			got, err := cb.RemoveContact(tt.args.ctx, tt.args.contactID, tt.args.profileID)
-//			if !tt.wantErr(t, err, fmt.Sprintf("RemoveContact(%v, %v, %v)", tt.args.ctx, tt.args.contactID, tt.args.profileID)) {
-//				return
-//			}
-//			require.Equalf(t, tt.want, got, "RemoveContact(%v, %v, %v)", tt.args.ctx, tt.args.contactID, tt.args.profileID)
-//		})
-//	}
-// }
+func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+		svc, ctx := cts.CreateService(t, dep)
+		cb := business.NewContactBusiness(ctx, svc)
+
+		// Create a contact first
+		contact, err := cb.CreateContact(ctx, "update@testing.com", map[string]string{
+			"name": "Original Name",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, contact)
+
+		// Update the contact
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), util.IDString(), map[string]string{
+			"name": "Updated Name",
+			"age":  "30",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, updated)
+		require.Equal(t, "Updated Name", updated.Properties["name"])
+		require.Equal(t, "30", updated.Properties["age"])
+
+		// Test updating non-existent contact
+		_, err = cb.UpdateContact(ctx, util.IDString(), util.IDString(), map[string]string{})
+		require.Error(t, err)
+	})
+}
+
+func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+		svc, ctx := cts.CreateService(t, dep)
+		cb := business.NewContactBusiness(ctx, svc)
+
+		// Create a contact with profile ID
+		contact, err := cb.CreateContact(ctx, "remove@testing.com", map[string]string{})
+		require.NoError(t, err)
+		require.NotNil(t, contact)
+
+		profileID := util.IDString()
+		// Update contact to link to profile
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, map[string]string{})
+		require.NoError(t, err)
+		require.Equal(t, profileID, updated.ProfileID)
+
+		// Remove the contact
+		removed, err := cb.RemoveContact(ctx, contact.GetID(), profileID)
+		require.NoError(t, err)
+		require.NotNil(t, removed)
+		require.Empty(t, removed.ProfileID)
+
+		// Test removing with wrong profile ID
+		_, err = cb.RemoveContact(ctx, contact.GetID(), util.IDString())
+		require.Error(t, err)
+
+		// Test removing non-existent contact
+		_, err = cb.RemoveContact(ctx, util.IDString(), profileID)
+		require.Error(t, err)
+	})
+}
+
+func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+		svc, ctx := cts.CreateService(t, dep)
+		cb := business.NewContactBusiness(ctx, svc)
+
+		// Create a contact first
+		contact, err := cb.CreateContact(ctx, "verify@testing.com", map[string]string{})
+		require.NoError(t, err)
+		require.NotNil(t, contact)
+
+		// Link to profile
+		profileID := util.IDString()
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, map[string]string{})
+		require.NoError(t, err)
+
+		// Verify contact
+		verification, err := cb.VerifyContact(ctx, updated, "", "123456", 0)
+		require.NoError(t, err)
+		require.NotNil(t, verification)
+		require.Equal(t, "123456", verification.Code)
+		require.Equal(t, profileID, verification.ProfileID)
+		require.Equal(t, updated.GetID(), verification.ContactID)
+
+		// Test with custom verification ID
+		customVerificationID := util.IDString()
+		verification2, err := cb.VerifyContact(ctx, updated, customVerificationID, "654321", 0)
+		require.NoError(t, err)
+		require.NotNil(t, verification2)
+		require.Equal(t, customVerificationID, verification2.GetID())
+
+		// Test with nil contact
+		_, err = cb.VerifyContact(ctx, nil, "", "123456", 0)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "no contact specified")
+	})
+}
+
+// Temporarily commented out due to nil pointer dereference in business layer.
+func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+		svc, ctx := cts.CreateService(t, dep)
+
+		cb := business.NewContactBusiness(ctx, svc)
+
+		// Create a contact and verification using the business layer
+		contact, err := cb.CreateContact(ctx, "verify@example.com", map[string]string{})
+		require.NoError(t, err)
+
+		profileID := util.IDString()
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, map[string]string{})
+		require.NoError(t, err)
+
+		verification, err := cb.VerifyContact(ctx, updated, "", "123456", 0)
+		require.NoError(t, err)
+
+		result, err := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
+			return cb.GetVerification(ctx, verification.GetID())
+		}, 5*time.Second, 100*time.Millisecond)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		require.Equal(t, verification.GetID(), result.GetID())
+
+		// Test with non-existent verification
+		result, err = cb.GetVerification(ctx, util.IDString())
+		require.Error(t, err) // Should return error for non-existent verification
+		require.Equal(t, "", result.GetID())
+	})
+}
+
+// Temporarily commented out due to nil pointer dereference in verification repository.
+func (cts *ContactTestSuite) Test_contactBusiness_GetVerificationAttempts() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+		svc, ctx := cts.CreateService(t, dep)
+
+		cb := business.NewContactBusiness(ctx, svc)
+
+		// Create a verification first
+		verification := &models.Verification{
+			ProfileID: util.IDString(),
+			ContactID: util.IDString(),
+			Code:      "123456",
+		}
+		verification.GenID(ctx)
+
+		verificationRepo := repository.NewVerificationRepository(svc)
+		err := verificationRepo.Save(ctx, verification)
+		require.NoError(t, err)
+
+		// Note: Using verification repository to save attempts since VerificationAttemptRepository may not exist
+		// This is a simplified test approach
+
+		// Test getting verification attempts
+		attempts, err := cb.GetVerificationAttempts(ctx, verification.GetID())
+		require.NoError(t, err)
+		require.NotNil(t, attempts) // May be empty if no attempts saved
+
+		// Test with non-existent verification
+		attempts, err = cb.GetVerificationAttempts(ctx, util.IDString())
+		require.NoError(t, err)
+		require.Empty(t, attempts)
+	})
+}
+
+func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+		svc, ctx := cts.CreateService(t, dep)
+		cb := business.NewContactBusiness(ctx, svc)
+
+		// Create a contact
+		contact := &models.Contact{
+			Detail:             "test@example.com",
+			ContactType:        profilev1.ContactType_name[int32(profilev1.ContactType_EMAIL)],
+			CommunicationLevel: "primary",
+			ProfileID:          util.IDString(),
+		}
+		contact.GenID(ctx)
+
+		// Test ToAPI conversion
+		apiContact, err := cb.ToAPI(ctx, contact, false)
+		require.NoError(t, err)
+		require.NotNil(t, apiContact)
+		require.Equal(t, contact.Detail, apiContact.GetDetail())
+		require.Equal(t, contact.GetID(), apiContact.GetId())
+
+		// Test with partial flag
+		apiContact, err = cb.ToAPI(ctx, contact, true)
+		require.NoError(t, err)
+		require.NotNil(t, apiContact)
+	})
+}
+
+func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+		svc, ctx := cts.CreateService(t, dep)
+
+		cb := business.NewContactBusiness(ctx, svc)
+		profileID := util.IDString()
+
+		// Create multiple contacts for the same profile using valid email formats only
+		contact1, err := cb.CreateContact(ctx, "test1@example.com", map[string]string{"type": "email"})
+		require.NoError(t, err)
+
+		// Update contact with profile ID
+		contact1, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, map[string]string{})
+		require.NoError(t, err)
+
+		contact2, err := cb.CreateContact(ctx, "test2@example.com", map[string]string{"type": "email"})
+		require.NoError(t, err)
+
+		// Update contact with profile ID
+		contact2, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, map[string]string{})
+		require.NoError(t, err)
+
+		// Test getting contacts by profile
+		contacts, err := cb.GetByProfile(ctx, profileID)
+		require.NoError(t, err)
+		require.Len(t, contacts, 2)
+
+		// Test with non-existent profile
+		contacts, err = cb.GetByProfile(ctx, util.IDString())
+		require.NoError(t, err)
+		require.Empty(t, contacts)
+	})
+}
+
+func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+		svc, ctx := cts.CreateService(t, dep)
+		cb := business.NewContactBusiness(ctx, svc)
+
+		// Test with empty detail
+		contact, err := cb.CreateContact(ctx, "", map[string]string{})
+		require.Error(t, err)
+		require.Nil(t, contact)
+
+		// Test with nil extra map
+		contact, err = cb.CreateContact(ctx, "test@example.com", nil)
+		require.NoError(t, err)
+		require.NotNil(t, contact)
+		require.Equal(t, "test@example.com", contact.Detail)
+
+		// Test with empty extra map
+		contact, err = cb.CreateContact(ctx, "test2@example.com", map[string]string{})
+		require.NoError(t, err)
+		require.NotNil(t, contact)
+		require.Equal(t, "test2@example.com", contact.Detail)
+	})
+}
