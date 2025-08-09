@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	buf.build/go/protovalidate v0.14.0
 	github.com/antinvestor/apis/go/common v1.37.10
-	github.com/antinvestor/apis/go/device v1.37.10
+	github.com/antinvestor/apis/go/device v1.38.0
 	github.com/antinvestor/apis/go/notification v1.37.10
 	github.com/antinvestor/apis/go/profile v1.37.9
 	github.com/antinvestor/apis/go/settings v1.37.9
@@ -24,7 +24,7 @@ require (
 )
 
 require (
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.6-20250717185734-6c6e0d3c608e.1 // indirect
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.7-20250717185734-6c6e0d3c608e.1 // indirect
 	cel.dev/expr v0.24.0 // indirect
 	dario.cat/mergo v1.0.1 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
