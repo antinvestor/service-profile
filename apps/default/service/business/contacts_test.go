@@ -510,7 +510,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 		// Test with non-existent verification
 		result, err = cb.GetVerification(ctx, util.IDString())
 		require.Error(t, err) // Should return error for non-existent verification
-		require.Equal(t, "", result.GetID())
+		require.Empty(t, result.GetID())
 	})
 }
 
@@ -594,14 +594,14 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 		require.NoError(t, err)
 
 		// Update contact with profile ID
-		contact1, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, map[string]string{})
+		_, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, map[string]string{})
 		require.NoError(t, err)
 
 		contact2, err := cb.CreateContact(ctx, "test2@example.com", map[string]string{"type": "email"})
 		require.NoError(t, err)
 
 		// Update contact with profile ID
-		contact2, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, map[string]string{})
+		_, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, map[string]string{})
 		require.NoError(t, err)
 
 		// Test getting contacts by profile

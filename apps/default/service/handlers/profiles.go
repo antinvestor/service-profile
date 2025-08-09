@@ -240,7 +240,7 @@ func (ps *ProfileServer) CheckVerification(
 
 	return &profilev1.CheckVerificationResponse{
 		Id:            request.GetId(),
-		CheckAttempts: int32(verificationAttempts),
+		CheckAttempts: int32(verificationAttempts), // #nosec G115 - verificationAttempts is bounded by business logic
 		Success:       verified,
 	}, nil
 }
