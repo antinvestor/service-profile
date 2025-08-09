@@ -3,12 +3,17 @@ package handlers
 import (
 	"context"
 	"math"
+	"net"
+	"strings"
+	"time"
 
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
@@ -23,8 +28,22 @@ const (
 type ProfileServer struct {
 	Service         *frame.Service
 	NotificationCli *notificationv1.NotificationClient
+	ProfileBusiness business.ProfileBusiness
 
 	profilev1.UnimplementedProfileServiceServer
+}
+
+// NewProfileServer creates a new ProfileServer with the profile business already initialized.
+func NewProfileServer(
+	ctx context.Context,
+	service *frame.Service,
+	notificationCli *notificationv1.NotificationClient,
+) *ProfileServer {
+	return &ProfileServer{
+		Service:         service,
+		NotificationCli: notificationCli,
+		ProfileBusiness: business.NewProfileBusiness(ctx, service),
+	}
 }
 
 func (ps *ProfileServer) toAPIError(err error) error {
@@ -43,8 +62,7 @@ func (ps *ProfileServer) toAPIError(err error) error {
 
 func (ps *ProfileServer) GetByID(ctx context.Context,
 	request *profilev1.GetByIdRequest) (*profilev1.GetByIdResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.GetByID(ctx, request.GetId())
+	profileObj, err := ps.ProfileBusiness.GetByID(ctx, request.GetId())
 	if err != nil {
 		return nil, ps.toAPIError(err)
 	}
@@ -54,8 +72,7 @@ func (ps *ProfileServer) GetByID(ctx context.Context,
 
 func (ps *ProfileServer) GetByContact(ctx context.Context,
 	request *profilev1.GetByContactRequest) (*profilev1.GetByContactResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.GetByContact(ctx, request.GetContact())
+	profileObj, err := ps.ProfileBusiness.GetByContact(ctx, request.GetContact())
 
 	if err != nil {
 		return nil, ps.toAPIError(err)
@@ -68,8 +85,7 @@ func (ps *ProfileServer) Search(request *profilev1.SearchRequest, stream profile
 	ctx, cancel := context.WithCancel(stream.Context())
 	defer cancel()
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	jobResult, err := profileBusiness.SearchProfile(ctx, request)
+	jobResult, err := ps.ProfileBusiness.SearchProfile(ctx, request)
 	if err != nil {
 		return ps.toAPIError(err)
 	}
@@ -86,7 +102,7 @@ func (ps *ProfileServer) Search(request *profilev1.SearchRequest, stream profile
 		}
 
 		for _, profile := range result.Item() {
-			profileObject, err1 := profileBusiness.ToAPI(ctx, profile)
+			profileObject, err1 := ps.ProfileBusiness.ToAPI(ctx, profile)
 			if err1 != nil {
 				return err1
 			}
@@ -100,8 +116,7 @@ func (ps *ProfileServer) Search(request *profilev1.SearchRequest, stream profile
 
 func (ps *ProfileServer) Merge(ctx context.Context, request *profilev1.MergeRequest) (
 	*profilev1.MergeResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.MergeProfile(ctx, request)
+	profileObj, err := ps.ProfileBusiness.MergeProfile(ctx, request)
 	if err != nil {
 		return nil, ps.toAPIError(err)
 	}
@@ -111,8 +126,7 @@ func (ps *ProfileServer) Merge(ctx context.Context, request *profilev1.MergeRequ
 
 func (ps *ProfileServer) Create(ctx context.Context, request *profilev1.CreateRequest) (
 	*profilev1.CreateResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.CreateProfile(ctx, request)
+	profileObj, err := ps.ProfileBusiness.CreateProfile(ctx, request)
 
 	if err != nil {
 		return nil, ps.toAPIError(err)
@@ -123,8 +137,7 @@ func (ps *ProfileServer) Create(ctx context.Context, request *profilev1.CreateRe
 
 func (ps *ProfileServer) Update(ctx context.Context, request *profilev1.UpdateRequest) (
 	*profilev1.UpdateResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.UpdateProfile(ctx, request)
+	profileObj, err := ps.ProfileBusiness.UpdateProfile(ctx, request)
 
 	if err != nil {
 		return nil, ps.toAPIError(err)
@@ -136,8 +149,7 @@ func (ps *ProfileServer) Update(ctx context.Context, request *profilev1.UpdateRe
 // AddAddress Adds a new address based on the request.
 func (ps *ProfileServer) AddAddress(ctx context.Context,
 	request *profilev1.AddAddressRequest) (*profilev1.AddAddressResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.AddAddress(ctx, request)
+	profileObj, err := ps.ProfileBusiness.AddAddress(ctx, request)
 	if err != nil {
 		return nil, ps.toAPIError(err)
 	}
@@ -147,8 +159,7 @@ func (ps *ProfileServer) AddAddress(ctx context.Context,
 
 func (ps *ProfileServer) AddContact(ctx context.Context, request *profilev1.AddContactRequest,
 ) (*profilev1.AddContactResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.AddContact(ctx, request)
+	profileObj, err := ps.ProfileBusiness.AddContact(ctx, request)
 
 	if err != nil {
 		return nil, ps.toAPIError(err)
@@ -157,12 +168,88 @@ func (ps *ProfileServer) AddContact(ctx context.Context, request *profilev1.AddC
 	return &profilev1.AddContactResponse{Data: profileObj}, nil
 }
 
+func (ps *ProfileServer) CreateContactVerification(
+	ctx context.Context,
+	request *profilev1.CreateContactVerificationRequest,
+) (*profilev1.CreateContactVerificationResponse, error) {
+	expiryDuration, err := time.ParseDuration(request.GetDurationToExpire())
+	if err != nil {
+		expiryDuration = 0
+	}
+
+	verificationID, err := ps.ProfileBusiness.VerifyContact(
+		ctx,
+		request.GetContactId(),
+		request.GetId(),
+		request.GetCode(),
+		expiryDuration,
+	)
+	if err != nil {
+		return nil, ps.toAPIError(err)
+	}
+
+	return &profilev1.CreateContactVerificationResponse{
+		Id:      verificationID,
+		Success: true,
+	}, nil
+}
+
+func getClientIP(ctx context.Context) string {
+	// First, try to get the IP from the X-Forwarded-For header.
+	if md, ok := metadata.FromIncomingContext(ctx); ok {
+		if xff := md.Get("x-forwarded-for"); len(xff) > 0 {
+			// X-Forwarded-For can be a comma-separated list of IPs.
+			// The first one is the original client.
+			ips := strings.Split(xff[0], ",")
+			if len(ips) > 0 {
+				return strings.TrimSpace(ips[0])
+			}
+		}
+		if xrip := md.Get("x-real-ip"); len(xrip) > 0 {
+			return xrip[0]
+		}
+	}
+
+	// If not available, fall back to the peer's address.
+	p, ok := peer.FromContext(ctx)
+	if ok {
+		tcpAddr, tcok := p.Addr.(*net.TCPAddr)
+		if tcok {
+			return tcpAddr.IP.String()
+		}
+		return p.Addr.String()
+	}
+
+	return "unknown"
+}
+
+func (ps *ProfileServer) CheckVerification(
+	ctx context.Context,
+	request *profilev1.CheckVerificationRequest,
+) (*profilev1.CheckVerificationResponse, error) {
+	verificationAttempts, verified, err := ps.ProfileBusiness.CheckVerification(
+		ctx,
+		request.GetId(),
+		request.GetCode(),
+		getClientIP(ctx),
+	)
+
+	if err != nil {
+		return nil, ps.toAPIError(err)
+	}
+
+	return &profilev1.CheckVerificationResponse{
+		Id:            request.GetId(),
+		CheckAttempts: int32(verificationAttempts),
+		Success:       verified,
+	}, nil
+}
+
 func (ps *ProfileServer) RemoveContact(
 	ctx context.Context,
 	request *profilev1.RemoveContactRequest,
 ) (*profilev1.RemoveContactResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	profileObj, err := profileBusiness.RemoveContact(ctx, request)
+	profileObj, err := ps.ProfileBusiness.RemoveContact(ctx, request)
 
 	if err != nil {
 		return nil, ps.toAPIError(err)
@@ -244,8 +331,7 @@ func (ps *ProfileServer) RemoveRoster(
 
 func (ps *ProfileServer) AddRelationship(ctx context.Context,
 	request *profilev1.AddRelationshipRequest) (*profilev1.AddRelationshipResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.ProfileBusiness)
 	relationshipObj, err := relationshipBusiness.CreateRelationship(ctx, request)
 
 	if err != nil {
@@ -257,8 +343,7 @@ func (ps *ProfileServer) AddRelationship(ctx context.Context,
 
 func (ps *ProfileServer) DeleteRelationship(ctx context.Context,
 	request *profilev1.DeleteRelationshipRequest) (*profilev1.DeleteRelationshipResponse, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.ProfileBusiness)
 	relationshipObj, err := relationshipBusiness.DeleteRelationship(ctx, request)
 
 	if err != nil {
@@ -274,8 +359,7 @@ func (ps *ProfileServer) ListRelationships(
 ) error {
 	ctx := server.Context()
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
+	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, ps.ProfileBusiness)
 
 	totalSent := 0
 	requiredCount := int(request.GetCount())

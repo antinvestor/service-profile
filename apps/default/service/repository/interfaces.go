@@ -27,10 +27,14 @@ type ContactRepository interface {
 	Save(ctx context.Context, contact *models.Contact) (*models.Contact, error)
 	Delete(ctx context.Context, id string) error
 	DelinkFromProfile(ctx context.Context, id, profileID string) (*models.Contact, error)
+}
 
-	GetVerificationByContactID(ctx context.Context, contactID string) (*models.Verification, error)
-	VerificationSave(ctx context.Context, verification *models.Verification) error
-	VerificationAttemptSave(ctx context.Context, attempt *models.VerificationAttempt) error
+type VerificationRepository interface {
+	GetByID(ctx context.Context, verificationID string) (*models.Verification, error)
+	Save(ctx context.Context, verification *models.Verification) error
+
+	GetAttempts(ctx context.Context, verificationID string) ([]*models.VerificationAttempt, error)
+	SaveAttempt(ctx context.Context, verificationAttempt *models.VerificationAttempt) error
 }
 
 type RosterRepository interface {

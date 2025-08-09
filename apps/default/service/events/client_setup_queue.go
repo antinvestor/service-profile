@@ -11,12 +11,20 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
+const ClientConnectedSetupQueueName = "client.connected.setup.queue"
+
 type ClientConnectedSetupQueue struct {
 	Service *frame.Service
 }
 
+func NewClientConnectedSetupQueue(service *frame.Service) *ClientConnectedSetupQueue {
+	return &ClientConnectedSetupQueue{
+		Service: service,
+	}
+}
+
 func (csq *ClientConnectedSetupQueue) Name() string {
-	return "client.connected.setup.queue"
+	return ClientConnectedSetupQueueName
 }
 
 func (csq *ClientConnectedSetupQueue) PayloadType() any {

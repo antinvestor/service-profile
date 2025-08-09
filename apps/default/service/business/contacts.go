@@ -14,6 +14,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
@@ -36,26 +37,40 @@ type ContactBusiness interface {
 		extra map[string]string,
 	) (*models.Contact, error)
 	RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error)
-	GetVerification(ctx context.Context, contactID string) (*models.Verification, error)
+	VerifyContact(
+		ctx context.Context,
+		contact *models.Contact,
+		verificationID string,
+		code string,
+		duration time.Duration,
+	) (*models.Verification, error)
+	GetVerification(ctx context.Context, verificationID string) (*models.Verification, error)
+	GetVerificationAttempts(ctx context.Context, verificationID string) ([]*models.VerificationAttempt, error)
 
 	ToAPI(ctx context.Context, contact *models.Contact, partial bool) (*profilev1.ContactObject, error)
 }
 
 func NewContactBusiness(_ context.Context, service *frame.Service) ContactBusiness {
 	contactRepo := repository.NewContactRepository(service)
+
+	cfg, _ := service.Config().(*config.ProfileConfig)
+
 	return &contactBusiness{
+		cfg:               cfg,
 		service:           service,
 		contactRepository: contactRepo,
 	}
 }
 
 type contactBusiness struct {
-	service           *frame.Service
-	contactRepository repository.ContactRepository
+	service                *frame.Service
+	cfg                    *config.ProfileConfig
+	contactRepository      repository.ContactRepository
+	verificationRepository repository.VerificationRepository
 }
 
 func (cb *contactBusiness) ToAPI(
-	ctx context.Context,
+	_ context.Context,
 	contact *models.Contact,
 	partial bool,
 ) (*profilev1.ContactObject, error) {
@@ -78,8 +93,7 @@ func (cb *contactBusiness) ToAPI(
 
 	contactObject.Verified = false
 	if !partial {
-		verification, _ := cb.GetVerification(ctx, contact.GetID())
-		contactObject.Verified = verification != nil
+		contactObject.Verified = contact.VerificationID != ""
 	}
 
 	return &contactObject, nil
@@ -112,10 +126,6 @@ func (cb *contactBusiness) GetByProfile(ctx context.Context, profileID string) (
 	}
 
 	return cb.contactRepository.GetByProfileID(ctx, profileID)
-}
-
-func (cb *contactBusiness) GetVerification(ctx context.Context, contactID string) (*models.Verification, error) {
-	return cb.contactRepository.GetVerificationByContactID(ctx, contactID)
 }
 
 func (cb *contactBusiness) UpdateContact(
@@ -166,10 +176,6 @@ func (cb *contactBusiness) CreateContact(
 		return nil, err
 	}
 
-	err = cb.VerifyContact(ctx, contact)
-	if err != nil {
-		return nil, err
-	}
 	return contact, nil
 }
 
@@ -177,27 +183,57 @@ func (cb *contactBusiness) RemoveContact(ctx context.Context, contactID, profile
 	return cb.contactRepository.DelinkFromProfile(ctx, contactID, profileID)
 }
 
-func (cb *contactBusiness) VerifyContact(ctx context.Context, contact *models.Contact) error {
+func (cb *contactBusiness) GetVerification(ctx context.Context, verificationID string) (*models.Verification, error) {
+	return cb.verificationRepository.GetByID(ctx, verificationID)
+}
+
+func (cb *contactBusiness) VerifyContact(
+	ctx context.Context,
+	contact *models.Contact,
+	verificationID string,
+	code string,
+	durationToExpiry time.Duration,
+) (*models.Verification, error) {
+	logger := cb.service.Log(ctx).WithField("contact", contact)
+
 	if contact == nil {
-		return nil
+		return nil, errors.New("no contact specified")
 	}
 
-	cfg, ok := cb.service.Config().(*config.ProfileConfig)
-	if !ok {
-		return errors.New("invalid service configuration")
+	if durationToExpiry == 0 {
+		durationToExpiry = time.Duration(cb.cfg.VerificationPinExpiryTimeInSec)
 	}
 
-	expiryTime := time.Now().Add(time.Duration(cfg.VerificationPinExpiryTimeInSec))
+	expiryTime := time.Now().Add(durationToExpiry)
+
+	if code == "" {
+		code = util.RandomString(cb.cfg.LengthOfVerificationCode)
+	}
 
 	verification := &models.Verification{
 		ProfileID: contact.ProfileID,
 		ContactID: contact.ID,
-		Pin:       util.RandomString(cfg.LengthOfVerificationPin),
-		LinkHash:  util.RandomString(cfg.LengthOfVerificationLinkHash),
-		ExpiresAt: &expiryTime,
+		Code:      code,
+		ExpiresAt: expiryTime,
 	}
 
 	verification.GenID(ctx)
 
-	return cb.service.Publish(ctx, cfg.QueueVerificationName, verification)
+	if verificationID != "" {
+		verification.ID = verificationID
+	}
+
+	err := cb.service.Emit(ctx, events.VerificationEventHandlerName, verification)
+	if err != nil {
+		logger.WithError(err).Error("could not emit verification attempt event")
+	}
+
+	return verification, nil
+}
+
+func (cb *contactBusiness) GetVerificationAttempts(
+	ctx context.Context,
+	verificationID string,
+) ([]*models.VerificationAttempt, error) {
+	return cb.verificationRepository.GetAttempts(ctx, verificationID)
 }

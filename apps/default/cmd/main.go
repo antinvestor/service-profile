@@ -20,7 +20,6 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/handlers"
-	"github.com/antinvestor/service-profile/apps/default/service/queue"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
@@ -66,8 +65,22 @@ func main() {
 		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
 	}
 
+	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
+		cfg.QueueRelationshipConnectName,
+		cfg.QueueRelationshipConnectURI,
+	)
+	relationshipDisConnectQueuePublisher := frame.WithRegisterPublisher(
+		cfg.QueueRelationshipDisConnectName,
+		cfg.QueueRelationshipDisConnectURI,
+	)
 	// Register queue handlers
-	serviceOptions = registerQueueHandlers(svc, serviceOptions, cfg, notificationCli)
+	serviceOptions = append(serviceOptions,
+		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
+		frame.WithRegisterEvents(
+			events.NewClientConnectedSetupQueue(svc),
+			events.NewContactVerificationQueue(svc, notificationCli),
+			events.NewContactVerificationAttemptedQueue(svc),
+		))
 
 	// Initialize the service with all options
 	svc.Init(ctx, serviceOptions...)
@@ -128,7 +141,7 @@ func setupNotificationClient(
 }
 
 // setupGRPCServer initializes and configures the gRPC server.
-func setupGRPCServer(_ context.Context, svc *frame.Service,
+func setupGRPCServer(ctx context.Context, svc *frame.Service,
 	notificationCli *notificationv1.NotificationClient,
 	cfg config.ProfileConfig,
 	serviceName string,
@@ -156,10 +169,7 @@ func setupGRPCServer(_ context.Context, svc *frame.Service,
 		),
 	)
 
-	implementation := &handlers.ProfileServer{
-		Service:         svc,
-		NotificationCli: notificationCli,
-	}
+	implementation := handlers.NewProfileServer(ctx, svc, notificationCli)
 	profilev1.RegisterProfileServiceServer(grpcServer, implementation)
 
 	return grpcServer, implementation
@@ -204,47 +214,4 @@ func setupHTTPHandlers(
 	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
 
 	return serviceOptions, nil
-}
-
-// registerQueueHandlers sets up all message queue handlers and publishers.
-func registerQueueHandlers(
-	svc *frame.Service,
-	serviceOptions []frame.Option,
-	cfg config.ProfileConfig,
-	notificationCli *notificationv1.NotificationClient,
-) []frame.Option {
-	// Setup verification queue
-	verificationQueueHandler := queue.VerificationsQueueHandler{
-		Service:         svc,
-		ContactRepo:     repository.NewContactRepository(svc),
-		NotificationCli: notificationCli,
-	}
-
-	verificationQueue := frame.WithRegisterSubscriber(
-		cfg.QueueVerificationName,
-		cfg.QueueVerification,
-		&verificationQueueHandler,
-	)
-	verificationQueuePublisher := frame.WithRegisterPublisher(
-		cfg.QueueVerificationName,
-		cfg.QueueVerification,
-	)
-
-	// Setup relationship queues
-	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
-		cfg.QueueRelationshipConnectName,
-		cfg.QueueRelationshipConnectURI,
-	)
-	relationshipDisConnectQueuePublisher := frame.WithRegisterPublisher(
-		cfg.QueueRelationshipDisConnectName,
-		cfg.QueueRelationshipDisConnectURI,
-	)
-
-	// Combine all options
-	return append(serviceOptions,
-		verificationQueue, verificationQueuePublisher,
-		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
-		frame.WithRegisterEvents(
-			&events.ClientConnectedSetupQueue{Service: svc},
-		))
 }

@@ -75,6 +75,8 @@ type Contact struct {
 	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
 
 	Properties frame.JSONMap
+
+	VerificationID string `gorm:"type:varchar(50)"`
 }
 
 type Roster struct {
@@ -94,22 +96,22 @@ type Verification struct {
 	ContactID string  `gorm:"type:varchar(50);index:contact_id" json:"contact_id"`
 	Contact   Contact `                                         json:"contact"`
 
-	Pin      string `gorm:"type:varchar(10)"  json:"pin"`
-	LinkHash string `gorm:"type:varchar(100)" json:"link_hash"`
+	Code string `gorm:"type:varchar(255)" json:"code"`
 
-	ExpiresAt  *time.Time `json:"expires_at"`
-	VerifiedAt *time.Time `json:"verified_at"`
+	ExpiresAt  time.Time `json:"expires_at"`
+	VerifiedAt time.Time `json:"verified_at"`
 }
 
 type VerificationAttempt struct {
 	frame.BaseModel
 	VerificationID string `gorm:"type:varchar(50);index:verification_id"`
-	Verification   Verification
 
-	ContactID string `gorm:"type:varchar(50)"`
-	Contact   Contact
-
+	Data  string `gorm:"type:varchar(250)"`
 	State string `gorm:"type:varchar(10)"`
+
+	DeviceID  string `gorm:"type:varchar(50)"`
+	IPAddress string `gorm:"type:varchar(50)"`
+	RequestID string `gorm:"type:varchar(50)"`
 }
 
 type Country struct {

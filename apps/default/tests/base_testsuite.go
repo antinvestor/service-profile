@@ -21,7 +21,6 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/queue"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
@@ -75,21 +74,6 @@ func (bs *BaseTestSuite) CreateService(
 		frame.WithDatastore(),
 		frame.WithNoopDriver())
 
-	verificationQueueHandler := queue.VerificationsQueueHandler{
-		Service:         svc,
-		ContactRepo:     repository.NewContactRepository(svc),
-		NotificationCli: bs.GetNotificationCli(ctx),
-	}
-
-	verificationQueue := frame.WithRegisterSubscriber(
-		profileConfig.QueueVerificationName,
-		profileConfig.QueueVerification,
-		&verificationQueueHandler,
-	)
-	verificationQueuePublisher := frame.WithRegisterPublisher(
-		profileConfig.QueueVerificationName,
-		profileConfig.QueueVerification,
-	)
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		profileConfig.QueueRelationshipConnectName,
 		profileConfig.QueueRelationshipConnectURI,
@@ -99,9 +83,13 @@ func (bs *BaseTestSuite) CreateService(
 		profileConfig.QueueRelationshipDisConnectURI,
 	)
 
-	svc.Init(ctx, verificationQueue, verificationQueuePublisher,
+	svc.Init(ctx,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
-		frame.WithRegisterEvents(&events.ClientConnectedSetupQueue{Service: svc}),
+		frame.WithRegisterEvents(
+			events.NewContactVerificationQueue(svc, bs.GetNotificationCli(ctx)),
+			events.NewClientConnectedSetupQueue(svc),
+			events.NewContactVerificationAttemptedQueue(svc),
+		),
 	)
 
 	err = repository.Migrate(ctx, svc, "../../migrations/0001")

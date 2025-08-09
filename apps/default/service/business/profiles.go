@@ -4,13 +4,16 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/util"
 	"github.com/rs/xid"
 
 	"github.com/antinvestor/service-profile/apps/default/service"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
@@ -32,6 +35,15 @@ type ProfileBusiness interface {
 	AddContact(ctx context.Context, contact *profilev1.AddContactRequest) (*profilev1.ProfileObject, error)
 
 	RemoveContact(ctx context.Context, contact *profilev1.RemoveContactRequest) (*profilev1.ProfileObject, error)
+
+	GetContactByID(ctx context.Context, contactID string) (*profilev1.ContactObject, error)
+	VerifyContact(
+		ctx context.Context,
+		contactID string,
+		verificationID, code string,
+		expiryDuration time.Duration,
+	) (string, error)
+	CheckVerification(ctx context.Context, verificationID string, code, ipAddress string) (int, bool, error)
 	ToAPI(ctx context.Context, profile *models.Profile) (*profilev1.ProfileObject, error)
 }
 
@@ -321,4 +333,86 @@ func (pb *profileBusiness) RemoveContact(
 	ctx context.Context,
 	request *profilev1.RemoveContactRequest) (*profilev1.ProfileObject, error) {
 	return pb.GetByID(ctx, request.GetId())
+}
+
+func (pb *profileBusiness) GetContactByID(ctx context.Context, contactID string) (*profilev1.ContactObject, error) {
+	contact, err := pb.contactBusiness.GetByID(ctx, contactID)
+	if err != nil {
+		return nil, err
+	}
+
+	return pb.contactBusiness.ToAPI(ctx, contact, true)
+}
+
+func (pb *profileBusiness) VerifyContact(
+	ctx context.Context,
+	contactID, verificationID, code string,
+	expiryDuration time.Duration,
+) (string, error) {
+	contact, err := pb.contactBusiness.GetByID(ctx, contactID)
+	if err != nil {
+		return "", err
+	}
+
+	verification, err := pb.contactBusiness.VerifyContact(ctx, contact, verificationID, code, expiryDuration)
+	if err != nil {
+		return "", err
+	}
+
+	return verification.GetID(), nil
+}
+
+func (pb *profileBusiness) CheckVerification(
+	ctx context.Context,
+	verificationID string,
+	code string,
+	ipAddress string,
+) (int, bool, error) {
+	logger := pb.service.Log(ctx).WithField("verificationID", verificationID)
+
+	verification, err := pb.contactBusiness.GetVerification(ctx, verificationID)
+	if err != nil {
+		return 0, false, err
+	}
+
+	if verification.ExpiresAt.Before(time.Now()) {
+		return 0, false, nil
+	}
+
+	attempts, err := pb.contactBusiness.GetVerificationAttempts(ctx, verificationID)
+	if err != nil {
+		return 0, false, err
+	}
+
+	verificationAttempts := len(attempts) + 1
+
+	deviceID := ""
+	claim := frame.ClaimsFromContext(ctx)
+	if claim != nil {
+		deviceID = claim.DeviceID
+	}
+
+	newAttempt := &models.VerificationAttempt{
+		VerificationID: verificationID,
+		Data:           code,
+		State:          "Fail",
+		DeviceID:       deviceID,
+		IPAddress:      ipAddress,
+		RequestID:      util.GetRequestID(ctx),
+	}
+
+	newAttempt.GenID(ctx)
+
+	codeMatches := false
+	if verification.Code == code {
+		newAttempt.State = "Success"
+		codeMatches = true
+	}
+
+	err = pb.service.Emit(ctx, events.VerificationAttemptEventHandlerName, newAttempt)
+	if err != nil {
+		logger.WithError(err).Error("could not emit verification attempt event")
+	}
+
+	return verificationAttempts, codeMatches, nil
 }

@@ -16,12 +16,12 @@ type contactRepository struct {
 	service *frame.Service
 }
 
-func (cr *contactRepository) GetVerificationByContactID(
+func (cr *contactRepository) GetVerificationByID(
 	ctx context.Context,
-	contactID string,
+	verificationID string,
 ) (*models.Verification, error) {
 	verification := &models.Verification{}
-	err := cr.service.DB(ctx, false).Last(verification, "contact_id = ?", contactID).Error
+	err := cr.service.DB(ctx, false).First(verification, "id = ?", verificationID).Error
 	return verification, err
 }
 
