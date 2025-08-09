@@ -6,7 +6,7 @@ require (
 	buf.build/go/protovalidate v0.14.0
 	github.com/antinvestor/apis/go/common v1.37.10
 	github.com/antinvestor/apis/go/device v1.37.10
-	github.com/antinvestor/apis/go/notification v1.37.9
+	github.com/antinvestor/apis/go/notification v1.37.10
 	github.com/antinvestor/apis/go/profile v1.37.9
 	github.com/antinvestor/apis/go/settings v1.37.9
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
