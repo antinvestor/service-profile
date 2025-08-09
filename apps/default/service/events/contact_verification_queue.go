@@ -61,7 +61,6 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 	}
 
 	logger := vq.Service.Log(ctx).WithField("payload", verification.GetID()).WithField("type", vq.Name())
-	logger.Info("+++++++++++++++++++++++++++++++++++++++++++++")
 
 	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 
