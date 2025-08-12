@@ -10,9 +10,9 @@ import (
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests"
-	"github.com/pitabwire/frame/tests/deps/testpostgres"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests"
+	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -31,12 +31,12 @@ const (
 )
 
 type BaseTestSuite struct {
-	tests.FrameBaseTestSuite
+	frametests.FrameBaseTestSuite
 }
 
-func initResources(_ context.Context) []testdef.TestResource {
-	pg := testpostgres.NewPGDepWithCred(PostgresqlDBImage, "ant", "s3cr3t", "service_profile")
-	resources := []testdef.TestResource{pg}
+func initResources(_ context.Context) []definition.TestResource {
+	pg := testpostgres.NewWithOpts("service_profile", definition.WithUserName("ant"))
+	resources := []definition.TestResource{pg}
 	return resources
 }
 
@@ -47,9 +47,11 @@ func (bs *BaseTestSuite) SetupSuite() {
 
 func (bs *BaseTestSuite) CreateService(
 	t *testing.T,
-	depOpts *testdef.DependancyOption,
+	depOpts *definition.DependancyOption,
 ) (*frame.Service, context.Context) {
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
+
+	ctx := t.Context()
 	profileConfig, err := frame.ConfigFromEnv[config.ProfileConfig]()
 	require.NoError(t, err)
 
@@ -57,7 +59,7 @@ func (bs *BaseTestSuite) CreateService(
 	profileConfig.RunServiceSecurely = false
 	profileConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database() {
+	for _, res := range depOpts.Database(ctx) {
 		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
 		require.NoError(t, err0)
 
@@ -162,10 +164,13 @@ func (bs *BaseTestSuite) TearDownSuite() {
 }
 
 // WithTestDependancies Creates subtests with each known DependancyOption.
-func (bs *BaseTestSuite) WithTestDependancies(t *testing.T, testFn func(t *testing.T, dep *testdef.DependancyOption)) {
-	options := []*testdef.DependancyOption{
-		testdef.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
+func (bs *BaseTestSuite) WithTestDependancies(
+	t *testing.T,
+	testFn func(t *testing.T, dep *definition.DependancyOption),
+) {
+	options := []*definition.DependancyOption{
+		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
 	}
 
-	tests.WithTestDependancies(t, options, testFn)
+	frametests.WithTestDependancies(t, options, testFn)
 }

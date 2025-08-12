@@ -123,8 +123,6 @@ func setupNotificationClient(
 	svc *frame.Service,
 	cfg config.ProfileConfig,
 ) (*notificationv1.NotificationClient, error) {
-	oauth2ServiceHost := cfg.GetOauth2ServiceURI()
-	oauth2ServiceURL := fmt.Sprintf("%s/oauth2/token", oauth2ServiceHost)
 
 	audienceList := make([]string, 0)
 	oauth2ServiceAudience := cfg.Oauth2ServiceAudience
@@ -134,7 +132,7 @@ func setupNotificationClient(
 
 	return notificationv1.NewNotificationClient(ctx,
 		apis.WithEndpoint(cfg.NotificationServiceURI),
-		apis.WithTokenEndpoint(oauth2ServiceURL),
+		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
 		apis.WithTokenUsername(svc.JwtClientID()),
 		apis.WithTokenPassword(cfg.Oauth2ServiceClientSecret),
 		apis.WithAudiences(audienceList...))

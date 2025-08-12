@@ -8,7 +8,7 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -141,7 +141,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 		},
 	}
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := cts.CreateService(t, dep)
@@ -192,7 +192,7 @@ func (cts *ContactTestSuite) createContacts(
 func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
@@ -256,7 +256,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 func (cts *ContactTestSuite) Test_contactBusiness_GetByID() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
@@ -353,7 +353,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 		},
 	}
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := cts.CreateService(t, dep)
@@ -380,7 +380,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 
@@ -410,7 +410,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 
@@ -444,7 +444,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
 func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 
@@ -484,7 +484,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
 func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
@@ -518,7 +518,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 func (cts *ContactTestSuite) Test_contactBusiness_GetVerificationAttempts() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
@@ -553,7 +553,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerificationAttempts() {
 func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 
@@ -583,7 +583,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
@@ -619,7 +619,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 

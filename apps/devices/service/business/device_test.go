@@ -9,9 +9,9 @@ import (
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests"
-	"github.com/pitabwire/frame/tests/deps/testpostgres"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests"
+	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -28,12 +28,12 @@ const (
 )
 
 type DeviceBusinessTestSuite struct {
-	tests.FrameBaseTestSuite
+	frametests.FrameBaseTestSuite
 }
 
-func initResources(_ context.Context) []testdef.TestResource {
-	pg := testpostgres.NewPGDepWithCred(testpostgres.PostgresqlDBImage, "ant", "s3cr3t", "service_profile")
-	return []testdef.TestResource{pg}
+func initResources(_ context.Context) []definition.TestResource {
+	pg := testpostgres.NewWithOpts("service_devices", definition.WithUserName("ant"))
+	return []definition.TestResource{pg}
 }
 
 func (suite *DeviceBusinessTestSuite) SetupSuite() {
@@ -43,8 +43,9 @@ func (suite *DeviceBusinessTestSuite) SetupSuite() {
 
 func (suite *DeviceBusinessTestSuite) CreateService(
 	t *testing.T,
-	depOpts *testdef.DependancyOption,
+	depOpts *definition.DependancyOption,
 ) (*frame.Service, context.Context) {
+	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 	deviceConfig, err := frame.ConfigFromEnv[config.DevicesConfig]()
 	require.NoError(t, err)
@@ -53,19 +54,19 @@ func (suite *DeviceBusinessTestSuite) CreateService(
 	deviceConfig.RunServiceSecurely = false
 	deviceConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database() {
-		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
+	for _, res := range depOpts.Database(ctx) {
+		testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
 		require.NoError(t, err0)
 
 		t.Cleanup(func() {
-			cleanup(t.Context())
+			cleanup(ctx)
 		})
 
 		deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
 		deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
 	}
 
-	ctx, svc := frame.NewServiceWithContext(t.Context(), "device tests",
+	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
 		frame.WithConfig(&deviceConfig),
 		frame.WithDatastore(),
 		frame.WithNoopDriver())
@@ -88,13 +89,13 @@ func (suite *DeviceBusinessTestSuite) TearDownSuite() {
 // WithTestDependancies Creates subtests with each known DependancyOption.
 func (suite *DeviceBusinessTestSuite) WithTestDependancies(
 	t *testing.T,
-	testFn func(t *testing.T, dep *testdef.DependancyOption),
+	testFn func(t *testing.T, dep *definition.DependancyOption),
 ) {
-	options := []*testdef.DependancyOption{
-		testdef.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
+	options := []*definition.DependancyOption{
+		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
 	}
 
-	tests.WithTestDependancies(t, options, testFn)
+	frametests.WithTestDependancies(t, options, testFn)
 }
 
 func TestDeviceBusinessTestSuite(t *testing.T) {
@@ -261,7 +262,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -300,7 +301,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -368,7 +369,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -441,7 +442,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -521,7 +522,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -579,7 +580,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -716,7 +717,7 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -756,7 +757,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -825,7 +826,7 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -898,7 +899,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -1020,7 +1021,7 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 

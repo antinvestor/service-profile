@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/events"
@@ -52,7 +52,7 @@ func (ats *AuditorTestSuite) TestSettingAuditor_Execute() {
 		},
 	}
 
-	ats.WithTestDependancies(t, func(t *testing.T, depOpt *testdef.DependancyOption) {
+	ats.WithTestDependancies(t, func(t *testing.T, depOpt *definition.DependancyOption) {
 		svc, ctx := ats.CreateService(t, depOpt)
 
 		for _, tt := range tests {

@@ -8,7 +8,7 @@ import (
 	commonMocks "github.com/antinvestor/apis/go/common/mocks"
 	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
@@ -48,7 +48,7 @@ func (ts *SettingsTestSuite) TestNewSettingsBusiness() {
 			wantErr:    require.Error},
 	}
 
-	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *testdef.DependancyOption) {
+	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependancyOption) {
 		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				var svc *frame.Service
@@ -70,7 +70,7 @@ func (ts *SettingsTestSuite) TestNewSettingsBusiness() {
 
 // Test_settingsBusiness_Set tests the Set method of the settings business.
 func (ts *SettingsTestSuite) Test_settingsBusiness_Set() {
-	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *testdef.DependancyOption) {
+	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependancyOption) {
 		svc, ctx := ts.CreateService(t, depOpt)
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -296,7 +296,7 @@ func (ts *SettingsTestSuite) Test_settingsBusiness_Get() {
 		},
 	}
 
-	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *testdef.DependancyOption) {
+	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependancyOption) {
 		svc, ctx := ts.CreateService(t, depOpt)
 
 		rRepo := repository.NewReferenceRepository(ctx, svc)
@@ -447,7 +447,7 @@ func (ts *SettingsTestSuite) Test_settingsBusiness_List() {
 		},
 	}
 
-	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *testdef.DependancyOption) {
+	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependancyOption) {
 		svc, ctx := ts.CreateService(t, depOpt)
 
 		rRepo := repository.NewReferenceRepository(ctx, svc)

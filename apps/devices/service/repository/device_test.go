@@ -6,9 +6,9 @@ import (
 
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/framedata"
-	"github.com/pitabwire/frame/tests"
-	"github.com/pitabwire/frame/tests/deps/testpostgres"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests"
+	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -24,12 +24,12 @@ const (
 )
 
 type DeviceRepositoryTestSuite struct {
-	tests.FrameBaseTestSuite
+	frametests.FrameBaseTestSuite
 }
 
-func initResources(_ context.Context) []testdef.TestResource {
-	pg := testpostgres.NewPGDepWithCred(testpostgres.PostgresqlDBImage, "ant", "s3cr3t", "service_profile")
-	resources := []testdef.TestResource{pg}
+func initResources(_ context.Context) []definition.TestResource {
+	pg := testpostgres.NewWithOpts("service_devices", definition.WithUserName("ant"))
+	resources := []definition.TestResource{pg}
 	return resources
 }
 
@@ -40,8 +40,9 @@ func (suite *DeviceRepositoryTestSuite) SetupSuite() {
 
 func (suite *DeviceRepositoryTestSuite) CreateService(
 	t *testing.T,
-	depOpts *testdef.DependancyOption,
+	depOpts *definition.DependancyOption,
 ) (*frame.Service, context.Context) {
+	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 	deviceConfig, err := frame.ConfigFromEnv[config.DevicesConfig]()
 	require.NoError(t, err)
@@ -50,7 +51,7 @@ func (suite *DeviceRepositoryTestSuite) CreateService(
 	deviceConfig.RunServiceSecurely = false
 	deviceConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database() {
+	for _, res := range depOpts.Database(ctx) {
 		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
 		require.NoError(t, err0)
 
@@ -85,13 +86,13 @@ func (suite *DeviceRepositoryTestSuite) TearDownSuite() {
 // WithTestDependancies Creates subtests with each known DependancyOption.
 func (suite *DeviceRepositoryTestSuite) WithTestDependancies(
 	t *testing.T,
-	testFn func(t *testing.T, dep *testdef.DependancyOption),
+	testFn func(t *testing.T, dep *definition.DependancyOption),
 ) {
-	options := []*testdef.DependancyOption{
-		testdef.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
+	options := []*definition.DependancyOption{
+		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
 	}
 
-	tests.WithTestDependancies(t, options, testFn)
+	frametests.WithTestDependancies(t, options, testFn)
 }
 
 func TestDeviceRepositoryTestSuite(t *testing.T) {
@@ -129,7 +130,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		deviceRepo := repository.NewDeviceRepository(svc)
 
@@ -218,7 +219,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceSessionRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		sessionRepo := repository.NewDeviceSessionRepository(svc)
 
@@ -277,7 +278,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		logRepo := repository.NewDeviceLogRepository(svc)
 
@@ -359,7 +360,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		keyRepo := repository.NewDeviceKeyRepository(svc)
 

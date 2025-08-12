@@ -3,7 +3,7 @@ package events_test
 import (
 	"testing"
 
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -25,7 +25,7 @@ func TestContactVerificationAttemptQueueSuite(t *testing.T) {
 func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationAttemptedQueue_Name() {
 	t := cvaqts.T()
 
-	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, _ := cvaqts.CreateService(t, dep)
 
 		queue := events.NewContactVerificationAttemptedQueue(svc)
@@ -36,7 +36,7 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationAttemptedQueue_PayloadType() {
 	t := cvaqts.T()
 
-	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, _ := cvaqts.CreateService(t, dep)
 
 		queue := events.NewContactVerificationAttemptedQueue(svc)
@@ -51,7 +51,7 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationAttemptedQueue_Validate() {
 	t := cvaqts.T()
 
-	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cvaqts.CreateService(t, dep)
 
 		queue := events.NewContactVerificationAttemptedQueue(svc)
@@ -81,7 +81,7 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationAttemptedQueue_Execute_Success() {
 	t := cvaqts.T()
 
-	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cvaqts.CreateService(t, dep)
 
 		// Create test verification first
@@ -123,7 +123,7 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationAttemptedQueue_Execute_InvalidPayload() {
 	t := cvaqts.T()
 
-	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := cvaqts.CreateService(t, dep)
 
 		queue := events.NewContactVerificationAttemptedQueue(svc)
@@ -139,7 +139,7 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestNewContactVerificationAttemptedQueue() {
 	t := cvaqts.T()
 
-	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, _ := cvaqts.CreateService(t, dep)
 
 		queue := events.NewContactVerificationAttemptedQueue(svc)

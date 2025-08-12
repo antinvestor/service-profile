@@ -6,7 +6,7 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -62,7 +62,7 @@ func (rts *RosterTestSuite) createRoster(
 func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
@@ -88,7 +88,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
@@ -116,7 +116,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
@@ -143,7 +143,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
 func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
@@ -160,7 +160,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
 func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 

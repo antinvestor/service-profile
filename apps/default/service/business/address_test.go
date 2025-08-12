@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -32,7 +32,7 @@ func (ats *AddressTestSuite) TestNewAddressBusiness() {
 		},
 	}
 
-	ats.WithTestDependancies(ats.T(), func(t *testing.T, dep *testdef.DependancyOption) {
+	ats.WithTestDependancies(ats.T(), func(t *testing.T, dep *definition.DependancyOption) {
 		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)
@@ -68,7 +68,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_CreateAddress() {
 		},
 	}
 
-	ats.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)
@@ -90,7 +90,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_CreateAddress() {
 func (ats *AddressTestSuite) Test_addressBusiness_GetByProfile() {
 	t := ats.T()
 
-	ats.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := ats.CreateService(t, dep)
 
 		testProfiles, err := ats.CreateTestProfiles(ctx, svc, []string{"testing@ant.com"})
@@ -149,7 +149,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_LinkAddressToProfile() {
 		// TODO: Add test cases.
 	}
 
-	ats.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)
@@ -177,7 +177,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_ToAPI() {
 		// TODO: Add test cases.
 	}
 
-	ats.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)

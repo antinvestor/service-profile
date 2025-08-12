@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/tests"
-	"github.com/pitabwire/frame/tests/deps/testpostgres"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests"
+	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -21,12 +21,12 @@ const (
 )
 
 type DeviceBaseTestSuite struct {
-	tests.FrameBaseTestSuite
+	frametests.FrameBaseTestSuite
 }
 
-func initResources(_ context.Context) []testdef.TestResource {
-	pg := testpostgres.NewPGDepWithCred(testpostgres.PostgresqlDBImage, "ant", "s3cr3t", "service_profile")
-	resources := []testdef.TestResource{pg}
+func initResources(_ context.Context) []definition.TestResource {
+	pg := testpostgres.NewWithOpts("service_devices", definition.WithUserName("ant"))
+	resources := []definition.TestResource{pg}
 	return resources
 }
 
@@ -37,8 +37,9 @@ func (bs *DeviceBaseTestSuite) SetupSuite() {
 
 func (bs *DeviceBaseTestSuite) CreateService(
 	t *testing.T,
-	depOpts *testdef.DependancyOption,
+	depOpts *definition.DependancyOption,
 ) (*frame.Service, context.Context) {
+	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 	deviceConfig, err := frame.ConfigFromEnv[config.DevicesConfig]()
 	require.NoError(t, err)
@@ -47,19 +48,19 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	deviceConfig.RunServiceSecurely = false
 	deviceConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database() {
-		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
+	for _, res := range depOpts.Database(ctx) {
+		testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
 		require.NoError(t, err0)
 
 		t.Cleanup(func() {
-			cleanup(t.Context())
+			cleanup(ctx)
 		})
 
 		deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
 		deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
 	}
 
-	ctx, svc := frame.NewServiceWithContext(t.Context(), "device tests",
+	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
 		frame.WithConfig(&deviceConfig),
 		frame.WithDatastore(),
 		frame.WithNoopDriver())
@@ -98,11 +99,11 @@ func (bs *DeviceBaseTestSuite) TearDownSuite() {
 // WithTestDependancies Creates subtests with each known DependancyOption.
 func (bs *DeviceBaseTestSuite) WithTestDependancies(
 	t *testing.T,
-	testFn func(t *testing.T, dep *testdef.DependancyOption),
+	testFn func(t *testing.T, dep *definition.DependancyOption),
 ) {
-	options := []*testdef.DependancyOption{
-		testdef.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
+	options := []*definition.DependancyOption{
+		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
 	}
 
-	tests.WithTestDependancies(t, options, testFn)
+	frametests.WithTestDependancies(t, options, testFn)
 }

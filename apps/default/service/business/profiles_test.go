@@ -7,7 +7,7 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame/tests/testdef"
+	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -46,7 +46,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 		},
 	}
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := pts.CreateService(t, dep)
@@ -72,7 +72,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 
 		var profileAvailable []string
@@ -145,7 +145,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
@@ -194,7 +194,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
@@ -245,7 +245,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
@@ -310,7 +310,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 func (pts *ProfileTestSuite) Test_profileBusiness_GetContactByID() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
@@ -354,7 +354,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetContactByID() {
 func (pts *ProfileTestSuite) Test_profileBusiness_VerifyContact() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
@@ -394,7 +394,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_VerifyContact() {
 func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
@@ -457,7 +457,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_WrongCode() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 		verificationRepo := repository.NewVerificationRepository(svc)
@@ -551,7 +551,7 @@ func (pts *ProfileTestSuite) setupVerificationForTest(
 func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *testdef.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
