@@ -121,9 +121,7 @@ func handleDatabaseMigration(
 func setupNotificationClient(
 	ctx context.Context,
 	svc *frame.Service,
-	cfg config.ProfileConfig,
-) (*notificationv1.NotificationClient, error) {
-
+	cfg config.ProfileConfig) (*notificationv1.NotificationClient, error) {
 	audienceList := make([]string, 0)
 	oauth2ServiceAudience := cfg.Oauth2ServiceAudience
 	if oauth2ServiceAudience != "" {
