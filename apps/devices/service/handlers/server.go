@@ -141,6 +141,19 @@ func (ds *DevicesServer) Update(ctx context.Context, req *devicev1.UpdateRequest
 	}, nil
 }
 
+func (ds *DevicesServer) Link(ctx context.Context, req *devicev1.LinkRequest) (*devicev1.LinkResponse, error) {
+	device, err := ds.Biz.LinkDeviceToProfile(
+		ctx, req.GetId(), req.GetProfileId(), req.GetProperties(),
+	)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to link session: %v", err)
+	}
+
+	return &devicev1.LinkResponse{
+		Data: device,
+	}, nil
+}
+
 func (ds *DevicesServer) Remove(ctx context.Context, req *devicev1.RemoveRequest) (*devicev1.RemoveResponse, error) {
 	dev, err := ds.Biz.GetDeviceByID(ctx, req.GetId())
 	if err != nil {
