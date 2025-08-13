@@ -27,7 +27,7 @@ func NewDeviceServer(ctx context.Context, svc *frame.Service) *DevicesServer {
 }
 
 // GetById retrieves a device by ID
-// nolint: revive,staticcheck // This is an api implementation
+// nolint: revive,staticcheck,nolintlint // This is an api implementation
 func (ds *DevicesServer) GetById(ctx context.Context, req *devicev1.GetByIdRequest) (*devicev1.GetByIdResponse, error) {
 	if len(req.GetId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "device ID is required")
@@ -60,7 +60,7 @@ func (ds *DevicesServer) GetById(ctx context.Context, req *devicev1.GetByIdReque
 }
 
 // GetBySessionId retrieves a device by session ID
-// nolint: revive,staticcheck // This is an api implementation
+// nolint: revive,staticcheck,nolintlint // This is an api implementation
 func (ds *DevicesServer) GetBySessionId(
 	ctx context.Context,
 	req *devicev1.GetBySessionIdRequest,
