@@ -195,11 +195,11 @@ func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev
 
 func (b *deviceBusiness) SearchDevices(
 	ctx context.Context,
-	request *devicev1.SearchRequest,
+	query *devicev1.SearchRequest,
 ) (frame.JobResultPipe[[]*devicev1.DeviceObject], error) {
 	resultPipe := frame.NewJob[[]*devicev1.DeviceObject](
 		func(ctx context.Context, result frame.JobResultPipe[[]*devicev1.DeviceObject]) error {
-			return b.processSearchRequest(ctx, request, result)
+			return b.processSearchRequest(ctx, query, result)
 		},
 	)
 
@@ -214,10 +214,10 @@ func (b *deviceBusiness) SearchDevices(
 // processSearchRequest handles the main search logic.
 func (b *deviceBusiness) processSearchRequest(
 	ctx context.Context,
-	request *devicev1.SearchRequest,
+	query *devicev1.SearchRequest,
 	result frame.JobResultPipe[[]*devicev1.DeviceObject],
 ) error {
-	searchQuery := b.buildSearchQuery(ctx, request)
+	searchQuery := b.buildSearchQuery(ctx, query)
 
 	devicesResult, err := b.deviceRepo.Search(ctx, searchQuery)
 	if err != nil {
@@ -228,7 +228,7 @@ func (b *deviceBusiness) processSearchRequest(
 }
 
 // buildSearchQuery creates the search query from the request.
-func (b *deviceBusiness) buildSearchQuery(ctx context.Context, request *devicev1.SearchRequest) *framedata.SearchQuery {
+func (b *deviceBusiness) buildSearchQuery(ctx context.Context, query *devicev1.SearchRequest) *framedata.SearchQuery {
 	profileID := ""
 	claims := frame.ClaimsFromContext(ctx)
 	if claims != nil {
@@ -237,16 +237,16 @@ func (b *deviceBusiness) buildSearchQuery(ctx context.Context, request *devicev1
 
 	searchProperties := map[string]any{
 		"profile_id": profileID,
-		"start_date": request.GetStartDate(),
-		"end_date":   request.GetEndDate(),
+		"start_date": query.GetStartDate(),
+		"end_date":   query.GetEndDate(),
 	}
 
-	for _, p := range request.GetProperties() {
-		searchProperties[p] = request.GetQuery()
+	for _, p := range query.GetProperties() {
+		searchProperties[p] = query.GetQuery()
 	}
 
-	return framedata.NewSearchQuery(request.GetQuery(), searchProperties, int(request.GetPage()),
-		int(request.GetCount()))
+	return framedata.NewSearchQuery(query.GetQuery(), searchProperties, int(query.GetPage()),
+		int(query.GetCount()))
 }
 
 // processSearchResults processes the search results and converts them to API objects.

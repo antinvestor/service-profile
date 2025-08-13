@@ -1,18 +1,14 @@
 package handlers_test
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"net/http"
-	"net/http/httptest"
 	"testing"
 
+	commonMocks "github.com/antinvestor/apis/go/common/mocks"
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -96,7 +92,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_GetByID() {
 					Id: []string{deviceID},
 				}
 
-				resp, err := server.GetByID(ctx, req)
+				resp, err := server.GetById(ctx, req)
 
 				if tc.expectedStatus == codes.OK {
 					suite.Require().NoError(err)
@@ -415,23 +411,23 @@ func (suite *HandlersTestSuite) executeSearchRequest(
 	ctx context.Context,
 	server *handlers.DevicesServer,
 	query string,
-) *mockSearchStream {
+) *commonMocks.MockServerStream[devicev1.SearchResponse] {
 	req := &devicev1.SearchRequest{
 		Query: query,
 	}
+	searchStream := commonMocks.NewMockServerStream[devicev1.SearchResponse](ctx)
 
-	stream := &mockSearchStream{
-		ctx: ctx,
-	}
-
-	err := server.Search(req, stream)
+	err := server.Search(req, searchStream)
 	suite.Require().NoError(err)
 
-	return stream
+	return searchStream
 }
 
-func (suite *HandlersTestSuite) validateSearchResults(stream *mockSearchStream, expectEmpty bool) {
-	totalDevices := suite.countDevicesInResponses(stream.responses)
+func (suite *HandlersTestSuite) validateSearchResults(
+	stream *commonMocks.MockServerStream[devicev1.SearchResponse],
+	expectEmpty bool,
+) {
+	totalDevices := suite.countDevicesInResponses(stream.GetResponses())
 
 	if expectEmpty {
 		suite.Equal(0, totalDevices, "Expected no devices in responses but got %d", totalDevices)
@@ -505,112 +501,4 @@ func (suite *HandlersTestSuite) TestGetClientIP() {
 			// For empty expected, we just check it doesn't panic
 		})
 	}
-}
-
-func (suite *HandlersTestSuite) TestRESTEndpoints() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-
-		// Create server
-		server := handlers.NewDeviceServer(ctx, svc)
-
-		suite.Run("RestLogDeviceData", func() {
-			reqBody := map[string]string{
-				"session_id": "test-session-123",
-				"action":     "page_view",
-				"url":        "https://example.com",
-			}
-
-			body, err := json.Marshal(reqBody)
-			suite.Require().NoError(err)
-
-			req := httptest.NewRequest(http.MethodPost, "/log", bytes.NewBuffer(body))
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("User-Agent", "Test Agent")
-			req = req.WithContext(ctx)
-
-			w := httptest.NewRecorder()
-			server.RestLogDeviceData(w, req)
-
-			suite.Equal(http.StatusOK, w.Code)
-
-			var response map[string]interface{}
-			err = json.Unmarshal(w.Body.Bytes(), &response)
-			suite.Require().NoError(err)
-			suite.NotNil(response)
-		})
-
-		suite.Run("RestLogDeviceData - missing session_id", func() {
-			reqBody := map[string]string{
-				"action": "page_view",
-			}
-
-			body, err := json.Marshal(reqBody)
-			suite.Require().NoError(err)
-
-			req := httptest.NewRequest(http.MethodPost, "/log", bytes.NewBuffer(body))
-			req.Header.Set("Content-Type", "application/json")
-			req = req.WithContext(ctx)
-
-			w := httptest.NewRecorder()
-			server.RestLogDeviceData(w, req)
-
-			suite.Equal(http.StatusBadRequest, w.Code)
-		})
-
-		suite.Run("RestDeviceLinkProfile", func() {
-			reqBody := map[string]string{
-				"session_id": "test-session-456",
-				"profile_id": "test-profile-789",
-			}
-
-			body, err := json.Marshal(reqBody)
-			suite.Require().NoError(err)
-
-			req := httptest.NewRequest(http.MethodPost, "/link", bytes.NewBuffer(body))
-			req.Header.Set("Content-Type", "application/json")
-			req = req.WithContext(ctx)
-
-			w := httptest.NewRecorder()
-			server.RestDeviceLinkProfile(w, req)
-
-			// This might return an error due to non-existent session, but should not panic
-			suite.True(w.Code == http.StatusOK || w.Code >= 400)
-		})
-
-		suite.Run("RestDeviceLinkProfile - missing parameters", func() {
-			reqBody := map[string]string{
-				"session_id": "test-session-456",
-				// missing profile_id
-			}
-
-			body, err := json.Marshal(reqBody)
-			suite.Require().NoError(err)
-
-			req := httptest.NewRequest(http.MethodPost, "/link", bytes.NewBuffer(body))
-			req.Header.Set("Content-Type", "application/json")
-			req = req.WithContext(ctx)
-
-			w := httptest.NewRecorder()
-			server.RestDeviceLinkProfile(w, req)
-
-			suite.Equal(http.StatusBadRequest, w.Code)
-		})
-	})
-}
-
-// Mock stream for testing streaming endpoints.
-type mockSearchStream struct {
-	grpc.ServerStream
-	ctx       context.Context
-	responses []*devicev1.SearchResponse
-}
-
-func (m *mockSearchStream) Send(resp *devicev1.SearchResponse) error {
-	m.responses = append(m.responses, resp)
-	return nil
-}
-
-func (m *mockSearchStream) Context() context.Context {
-	return m.ctx
 }

@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"net/http"
 
 	"buf.build/go/protovalidate"
 	apis "github.com/antinvestor/apis/go/common"
@@ -57,7 +56,7 @@ func main() {
 	grpcServer, implementation := setupGRPCServer(ctx, svc, cfg, serviceName, log)
 
 	// Setup HTTP handlers and proxy
-	serviceOptions, httpErr := setupHTTPHandlers(ctx, implementation, cfg, grpcServer)
+	serviceOptions, httpErr := setupHTTPHandlers(ctx, cfg, grpcServer)
 	if err != nil {
 		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
 	}
@@ -130,7 +129,6 @@ func setupGRPCServer(ctx context.Context, svc *frame.Service,
 // setupHTTPHandlers configures HTTP handlers and proxy.
 func setupHTTPHandlers(
 	ctx context.Context,
-	implementation *handlers.DevicesServer,
 	cfg config.DevicesConfig, grpcServer *grpc.Server,
 ) ([]frame.Option, error) {
 	// Start with datastore option
@@ -151,8 +149,6 @@ func setupHTTPHandlers(
 		return nil, err
 	}
 
-	// Setup REST handlers
-	proxyMux.Handle("/_public/", http.StripPrefix("/_public", implementation.NewInSecureRouterV1()))
 	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
 
 	return serviceOptions, nil
