@@ -18,9 +18,10 @@ type Device struct {
 
 func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
 	obj := &devicev1.DeviceObject{
-		Id:   d.GetID(),
-		Name: d.Name,
-		Os:   d.OS,
+		Id:         d.GetID(),
+		Name:       d.Name,
+		Os:         d.OS,
+		Properties: map[string]string{"owner": d.ProfileID},
 	}
 
 	if session != nil {
