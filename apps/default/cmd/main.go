@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"buf.build/go/protovalidate"
 	apis "github.com/antinvestor/apis/go/common"
@@ -122,18 +121,12 @@ func setupNotificationClient(
 	ctx context.Context,
 	svc *frame.Service,
 	cfg config.ProfileConfig) (*notificationv1.NotificationClient, error) {
-	audienceList := make([]string, 0)
-	oauth2ServiceAudience := cfg.Oauth2ServiceAudience
-	if oauth2ServiceAudience != "" {
-		audienceList = strings.Split(oauth2ServiceAudience, ",")
-	}
-
 	return notificationv1.NewNotificationClient(ctx,
 		apis.WithEndpoint(cfg.NotificationServiceURI),
 		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
 		apis.WithTokenUsername(svc.JwtClientID()),
-		apis.WithTokenPassword(cfg.Oauth2ServiceClientSecret),
-		apis.WithAudiences(audienceList...))
+		apis.WithTokenPassword(svc.JwtClientSecret()),
+		apis.WithAudiences("service_notifications"))
 }
 
 // setupGRPCServer initializes and configures the gRPC server.
