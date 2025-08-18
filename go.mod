@@ -4,14 +4,14 @@ go 1.24.0
 
 require (
 	buf.build/go/protovalidate v0.14.0
-	github.com/antinvestor/apis/go/common v1.38.0
-	github.com/antinvestor/apis/go/device v1.39.0
-	github.com/antinvestor/apis/go/notification v1.39.0
-	github.com/antinvestor/apis/go/profile v1.39.0
-	github.com/antinvestor/apis/go/settings v1.39.0
+	github.com/antinvestor/apis/go/common v1.39.2
+	github.com/antinvestor/apis/go/device v1.40.0
+	github.com/antinvestor/apis/go/notification v1.40.0
+	github.com/antinvestor/apis/go/profile v1.40.0
+	github.com/antinvestor/apis/go/settings v1.40.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.55.6
+	github.com/pitabwire/frame v1.55.7
 	github.com/pitabwire/util v0.3.4
 	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.10.0
