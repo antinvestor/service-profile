@@ -4,10 +4,12 @@ import (
 	"context"
 	"testing"
 
+	"buf.build/go/protovalidate"
 	commonMocks "github.com/antinvestor/apis/go/common/mocks"
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -199,6 +201,26 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 			data:        map[string]string{},
 			expectError: false,
 		},
+		{
+			name:        "log with empty device ID",
+			setupDevice: false,
+			deviceID:    "",
+			sessionID:   "test-session-3",
+			data: map[string]string{
+				"action": "login",
+			},
+			expectError: false, // Current implementation allows empty device ID
+		},
+		{
+			name:        "log with non-existent device ID",
+			setupDevice: false,
+			deviceID:    "non-existent-device-123",
+			sessionID:   "test-session-4",
+			data: map[string]string{
+				"action": "logout",
+			},
+			expectError: false, // Current implementation doesn't validate device existence
+		},
 	}
 
 	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
@@ -244,6 +266,74 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 			})
 		}
 	})
+}
+
+func (suite *HandlersTestSuite) TestDevices_LogRequest() {
+	testCases := []struct {
+		name        string
+		deviceID    string
+		sessionID   string
+		data        map[string]string
+		expectError bool
+	}{
+		{
+			name:      "log device activity successfully",
+			deviceID:  "",
+			sessionID: "test-session",
+			data: map[string]string{
+				"action": "page_view",
+				"url":    "https://example.com",
+			},
+			expectError: false,
+		},
+		{
+			name:        "log with error data",
+			deviceID:    "h",
+			sessionID:   "test-session-2",
+			data:        map[string]string{},
+			expectError: true,
+		},
+		{
+			name:      "log with empty device ID",
+			deviceID:  "hellow",
+			sessionID: "test-session-3",
+			data: map[string]string{
+				"action": "login",
+			},
+			expectError: false, // Current implementation allows empty device ID
+		},
+		{
+			name:      "log with very long device ID",
+			deviceID:  "fasodeifwqoiejfpasdjfoiasdjfoisjdfljksjdflaksdjfosidjfsoidjfsoidjfoasdfasdfasdfsa",
+			sessionID: "test-session-4",
+			data: map[string]string{
+				"action": "logout",
+			},
+			expectError: true, // Current implementation doesn't validate device existence
+		},
+	}
+
+	validator, err := protovalidate.New()
+	require.NoError(suite.T(), err)
+	for _, tc := range testCases {
+		suite.Run(tc.name, func() {
+
+			req := &devicev1.LogRequest{
+				DeviceId:  tc.deviceID,
+				SessionId: tc.sessionID,
+				Extras:    tc.data,
+			}
+
+			err = validator.Validate(req)
+
+			if tc.expectError {
+				suite.Require().Error(err)
+			} else {
+				suite.Require().NoError(err)
+			}
+		})
+	}
+
 }
 
 func (suite *HandlersTestSuite) TestDevicesServer_AddKey() {
@@ -369,12 +459,12 @@ func (suite *HandlersTestSuite) runSearchTestCase(
 	svc *frame.Service,
 	server *handlers.DevicesServer,
 	tc struct {
-		name        string
-		setupDevice bool
-		profileID   string
-		query       string
-		expectEmpty bool
-	},
+	name        string
+	setupDevice bool
+	profileID   string
+	query       string
+	expectEmpty bool
+},
 ) {
 	testCtx := suite.setupTestContext(ctx, tc.profileID)
 

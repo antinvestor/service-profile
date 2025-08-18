@@ -8,6 +8,7 @@ import (
 	"github.com/antinvestor/apis/go/common/mocks"
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
+	notificationv1_mocks "github.com/antinvestor/apis/go/notification/v1_mocks"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/frametests"
@@ -104,7 +105,7 @@ func (bs *BaseTestSuite) CreateService(
 }
 
 func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.NotificationClient {
-	mockNotificationService := notificationv1.NewMockNotificationServiceClient(bs.Ctrl)
+	mockNotificationService := notificationv1_mocks.NewMockNotificationServiceClient(bs.Ctrl)
 	mockNotificationService.EXPECT().Send(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, _ *notificationv1.SendRequest, _ ...grpc.CallOption) (grpc.ServerStreamingClient[notificationv1.SendResponse], error) {
 			// Return a successful response with a generated message ID

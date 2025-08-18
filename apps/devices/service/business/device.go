@@ -89,6 +89,8 @@ func (b *deviceBusiness) LogDeviceActivity(
 		Data:            frame.DBPropertiesFromMap(extra),
 	}
 
+	log.GenID(ctx)
+
 	if err := b.deviceLogRepo.Save(ctx, log); err != nil {
 		return nil, err
 	}

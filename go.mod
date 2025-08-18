@@ -1,14 +1,14 @@
 module github.com/antinvestor/service-profile
 
-go 1.24.0
+go 1.25
 
 require (
 	buf.build/go/protovalidate v0.14.0
-	github.com/antinvestor/apis/go/common v1.39.2
-	github.com/antinvestor/apis/go/device v1.40.0
-	github.com/antinvestor/apis/go/notification v1.40.0
-	github.com/antinvestor/apis/go/profile v1.40.0
-	github.com/antinvestor/apis/go/settings v1.40.0
+	github.com/antinvestor/apis/go/common v1.40.1
+	github.com/antinvestor/apis/go/device v1.40.2
+	github.com/antinvestor/apis/go/notification v1.40.2
+	github.com/antinvestor/apis/go/profile v1.40.2
+	github.com/antinvestor/apis/go/settings v1.40.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/mssola/user_agent v0.6.0
 	github.com/pitabwire/frame v1.55.7
@@ -16,7 +16,7 @@ require (
 	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.10.0
 	github.com/ttacon/libphonenumber v1.2.1
-	go.uber.org/mock v0.5.2
+	go.uber.org/mock v0.6.0
 	golang.org/x/net v0.43.0
 	google.golang.org/grpc v1.74.2
 	google.golang.org/protobuf v1.36.7
