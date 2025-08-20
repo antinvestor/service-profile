@@ -182,7 +182,7 @@ func setupHTTPHandlers(
 
 	// Setup proxy
 	proxyOptions := apis.ProxyOptions{
-		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", cfg.GrpcPort()),
+		GrpcServerEndpoint: fmt.Sprintf("localhost%s", cfg.GrpcPort()),
 		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	}
 
@@ -194,7 +194,7 @@ func setupHTTPHandlers(
 	// Setup REST handlers
 	jwtAudience := cfg.Oauth2JwtVerifyAudience
 	if jwtAudience == "" {
-		jwtAudience = "service_profile"
+		jwtAudience = svc.Name()
 	}
 
 	profileServiceRestHandlers := svc.AuthenticationMiddleware(

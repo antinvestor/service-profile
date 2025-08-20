@@ -163,7 +163,7 @@ func (cb *contactBusiness) CreateContact(
 		Detail:      detail,
 		ContactType: contactType,
 	}
-	
+
 	if extra != nil {
 		contact.Properties = frame.DBPropertiesFromMap(extra)
 	}

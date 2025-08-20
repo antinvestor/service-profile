@@ -53,7 +53,7 @@ func main() {
 	}
 
 	// Setup GRPC server
-	grpcServer, implementation := setupGRPCServer(ctx, svc, cfg, serviceName, log)
+	grpcServer, implementation := setupGRPCServer(ctx, svc, cfg, log)
 
 	// Setup HTTP handlers and proxy
 	serviceOptions, httpErr := setupHTTPHandlers(ctx, cfg, grpcServer)
@@ -97,11 +97,10 @@ func main() {
 // setupGRPCServer initializes and configures the gRPC server.
 func setupGRPCServer(ctx context.Context, svc *frame.Service,
 	cfg config.DevicesConfig,
-	serviceName string,
 	log *util.LogEntry) (*grpc.Server, *handlers.DevicesServer) {
 	jwtAudience := cfg.Oauth2JwtVerifyAudience
 	if jwtAudience == "" {
-		jwtAudience = serviceName
+		jwtAudience = svc.Name()
 	}
 
 	validator, err := protovalidate.New()
@@ -142,7 +141,7 @@ func setupHTTPHandlers(
 
 	// Setup proxy
 	proxyOptions := apis.ProxyOptions{
-		GrpcServerEndpoint: fmt.Sprintf("localhost:%s", cfg.GrpcPort()),
+		GrpcServerEndpoint: fmt.Sprintf("localhost%s", cfg.GrpcPort()),
 		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
 	}
 
