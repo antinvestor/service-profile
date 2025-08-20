@@ -162,7 +162,10 @@ func (cb *contactBusiness) CreateContact(
 	contact = &models.Contact{
 		Detail:      detail,
 		ContactType: contactType,
-		Properties:  frame.DBPropertiesFromMap(extra),
+	}
+	
+	if extra != nil {
+		contact.Properties = frame.DBPropertiesFromMap(extra)
 	}
 
 	contact, err = cb.contactRepository.Save(ctx, contact)

@@ -119,7 +119,7 @@ type Roster struct {
 func (r *Roster) ToAPI() *profilev1.RosterObject {
 	return &profilev1.RosterObject{
 		Id:        r.ID,
-		ProfileId: r.ProfileID,
+		ProfileId: r.Contact.ProfileID,
 		Contact:   r.Contact.ToAPI(true),
 		Extra:     frame.DBPropertiesToMap(r.Properties),
 	}
