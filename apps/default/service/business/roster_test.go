@@ -62,10 +62,7 @@ func (rts *RosterTestSuite) createRoster(
 func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
-		svc, ctx := rts.CreateService(t, dep)
-		rb := business.NewRosterBusiness(ctx, svc)
-
+	rts.WithTestDependancies(t, func(t *testing.T, _ *definition.DependancyOption) {
 		contact := &models.Contact{
 			Detail:             "+256757546244",
 			ProfileID:          "ownersId123",
@@ -78,9 +75,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 			Properties: map[string]interface{}{"key1": "value1"},
 		}
 
-		result, err := rb.ToAPI(ctx, roster)
-
-		require.NoError(t, err, "ToApi should succeed")
+		result := roster.ToAPI()
 		require.Equal(t, "ownersId123", result.GetProfileId(), "Profile ID should match")
 	})
 }

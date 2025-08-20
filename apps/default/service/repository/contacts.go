@@ -2,11 +2,9 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/pitabwire/frame"
-	"gorm.io/gorm"
 
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -50,9 +48,6 @@ func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*m
 
 	detail = strings.ToLower(strings.TrimSpace(detail))
 	if err := cr.service.DB(ctx, true).First(contact, " detail = ?", detail).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, service.ErrContactDoesNotExist
-		}
 		return nil, err
 	}
 

@@ -7,7 +7,7 @@ require (
 	github.com/antinvestor/apis/go/common v1.40.1
 	github.com/antinvestor/apis/go/device v1.40.2
 	github.com/antinvestor/apis/go/notification v1.40.2
-	github.com/antinvestor/apis/go/profile v1.40.2
+	github.com/antinvestor/apis/go/profile v1.40.4
 	github.com/antinvestor/apis/go/settings v1.40.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/mssola/user_agent v0.6.0
@@ -18,7 +18,7 @@ require (
 	github.com/ttacon/libphonenumber v1.2.1
 	go.uber.org/mock v0.6.0
 	golang.org/x/net v0.43.0
-	google.golang.org/grpc v1.74.2
+	google.golang.org/grpc v1.75.0
 	google.golang.org/protobuf v1.36.7
 	gorm.io/gorm v1.30.1
 )

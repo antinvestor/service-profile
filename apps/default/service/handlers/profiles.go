@@ -159,13 +159,26 @@ func (ps *ProfileServer) AddAddress(ctx context.Context,
 
 func (ps *ProfileServer) AddContact(ctx context.Context, request *profilev1.AddContactRequest,
 ) (*profilev1.AddContactResponse, error) {
-	profileObj, err := ps.ProfileBusiness.AddContact(ctx, request)
+	profileObj, verificationID, err := ps.ProfileBusiness.AddContact(ctx, request)
 
 	if err != nil {
 		return nil, ps.toAPIError(err)
 	}
 
-	return &profilev1.AddContactResponse{Data: profileObj}, nil
+	return &profilev1.AddContactResponse{Data: profileObj, VerificationId: verificationID}, nil
+}
+
+func (ps *ProfileServer) CreateContact(
+	ctx context.Context,
+	request *profilev1.CreateContactRequest,
+) (*profilev1.CreateContactResponse, error) {
+	contactObj, err := ps.ProfileBusiness.CreateContact(ctx, request)
+
+	if err != nil {
+		return nil, ps.toAPIError(err)
+	}
+
+	return &profilev1.CreateContactResponse{Data: contactObj}, nil
 }
 
 func (ps *ProfileServer) CreateContactVerification(
@@ -284,12 +297,7 @@ func (ps *ProfileServer) SearchRoster(
 		// Preallocate slice to optimize memory allocation.
 		rosterList := make([]*profilev1.RosterObject, 0, len(result.Item()))
 		for _, roster := range result.Item() {
-			rosterObject, err1 := rosterBusiness.ToAPI(ctx, roster)
-			if err1 != nil {
-				return ps.toAPIError(err1)
-			}
-
-			rosterList = append(rosterList, rosterObject)
+			rosterList = append(rosterList, roster.ToAPI())
 		}
 
 		err = stream.Send(&profilev1.SearchRosterResponse{Data: rosterList})

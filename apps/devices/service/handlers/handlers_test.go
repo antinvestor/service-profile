@@ -9,7 +9,6 @@ import (
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -314,10 +313,9 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 	}
 
 	validator, err := protovalidate.New()
-	require.NoError(suite.T(), err)
+	suite.Require().NoError(err)
 	for _, tc := range testCases {
 		suite.Run(tc.name, func() {
-
 			req := &devicev1.LogRequest{
 				DeviceId:  tc.deviceID,
 				SessionId: tc.sessionID,
@@ -333,7 +331,6 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 			}
 		})
 	}
-
 }
 
 func (suite *HandlersTestSuite) TestDevicesServer_AddKey() {
@@ -459,12 +456,12 @@ func (suite *HandlersTestSuite) runSearchTestCase(
 	svc *frame.Service,
 	server *handlers.DevicesServer,
 	tc struct {
-	name        string
-	setupDevice bool
-	profileID   string
-	query       string
-	expectEmpty bool
-},
+		name        string
+		setupDevice bool
+		profileID   string
+		query       string
+		expectEmpty bool
+	},
 ) {
 	testCtx := suite.setupTestContext(ctx, tc.profileID)
 

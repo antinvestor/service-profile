@@ -17,8 +17,6 @@ type RosterBusiness interface {
 	GetByID(ctx context.Context, rosterID string) (*models.Roster, error)
 	CreateRoster(ctx context.Context, request *profilev1.AddRosterRequest) ([]*profilev1.RosterObject, error)
 	RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, error)
-
-	ToAPI(ctx context.Context, roster *models.Roster) (*profilev1.RosterObject, error)
 }
 
 func NewRosterBusiness(ctx context.Context, service *frame.Service) RosterBusiness {
@@ -34,25 +32,6 @@ type rosterBusiness struct {
 	service          *frame.Service
 	rosterRepository repository.RosterRepository
 	contactBusiness  ContactBusiness
-}
-
-func (rb *rosterBusiness) ToAPI(ctx context.Context, roster *models.Roster) (*profilev1.RosterObject, error) {
-	if roster == nil {
-		return nil, errors.New("roster is nil")
-	}
-
-	contact := roster.Contact
-	contactObject, err := rb.contactBusiness.ToAPI(ctx, contact, true)
-	if err != nil {
-		return nil, err
-	}
-
-	return &profilev1.RosterObject{
-		Id:        roster.GetID(),
-		ProfileId: contact.ProfileID,
-		Contact:   contactObject,
-		Extra:     frame.DBPropertiesToMap(roster.Properties),
-	}, nil
 }
 
 func (rb *rosterBusiness) GetByID(ctx context.Context, rosterID string) (*models.Roster, error) {
@@ -136,11 +115,8 @@ func (rb *rosterBusiness) CreateRoster(
 				return nil, err
 			}
 		}
-		rosterObject, apiErr := rb.ToAPI(ctx, roster)
-		if apiErr != nil {
-			return nil, apiErr
-		}
-		rosterObjectList = append(rosterObjectList, rosterObject)
+
+		rosterObjectList = append(rosterObjectList, roster.ToAPI())
 	}
 
 	return rosterObjectList, nil
@@ -157,5 +133,5 @@ func (rb *rosterBusiness) RemoveRoster(ctx context.Context, rosterID string) (*p
 		return nil, err
 	}
 
-	return rb.ToAPI(ctx, roster)
+	return roster.ToAPI(), nil
 }

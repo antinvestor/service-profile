@@ -554,8 +554,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
-		svc, ctx := cts.CreateService(t, dep)
-		cb := business.NewContactBusiness(ctx, svc)
+		_, ctx := cts.CreateService(t, dep)
 
 		// Create a contact
 		contact := &models.Contact{
@@ -567,15 +566,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 		contact.GenID(ctx)
 
 		// Test ToAPI conversion
-		apiContact, err := cb.ToAPI(ctx, contact, false)
-		require.NoError(t, err)
+		apiContact := contact.ToAPI(false)
 		require.NotNil(t, apiContact)
 		require.Equal(t, contact.Detail, apiContact.GetDetail())
 		require.Equal(t, contact.GetID(), apiContact.GetId())
 
 		// Test with partial flag
-		apiContact, err = cb.ToAPI(ctx, contact, true)
-		require.NoError(t, err)
+		apiContact = contact.ToAPI(true)
 		require.NotNil(t, apiContact)
 	})
 }

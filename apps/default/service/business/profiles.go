@@ -32,7 +32,9 @@ type ProfileBusiness interface {
 
 	AddAddress(ctx context.Context, address *profilev1.AddAddressRequest) (*profilev1.ProfileObject, error)
 
-	AddContact(ctx context.Context, contact *profilev1.AddContactRequest) (*profilev1.ProfileObject, error)
+	AddContact(ctx context.Context, contact *profilev1.AddContactRequest) (*profilev1.ProfileObject, string, error)
+
+	CreateContact(ctx context.Context, contact *profilev1.CreateContactRequest) (*profilev1.ContactObject, error)
 
 	RemoveContact(ctx context.Context, contact *profilev1.RemoveContactRequest) (*profilev1.ProfileObject, error)
 
@@ -79,12 +81,7 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 		return nil, err
 	}
 	for _, c := range contactList {
-		ctObj, ctErr := pb.contactBusiness.ToAPI(ctx, c, true)
-		if ctErr != nil {
-			return nil, ctErr
-		}
-
-		contactObjects = append(contactObjects, ctObj)
+		contactObjects = append(contactObjects, c.ToAPI(true))
 	}
 	profileObject.Contacts = contactObjects
 
@@ -325,8 +322,57 @@ func (pb *profileBusiness) AddAddress(
 
 func (pb *profileBusiness) AddContact(
 	ctx context.Context,
-	request *profilev1.AddContactRequest) (*profilev1.ProfileObject, error) {
-	return pb.GetByID(ctx, request.GetId())
+	request *profilev1.AddContactRequest) (*profilev1.ProfileObject, string, error) {
+	claims := frame.ClaimsFromContext(ctx)
+	if claims == nil {
+		return nil, "", service.ErrContactProfileNotValid
+	}
+
+	subject, err := claims.GetSubject()
+	if err != nil {
+		return nil, "", service.ErrContactProfileNotValid
+	}
+	if request.GetId() != subject {
+		return nil, "", service.ErrContactProfileNotValid
+	}
+
+	profile, err := pb.GetByID(ctx, subject)
+	if err != nil {
+		return nil, "", err
+	}
+
+	for _, contact := range profile.GetContacts() {
+		if contact.GetDetail() == request.GetContact() {
+			return profile, "", nil
+		}
+	}
+
+	resp, err := pb.CreateContact(ctx, &profilev1.CreateContactRequest{
+		Contact: request.GetContact(),
+		Extras:  request.GetExtras(),
+	})
+
+	if err != nil {
+		return nil, "", err
+	}
+
+	verificationID, err := pb.VerifyContact(ctx, resp.GetId(), "", "", 0)
+	if err != nil {
+		return nil, "", err
+	}
+
+	return profile, verificationID, nil
+}
+
+func (pb *profileBusiness) CreateContact(
+	ctx context.Context,
+	request *profilev1.CreateContactRequest) (*profilev1.ContactObject, error) {
+	contact, err := pb.contactBusiness.CreateContact(ctx, request.GetContact(), request.GetExtras())
+	if err != nil {
+		return nil, err
+	}
+
+	return contact.ToAPI(true), nil
 }
 
 func (pb *profileBusiness) RemoveContact(
@@ -341,7 +387,7 @@ func (pb *profileBusiness) GetContactByID(ctx context.Context, contactID string)
 		return nil, err
 	}
 
-	return pb.contactBusiness.ToAPI(ctx, contact, true)
+	return contact.ToAPI(true), nil
 }
 
 func (pb *profileBusiness) VerifyContact(

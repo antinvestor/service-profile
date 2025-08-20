@@ -46,8 +46,6 @@ type ContactBusiness interface {
 	) (*models.Verification, error)
 	GetVerification(ctx context.Context, verificationID string) (*models.Verification, error)
 	GetVerificationAttempts(ctx context.Context, verificationID string) ([]*models.VerificationAttempt, error)
-
-	ToAPI(ctx context.Context, contact *models.Contact, partial bool) (*profilev1.ContactObject, error)
 }
 
 func NewContactBusiness(_ context.Context, service *frame.Service) ContactBusiness {
@@ -70,36 +68,6 @@ type contactBusiness struct {
 	verificationRepository repository.VerificationRepository
 }
 
-func (cb *contactBusiness) ToAPI(
-	_ context.Context,
-	contact *models.Contact,
-	partial bool,
-) (*profilev1.ContactObject, error) {
-	contactObject := profilev1.ContactObject{
-		Id:     contact.ID,
-		Detail: contact.Detail,
-	}
-
-	contactTypeID, ok := profilev1.ContactType_value[contact.ContactType]
-	if !ok {
-		return nil, service.ErrContactTypeNotValid
-	}
-	contactObject.Type = profilev1.ContactType(contactTypeID)
-
-	communicationLevel, ok := profilev1.CommunicationLevel_value[contact.CommunicationLevel]
-	if !ok {
-		communicationLevel = int32(profilev1.CommunicationLevel_ALL)
-	}
-	contactObject.CommunicationLevel = profilev1.CommunicationLevel(communicationLevel)
-
-	contactObject.Verified = false
-	if !partial {
-		contactObject.Verified = contact.VerificationID != ""
-	}
-
-	return &contactObject, nil
-}
-
 func (cb *contactBusiness) ContactTypeFromDetail(_ context.Context, detail string) (string, error) {
 	if EmailPattern.MatchString(detail) {
 		return profilev1.ContactType_EMAIL.String(), nil
@@ -114,11 +82,23 @@ func (cb *contactBusiness) ContactTypeFromDetail(_ context.Context, detail strin
 }
 
 func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*models.Contact, error) {
-	return cb.contactRepository.GetByID(ctx, contactID)
+	contact, err := cb.contactRepository.GetByID(ctx, contactID)
+	if err != nil {
+		if frame.ErrorIsNoRows(err) {
+			return nil, service.ErrContactDoesNotExist
+		}
+	}
+	return contact, err
 }
 
 func (cb *contactBusiness) GetByDetail(ctx context.Context, detail string) (*models.Contact, error) {
-	return cb.contactRepository.GetByDetail(ctx, detail)
+	contact, err := cb.contactRepository.GetByDetail(ctx, detail)
+	if err != nil {
+		if frame.ErrorIsNoRows(err) {
+			return nil, service.ErrContactDoesNotExist
+		}
+	}
+	return contact, err
 }
 
 func (cb *contactBusiness) GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error) {
@@ -163,20 +143,28 @@ func (cb *contactBusiness) CreateContact(
 	detail string,
 	extra map[string]string,
 ) (*models.Contact, error) {
-	contact := &models.Contact{}
-
 	detail = strings.ToLower(strings.TrimSpace(detail))
 
-	var err error
-	contact.ContactType, err = cb.ContactTypeFromDetail(ctx, detail)
+	contactType, err := cb.ContactTypeFromDetail(ctx, detail)
 	if err != nil {
 		return nil, err
 	}
 
-	contact.Detail = detail
-	if extra != nil {
-		contact.Properties = frame.DBPropertiesFromMap(extra)
+	contact, err := cb.GetByDetail(ctx, detail)
+	if err == nil {
+		return contact, nil
 	}
+
+	if !errors.Is(err, service.ErrContactDoesNotExist) {
+		return nil, err
+	}
+
+	contact = &models.Contact{
+		Detail:      detail,
+		ContactType: contactType,
+		Properties:  frame.DBPropertiesFromMap(extra),
+	}
+
 	contact, err = cb.contactRepository.Save(ctx, contact)
 	if err != nil {
 		return nil, err

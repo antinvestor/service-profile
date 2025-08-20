@@ -79,6 +79,32 @@ type Contact struct {
 	VerificationID string `gorm:"type:varchar(50)"`
 }
 
+func (c *Contact) ToAPI(partial bool) *profilev1.ContactObject {
+	contactObject := profilev1.ContactObject{
+		Id:     c.ID,
+		Detail: c.Detail,
+	}
+
+	contactTypeID, ok := profilev1.ContactType_value[c.ContactType]
+	if !ok {
+		contactTypeID = int32(profilev1.ContactType_EMAIL)
+	}
+	contactObject.Type = profilev1.ContactType(contactTypeID)
+
+	communicationLevel, ok := profilev1.CommunicationLevel_value[c.CommunicationLevel]
+	if !ok {
+		communicationLevel = int32(profilev1.CommunicationLevel_ALL)
+	}
+	contactObject.CommunicationLevel = profilev1.CommunicationLevel(communicationLevel)
+
+	contactObject.Verified = false
+	if !partial {
+		contactObject.Verified = c.VerificationID != ""
+	}
+
+	return &contactObject
+}
+
 type Roster struct {
 	frame.BaseModel
 
@@ -88,6 +114,15 @@ type Roster struct {
 	Contact   *Contact
 
 	Properties frame.JSONMap
+}
+
+func (r *Roster) ToAPI() *profilev1.RosterObject {
+	return &profilev1.RosterObject{
+		Id:        r.ID,
+		ProfileId: r.ProfileID,
+		Contact:   r.Contact.ToAPI(true),
+		Extra:     frame.DBPropertiesToMap(r.Properties),
+	}
 }
 
 type Verification struct {
