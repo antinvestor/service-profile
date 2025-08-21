@@ -137,7 +137,6 @@ func (pb *profileBusiness) GetByID(
 
 func (pb *profileBusiness) SearchProfile(ctx context.Context,
 	request *profilev1.SearchRequest) (frame.JobResultPipe[[]*models.Profile], error) {
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 
 	profileID := ""
 	claims := frame.ClaimsFromContext(ctx)

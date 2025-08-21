@@ -177,8 +177,6 @@ github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJw
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
 github.com/panjf2000/ants/v2 v2.11.3 h1:AfI0ngBoXJmYOpDh9m516vjqoUu2sLrIVgppI9TZVpg=
 github.com/panjf2000/ants/v2 v2.11.3/go.mod h1:8u92CYMUc6gyvTIw8Ru7Mt7+/ESnJahz5EVtqfrilek=
-github.com/pitabwire/frame v1.55.7 h1:7+FxF9KTtXCxePCaz7pOFQD9F48lL+tuQ+3wNs4VjIs=
-github.com/pitabwire/frame v1.55.7/go.mod h1:ADNXtc/NHYXA5kX6djIJyao7nPg5n7YoAmyZHkgEmjM=
 github.com/pitabwire/frame v1.55.8 h1:uINWw6FXfSZ0fPfN390MX2MohsuBYKYw8pcABLxOtaI=
 github.com/pitabwire/frame v1.55.8/go.mod h1:xMii43DGmQ2iuBKKIjGPlEsb/kQMJIN7f+hpZVWyX+c=
 github.com/pitabwire/natspubsub v0.6.11 h1:7IEwgPrdzOxoyz9BWXXiUBaMXNUZS31cHxJnRwf2lQI=
@@ -351,8 +349,6 @@ google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b h1:
 google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b/go.mod h1:qQ0YXyHHx3XkvlzUtpXDkS29lDSafHMZBAZDc03LQ3A=
 google.golang.org/grpc v1.75.0 h1:+TW+dqTd2Biwe6KKfhE5JpiYIBWq865PhKGSXiivqt4=
 google.golang.org/grpc v1.75.0/go.mod h1:JtPAzKiq4v1xcAB2hydNlWI2RnF85XXcV0mhKXr2ecQ=
-google.golang.org/protobuf v1.36.7 h1:IgrO7UwFQGJdRNXH/sQux4R1Dj1WAKcLElzeeRaXV2A=
-google.golang.org/protobuf v1.36.7/go.mod h1:jduwjTPXsFjZGTmRluh+L6NjiWu7pchiJ2/5YcXBHnY=
 google.golang.org/protobuf v1.36.8 h1:xHScyCOEuuwZEc6UtSOvPbAT4zRh0xcNRYekJwfqyMc=
 google.golang.org/protobuf v1.36.8/go.mod h1:fuxRtAxBytpl4zzqUh6/eyUujkJdNiuEkXntxiD/uRU=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

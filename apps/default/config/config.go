@@ -19,5 +19,5 @@ type ProfileConfig struct {
 	LengthOfVerificationCode       int `envDefault:"6"     env:"LENGTH_OF_VERIFICATION_CODE"`
 	VerificationPinExpiryTimeInSec int `envDefault:"86400" env:"VERIFICATION_PIN_EXPIRY_TIME_IN_SEC"`
 
-	MessageTemplateContactVerification string `envDefault:"template.papi.contact.verification" env:"MESSAGE_TEMPLATE_CONTACT_VERIFICATION"`
+	MessageTemplateContactVerification string `envDefault:"template.profilev1.contact.verification" env:"MESSAGE_TEMPLATE_CONTACT_VERIFICATION"`
 }
