@@ -179,6 +179,8 @@ github.com/panjf2000/ants/v2 v2.11.3 h1:AfI0ngBoXJmYOpDh9m516vjqoUu2sLrIVgppI9TZ
 github.com/panjf2000/ants/v2 v2.11.3/go.mod h1:8u92CYMUc6gyvTIw8Ru7Mt7+/ESnJahz5EVtqfrilek=
 github.com/pitabwire/frame v1.55.7 h1:7+FxF9KTtXCxePCaz7pOFQD9F48lL+tuQ+3wNs4VjIs=
 github.com/pitabwire/frame v1.55.7/go.mod h1:ADNXtc/NHYXA5kX6djIJyao7nPg5n7YoAmyZHkgEmjM=
+github.com/pitabwire/frame v1.55.8 h1:uINWw6FXfSZ0fPfN390MX2MohsuBYKYw8pcABLxOtaI=
+github.com/pitabwire/frame v1.55.8/go.mod h1:xMii43DGmQ2iuBKKIjGPlEsb/kQMJIN7f+hpZVWyX+c=
 github.com/pitabwire/natspubsub v0.6.11 h1:7IEwgPrdzOxoyz9BWXXiUBaMXNUZS31cHxJnRwf2lQI=
 github.com/pitabwire/natspubsub v0.6.11/go.mod h1:pudFshYEmqs6jvgTfJo9HwMfwstWaNITFVLdEsFa3jo=
 github.com/pitabwire/util v0.3.4 h1:OOsNVgJlqrC4EFNBqXsTwi/GbvENKv0BuK8ZK1E+F/4=
@@ -351,6 +353,8 @@ google.golang.org/grpc v1.75.0 h1:+TW+dqTd2Biwe6KKfhE5JpiYIBWq865PhKGSXiivqt4=
 google.golang.org/grpc v1.75.0/go.mod h1:JtPAzKiq4v1xcAB2hydNlWI2RnF85XXcV0mhKXr2ecQ=
 google.golang.org/protobuf v1.36.7 h1:IgrO7UwFQGJdRNXH/sQux4R1Dj1WAKcLElzeeRaXV2A=
 google.golang.org/protobuf v1.36.7/go.mod h1:jduwjTPXsFjZGTmRluh+L6NjiWu7pchiJ2/5YcXBHnY=
+google.golang.org/protobuf v1.36.8 h1:xHScyCOEuuwZEc6UtSOvPbAT4zRh0xcNRYekJwfqyMc=
+google.golang.org/protobuf v1.36.8/go.mod h1:fuxRtAxBytpl4zzqUh6/eyUujkJdNiuEkXntxiD/uRU=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c h1:Hei/4ADfdWqJk1ZMxUNpqntNwaWcugrBjAiHlqqRiVk=
 gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EVd6muEfDQjcINNoR0C8j2r3qZ4Q=

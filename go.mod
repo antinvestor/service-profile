@@ -11,7 +11,7 @@ require (
 	github.com/antinvestor/apis/go/settings v1.40.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.55.7
+	github.com/pitabwire/frame v1.55.8
 	github.com/pitabwire/util v0.3.4
 	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.10.0
@@ -19,7 +19,7 @@ require (
 	go.uber.org/mock v0.6.0
 	golang.org/x/net v0.43.0
 	google.golang.org/grpc v1.75.0
-	google.golang.org/protobuf v1.36.7
+	google.golang.org/protobuf v1.36.8
 	gorm.io/gorm v1.30.1
 )
 
