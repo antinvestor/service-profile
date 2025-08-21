@@ -234,13 +234,23 @@ func (pb *profileBusiness) CreateProfile(
 	p := models.Profile{}
 	p.Properties = frame.DBPropertiesFromMap(request.GetProperties())
 
-	contact, err := pb.contactBusiness.GetByDetail(ctx, contactDetail)
+	var contact *models.Contact
+	_, err := ContactTypeFromDetail(ctx, contactDetail)
 	if err == nil {
-		return pb.GetByID(ctx, contact.ProfileID)
+		contact, err = pb.contactBusiness.GetByDetail(ctx, contactDetail)
+		if !errors.Is(err, service.ErrContactDoesNotExist) {
+			return nil, err
+		}
+	} else {
+
+		contact, err = pb.contactBusiness.GetByID(ctx, contactDetail)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if !errors.Is(err, service.ErrContactDoesNotExist) {
-		return nil, err
+	if contact != nil && contact.ProfileID != "" {
+		return pb.GetByID(ctx, contact.ProfileID)
 	}
 
 	var pt *models.ProfileType
@@ -257,9 +267,11 @@ func (pb *profileBusiness) CreateProfile(
 		return nil, err
 	}
 
-	contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, map[string]string{})
-	if err != nil {
-		return nil, err
+	if contact == nil {
+		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, map[string]string{})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	contact, err = pb.contactBusiness.UpdateContact(ctx, contact.GetID(), p.GetID(), map[string]string{})

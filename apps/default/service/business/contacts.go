@@ -68,7 +68,7 @@ type contactBusiness struct {
 	verificationRepository repository.VerificationRepository
 }
 
-func (cb *contactBusiness) ContactTypeFromDetail(_ context.Context, detail string) (string, error) {
+func ContactTypeFromDetail(_ context.Context, detail string) (string, error) {
 	if EmailPattern.MatchString(detail) {
 		return profilev1.ContactType_EMAIL.String(), nil
 	}
@@ -145,7 +145,7 @@ func (cb *contactBusiness) CreateContact(
 ) (*models.Contact, error) {
 	detail = strings.ToLower(strings.TrimSpace(detail))
 
-	contactType, err := cb.ContactTypeFromDetail(ctx, detail)
+	contactType, err := ContactTypeFromDetail(ctx, detail)
 	if err != nil {
 		return nil, err
 	}
