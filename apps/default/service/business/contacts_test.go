@@ -638,3 +638,238 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 		require.Equal(t, "test2@example.com", contact.Detail)
 	})
 }
+
+func (cts *ContactTestSuite) TestContactTypeFromDetail() {
+	t := cts.T()
+
+	type args struct {
+		detail string
+	}
+	testCases := []struct {
+		name    string
+		args    args
+		want    string
+		wantErr require.ErrorAssertionFunc
+	}{
+		// Valid Email Tests
+		{
+			name:    "Valid simple email",
+			args:    args{detail: "test@example.com"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid email with subdomain",
+			args:    args{detail: "user@mail.example.com"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid email with numbers",
+			args:    args{detail: "user123@example123.com"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid email with special characters",
+			args:    args{detail: "user.name+tag@example.com"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid email with hyphen in domain",
+			args:    args{detail: "user@my-domain.com"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid email with underscore",
+			args:    args{detail: "user_name@example.com"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid email with long TLD",
+			args:    args{detail: "user@example.museum"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+
+		// Valid Phone Number Tests (MSISDN)
+		{
+			name:    "Valid international phone number with country code",
+			args:    args{detail: "+256757546244"},
+			want:    profilev1.ContactType_MSISDN.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Random phone number",
+			args:    args{detail: "+12345678900"},
+			want:    profilev1.ContactType_MSISDN.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid US phone number",
+			args:    args{detail: "+12025551234"},
+			want:    profilev1.ContactType_MSISDN.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid UK phone number",
+			args:    args{detail: "+442071234567"},
+			want:    profilev1.ContactType_MSISDN.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid Kenya phone number",
+			args:    args{detail: "+254701234567"},
+			want:    profilev1.ContactType_MSISDN.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Valid phone number with spaces (should be normalized)",
+			args:    args{detail: "+1 202 555 1234"},
+			want:    profilev1.ContactType_MSISDN.String(),
+			wantErr: require.NoError,
+		},
+
+		// Invalid Email Tests
+		{
+			name:    "Invalid email - missing @",
+			args:    args{detail: "testexample.com"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Invalid email - missing domain",
+			args:    args{detail: "test@"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Invalid email - missing local part",
+			args:    args{detail: "@example.com"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Invalid email - double @",
+			args:    args{detail: "test@@example.com"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Invalid email - spaces",
+			args:    args{detail: "test @example.com"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Invalid email - invalid characters",
+			args:    args{detail: "test<>@example.com"},
+			want:    "",
+			wantErr: require.Error,
+		},
+
+		// Invalid Phone Number Tests
+		{
+			name:    "Invalid phone - too short",
+			args:    args{detail: "+1234"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Invalid phone - no country code",
+			args:    args{detail: "1234567890"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Invalid phone - letters",
+			args:    args{detail: "+1abc2345678"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Invalid phone - too many digits",
+			args:    args{detail: "+123456789012345678901"},
+			want:    "",
+			wantErr: require.Error,
+		},
+
+		// Edge Cases
+		{
+			name:    "Empty string",
+			args:    args{detail: ""},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Whitespace only",
+			args:    args{detail: "   "},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Random text",
+			args:    args{detail: "random-text-123"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "URL-like string",
+			args:    args{detail: "http://example.com"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Number without plus sign",
+			args:    args{detail: "256757546244"},
+			want:    "",
+			wantErr: require.Error,
+		},
+		{
+			name:    "Email-like but invalid TLD",
+			args:    args{detail: "test@example"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Phone with invalid country code",
+			args:    args{detail: "+999999999999"},
+			want:    "",
+			wantErr: require.Error,
+		},
+
+		// Boundary Cases
+		{
+			name: "Very long email",
+			args: args{
+				detail: "verylongemailaddressthatmightcauseproblemswithvalidation@verylongdomainnamethatmightalsocauseissues.com",
+			},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Minimum valid email",
+			args:    args{detail: "a@b.co"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+		{
+			name:    "Email with all allowed special chars",
+			args:    args{detail: "test.email+tag@example-domain.co.uk"},
+			want:    profilev1.ContactType_EMAIL.String(),
+			wantErr: require.NoError,
+		},
+	}
+
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			got, err := business.ContactTypeFromDetail(ctx, tt.args.detail)
+			tt.wantErr(t, err, fmt.Sprintf("ContactTypeFromDetail(ctx, %v)", tt.args.detail))
+			require.Equalf(t, tt.want, got, "ContactTypeFromDetail(ctx, %v)", tt.args.detail)
+		})
+	}
+}

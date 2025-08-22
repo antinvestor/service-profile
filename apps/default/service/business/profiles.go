@@ -137,7 +137,6 @@ func (pb *profileBusiness) GetByID(
 
 func (pb *profileBusiness) SearchProfile(ctx context.Context,
 	request *profilev1.SearchRequest) (frame.JobResultPipe[[]*models.Profile], error) {
-
 	profileID := ""
 	claims := frame.ClaimsFromContext(ctx)
 	if claims != nil {
@@ -242,7 +241,6 @@ func (pb *profileBusiness) CreateProfile(
 			return nil, err
 		}
 	} else {
-
 		contact, err = pb.contactBusiness.GetByID(ctx, contactDetail)
 		if err != nil {
 			return nil, err
