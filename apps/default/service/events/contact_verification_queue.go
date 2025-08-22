@@ -81,6 +81,7 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 	}
 
 	variables := make(map[string]string)
+	variables["verification_id"] = verification.GetID()
 	variables["code"] = verification.Code
 	variables["expiryDate"] = verification.ExpiresAt.String()
 
