@@ -10,7 +10,6 @@ import (
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/framedata"
 	"github.com/pitabwire/util"
-	"github.com/rs/xid"
 
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
@@ -106,8 +105,8 @@ func (pb *profileBusiness) GetByContact(
 
 	var contact *models.Contact
 
-	_, err := xid.FromString(contactData)
-	if err != nil {
+	_, err := ContactTypeFromDetail(ctx, contactData)
+	if err == nil {
 		contact, err = pb.contactBusiness.GetByDetail(ctx, contactData)
 		if err != nil {
 			return nil, err
@@ -118,7 +117,6 @@ func (pb *profileBusiness) GetByContact(
 			return nil, err
 		}
 	}
-
 	return pb.GetByID(ctx, contact.ProfileID)
 }
 
