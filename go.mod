@@ -11,9 +11,8 @@ require (
 	github.com/antinvestor/apis/go/settings v1.40.2
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.55.8
+	github.com/pitabwire/frame v1.55.9
 	github.com/pitabwire/util v0.3.4
-	github.com/rs/xid v1.6.0
 	github.com/stretchr/testify v1.10.0
 	github.com/ttacon/libphonenumber v1.2.1
 	go.uber.org/mock v0.6.0
@@ -87,6 +86,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
+	github.com/rs/xid v1.6.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.5 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/stoewer/go-strcase v1.3.0 // indirect

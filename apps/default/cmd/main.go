@@ -126,7 +126,7 @@ func setupNotificationClient(
 		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
 		apis.WithTokenUsername(svc.JwtClientID()),
 		apis.WithTokenPassword(svc.JwtClientSecret()),
-		apis.WithScopes(frame.ConstInternalSystemScope),
+		apis.WithScopes(frame.ConstSystemScopeInternal),
 		apis.WithAudiences("service_notifications"))
 }
 
