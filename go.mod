@@ -13,7 +13,7 @@ require (
 	github.com/mssola/user_agent v0.6.0
 	github.com/pitabwire/frame v1.55.10
 	github.com/pitabwire/util v0.3.4
-	github.com/stretchr/testify v1.11.0
+	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
 	go.uber.org/mock v0.6.0
 	golang.org/x/net v0.43.0
