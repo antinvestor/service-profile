@@ -54,7 +54,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_CreateAddress() {
 		Country: "KEN",
 	}
 
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		request *profilev1.AddressObject
 		want    *profilev1.AddressObject
@@ -69,7 +69,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_CreateAddress() {
 	}
 
 	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
-		for _, tt := range tests {
+		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)
 
@@ -141,7 +141,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_LinkAddressToProfile() {
 		name      string
 		address   *profilev1.AddressObject
 	}
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		args    args
 		wantErr bool
@@ -150,7 +150,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_LinkAddressToProfile() {
 	}
 
 	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
-		for _, tt := range tests {
+		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)
 

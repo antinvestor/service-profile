@@ -81,10 +81,10 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 		var profileAvailable []string
 		pbc := business.NewProfileBusiness(ctx, svc)
 
-		prop1 := &frame.JSONMap{
+		prop1 := frame.JSONMap{
 			"name": "Profile Tester Get",
 		}
-		prop2 := &frame.JSONMap{
+		prop2 := frame.JSONMap{
 			"name": "Profile Tester Get 2",
 		}
 
@@ -155,7 +155,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
-		properties := &frame.JSONMap{
+		properties := frame.JSONMap{
 			"name": "Get By Contact Test",
 		}
 		// Create a profile first
@@ -205,7 +205,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
-		properties := &frame.JSONMap{
+		properties := frame.JSONMap{
 			"name": "Original Name",
 		}
 		// Create a profile first
@@ -221,7 +221,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 			return
 		}
 
-		reqProperties := &frame.JSONMap{
+		reqProperties := frame.JSONMap{
 			"name": "Updated Name",
 			"age":  "30",
 		}

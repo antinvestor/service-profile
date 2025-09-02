@@ -3,7 +3,6 @@ package queue
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"strings"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
@@ -166,46 +165,31 @@ func (dq *DeviceAnalysisQueueHandler) ExtractLocaleData(
 	geoIP *GeoIP,
 ) (*devicev1.Locale, error) {
 	locale := devicev1.Locale{}
-	rawDat, ok := data["tz"]
-	if ok {
-		locale.Timezone = rawDat.(string)
-	}
-	if !ok && geoIP != nil {
+	locale.Timezone = data.GetString("tz")
+
+	if locale.GetTimezone() == "" && geoIP != nil {
 		locale.Timezone = geoIP.Timezone
 	}
 
-	var languages string
-	rawDat, ok = data["lang"]
-	if ok {
-		languages = rawDat.(string)
-	}
-	if !ok && geoIP != nil {
+	languages := data.GetString("lang")
+	if languages == "" && geoIP != nil {
 		languages = geoIP.Languages
 	}
 
 	locale.Language = strings.Split(languages, ",")
 
-	rawDat, ok = data["cur"]
-	if ok {
-		locale.Currency = rawDat.(string)
-	}
-	if !ok && geoIP != nil {
+	locale.Currency = data.GetString("cur")
+	if locale.GetCurrency() == "" && geoIP != nil {
 		locale.Currency = geoIP.Currency
 	}
 
-	rawDat, ok = data["curNm"]
-	if ok {
-		locale.CurrencyName = rawDat.(string)
-	}
-	if !ok && geoIP != nil {
+	locale.CurrencyName = data.GetString("curNm")
+	if locale.GetCurrencyName() == "" && geoIP != nil {
 		locale.CurrencyName = geoIP.CurrencyName
 	}
 
-	rawDat, ok = data["code"]
-	if ok {
-		locale.Code = rawDat.(string)
-	}
-	if !ok && geoIP != nil {
+	locale.Code = data.GetString("code")
+	if locale.GetCode() == "" && geoIP != nil {
 		locale.Code = geoIP.CountryCallingCode
 	}
 
@@ -223,8 +207,8 @@ func (dq *DeviceAnalysisQueueHandler) ExtractLocationData(
 		locationData["country"] = geoIP.Country
 		locationData["region"] = geoIP.Region
 		locationData["city"] = geoIP.City
-		locationData["latitude"] = fmt.Sprintf("%f", geoIP.Latitude)
-		locationData["longitude"] = fmt.Sprintf("%f", geoIP.Longitude)
+		locationData["latitude"] = geoIP.Latitude
+		locationData["longitude"] = geoIP.Longitude
 	}
 
 	rawData, ok := data["lat"]

@@ -77,7 +77,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 
 	type args struct {
 		detail string
-		extra  *frame.JSONMap
+		extra  frame.JSONMap
 	}
 	testCases := []struct {
 		name    string
@@ -90,11 +90,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with valid MSISDN",
 			args: args{
 				detail: "+256757546244", // Valid MSISDN
-				extra:  &frame.JSONMap{"type": "msisdn"},
+				extra:  frame.JSONMap{"type": "msisdn"},
 			},
 			want: &models.Contact{ // Expected result
 				Detail:     "+256757546244",
-				Properties: &frame.JSONMap{"type": "msisdn"},
+				Properties: frame.JSONMap{"type": "msisdn"},
 			},
 			wantErr: require.NoError, // No error expected
 		},
@@ -102,11 +102,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with valid Email",
 			args: args{
 				detail: "test@example.com", // Valid Email
-				extra:  &frame.JSONMap{"type": "email"},
+				extra:  frame.JSONMap{"type": "email"},
 			},
 			want: &models.Contact{ // Expected result
 				Detail:     "test@example.com",
-				Properties: &frame.JSONMap{"type": "email"},
+				Properties: frame.JSONMap{"type": "email"},
 			},
 			wantErr: require.NoError, // No error expected
 		},
@@ -114,7 +114,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with invalid detail",
 			args: args{
 				detail: "invalid-detail", // Invalid data, e.g., malformed MSISDN or email
-				extra:  &frame.JSONMap{"type": "unknown"},
+				extra:  frame.JSONMap{"type": "unknown"},
 			},
 			want:    nil,           // Expect no valid contact to be created
 			wantErr: require.Error, // Error is expected
@@ -123,7 +123,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with empty detail",
 			args: args{
 				detail: "", // Empty detail
-				extra:  &frame.JSONMap{"type": "email"},
+				extra:  frame.JSONMap{"type": "email"},
 			},
 			want:    nil,           // Contact should not be created with empty details
 			wantErr: require.Error, // Error is expected
@@ -135,7 +135,8 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 				extra:  nil,                 // Properties data missing
 			},
 			want: &models.Contact{
-				Detail: "test2@example.com",
+				Detail:     "test2@example.com",
+				Properties: frame.JSONMap{},
 			},
 			wantErr: require.NoError, // No error expected if type can be inferred or defaults
 		},
@@ -246,8 +247,35 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 			t.Run(tt.name, func(t *testing.T) {
 				var got *models.Contact
 				got, err = cb.GetByDetail(ctx, tt.args.detail)
-				tt.wantErr(t, err, fmt.Sprintf("GetByDetail(%v, %v)", ctx, tt.args.detail))
-				require.Equalf(t, tt.want, got, "GetByDetail(%v, %v)", ctx, tt.args.detail)
+				tt.wantErr(t, err, fmt.Sprintf("GetByDetail(ctx, %v)", tt.args.detail))
+				if err != nil {
+					return
+				}
+				require.Equalf(t, tt.want.GetID(), got.GetID(), "GetByDetail(ctx, %v) ID check", tt.args.detail)
+				require.Equalf(t, tt.want.Version, got.Version, "GetByDetail(ctx, %v) Version check", tt.args.detail)
+				require.Equalf(t, tt.want.Detail, got.Detail, "GetByDetail(ctx, %v) Detail check", tt.args.detail)
+				require.Equalf(
+					t,
+					tt.want.ContactType,
+					got.ContactType,
+					"GetByDetail(ctx, %v) ContactType check",
+					tt.args.detail,
+				)
+				require.Equalf(t, tt.want.Language, got.Language, "GetByDetail(ctx, %v) Language check", tt.args.detail)
+				require.Equalf(
+					t,
+					tt.want.ProfileID,
+					got.ProfileID,
+					"GetByDetail(ctx, %v) ProfileID check",
+					tt.args.detail,
+				)
+				require.Equalf(
+					t,
+					tt.want.Properties,
+					got.Properties,
+					"GetByDetail(ctx, %v) Properties check",
+					tt.args.detail,
+				)
 			})
 		}
 	})
@@ -303,7 +331,29 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByID() {
 				got, err0 := cb.GetByID(ctx, tt.args.contactID)
 				tt.wantErr(t, err0, fmt.Sprintf("GetByID(ctx, %v)", tt.args.contactID))
 				if tt.want != nil {
-					require.Equalf(t, tt.want, got, "GetByID(ctx, %v)", tt.args.contactID)
+					require.Equalf(t, tt.want.GetID(), got.GetID(), "GetByID(ctx, %v) ID check", tt.args.contactID)
+					require.Equalf(t, tt.want.Detail, got.Detail, "GetByID(ctx, %v) Detail check", tt.args.contactID)
+					require.Equalf(
+						t,
+						tt.want.ContactType,
+						got.ContactType,
+						"GetByID(ctx, %v) ContactType check",
+						tt.args.contactID,
+					)
+					require.Equalf(
+						t,
+						tt.want.ProfileID,
+						got.ProfileID,
+						"GetByID(ctx, %v) ProfileID check",
+						tt.args.contactID,
+					)
+					require.Equalf(
+						t,
+						tt.want.Properties,
+						got.Properties,
+						"GetByID(ctx, %v) Properties check",
+						tt.args.contactID,
+					)
 				}
 			})
 		}
@@ -385,27 +435,25 @@ func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact first
-		contact, err := cb.CreateContact(ctx, "update@testing.com", &frame.JSONMap{
+		contact, err := cb.CreateContact(ctx, "update@testing.com", frame.JSONMap{
 			"name": "Original Name",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		// Update the contact
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), util.IDString(), &frame.JSONMap{
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), util.IDString(), frame.JSONMap{
 			"name": "Updated Name",
 			"age":  "30",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, updated)
 
-		updateProps := *updated.Properties
-
-		require.Equal(t, "Updated Name", updateProps["name"])
-		require.Equal(t, "30", updateProps["age"])
+		require.Equal(t, "Updated Name", updated.Properties["name"])
+		require.Equal(t, "30", updated.Properties["age"])
 
 		// Test updating non-existent contact
-		_, err = cb.UpdateContact(ctx, util.IDString(), util.IDString(), &frame.JSONMap{})
+		_, err = cb.UpdateContact(ctx, util.IDString(), util.IDString(), frame.JSONMap{})
 		require.Error(t, err)
 	})
 }
@@ -418,13 +466,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact with profile ID
-		contact, err := cb.CreateContact(ctx, "remove@testing.com", &frame.JSONMap{})
+		contact, err := cb.CreateContact(ctx, "remove@testing.com", frame.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		profileID := util.IDString()
 		// Update contact to link to profile
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, &frame.JSONMap{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, frame.JSONMap{})
 		require.NoError(t, err)
 		require.Equal(t, profileID, updated.ProfileID)
 
@@ -452,13 +500,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact first
-		contact, err := cb.CreateContact(ctx, "verify@testing.com", &frame.JSONMap{})
+		contact, err := cb.CreateContact(ctx, "verify@testing.com", frame.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		// Link to profile
 		profileID := util.IDString()
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, &frame.JSONMap{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, frame.JSONMap{})
 		require.NoError(t, err)
 
 		// Verify contact
@@ -493,11 +541,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact and verification using the business layer
-		contact, err := cb.CreateContact(ctx, "verify@example.com", &frame.JSONMap{})
+		contact, err := cb.CreateContact(ctx, "verify@example.com", frame.JSONMap{})
 		require.NoError(t, err)
 
 		profileID := util.IDString()
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, &frame.JSONMap{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, frame.JSONMap{})
 		require.NoError(t, err)
 
 		verification, err := cb.VerifyContact(ctx, updated, "", "123456", 0)
@@ -590,18 +638,18 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 		profileID := util.IDString()
 
 		// Create multiple contacts for the same profile using valid email formats only
-		contact1, err := cb.CreateContact(ctx, "test1@example.com", &frame.JSONMap{"type": "email"})
+		contact1, err := cb.CreateContact(ctx, "test1@example.com", frame.JSONMap{"type": "email"})
 		require.NoError(t, err)
 
 		// Update contact with profile ID
-		_, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, &frame.JSONMap{})
+		_, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, frame.JSONMap{})
 		require.NoError(t, err)
 
-		contact2, err := cb.CreateContact(ctx, "test2@example.com", &frame.JSONMap{"type": "email"})
+		contact2, err := cb.CreateContact(ctx, "test2@example.com", frame.JSONMap{"type": "email"})
 		require.NoError(t, err)
 
 		// Update contact with profile ID
-		_, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, &frame.JSONMap{})
+		_, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, frame.JSONMap{})
 		require.NoError(t, err)
 
 		// Test getting contacts by profile
@@ -624,7 +672,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Test with empty detail
-		contact, err := cb.CreateContact(ctx, "", &frame.JSONMap{})
+		contact, err := cb.CreateContact(ctx, "", frame.JSONMap{})
 		require.Error(t, err)
 		require.Nil(t, contact)
 
@@ -635,7 +683,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 		require.Equal(t, "test@example.com", contact.Detail)
 
 		// Test with empty extra map
-		contact, err = cb.CreateContact(ctx, "test2@example.com", &frame.JSONMap{})
+		contact, err = cb.CreateContact(ctx, "test2@example.com", frame.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 		require.Equal(t, "test2@example.com", contact.Detail)

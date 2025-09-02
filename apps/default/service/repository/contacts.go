@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/pitabwire/frame"
@@ -55,20 +56,25 @@ func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*m
 }
 
 func (cr *contactRepository) Save(ctx context.Context, contact *models.Contact) (*models.Contact, error) {
+	db := cr.service.DB(ctx, false)
+
 	if contact.ID == "" {
 		contact.GenID(ctx)
-		err := cr.service.DB(ctx, false).Model(contact).Create(frame.JSONMap{
-			"ID":                 contact.ID,
-			"ContactType":        contact.ContactType,
-			"CommunicationLevel": contact.CommunicationLevel,
-			"ProfileID":          contact.ProfileID,
-			"Detail":             contact.Detail,
-		}).Error
-		return contact, err
 	}
 
-	err := cr.service.DB(ctx, false).Save(contact).Error
-	return contact, err
+	if contact.Version == 0 {
+		// Create new contact
+		if err := db.Create(contact).Error; err != nil {
+			return nil, fmt.Errorf("failed to create contact: %w", err)
+		}
+	} else {
+		// Update existing contact
+		if err := db.Save(contact).Error; err != nil {
+			return nil, fmt.Errorf("failed to update contact: %w", err)
+		}
+	}
+
+	return contact, nil
 }
 
 func (cr *contactRepository) DelinkFromProfile(ctx context.Context, id, profileID string) (*models.Contact, error) {

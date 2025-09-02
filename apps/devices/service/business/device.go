@@ -158,7 +158,7 @@ func (b *deviceBusiness) SaveDevice(
 	name string,
 	data frame.JSONMap,
 ) (*devicev1.DeviceObject, error) {
-	sessionID := data["session_id"].(string)
+	sessionID := data.GetString("session_id")
 
 	_, err := b.LogDeviceActivity(ctx, id, sessionID, data)
 	if err != nil {

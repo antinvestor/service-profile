@@ -354,18 +354,18 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 			name     string
 			data     frame.JSONMap
 			geoIP    *queue.GeoIP
-			wantLat  string
-			wantLong string
+			wantLat  float64
+			wantLong float64
 		}{
 			{
 				name: "extract from data map",
 				data: frame.JSONMap{
-					"lat":  "40.7128",
-					"long": "-74.0060",
+					"lat":  40.7128,
+					"long": -74.0060,
 				},
 				geoIP:    nil,
-				wantLat:  "40.7128",
-				wantLong: "-74.0060",
+				wantLat:  40.7128,
+				wantLong: -74.006,
 			},
 			{
 				name: "extract from geoIP",
@@ -377,21 +377,21 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 					Latitude:  40.7128,
 					Longitude: -74.0060,
 				},
-				wantLat:  "40.712800",
-				wantLong: "-74.006000",
+				wantLat:  40.712800,
+				wantLong: -74.006,
 			},
 			{
 				name: "data overrides geoIP",
 				data: frame.JSONMap{
-					"lat":  "35.6762",
-					"long": "139.6503",
+					"lat":  35.6762,
+					"long": 139.6503,
 				},
 				geoIP: &queue.GeoIP{
 					Latitude:  40.7128,
 					Longitude: -74.0060,
 				},
-				wantLat:  "35.6762",
-				wantLong: "139.6503",
+				wantLat:  35.6762,
+				wantLong: 139.6503,
 			},
 		}
 
@@ -400,12 +400,8 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 				locationData := handler.ExtractLocationData(ctx, tc.data, tc.geoIP)
 				assert.NotNil(t, locationData)
 
-				if tc.wantLat != "" {
-					assert.Equal(t, tc.wantLat, locationData["latitude"])
-				}
-				if tc.wantLong != "" {
-					assert.Equal(t, tc.wantLong, locationData["longitude"])
-				}
+				assert.InDelta(t, tc.wantLat, locationData["latitude"], 0.0001)
+				assert.InDelta(t, tc.wantLong, locationData["longitude"], 0.0001)
 			})
 		}
 	})

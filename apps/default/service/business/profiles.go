@@ -3,7 +3,6 @@ package business
 import (
 	"context"
 	"errors"
-	"maps"
 	"strings"
 	"time"
 
@@ -204,8 +203,8 @@ func (pb *profileBusiness) UpdateProfile(
 	}
 
 	requestProperties := frame.JSONMap{}
-	requestProperties.FromProtoStruct(request.GetProperties())
-	profile.Properties.Update(&requestProperties)
+	requestProperties = requestProperties.FromProtoStruct(request.GetProperties())
+	profile.Properties = profile.Properties.Update(requestProperties)
 
 	err = pb.profileRepo.Save(ctx, profile)
 	if err != nil {
@@ -227,7 +226,8 @@ func (pb *profileBusiness) CreateProfile(
 	}
 
 	p := models.Profile{}
-	maps.Insert(p.Properties, maps.All(request.GetProperties().AsMap()))
+
+	p.Properties = request.GetProperties().AsMap()
 
 	var contact *models.Contact
 	_, err := ContactTypeFromDetail(ctx, contactDetail)
@@ -262,8 +262,7 @@ func (pb *profileBusiness) CreateProfile(
 	}
 
 	if contact == nil {
-		properties := frame.JSONMap{}
-		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, &properties)
+		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, frame.JSONMap{})
 		if err != nil {
 			return nil, err
 		}
@@ -374,9 +373,11 @@ func (pb *profileBusiness) CreateContact(
 	ctx context.Context,
 	request *profilev1.CreateContactRequest) (*profilev1.ContactObject, error) {
 	requestProperties := frame.JSONMap{}
-	requestProperties.FromProtoStruct(request.GetExtras())
-
-	contact, err := pb.contactBusiness.CreateContact(ctx, request.GetContact(), &requestProperties)
+	contact, err := pb.contactBusiness.CreateContact(
+		ctx,
+		request.GetContact(),
+		requestProperties.FromProtoStruct(request.GetExtras()),
+	)
 	if err != nil {
 		return nil, err
 	}

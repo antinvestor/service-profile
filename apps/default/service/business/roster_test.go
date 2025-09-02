@@ -72,7 +72,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 		roster := &models.Roster{
 			Contact:    contact,
 			ProfileID:  "profile123",
-			Properties: &frame.JSONMap{"key1": "value1"},
+			Properties: frame.JSONMap{"key1": "value1"},
 		}
 
 		result := roster.ToAPI()

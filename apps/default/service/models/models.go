@@ -74,7 +74,7 @@ type Contact struct {
 
 	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
 
-	Properties *frame.JSONMap
+	Properties frame.JSONMap
 
 	VerificationID string `gorm:"type:varchar(50)"`
 }
@@ -113,7 +113,7 @@ type Roster struct {
 	ContactID string `gorm:"type:varchar(50);uniqueIndex:roster_composite_index;"`
 	Contact   *Contact
 
-	Properties *frame.JSONMap
+	Properties frame.JSONMap
 }
 
 func (r *Roster) ToAPI() *profilev1.RosterObject {
@@ -167,7 +167,7 @@ type Address struct {
 	CountryID string `gorm:"type:varchar(50)"`
 	Country   *Country
 
-	Properties *frame.JSONMap
+	Properties frame.JSONMap
 }
 
 type ProfileAddress struct {
@@ -209,7 +209,7 @@ type Relationship struct {
 	RelationshipTypeID string `gorm:"type:varchar(50);index:relationship_type_id"`
 	RelationshipType   *RelationshipType
 
-	Properties *frame.JSONMap
+	Properties frame.JSONMap
 }
 
 func (r *Relationship) ToAPI() *profilev1.RelationshipObject {

@@ -29,12 +29,12 @@ type ContactBusiness interface {
 	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
 	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
-	CreateContact(ctx context.Context, detail string, extra *frame.JSONMap) (*models.Contact, error)
+	CreateContact(ctx context.Context, detail string, extra frame.JSONMap) (*models.Contact, error)
 	UpdateContact(
 		ctx context.Context,
 		contactID string,
 		profileID string,
-		extra *frame.JSONMap,
+		extra frame.JSONMap,
 	) (*models.Contact, error)
 	RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error)
 	VerifyContact(
@@ -113,7 +113,7 @@ func (cb *contactBusiness) UpdateContact(
 	ctx context.Context,
 	contactID string,
 	profileID string,
-	extra *frame.JSONMap,
+	extra frame.JSONMap,
 ) (*models.Contact, error) {
 	contact, err := cb.contactRepository.GetByID(ctx, contactID)
 	if err != nil {
@@ -131,7 +131,7 @@ func (cb *contactBusiness) UpdateContact(
 func (cb *contactBusiness) CreateContact(
 	ctx context.Context,
 	detail string,
-	extra *frame.JSONMap,
+	extra frame.JSONMap,
 ) (*models.Contact, error) {
 	detail = strings.ToLower(strings.TrimSpace(detail))
 

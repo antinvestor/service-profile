@@ -108,19 +108,13 @@ func (ds *DevicesServer) Create(ctx context.Context, req *devicev1.CreateRequest
 	deviceID := util.IDString()
 
 	// Add device name to properties if provided
-	properties := req.GetProperties().AsMap()
-	if properties == nil {
-		properties = frame.JSONMap{}
-	}
+	var properties frame.JSONMap = req.GetProperties().AsMap()
+
 	if req.GetName() != "" {
 		properties["device_name"] = req.GetName()
 	}
 
-	sessionID := ""
-	rawData, ok := properties["session_id"]
-	if ok {
-		sessionID = rawData.(string)
-	}
+	sessionID := properties.GetString("session_id")
 
 	// Log device activity to trigger device analysis and creation
 	_, err := ds.Biz.LogDeviceActivity(ctx, deviceID, sessionID, properties)
