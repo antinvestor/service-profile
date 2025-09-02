@@ -51,22 +51,21 @@ func (suite *DeviceRepositoryTestSuite) CreateService(
 	deviceConfig.RunServiceSecurely = false
 	deviceConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database(ctx) {
-		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
-		require.NoError(t, err0)
+	res := depOpts.ByIsDatabase(ctx)
+	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
+	require.NoError(t, err0)
 
-		t.Cleanup(func() {
-			cleanup(t.Context())
-		})
+	t.Cleanup(func() {
+		cleanup(t.Context())
+	})
 
-		deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
-		deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
-	}
+	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
+	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(t.Context(), "device tests",
 		frame.WithConfig(&deviceConfig),
 		frame.WithDatastore(),
-		frame.WithNoopDriver())
+		frametests.WithNoopDriver())
 
 	svc.Init(ctx)
 
@@ -160,7 +159,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 				assert.Equal(t, tc.os, retrievedDevice.OS)
 
 				// Retrieve by ProfileID
-				searchProperties := map[string]any{
+				searchProperties := frame.JSONMap{
 					"profile_id": tc.profileID,
 				}
 				q := framedata.NewSearchQuery("", searchProperties, 0, 50)
@@ -288,7 +287,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 				log := &models.DeviceLog{
 					DeviceID:        tc.deviceID,
 					DeviceSessionID: tc.sessionID,
-					Data:            frame.DBPropertiesFromMap(map[string]string{"action": "test"}),
+					Data:            frame.JSONMap{"action": "test"},
 				}
 
 				err := logRepo.Save(ctx, log)
@@ -307,7 +306,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 				assert.Equal(t, tc.sessionID, retrievedLog.DeviceSessionID)
 
 				// Retrieve by device ID
-				searchProperties := map[string]any{
+				searchProperties := frame.JSONMap{
 					"device_id": tc.deviceID,
 				}
 				q := framedata.NewSearchQuery("", searchProperties, 0, 50)
@@ -370,7 +369,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 				key := &models.DeviceKey{
 					DeviceID: tc.deviceID,
 					Key:      tc.key,
-					Extra:    frame.DBPropertiesFromMap(map[string]string{"type": "test"}),
+					Extra:    frame.JSONMap{"type": "test"},
 				}
 
 				err := keyRepo.Save(ctx, key)

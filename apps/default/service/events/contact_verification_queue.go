@@ -7,6 +7,7 @@ import (
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	"github.com/pitabwire/frame"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -80,10 +81,12 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		return errors.New("invalid service configuration")
 	}
 
-	variables := make(map[string]string)
+	variables := make(frame.JSONMap)
 	variables["verification_id"] = verification.GetID()
 	variables["code"] = verification.Code
 	variables["expiryDate"] = verification.ExpiresAt.String()
+
+	variablePayload, _ := structpb.NewStruct(variables)
 
 	recipient := &commonv1.ContactLink{
 		ProfileType: "Profile",
@@ -93,7 +96,7 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 
 	nMessages := &notificationv1.Notification{
 		Recipient: recipient,
-		Payload:   variables,
+		Payload:   variablePayload,
 		Language:  contact.Language,
 		Template:  profileConfig.MessageTemplateContactVerification,
 		OutBound:  true,

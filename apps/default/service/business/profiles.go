@@ -3,6 +3,7 @@ package business
 import (
 	"context"
 	"errors"
+	"maps"
 	"strings"
 	"time"
 
@@ -72,7 +73,7 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 	profileObject.Id = p.ID
 
 	profileObject.Type = models.ProfileTypeIDToEnum(p.ProfileType.UID)
-	profileObject.Properties = frame.DBPropertiesToMap(p.Properties)
+	profileObject.Properties = p.Properties.ToProtoStruct()
 
 	var contactObjects []*profilev1.ContactObject
 	contactList, err := pb.contactBusiness.GetByProfile(ctx, p.ID)
@@ -141,7 +142,7 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 		profileID, _ = claims.GetSubject()
 	}
 
-	searchProperties := map[string]any{
+	searchProperties := frame.JSONMap{
 		"profile_id": profileID,
 		"start_date": request.GetStartDate(),
 		"end_date":   request.GetEndDate(),
@@ -202,12 +203,9 @@ func (pb *profileBusiness) UpdateProfile(
 		return nil, err
 	}
 
-	properties := frame.DBPropertiesFromMap(request.GetProperties())
-	for key, value := range properties {
-		if value != profile.Properties[key] {
-			profile.Properties[key] = value
-		}
-	}
+	requestProperties := frame.JSONMap{}
+	requestProperties.FromProtoStruct(request.GetProperties())
+	profile.Properties.Update(&requestProperties)
 
 	err = pb.profileRepo.Save(ctx, profile)
 	if err != nil {
@@ -229,7 +227,7 @@ func (pb *profileBusiness) CreateProfile(
 	}
 
 	p := models.Profile{}
-	p.Properties = frame.DBPropertiesFromMap(request.GetProperties())
+	maps.Insert(p.Properties, maps.All(request.GetProperties().AsMap()))
 
 	var contact *models.Contact
 	_, err := ContactTypeFromDetail(ctx, contactDetail)
@@ -264,13 +262,14 @@ func (pb *profileBusiness) CreateProfile(
 	}
 
 	if contact == nil {
-		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, map[string]string{})
+		properties := frame.JSONMap{}
+		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, &properties)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	contact, err = pb.contactBusiness.UpdateContact(ctx, contact.GetID(), p.GetID(), map[string]string{})
+	contact, err = pb.contactBusiness.UpdateContact(ctx, contact.GetID(), p.GetID(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -278,9 +277,9 @@ func (pb *profileBusiness) CreateProfile(
 	return pb.GetByID(ctx, contact.ProfileID)
 }
 
-// func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params map[string]any) error {
+// func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params frame.JSONMap) error {
 //
-//	storedPropertiesMap := make(map[string]any)
+//	storedPropertiesMap := make(frame.JSONMap)
 //	attributeMap, err := p.PropertiesToSearchOn.MarshalJSON()
 //	if err != nil {
 //		return err
@@ -374,7 +373,10 @@ func (pb *profileBusiness) AddContact(
 func (pb *profileBusiness) CreateContact(
 	ctx context.Context,
 	request *profilev1.CreateContactRequest) (*profilev1.ContactObject, error) {
-	contact, err := pb.contactBusiness.CreateContact(ctx, request.GetContact(), request.GetExtras())
+	requestProperties := frame.JSONMap{}
+	requestProperties.FromProtoStruct(request.GetExtras())
+
+	contact, err := pb.contactBusiness.CreateContact(ctx, request.GetContact(), &requestProperties)
 	if err != nil {
 		return nil, err
 	}

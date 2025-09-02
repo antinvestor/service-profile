@@ -119,6 +119,8 @@ func (rb *relationshipBusiness) CreateRelationship(
 		return nil, err
 	}
 
+	requestProperties := frame.JSONMap{}
+
 	relationship := models.Relationship{
 		ParentObject:       request.GetParent(),
 		ParentObjectID:     request.GetParentId(),
@@ -126,7 +128,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 		RelationshipType:   relationshipType,
 		ChildObject:        request.GetChild(),
 		ChildObjectID:      request.GetChildId(),
-		Properties:         frame.DBPropertiesFromMap(request.GetProperties()),
+		Properties:         requestProperties.FromProtoStruct(request.GetProperties()),
 	}
 	relationship.GenID(ctx)
 	if relationship.ValidXID(request.GetId()) {

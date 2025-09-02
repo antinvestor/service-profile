@@ -116,14 +116,14 @@ func (suite *HandlersTestSuite) TestDevicesServer_Create() {
 		name        string
 		linkID      string
 		deviceName  string
-		data        map[string]string
+		data        frame.JSONMap
 		expectError bool
 	}{
 		{
 			name:       "create device successfully",
 			linkID:     "test-link-123",
 			deviceName: "Test Device",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"os":         "Linux",
 				"user_agent": "Test Agent",
 				"session_id": "test-session",
@@ -135,7 +135,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Create() {
 			name:       "create device with empty name",
 			linkID:     "test-link-456",
 			deviceName: "",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"session_id": "test-session-2",
 				"ip":         "127.0.0.1",
 			},
@@ -153,7 +153,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Create() {
 			suite.Run(tc.name, func() {
 				req := &devicev1.CreateRequest{
 					Name:       tc.deviceName,
-					Properties: tc.data,
+					Properties: tc.data.ToProtoStruct(),
 				}
 
 				resp, err := server.Create(ctx, req)
@@ -180,14 +180,14 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 		setupDevice bool
 		deviceID    string
 		sessionID   string
-		data        map[string]string
+		data        frame.JSONMap
 		expectError bool
 	}{
 		{
 			name:        "log device activity successfully",
 			setupDevice: true,
 			sessionID:   "test-session",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"action": "page_view",
 				"url":    "https://example.com",
 			},
@@ -197,7 +197,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 			name:        "log with empty data",
 			setupDevice: true,
 			sessionID:   "test-session-2",
-			data:        map[string]string{},
+			data:        frame.JSONMap{},
 			expectError: false,
 		},
 		{
@@ -205,7 +205,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 			setupDevice: false,
 			deviceID:    "",
 			sessionID:   "test-session-3",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"action": "login",
 			},
 			expectError: false, // Current implementation allows empty device ID
@@ -215,7 +215,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 			setupDevice: false,
 			deviceID:    "non-existent-device-123",
 			sessionID:   "test-session-4",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"action": "logout",
 			},
 			expectError: false, // Current implementation doesn't validate device existence
@@ -249,7 +249,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 				req := &devicev1.LogRequest{
 					DeviceId:  deviceID,
 					SessionId: tc.sessionID,
-					Extras:    tc.data,
+					Extras:    tc.data.ToProtoStruct(),
 				}
 
 				resp, err := server.Log(ctx, req)
@@ -272,14 +272,14 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 		name        string
 		deviceID    string
 		sessionID   string
-		data        map[string]string
+		data        frame.JSONMap
 		expectError bool
 	}{
 		{
 			name:      "log device activity successfully",
 			deviceID:  "",
 			sessionID: "test-session",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"action": "page_view",
 				"url":    "https://example.com",
 			},
@@ -289,14 +289,14 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 			name:        "log with error data",
 			deviceID:    "h",
 			sessionID:   "test-session-2",
-			data:        map[string]string{},
+			data:        frame.JSONMap{},
 			expectError: true,
 		},
 		{
 			name:      "log with empty device ID",
 			deviceID:  "hellow",
 			sessionID: "test-session-3",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"action": "login",
 			},
 			expectError: false, // Current implementation allows empty device ID
@@ -305,7 +305,7 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 			name:      "log with very long device ID",
 			deviceID:  "fasodeifwqoiejfpasdjfoiasdjfoisjdfljksjdflaksdjfosidjfsoidjfsoidjfoasdfasdfasdfsa",
 			sessionID: "test-session-4",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"action": "logout",
 			},
 			expectError: true, // Current implementation doesn't validate device existence
@@ -319,7 +319,7 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 			req := &devicev1.LogRequest{
 				DeviceId:  tc.deviceID,
 				SessionId: tc.sessionID,
-				Extras:    tc.data,
+				Extras:    tc.data.ToProtoStruct(),
 			}
 
 			err = validator.Validate(req)
@@ -381,11 +381,13 @@ func (suite *HandlersTestSuite) TestDevicesServer_AddKey() {
 					deviceID = "non-existent-device"
 				}
 
+				extras := frame.JSONMap{"test": "data"}
+
 				req := &devicev1.AddKeyRequest{
 					DeviceId: deviceID,
 					KeyType:  tc.keyType,
 					Data:     tc.keyData,
-					Extras:   map[string]string{"test": "data"},
+					Extras:   extras.ToProtoStruct(),
 				}
 
 				resp, err := server.AddKey(ctx, req)

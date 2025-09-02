@@ -2,6 +2,7 @@ package queue
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -21,7 +22,13 @@ type DeviceAnalysisQueueHandler struct {
 	Service             *frame.Service
 }
 
-func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, idPayload map[string]string, _ []byte) error {
+func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]string, payload []byte) error {
+	var idPayload map[string]string
+	err := json.Unmarshal(payload, &idPayload)
+	if err != nil {
+		return err
+	}
+
 	deviceLogID := idPayload["id"]
 	if deviceLogID == "" {
 		dq.Service.Log(ctx).WithField("payload", idPayload).Warn("no device log id found in payload")
@@ -111,33 +118,41 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 	ctx context.Context,
 	deviceLog *models.DeviceLog,
 ) (*models.DeviceSession, error) {
-	data := frame.DBPropertiesToMap(deviceLog.Data)
+	data := deviceLog.Data
 
 	sess := &models.DeviceSession{
-		DeviceID:  deviceLog.DeviceID,
-		UserAgent: data["userAgent"],
-		IP:        data["ip"],
-		LastSeen:  deviceLog.CreatedAt,
+		DeviceID: deviceLog.DeviceID,
+		LastSeen: deviceLog.CreatedAt,
 	}
 	sess.GenID(ctx)
 
-	geoIP, _ := QueryIPGeo(ctx, dq.Service, data["ip"])
-
-	locale, err0 := dq.ExtractLocaleData(ctx, data, geoIP)
-	if err0 != nil {
-		return nil, err0
+	anyData, ok := data["userAgent"]
+	if ok {
+		sess.UserAgent, _ = anyData.(string)
 	}
 
-	localeBytes, err := protojson.Marshal(locale)
-	if err != nil {
-		return nil, err
+	anyData, ok = data["ip"]
+	if ok {
+		sess.IP, _ = anyData.(string)
+
+		geoIP, _ := QueryIPGeo(ctx, dq.Service, sess.IP)
+
+		locale, err0 := dq.ExtractLocaleData(ctx, data, geoIP)
+		if err0 != nil {
+			return nil, err0
+		}
+
+		localeBytes, err := protojson.Marshal(locale)
+		if err != nil {
+			return nil, err
+		}
+
+		sess.Locale = localeBytes
+
+		sess.Location = dq.ExtractLocationData(ctx, data, geoIP)
 	}
 
-	sess.Locale = localeBytes
-
-	sess.Location = dq.ExtractLocationData(ctx, data, geoIP)
-
-	err = dq.SessionRepository.Save(ctx, sess)
+	err := dq.SessionRepository.Save(ctx, sess)
 	if err != nil {
 		return nil, err
 	}
@@ -147,34 +162,49 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 
 func (dq *DeviceAnalysisQueueHandler) ExtractLocaleData(
 	_ context.Context,
-	data map[string]string,
+	data frame.JSONMap,
 	geoIP *GeoIP,
 ) (*devicev1.Locale, error) {
-	var ok bool
 	locale := devicev1.Locale{}
-	locale.Timezone, ok = data["tz"]
+	rawDat, ok := data["tz"]
+	if ok {
+		locale.Timezone = rawDat.(string)
+	}
 	if !ok && geoIP != nil {
 		locale.Timezone = geoIP.Timezone
 	}
 
-	languages, ok := data["lang"]
+	var languages string
+	rawDat, ok = data["lang"]
+	if ok {
+		languages = rawDat.(string)
+	}
 	if !ok && geoIP != nil {
 		languages = geoIP.Languages
 	}
 
 	locale.Language = strings.Split(languages, ",")
 
-	locale.Currency, ok = data["cur"]
+	rawDat, ok = data["cur"]
+	if ok {
+		locale.Currency = rawDat.(string)
+	}
 	if !ok && geoIP != nil {
 		locale.Currency = geoIP.Currency
 	}
 
-	locale.CurrencyName, ok = data["curNm"]
+	rawDat, ok = data["curNm"]
+	if ok {
+		locale.CurrencyName = rawDat.(string)
+	}
 	if !ok && geoIP != nil {
 		locale.CurrencyName = geoIP.CurrencyName
 	}
 
-	locale.Code, ok = data["code"]
+	rawDat, ok = data["code"]
+	if ok {
+		locale.Code = rawDat.(string)
+	}
 	if !ok && geoIP != nil {
 		locale.Code = geoIP.CountryCallingCode
 	}
@@ -184,10 +214,10 @@ func (dq *DeviceAnalysisQueueHandler) ExtractLocaleData(
 
 func (dq *DeviceAnalysisQueueHandler) ExtractLocationData(
 	_ context.Context,
-	data map[string]string,
+	data frame.JSONMap,
 	geoIP *GeoIP,
 ) frame.JSONMap {
-	locationData := map[string]string{}
+	locationData := frame.JSONMap{}
 
 	if geoIP != nil {
 		locationData["country"] = geoIP.Country
@@ -197,15 +227,15 @@ func (dq *DeviceAnalysisQueueHandler) ExtractLocationData(
 		locationData["longitude"] = fmt.Sprintf("%f", geoIP.Longitude)
 	}
 
-	latitude, ok := data["lat"]
+	rawData, ok := data["lat"]
 	if ok {
-		locationData["latitude"] = latitude
+		locationData["latitude"] = rawData
 	}
 
-	longitude, ok := data["long"]
+	rawData, ok = data["long"]
 	if ok {
-		locationData["longitude"] = longitude
+		locationData["longitude"] = rawData
 	}
 
-	return frame.DBPropertiesFromMap(locationData)
+	return locationData
 }

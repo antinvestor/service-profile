@@ -29,12 +29,12 @@ type ContactBusiness interface {
 	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
 	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
-	CreateContact(ctx context.Context, detail string, extra map[string]string) (*models.Contact, error)
+	CreateContact(ctx context.Context, detail string, extra *frame.JSONMap) (*models.Contact, error)
 	UpdateContact(
 		ctx context.Context,
 		contactID string,
 		profileID string,
-		extra map[string]string,
+		extra *frame.JSONMap,
 	) (*models.Contact, error)
 	RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error)
 	VerifyContact(
@@ -113,7 +113,7 @@ func (cb *contactBusiness) UpdateContact(
 	ctx context.Context,
 	contactID string,
 	profileID string,
-	extra map[string]string,
+	extra *frame.JSONMap,
 ) (*models.Contact, error) {
 	contact, err := cb.contactRepository.GetByID(ctx, contactID)
 	if err != nil {
@@ -123,17 +123,7 @@ func (cb *contactBusiness) UpdateContact(
 		contact.ProfileID = profileID
 	}
 
-	// Initialize Properties map if nil to prevent panic
-	if contact.Properties == nil {
-		contact.Properties = make(map[string]interface{})
-	}
-
-	properties := frame.DBPropertiesFromMap(extra)
-	for key, value := range properties {
-		if value != contact.Properties[key] {
-			contact.Properties[key] = value
-		}
-	}
+	contact.Properties = contact.Properties.Update(extra)
 
 	return cb.contactRepository.Save(ctx, contact)
 }
@@ -141,7 +131,7 @@ func (cb *contactBusiness) UpdateContact(
 func (cb *contactBusiness) CreateContact(
 	ctx context.Context,
 	detail string,
-	extra map[string]string,
+	extra *frame.JSONMap,
 ) (*models.Contact, error) {
 	detail = strings.ToLower(strings.TrimSpace(detail))
 
@@ -164,9 +154,7 @@ func (cb *contactBusiness) CreateContact(
 		ContactType: contactType,
 	}
 
-	if extra != nil {
-		contact.Properties = frame.DBPropertiesFromMap(extra)
-	}
+	contact.Properties = contact.Properties.Update(extra)
 
 	contact, err = cb.contactRepository.Save(ctx, contact)
 	if err != nil {

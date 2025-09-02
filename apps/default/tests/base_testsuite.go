@@ -60,22 +60,21 @@ func (bs *BaseTestSuite) CreateService(
 	profileConfig.RunServiceSecurely = false
 	profileConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database(ctx) {
-		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
-		require.NoError(t, err0)
+	res := depOpts.ByIsDatabase(ctx)
+	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
+	require.NoError(t, err0)
 
-		t.Cleanup(func() {
-			cleanup(t.Context())
-		})
+	t.Cleanup(func() {
+		cleanup(t.Context())
+	})
 
-		profileConfig.DatabasePrimaryURL = []string{testDS.String()}
-		profileConfig.DatabaseReplicaURL = []string{testDS.String()}
-	}
+	profileConfig.DatabasePrimaryURL = []string{testDS.String()}
+	profileConfig.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(t.Context(), "profile tests",
 		frame.WithConfig(&profileConfig),
 		frame.WithDatastore(),
-		frame.WithNoopDriver())
+		frametests.WithNoopDriver())
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		profileConfig.QueueRelationshipConnectName,

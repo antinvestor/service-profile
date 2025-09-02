@@ -48,22 +48,21 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	deviceConfig.RunServiceSecurely = false
 	deviceConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database(ctx) {
-		testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
-		require.NoError(t, err0)
+	res := depOpts.ByIsDatabase(ctx)
+	testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
+	require.NoError(t, err0)
 
-		t.Cleanup(func() {
-			cleanup(ctx)
-		})
+	t.Cleanup(func() {
+		cleanup(ctx)
+	})
 
-		deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
-		deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
-	}
+	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
+	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
 		frame.WithConfig(&deviceConfig),
 		frame.WithDatastore(),
-		frame.WithNoopDriver())
+		frametests.WithNoopDriver())
 
 	verificationQueueHandler := queue.DeviceAnalysisQueueHandler{
 		Service:          svc,

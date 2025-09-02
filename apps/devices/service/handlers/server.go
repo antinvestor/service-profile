@@ -108,16 +108,22 @@ func (ds *DevicesServer) Create(ctx context.Context, req *devicev1.CreateRequest
 	deviceID := util.IDString()
 
 	// Add device name to properties if provided
-	properties := req.GetProperties()
+	properties := req.GetProperties().AsMap()
 	if properties == nil {
-		properties = make(map[string]string)
+		properties = frame.JSONMap{}
 	}
 	if req.GetName() != "" {
 		properties["device_name"] = req.GetName()
 	}
 
+	sessionID := ""
+	rawData, ok := properties["session_id"]
+	if ok {
+		sessionID = rawData.(string)
+	}
+
 	// Log device activity to trigger device analysis and creation
-	_, err := ds.Biz.LogDeviceActivity(ctx, deviceID, properties["session_id"], properties)
+	_, err := ds.Biz.LogDeviceActivity(ctx, deviceID, sessionID, properties)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to log device activity: %v", err)
 	}
@@ -134,7 +140,7 @@ func (ds *DevicesServer) Create(ctx context.Context, req *devicev1.CreateRequest
 
 func (ds *DevicesServer) Update(ctx context.Context, req *devicev1.UpdateRequest) (*devicev1.UpdateResponse, error) {
 	device, err := ds.Biz.SaveDevice(
-		ctx, req.GetId(), req.GetName(), req.GetProperties(),
+		ctx, req.GetId(), req.GetName(), req.GetProperties().AsMap(),
 	)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to update device: %v", err)
@@ -147,7 +153,7 @@ func (ds *DevicesServer) Update(ctx context.Context, req *devicev1.UpdateRequest
 
 func (ds *DevicesServer) Link(ctx context.Context, req *devicev1.LinkRequest) (*devicev1.LinkResponse, error) {
 	device, err := ds.Biz.LinkDeviceToProfile(
-		ctx, req.GetId(), req.GetProfileId(), req.GetProperties(),
+		ctx, req.GetId(), req.GetProfileId(), req.GetProperties().AsMap(),
 	)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "failed to link session: %v", err)
@@ -175,7 +181,7 @@ func (ds *DevicesServer) Remove(ctx context.Context, req *devicev1.RemoveRequest
 }
 
 func (ds *DevicesServer) Log(ctx context.Context, req *devicev1.LogRequest) (*devicev1.LogResponse, error) {
-	data := req.GetExtras()
+	data := req.GetExtras().AsMap()
 
 	data["ip"] = GetClientIP(ctx)
 	deviceLog, err := ds.Biz.LogDeviceActivity(ctx, req.GetDeviceId(), req.GetSessionId(), data)
@@ -216,7 +222,7 @@ func (ds *DevicesServer) ListLogs(req *devicev1.ListLogsRequest, stream devicev1
 }
 
 func (ds *DevicesServer) AddKey(ctx context.Context, req *devicev1.AddKeyRequest) (*devicev1.AddKeyResponse, error) {
-	deviceKey, err := ds.Biz.AddKey(ctx, req.GetDeviceId(), req.GetKeyType(), req.GetData(), req.GetExtras())
+	deviceKey, err := ds.Biz.AddKey(ctx, req.GetDeviceId(), req.GetKeyType(), req.GetData(), req.GetExtras().AsMap())
 	if err != nil {
 		return nil, err
 	}

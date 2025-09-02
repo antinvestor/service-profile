@@ -54,22 +54,21 @@ func (suite *DeviceBusinessTestSuite) CreateService(
 	deviceConfig.RunServiceSecurely = false
 	deviceConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database(ctx) {
-		testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
-		require.NoError(t, err0)
+	res := depOpts.ByIsDatabase(ctx)
+	testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
+	require.NoError(t, err0)
 
-		t.Cleanup(func() {
-			cleanup(ctx)
-		})
+	t.Cleanup(func() {
+		cleanup(ctx)
+	})
 
-		deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
-		deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
-	}
+	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
+	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
 		frame.WithConfig(&deviceConfig),
 		frame.WithDatastore(),
-		frame.WithNoopDriver())
+		frametests.WithNoopDriver())
 
 	svc.Init(ctx)
 
@@ -174,14 +173,18 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 		name        string
 		id          string
 		deviceName  string
-		data        map[string]string
+		data        frame.JSONMap
 		expectError bool
 		expectNil   bool
 	},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
-		sessionID := tc.data["session_id"]
+		sessionID := ""
+		rawDat, ok := tc.data["session_id"]
+		if ok {
+			sessionID = rawDat.(string)
+		}
 		err := suite.createTestDeviceWithSession(ctx, svc, tc.id, sessionID)
 		require.NoError(t, err)
 	}
@@ -206,7 +209,11 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	}
 
 	// Verify activity logging only for successful cases with valid device ID
-	sessionID := tc.data["session_id"]
+	sessionID := ""
+	rawDat, ok := tc.data["session_id"]
+	if ok {
+		sessionID = rawDat.(string)
+	}
 	if !tc.expectError && tc.id != "" && sessionID != "" {
 		err = suite.verifyDeviceActivityLogged(ctx, biz, tc.id, sessionID)
 		assert.NoError(t, err)
@@ -219,7 +226,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 		name        string
 		id          string
 		deviceName  string
-		data        map[string]string
+		data        frame.JSONMap
 		expectError bool
 		expectNil   bool
 	}{
@@ -227,7 +234,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 			name:       "save device with existing ID",
 			id:         "existing-device-id",
 			deviceName: "Test Device",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"profile_id": "profile-123",
 				"os":         "Linux",
 				"user_agent": "Mozilla/5.0",
@@ -241,7 +248,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 			name:       "save device with empty ID returns error",
 			id:         "",
 			deviceName: "Test Device",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"profile_id": "profile-456",
 				"os":         "Windows",
 				"session_id": "test-session-2",
@@ -253,7 +260,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 			name:       "save device with empty ID and session logs activity but returns error",
 			id:         "",
 			deviceName: "Minimal Device",
-			data: map[string]string{
+			data: frame.JSONMap{
 				"profile_id": "profile-789",
 				"session_id": "test-session-3",
 			},
@@ -422,13 +429,13 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 		setupDevice bool
 		deviceID    string
 		sessionID   string
-		data        map[string]string
+		data        frame.JSONMap
 		expectError bool
 	}{
 		{
 			name:        "valid activity log",
 			setupDevice: true,
-			data: map[string]string{
+			data: frame.JSONMap{
 				"action": "login",
 				"result": "success",
 			},
@@ -437,7 +444,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 		{
 			name:        "empty data",
 			setupDevice: true,
-			data:        map[string]string{},
+			data:        frame.JSONMap{},
 			expectError: false,
 		},
 	}
@@ -499,7 +506,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 		deviceID    string
 		keyType     devicev1.KeyType
 		key         []byte
-		extra       map[string]string
+		extra       frame.JSONMap
 		expectError bool
 	}{
 		{
@@ -507,7 +514,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 			setupDevice: true,
 			keyType:     devicev1.KeyType_MATRIX_KEY,
 			key:         []byte("test-encryption-key"),
-			extra: map[string]string{
+			extra: frame.JSONMap{
 				"algorithm": "AES256",
 			},
 			expectError: false,
@@ -517,7 +524,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 			setupDevice: true,
 			keyType:     devicev1.KeyType_NOTIFICATION_KEY,
 			key:         []byte("test-signing-key"),
-			extra:       map[string]string{},
+			extra:       frame.JSONMap{},
 			expectError: false,
 		},
 	}
@@ -959,7 +966,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithKeys(
 	var keyIDs []string
 	for i := range keyCount {
 		keyResult, keyErr := biz.AddKey(ctx, deviceID, devicev1.KeyType_MATRIX_KEY,
-			[]byte(fmt.Sprintf("test-key-data-%d", i)), map[string]string{
+			[]byte(fmt.Sprintf("test-key-data-%d", i)), frame.JSONMap{
 				"index": strconv.Itoa(i),
 			})
 		if keyErr != nil {
@@ -1053,7 +1060,7 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 					sessionID = tc.sessionID
 				}
 
-				linkedDevice, err := biz.LinkDeviceToProfile(ctx, sessionID, tc.profileID, map[string]string{
+				linkedDevice, err := biz.LinkDeviceToProfile(ctx, sessionID, tc.profileID, frame.JSONMap{
 					"link_reason": "test",
 				})
 
@@ -1134,7 +1141,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceForLogs(
 
 	deviceID := device.GetID()
 	if addLog {
-		_, logErr := biz.LogDeviceActivity(ctx, deviceID, "test-session-10", map[string]string{
+		_, logErr := biz.LogDeviceActivity(ctx, deviceID, "test-session-10", frame.JSONMap{
 			"action": "test_action",
 		})
 		if logErr != nil {
@@ -1182,7 +1189,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithKey(
 
 	deviceID := device.GetID()
 	if addKey {
-		_, keyErr := biz.AddKey(ctx, deviceID, keyType, []byte("test-key-data"), map[string]string{
+		_, keyErr := biz.AddKey(ctx, deviceID, keyType, []byte("test-key-data"), frame.JSONMap{
 			"test": "data",
 		})
 		if keyErr != nil {

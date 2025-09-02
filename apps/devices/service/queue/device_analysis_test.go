@@ -67,22 +67,21 @@ func (suite *QueueTestSuite) CreateService(
 	deviceConfig.RunServiceSecurely = false
 	deviceConfig.ServerPort = ""
 
-	for _, res := range depOpts.Database(ctx) {
-		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
-		require.NoError(t, err0)
+	res := depOpts.ByIsDatabase(ctx)
+	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
+	require.NoError(t, err0)
 
-		t.Cleanup(func() {
-			cleanup(ctx)
-		})
+	t.Cleanup(func() {
+		cleanup(ctx)
+	})
 
-		deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
-		deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
-	}
+	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
+	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
 		frame.WithConfig(&deviceConfig),
 		frame.WithDatastore(),
-		frame.WithNoopDriver())
+		frametests.WithNoopDriver())
 
 	// Skip queue initialization for basic functionality tests
 	// This allows us to test the core logic without queue dependencies
@@ -134,11 +133,11 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 		deviceLog := &models.DeviceLog{
 			DeviceID:        device.ID,
 			DeviceSessionID: session.ID,
-			Data: frame.DBPropertiesFromMap(map[string]string{
+			Data: frame.JSONMap{
 				"action":    "page_view",
 				"userAgent": session.UserAgent,
 				"ip":        session.IP,
-			}),
+			},
 		}
 		deviceLog.GenID(ctx)
 		err = logRepo.Save(ctx, deviceLog)
@@ -147,26 +146,26 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 		// Test cases
 		testCases := []struct {
 			name        string
-			payload     map[string]string
+			payload     frame.JSONMap
 			expectError bool
 		}{
 			{
 				name: "handle_valid_device_log",
-				payload: map[string]string{
+				payload: frame.JSONMap{
 					"id": deviceLog.ID,
 				},
 				expectError: false,
 			},
 			{
 				name: "handle_non-existent_log",
-				payload: map[string]string{
+				payload: frame.JSONMap{
 					"id": "non-existent-log",
 				},
 				expectError: false, // Handler should handle gracefully
 			},
 			{
 				name: "handle_empty_log_ID",
-				payload: map[string]string{
+				payload: frame.JSONMap{
 					"id": "",
 				},
 				expectError: false, // Handler should handle gracefully
@@ -177,7 +176,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 			t.Run(tc.name, func(t *testing.T) {
 				// Convert payload to expected format
 				payloadBytes, _ := json.Marshal(tc.payload)
-				handleErr := handler.Handle(ctx, tc.payload, payloadBytes)
+				handleErr := handler.Handle(ctx, nil, payloadBytes)
 				if tc.expectError {
 					assert.Error(t, handleErr)
 				} else {
@@ -217,13 +216,13 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateSessionFromLog
 		// Create a device log with session data
 		deviceLog := &models.DeviceLog{
 			DeviceID: device.ID,
-			Data: frame.DBPropertiesFromMap(map[string]string{
+			Data: frame.JSONMap{
 				"userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
 				"ip":        "192.168.1.1",
 				"tz":        "UTC",
 				"lang":      "en-US",
 				"cur":       "USD",
-			}),
+			},
 		}
 		deviceLog.GenID(ctx)
 
@@ -284,14 +283,14 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 
 		testCases := []struct {
 			name    string
-			data    map[string]string
+			data    frame.JSONMap
 			geoIP   *queue.GeoIP
 			wantTz  string
 			wantCur string
 		}{
 			{
 				name: "extract from data map",
-				data: map[string]string{
+				data: frame.JSONMap{
 					"tz":    "America/New_York",
 					"lang":  "en-US,en",
 					"cur":   "USD",
@@ -304,7 +303,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 			},
 			{
 				name: "extract from geoIP fallback",
-				data: map[string]string{},
+				data: frame.JSONMap{},
 				geoIP: &queue.GeoIP{
 					Timezone:           "Europe/London",
 					Languages:          "en-GB,en",
@@ -317,7 +316,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 			},
 			{
 				name: "data overrides geoIP",
-				data: map[string]string{
+				data: frame.JSONMap{
 					"tz":  "Asia/Tokyo",
 					"cur": "JPY",
 				},
@@ -353,14 +352,14 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 
 		testCases := []struct {
 			name     string
-			data     map[string]string
+			data     frame.JSONMap
 			geoIP    *queue.GeoIP
 			wantLat  string
 			wantLong string
 		}{
 			{
 				name: "extract from data map",
-				data: map[string]string{
+				data: frame.JSONMap{
 					"lat":  "40.7128",
 					"long": "-74.0060",
 				},
@@ -370,7 +369,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 			},
 			{
 				name: "extract from geoIP",
-				data: map[string]string{},
+				data: frame.JSONMap{},
 				geoIP: &queue.GeoIP{
 					Country:   "United States",
 					Region:    "New York",
@@ -383,7 +382,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 			},
 			{
 				name: "data overrides geoIP",
-				data: map[string]string{
+				data: frame.JSONMap{
 					"lat":  "35.6762",
 					"long": "139.6503",
 				},
@@ -401,12 +400,11 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 				locationData := handler.ExtractLocationData(ctx, tc.data, tc.geoIP)
 				assert.NotNil(t, locationData)
 
-				locationMap := frame.DBPropertiesToMap(locationData)
 				if tc.wantLat != "" {
-					assert.Equal(t, tc.wantLat, locationMap["latitude"])
+					assert.Equal(t, tc.wantLat, locationData["latitude"])
 				}
 				if tc.wantLong != "" {
-					assert.Equal(t, tc.wantLong, locationMap["longitude"])
+					assert.Equal(t, tc.wantLong, locationData["longitude"])
 				}
 			})
 		}

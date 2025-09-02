@@ -28,13 +28,13 @@ func (rts *RosterTestSuite) createRoster(
 	ctx context.Context,
 	rb business.RosterBusiness,
 	profileID string,
-	contacts map[string]map[string]string,
+	contacts map[string]frame.JSONMap,
 ) (map[string]*profilev1.RosterObject, error) {
 	var requestData []*profilev1.AddContactRequest
 	for detail, extra := range contacts {
 		requestData = append(requestData, &profilev1.AddContactRequest{
 			Contact: detail,
-			Extras:  extra,
+			Extras:  extra.ToProtoStruct(),
 		})
 	}
 
@@ -72,7 +72,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 		roster := &models.Roster{
 			Contact:    contact,
 			ProfileID:  "profile123",
-			Properties: map[string]interface{}{"key1": "value1"},
+			Properties: &frame.JSONMap{"key1": "value1"},
 		}
 
 		result := roster.ToAPI()
@@ -87,7 +87,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
-		rosterMap, err := rts.createRoster(ctx, rb, "profile123", map[string]map[string]string{
+		rosterMap, err := rts.createRoster(ctx, rb, "profile123", map[string]frame.JSONMap{
 			"roster@test.com": {"key1": "value1"},
 		})
 		require.NoError(t, err)
@@ -115,7 +115,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
-		rosterMap, err := rts.createRoster(ctx, rb, "profRemov123", map[string]map[string]string{
+		rosterMap, err := rts.createRoster(ctx, rb, "profRemov123", map[string]frame.JSONMap{
 			"rosterremove@test.com": {"key1": "value1"},
 		})
 		require.NoError(t, err)
@@ -161,7 +161,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 
 		profileID := "searchProfileC1"
 
-		_, err := rts.createRoster(ctx, rb, profileID, map[string]map[string]string{
+		_, err := rts.createRoster(ctx, rb, profileID, map[string]frame.JSONMap{
 			"rostersearch@test.com":        {"name": "John Osogo", "age": "33"},
 			"searchrostercontact@test.com": {"name": "Thomas Balindhe", "age": "36"},
 			"+256755718293":                {"name": "Mary Osogo", "age": "21"},

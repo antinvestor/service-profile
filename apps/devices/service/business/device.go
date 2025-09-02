@@ -25,12 +25,12 @@ type DeviceBusiness interface {
 		ctx context.Context,
 		query *devicev1.SearchRequest,
 	) (frame.JobResultPipe[[]*devicev1.DeviceObject], error)
-	SaveDevice(ctx context.Context, id string, name string, data map[string]string) (*devicev1.DeviceObject, error)
+	SaveDevice(ctx context.Context, id string, name string, data frame.JSONMap) (*devicev1.DeviceObject, error)
 	LinkDeviceToProfile(
 		ctx context.Context,
 		sessionID string,
 		profileID string,
-		data map[string]string,
+		data frame.JSONMap,
 	) (*devicev1.DeviceObject, error)
 	RemoveDevice(ctx context.Context, id string) error
 
@@ -39,7 +39,7 @@ type DeviceBusiness interface {
 		deviceID string,
 		_ devicev1.KeyType,
 		key []byte,
-		extra map[string]string,
+		extra frame.JSONMap,
 	) (*devicev1.KeyObject, error)
 	GetKeys(
 		ctx context.Context,
@@ -51,7 +51,7 @@ type DeviceBusiness interface {
 	LogDeviceActivity(
 		ctx context.Context,
 		deviceID, sessionID string,
-		data map[string]string,
+		data frame.JSONMap,
 	) (*devicev1.DeviceLog, error)
 	GetDeviceLogs(ctx context.Context, deviceID string) (frame.JobResultPipe[[]*devicev1.DeviceLog], error)
 }
@@ -81,12 +81,12 @@ func NewDeviceBusiness(_ context.Context, service *frame.Service) DeviceBusiness
 func (b *deviceBusiness) LogDeviceActivity(
 	ctx context.Context,
 	deviceID, sessionID string,
-	extra map[string]string,
+	extra frame.JSONMap,
 ) (*devicev1.DeviceLog, error) {
 	log := &models.DeviceLog{
 		DeviceID:        deviceID,
 		DeviceSessionID: sessionID,
-		Data:            frame.DBPropertiesFromMap(extra),
+		Data:            extra,
 	}
 
 	log.GenID(ctx)
@@ -97,7 +97,7 @@ func (b *deviceBusiness) LogDeviceActivity(
 
 	// Publish to queue for further analysis
 	if b.cfg.QueueDeviceAnalysisName != "" {
-		payload := map[string]string{"id": log.GetID()}
+		payload := frame.JSONMap{"id": log.GetID()}
 		_ = b.service.Publish(ctx, b.cfg.QueueDeviceAnalysisName, payload, nil)
 	}
 
@@ -110,7 +110,7 @@ func (b *deviceBusiness) GetDeviceLogs(
 ) (frame.JobResultPipe[[]*devicev1.DeviceLog], error) {
 	resultPipe := frame.NewJob[[]*devicev1.DeviceLog](
 		func(ctx context.Context, result frame.JobResultPipe[[]*devicev1.DeviceLog]) error {
-			searchProperties := map[string]any{
+			searchProperties := frame.JSONMap{
 				"device_id": deviceID,
 			}
 
@@ -156,9 +156,9 @@ func (b *deviceBusiness) SaveDevice(
 	ctx context.Context,
 	id string,
 	name string,
-	data map[string]string,
+	data frame.JSONMap,
 ) (*devicev1.DeviceObject, error) {
-	sessionID := data["session_id"]
+	sessionID := data["session_id"].(string)
 
 	_, err := b.LogDeviceActivity(ctx, id, sessionID, data)
 	if err != nil {
@@ -237,7 +237,7 @@ func (b *deviceBusiness) buildSearchQuery(ctx context.Context, query *devicev1.S
 		profileID, _ = claims.GetSubject()
 	}
 
-	searchProperties := map[string]any{
+	searchProperties := frame.JSONMap{
 		"profile_id": profileID,
 		"start_date": query.GetStartDate(),
 		"end_date":   query.GetEndDate(),
@@ -309,7 +309,7 @@ func (b *deviceBusiness) LinkDeviceToProfile(
 	ctx context.Context,
 	sessionID string,
 	profileID string,
-	_ map[string]string,
+	_ frame.JSONMap,
 ) (*devicev1.DeviceObject, error) {
 	session, err := b.sessionRepo.GetByID(ctx, sessionID)
 	if err != nil {
@@ -343,7 +343,7 @@ func (b *deviceBusiness) AddKey(
 	deviceID string,
 	_ devicev1.KeyType,
 	key []byte,
-	extra map[string]string,
+	extra frame.JSONMap,
 ) (*devicev1.KeyObject, error) {
 	// Validate that the device exists before adding a key
 	_, err := b.deviceRepo.GetByID(ctx, deviceID)
@@ -354,7 +354,7 @@ func (b *deviceBusiness) AddKey(
 	deviceKey := &models.DeviceKey{
 		DeviceID: deviceID,
 		Key:      key,
-		Extra:    frame.DBPropertiesFromMap(extra),
+		Extra:    extra,
 	}
 
 	err = b.deviceKeyRepo.Save(ctx, deviceKey)

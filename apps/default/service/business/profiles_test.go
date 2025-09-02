@@ -7,9 +7,11 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -28,6 +30,9 @@ func TestProfileSuite(t *testing.T) {
 func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 	t := pts.T()
 
+	requestProp, _ := structpb.NewStruct(frame.JSONMap{
+		"name": "Profile Tester",
+	})
 	testcases := []struct {
 		name    string
 		request *profilev1.CreateRequest
@@ -36,11 +41,9 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 		{
 			name: "Happy path create a profile",
 			request: &profilev1.CreateRequest{
-				Type:    profilev1.ProfileType_PERSON,
-				Contact: "profile.create@testing.com",
-				Properties: map[string]string{
-					"name": "Profile Tester",
-				},
+				Type:       profilev1.ProfileType_PERSON,
+				Contact:    "profile.create@testing.com",
+				Properties: requestProp,
 			},
 			wantErr: false,
 		},
@@ -78,20 +81,23 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 		var profileAvailable []string
 		pbc := business.NewProfileBusiness(ctx, svc)
 
+		prop1 := &frame.JSONMap{
+			"name": "Profile Tester Get",
+		}
+		prop2 := &frame.JSONMap{
+			"name": "Profile Tester Get 2",
+		}
+
 		for _, val := range []*profilev1.CreateRequest{
 			{
-				Type:    profilev1.ProfileType_PERSON,
-				Contact: "profile.get.one@testing.com",
-				Properties: map[string]string{
-					"name": "Profile Tester Get",
-				},
+				Type:       profilev1.ProfileType_PERSON,
+				Contact:    "profile.get.one@testing.com",
+				Properties: prop1.ToProtoStruct(),
 			},
 			{
-				Type:    profilev1.ProfileType_PERSON,
-				Contact: "profile.create@testing.com",
-				Properties: map[string]string{
-					"name": "Profile Tester Get 2",
-				},
+				Type:       profilev1.ProfileType_PERSON,
+				Contact:    "profile.create@testing.com",
+				Properties: prop2.ToProtoStruct(),
 			},
 		} {
 			got, err := pbc.CreateProfile(ctx, val)
@@ -149,13 +155,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
+		properties := &frame.JSONMap{
+			"name": "Get By Contact Test",
+		}
 		// Create a profile first
 		createReq := &profilev1.CreateRequest{
-			Type:    profilev1.ProfileType_PERSON,
-			Contact: "getbycontact@testing.com",
-			Properties: map[string]string{
-				"name": "Get By Contact Test",
-			},
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "getbycontact@testing.com",
+			Properties: properties.ToProtoStruct(),
 		}
 
 		profile, err := pb.CreateProfile(ctx, createReq)
@@ -198,13 +205,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
+		properties := &frame.JSONMap{
+			"name": "Original Name",
+		}
 		// Create a profile first
 		createReq := &profilev1.CreateRequest{
-			Type:    profilev1.ProfileType_PERSON,
-			Contact: "update@testing.com",
-			Properties: map[string]string{
-				"name": "Original Name",
-			},
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "update@testing.com",
+			Properties: properties.ToProtoStruct(),
 		}
 
 		profile, err := pb.CreateProfile(ctx, createReq)
@@ -213,13 +221,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 			return
 		}
 
+		reqProperties := &frame.JSONMap{
+			"name": "Updated Name",
+			"age":  "30",
+		}
 		// Update the profile
 		updateReq := &profilev1.UpdateRequest{
-			Id: profile.GetId(),
-			Properties: map[string]string{
-				"name": "Updated Name",
-				"age":  "30",
-			},
+			Id:         profile.GetId(),
+			Properties: reqProperties.ToProtoStruct(),
 		}
 
 		updated, err := pb.UpdateProfile(ctx, updateReq)
@@ -228,16 +237,17 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 			return
 		}
 
-		if updated.GetProperties()["name"] != "Updated Name" {
+		updateProperties := updated.GetProperties().AsMap()
+		if updateProperties["name"] != "Updated Name" {
 			t.Errorf(
 				"UpdateProfile() name not updated, got = %v, want = %v",
-				updated.GetProperties()["name"],
+				updateProperties["name"],
 				"Updated Name",
 			)
 		}
 
-		if updated.GetProperties()["age"] != "30" {
-			t.Errorf("UpdateProfile() age not added, got = %v, want = %v", updated.GetProperties()["age"], "30")
+		if updateProperties["age"] != "30" {
+			t.Errorf("UpdateProfile() age not added, got = %v, want = %v", updateProperties["age"], "30")
 		}
 	})
 }
@@ -249,13 +259,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
+		properties := frame.JSONMap{
+			"name": "Target Profile",
+		}
 		// Create target profile
 		targetReq := &profilev1.CreateRequest{
-			Type:    profilev1.ProfileType_PERSON,
-			Contact: "target@testing.com",
-			Properties: map[string]string{
-				"name": "Target Profile",
-			},
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "target@testing.com",
+			Properties: properties.ToProtoStruct(),
 		}
 
 		target, err := pb.CreateProfile(ctx, targetReq)
@@ -264,14 +275,15 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 			return
 		}
 
+		mergeProperties := frame.JSONMap{
+			"age":     "25",
+			"country": "Kenya",
+		}
 		// Create profile to merge
 		mergeReq := &profilev1.CreateRequest{
-			Type:    profilev1.ProfileType_PERSON,
-			Contact: "merge@testing.com",
-			Properties: map[string]string{
-				"age":     "25",
-				"country": "Kenya",
-			},
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "merge@testing.com",
+			Properties: mergeProperties.ToProtoStruct(),
 		}
 
 		merging, err := pb.CreateProfile(ctx, mergeReq)
@@ -292,17 +304,18 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 			return
 		}
 
+		finalProps := merged.GetProperties().AsMap()
 		// Check merged properties
-		if merged.GetProperties()["name"] != "Target Profile" {
-			t.Errorf("MergeProfile() original property lost, got = %v", merged.GetProperties()["name"])
+		if finalProps["name"] != "Target Profile" {
+			t.Errorf("MergeProfile() original property lost, got = %v", finalProps["name"])
 		}
 
-		if merged.GetProperties()["age"] != "25" {
-			t.Errorf("MergeProfile() merged property not added, got = %v", merged.GetProperties()["age"])
+		if finalProps["age"] != "25" {
+			t.Errorf("MergeProfile() merged property not added, got = %v", finalProps["age"])
 		}
 
-		if merged.GetProperties()["country"] != "Kenya" {
-			t.Errorf("MergeProfile() merged property not added, got = %v", merged.GetProperties()["country"])
+		if finalProps["country"] != "Kenya" {
+			t.Errorf("MergeProfile() merged property not added, got = %v", finalProps["country"])
 		}
 	})
 }
@@ -314,13 +327,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetContactByID() {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
+		properties := frame.JSONMap{
+			"name": "Get Contact Test",
+		}
 		// Create a profile first
 		createReq := &profilev1.CreateRequest{
-			Type:    profilev1.ProfileType_PERSON,
-			Contact: "getcontact@testing.com",
-			Properties: map[string]string{
-				"name": "Get Contact Test",
-			},
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "getcontact@testing.com",
+			Properties: properties.ToProtoStruct(),
 		}
 
 		profile, err := pb.CreateProfile(ctx, createReq)
@@ -358,13 +372,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_VerifyContact() {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
+		properties := frame.JSONMap{
+			"name": "Verify Contact Test",
+		}
 		// Create a profile first
 		createReq := &profilev1.CreateRequest{
-			Type:    profilev1.ProfileType_PERSON,
-			Contact: "verify@testing.com",
-			Properties: map[string]string{
-				"name": "Verify Contact Test",
-			},
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "verify@testing.com",
+			Properties: properties.ToProtoStruct(),
 		}
 
 		profile, err := pb.CreateProfile(ctx, createReq)
@@ -400,13 +415,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 
 		verificationRepo := repository.NewVerificationRepository(svc)
 
+		properties := frame.JSONMap{
+			"name": "Check Verify Test",
+		}
 		// Create a profile and verify contact first
 		createReq := &profilev1.CreateRequest{
-			Type:    profilev1.ProfileType_PERSON,
-			Contact: "test@example.com",
-			Properties: map[string]string{
-				"name": "Check Verify Test",
-			},
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "test@example.com",
+			Properties: properties.ToProtoStruct(),
 		}
 
 		profile, err := pb.CreateProfile(ctx, createReq)
@@ -508,13 +524,14 @@ func (pts *ProfileTestSuite) setupVerificationForTest(
 	verificationRepo repository.VerificationRepository,
 	email string,
 ) string {
+	properties := frame.JSONMap{
+		"name": "Check Verify Test",
+	}
 	// Create a profile and verify contact first
 	createReq := &profilev1.CreateRequest{
-		Type:    profilev1.ProfileType_PERSON,
-		Contact: email,
-		Properties: map[string]string{
-			"name": "Check Verify Test",
-		},
+		Type:       profilev1.ProfileType_PERSON,
+		Contact:    email,
+		Properties: properties.ToProtoStruct(),
 	}
 
 	profile, err := pb.CreateProfile(ctx, createReq)
@@ -556,12 +573,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 		pb := business.NewProfileBusiness(ctx, svc)
 
 		t.Run("empty contact", func(t *testing.T) {
+			properties := frame.JSONMap{
+				"name": "Invalid Contact Test",
+			}
+
 			createReq := &profilev1.CreateRequest{
-				Type:    profilev1.ProfileType_PERSON,
-				Contact: "",
-				Properties: map[string]string{
-					"name": "Invalid Contact Test",
-				},
+				Type:       profilev1.ProfileType_PERSON,
+				Contact:    "",
+				Properties: properties.ToProtoStruct(),
 			}
 
 			_, err := pb.CreateProfile(ctx, createReq)
@@ -571,12 +590,14 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 		})
 
 		t.Run("invalid contact format", func(t *testing.T) {
+			properties := frame.JSONMap{
+				"name": "Invalid Contact Test 2",
+			}
+
 			createReq2 := &profilev1.CreateRequest{
-				Type:    profilev1.ProfileType_PERSON,
-				Contact: "invalid-contact",
-				Properties: map[string]string{
-					"name": "Invalid Contact Test 2",
-				},
+				Type:       profilev1.ProfileType_PERSON,
+				Contact:    "invalid-contact",
+				Properties: properties.ToProtoStruct(),
 			}
 
 			_, err := pb.CreateProfile(ctx, createReq2)

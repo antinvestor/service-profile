@@ -165,7 +165,7 @@ func (ps *ProfileServer) sendRelationshipListResponse(
 	claims *frame.AuthenticationClaims,
 ) {
 	// Create response object
-	response := map[string]any{
+	response := frame.JSONMap{
 		"relationships":      relationshipObjects,
 		"count":              len(relationshipObjects),
 		"LastRelationshipID": lastRelationshipID,
@@ -196,11 +196,12 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	response := map[string]any{
+	properties := profile.GetProperties().AsMap()
+	response := frame.JSONMap{
 		"sub":      profile.GetId(),
-		"name":     profile.GetProperties()["name"],
+		"name":     properties["name"],
 		"contacts": profile.GetContacts(),
-		"url":      profile.GetProperties()["profile_pic"],
+		"url":      properties["profile_pic"],
 	}
 
 	rw.Header().Set("Content-Type", "application/json")

@@ -50,22 +50,21 @@ func (bs *SettingsBaseTestSuite) CreateService(
 	cfg.RunServiceSecurely = false
 	cfg.ServerPort = ""
 
-	for _, res := range depOpts.Database(ctx) {
-		testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
-		require.NoError(t, err0)
+	res := depOpts.ByIsDatabase(ctx)
+	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
+	require.NoError(t, err0)
 
-		t.Cleanup(func() {
-			cleanup(t.Context())
-		})
+	t.Cleanup(func() {
+		cleanup(t.Context())
+	})
 
-		cfg.DatabasePrimaryURL = []string{testDS.String()}
-		cfg.DatabaseReplicaURL = []string{testDS.String()}
-	}
+	cfg.DatabasePrimaryURL = []string{testDS.String()}
+	cfg.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(t.Context(), "settings tests",
 		frame.WithConfig(&cfg),
 		frame.WithDatastore(),
-		frame.WithNoopDriver())
+		frametests.WithNoopDriver())
 
 	eventList := frame.WithRegisterEvents(
 		&events.SettingsAuditor{Service: svc})

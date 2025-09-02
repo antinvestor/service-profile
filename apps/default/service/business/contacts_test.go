@@ -33,7 +33,7 @@ func (cts *ContactTestSuite) TestGeneratePin() {
 	type args struct {
 		n int
 	}
-	tests := []struct {
+	testCases := []struct {
 		name string
 		args args
 		want int
@@ -64,7 +64,7 @@ func (cts *ContactTestSuite) TestGeneratePin() {
 			want: 12, // Placeholder PIN for example purposes
 		},
 	}
-	for _, tt := range tests {
+	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			newPin := util.RandomString(tt.args.n)
 			require.Lenf(t, newPin, tt.want, "GeneratePin(%v)", tt.args.n)
@@ -77,9 +77,9 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 
 	type args struct {
 		detail string
-		extra  map[string]string
+		extra  *frame.JSONMap
 	}
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		args    args
 		want    *models.Contact
@@ -90,11 +90,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with valid MSISDN",
 			args: args{
 				detail: "+256757546244", // Valid MSISDN
-				extra:  map[string]string{"type": "msisdn"},
+				extra:  &frame.JSONMap{"type": "msisdn"},
 			},
 			want: &models.Contact{ // Expected result
 				Detail:     "+256757546244",
-				Properties: frame.DBPropertiesFromMap(map[string]string{"type": "msisdn"}),
+				Properties: &frame.JSONMap{"type": "msisdn"},
 			},
 			wantErr: require.NoError, // No error expected
 		},
@@ -102,11 +102,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with valid Email",
 			args: args{
 				detail: "test@example.com", // Valid Email
-				extra:  map[string]string{"type": "email"},
+				extra:  &frame.JSONMap{"type": "email"},
 			},
 			want: &models.Contact{ // Expected result
 				Detail:     "test@example.com",
-				Properties: frame.DBPropertiesFromMap(map[string]string{"type": "email"}),
+				Properties: &frame.JSONMap{"type": "email"},
 			},
 			wantErr: require.NoError, // No error expected
 		},
@@ -114,7 +114,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with invalid detail",
 			args: args{
 				detail: "invalid-detail", // Invalid data, e.g., malformed MSISDN or email
-				extra:  map[string]string{"type": "unknown"},
+				extra:  &frame.JSONMap{"type": "unknown"},
 			},
 			want:    nil,           // Expect no valid contact to be created
 			wantErr: require.Error, // Error is expected
@@ -123,7 +123,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with empty detail",
 			args: args{
 				detail: "", // Empty detail
-				extra:  map[string]string{"type": "email"},
+				extra:  &frame.JSONMap{"type": "email"},
 			},
 			want:    nil,           // Contact should not be created with empty details
 			wantErr: require.Error, // Error is expected
@@ -142,7 +142,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 	}
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
-		for _, tt := range tests {
+		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := cts.CreateService(t, dep)
 
@@ -202,7 +202,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 		type args struct {
 			detail string
 		}
-		tests := []struct {
+		testCases := []struct {
 			name    string
 			args    args
 			want    *models.Contact
@@ -242,7 +242,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 			},
 		}
 
-		for _, tt := range tests {
+		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				var got *models.Contact
 				got, err = cb.GetByDetail(ctx, tt.args.detail)
@@ -317,7 +317,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 		profileID      string
 		contactDetails []string
 	}
-	tests := []struct {
+	testCases := []struct {
 		name    string
 		args    args
 		want    []*models.Contact
@@ -354,7 +354,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 	}
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
-		for _, tt := range tests {
+		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := cts.CreateService(t, dep)
 
@@ -363,7 +363,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 				require.NoError(t, err)
 
 				for _, contact := range existingContacts {
-					_, err = cb.UpdateContact(ctx, contact.GetID(), tt.args.profileID, map[string]string{})
+					_, err = cb.UpdateContact(ctx, contact.GetID(), tt.args.profileID, nil)
 					require.NoError(t, err)
 				}
 
@@ -385,24 +385,27 @@ func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact first
-		contact, err := cb.CreateContact(ctx, "update@testing.com", map[string]string{
+		contact, err := cb.CreateContact(ctx, "update@testing.com", &frame.JSONMap{
 			"name": "Original Name",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		// Update the contact
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), util.IDString(), map[string]string{
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), util.IDString(), &frame.JSONMap{
 			"name": "Updated Name",
 			"age":  "30",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, updated)
-		require.Equal(t, "Updated Name", updated.Properties["name"])
-		require.Equal(t, "30", updated.Properties["age"])
+
+		updateProps := *updated.Properties
+
+		require.Equal(t, "Updated Name", updateProps["name"])
+		require.Equal(t, "30", updateProps["age"])
 
 		// Test updating non-existent contact
-		_, err = cb.UpdateContact(ctx, util.IDString(), util.IDString(), map[string]string{})
+		_, err = cb.UpdateContact(ctx, util.IDString(), util.IDString(), &frame.JSONMap{})
 		require.Error(t, err)
 	})
 }
@@ -415,13 +418,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact with profile ID
-		contact, err := cb.CreateContact(ctx, "remove@testing.com", map[string]string{})
+		contact, err := cb.CreateContact(ctx, "remove@testing.com", &frame.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		profileID := util.IDString()
 		// Update contact to link to profile
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, map[string]string{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, &frame.JSONMap{})
 		require.NoError(t, err)
 		require.Equal(t, profileID, updated.ProfileID)
 
@@ -449,13 +452,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact first
-		contact, err := cb.CreateContact(ctx, "verify@testing.com", map[string]string{})
+		contact, err := cb.CreateContact(ctx, "verify@testing.com", &frame.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		// Link to profile
 		profileID := util.IDString()
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, map[string]string{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, &frame.JSONMap{})
 		require.NoError(t, err)
 
 		// Verify contact
@@ -490,11 +493,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact and verification using the business layer
-		contact, err := cb.CreateContact(ctx, "verify@example.com", map[string]string{})
+		contact, err := cb.CreateContact(ctx, "verify@example.com", &frame.JSONMap{})
 		require.NoError(t, err)
 
 		profileID := util.IDString()
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, map[string]string{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, &frame.JSONMap{})
 		require.NoError(t, err)
 
 		verification, err := cb.VerifyContact(ctx, updated, "", "123456", 0)
@@ -587,18 +590,18 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 		profileID := util.IDString()
 
 		// Create multiple contacts for the same profile using valid email formats only
-		contact1, err := cb.CreateContact(ctx, "test1@example.com", map[string]string{"type": "email"})
+		contact1, err := cb.CreateContact(ctx, "test1@example.com", &frame.JSONMap{"type": "email"})
 		require.NoError(t, err)
 
 		// Update contact with profile ID
-		_, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, map[string]string{})
+		_, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, &frame.JSONMap{})
 		require.NoError(t, err)
 
-		contact2, err := cb.CreateContact(ctx, "test2@example.com", map[string]string{"type": "email"})
+		contact2, err := cb.CreateContact(ctx, "test2@example.com", &frame.JSONMap{"type": "email"})
 		require.NoError(t, err)
 
 		// Update contact with profile ID
-		_, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, map[string]string{})
+		_, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, &frame.JSONMap{})
 		require.NoError(t, err)
 
 		// Test getting contacts by profile
@@ -621,7 +624,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Test with empty detail
-		contact, err := cb.CreateContact(ctx, "", map[string]string{})
+		contact, err := cb.CreateContact(ctx, "", &frame.JSONMap{})
 		require.Error(t, err)
 		require.Nil(t, contact)
 
@@ -632,7 +635,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 		require.Equal(t, "test@example.com", contact.Detail)
 
 		// Test with empty extra map
-		contact, err = cb.CreateContact(ctx, "test2@example.com", map[string]string{})
+		contact, err = cb.CreateContact(ctx, "test2@example.com", &frame.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 		require.Equal(t, "test2@example.com", contact.Detail)

@@ -52,7 +52,7 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 		}
 	}
 
-	searchProperties := map[string]any{
+	searchProperties := frame.JSONMap{
 		"profile_id": profileID,
 		"start_date": request.GetStartDate(),
 		"end_date":   request.GetEndDate(),
@@ -92,7 +92,13 @@ func (rb *rosterBusiness) CreateRoster(
 		var contact *models.Contact
 		var roster *models.Roster
 
-		contact, err = rb.contactBusiness.CreateContact(ctx, newRoster.GetContact(), newRoster.GetExtras())
+		requestExtras := frame.JSONMap{}
+
+		contact, err = rb.contactBusiness.CreateContact(
+			ctx,
+			newRoster.GetContact(),
+			requestExtras.FromProtoStruct(newRoster.GetExtras()),
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -103,11 +109,13 @@ func (rb *rosterBusiness) CreateRoster(
 				return nil, err
 			}
 
+			rosterExtras := frame.JSONMap{}
+
 			roster = &models.Roster{
 				ProfileID:  profileID,
 				ContactID:  contact.GetID(),
 				Contact:    contact,
-				Properties: frame.DBPropertiesFromMap(newRoster.GetExtras()),
+				Properties: rosterExtras.FromProtoStruct(newRoster.GetExtras()),
 			}
 
 			roster, err = rb.rosterRepository.Save(ctx, roster)

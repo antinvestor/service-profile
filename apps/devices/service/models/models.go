@@ -6,6 +6,7 @@ import (
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
 	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Device represents a core device identity.
@@ -17,11 +18,13 @@ type Device struct {
 }
 
 func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
+	properties, _ := structpb.NewStruct(frame.JSONMap{"owner": d.ProfileID})
+
 	obj := &devicev1.DeviceObject{
 		Id:         d.GetID(),
 		Name:       d.Name,
 		Os:         d.OS,
-		Properties: map[string]string{"owner": d.ProfileID},
+		Properties: properties,
 	}
 
 	if session != nil {
@@ -33,7 +36,7 @@ func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
 		_ = protojson.Unmarshal(session.Locale, &locale)
 
 		obj.Locale = &locale
-		obj.Location = frame.DBPropertiesToMap(session.Location)
+		obj.Location = session.Location.ToProtoStruct()
 		obj.LastSeen = session.LastSeen.String()
 	}
 
@@ -64,7 +67,7 @@ func (k *DeviceKey) ToAPI() *devicev1.KeyObject {
 		Id:       k.GetID(),
 		DeviceId: k.DeviceID,
 		Key:      k.Key,
-		Extra:    frame.DBPropertiesToMap(k.Extra),
+		Extra:    k.Extra.ToProtoStruct(),
 	}
 }
 
@@ -77,12 +80,10 @@ type DeviceLog struct {
 }
 
 func (dl *DeviceLog) ToAPI() *devicev1.DeviceLog {
-	extra := frame.DBPropertiesToMap(dl.Data)
-
 	return &devicev1.DeviceLog{
 		Id:        dl.GetID(),
 		DeviceId:  dl.DeviceID,
 		SessionId: dl.DeviceSessionID,
-		Extra:     extra,
+		Extra:     dl.Data.ToProtoStruct(),
 	}
 }
