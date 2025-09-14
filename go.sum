@@ -61,6 +61,8 @@ github.com/antinvestor/apis/go/settings v1.41.3 h1:LplnwKrNtFaRKgaYTAeYGDLbqgBwQ
 github.com/antinvestor/apis/go/settings v1.41.3/go.mod h1:pwq/ADyFKffgZIFimQpjiH42Psw5r5U6ykXo7Mm0164=
 github.com/antinvestor/apis/go/settings v1.42.1 h1:8WObsrRO+pnl+PpyVmlTOpaw1nyx74ZEG5SVmw4RBsc=
 github.com/antinvestor/apis/go/settings v1.42.1/go.mod h1:/CPpsw6W6VVjt5yRcVpQUwCbb7ODq1S6Zomqz3N022I=
+github.com/antinvestor/apis/go/settings v1.44.1 h1:IJrTLQKTpt3KImB28t/isPJ8pFvkLEWnH4PF3VdefvU=
+github.com/antinvestor/apis/go/settings v1.44.1/go.mod h1:hdBw2agi+hY/65pY7oPwh2016QkRNjlZ9Qx2mU8wI6M=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
 github.com/antlr4-go/antlr/v4 v4.13.1/go.mod h1:GKmUxMtwp6ZgGwZSva4eWPC5mS6vUAmOABFgjdkM7Nw=
 github.com/caarlos0/env/v11 v11.3.1 h1:cArPWC15hWmEt+gWk7YBi7lEXTXCvpaSdCiZE2X5mCA=
