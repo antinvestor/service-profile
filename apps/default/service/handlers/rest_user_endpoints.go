@@ -17,6 +17,11 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
+const (
+	profileDefaultName      = "au_name"
+	profileDefaultAvaterUri = "au_avater_uri"
+)
+
 func (ps *ProfileServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -199,9 +204,9 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	properties := profile.GetProperties().AsMap()
 	response := frame.JSONMap{
 		"sub":      profile.GetId(),
-		"name":     properties["name"],
+		"name":     properties[profileDefaultName],
 		"contacts": profile.GetContacts(),
-		"url":      properties["profile_pic"],
+		"url":      properties[profileDefaultAvaterUri],
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
