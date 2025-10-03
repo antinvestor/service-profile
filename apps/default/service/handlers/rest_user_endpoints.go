@@ -19,7 +19,7 @@ import (
 
 const (
 	profileDefaultName      = "au_name"
-	profileDefaultAvaterUri = "au_avater_uri"
+	profileDefaultAvaterURI = "au_avater_uri"
 )
 
 func (ps *ProfileServer) writeError(ctx context.Context, w http.ResponseWriter, err error, code int) {
@@ -206,7 +206,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 		"sub":      profile.GetId(),
 		"name":     properties[profileDefaultName],
 		"contacts": profile.GetContacts(),
-		"url":      properties[profileDefaultAvaterUri],
+		"url":      properties[profileDefaultAvaterURI],
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
