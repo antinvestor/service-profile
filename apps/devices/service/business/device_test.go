@@ -9,7 +9,6 @@ import (
 	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
@@ -22,6 +21,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
@@ -180,13 +180,13 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-	name        string
-	id          string
-	deviceName  string
-	data        frame.JSONMap
-	expectError bool
-	expectNil   bool
-},
+		name        string
+		id          string
+		deviceName  string
+		data        frame.JSONMap
+		expectError bool
+		expectNil   bool
+	},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
@@ -640,12 +640,12 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-	name        string
-	setupDevice bool
-	profileID   string
-	searchQuery string
-	expectError bool
-},
+		name        string
+		setupDevice bool
+		profileID   string
+		searchQuery string
+		expectError bool
+	},
 ) {
 	// Create context with claims for the expected profile_id
 	testCtx := ctx
@@ -1267,9 +1267,9 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 		sessionRepo := repository.NewDeviceSessionRepository(svc)
 
 		_, sessionErr := sessionRepo.GetByID(ctx, sessionID)
-		assert.Error(t, sessionErr, "Session should not exist before queue processing")
+		require.Error(t, sessionErr, "Session should not exist before queue processing")
 		_, deviceErr := deviceRepo.GetByID(ctx, deviceID)
-		assert.Error(t, deviceErr, "Device should not exist before queue processing")
+		require.Error(t, deviceErr, "Device should not exist before queue processing")
 
 		// Step 4: Wait for queue to process and create device and session
 		// The queue handler will automatically process the device log and create both

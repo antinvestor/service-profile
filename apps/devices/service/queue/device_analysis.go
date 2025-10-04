@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"strings"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
@@ -12,6 +13,13 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+)
+
+var (
+	// ErrDeviceLogIDMissing is returned when the device log ID is missing from the payload.
+	ErrDeviceLogIDMissing = errors.New("device log id missing from payload")
+	// ErrDeviceLogNotFound is returned when the device log is not found in the database.
+	ErrDeviceLogNotFound = errors.New("device log not found")
 )
 
 type DeviceAnalysisQueueHandler struct {
@@ -33,95 +41,141 @@ func NewDeviceAnalysisQueueHandler(
 }
 
 func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]string, payload []byte) error {
-	var idPayload map[string]string
-	err := json.Unmarshal(payload, &idPayload)
+	deviceLog, err := dq.getDeviceLog(ctx, payload)
 	if err != nil {
-		return err
-	}
-
-	deviceLogID := idPayload["id"]
-	if deviceLogID == "" {
-		dq.Service.Log(ctx).WithField("payload", idPayload).Warn("no device log id found in payload")
-		return nil
-	}
-
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
-
-	// Fetch the device log
-	deviceLog, err := dq.DeviceLogRepository.GetByID(ctx, deviceLogID)
-	if err != nil {
-		if frame.ErrorIsNoRows(err) {
-			dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log not found")
+		// Ignore expected errors (missing ID, not found)
+		if errors.Is(err, ErrDeviceLogIDMissing) || errors.Is(err, ErrDeviceLogNotFound) {
 			return nil
 		}
 		return err
 	}
 
-	var session *models.DeviceSession
+	ctx = frame.SkipTenancyChecksOnClaims(ctx)
 
-	if deviceLog.DeviceSessionID != "" {
-		session, err = dq.SessionRepository.GetByID(ctx, deviceLog.DeviceSessionID)
-		if err != nil {
-			if frame.ErrorIsNoRows(err) {
-				// Session ID provided but doesn't exist - will create it below
-				session = nil
-			} else {
-				// Actual database error
-				dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
-					Warn("error fetching device session")
-				return err
-			}
-		}
-
-		if session != nil {
-			// Update session's last seen timestamp
-			session.LastSeen = deviceLog.CreatedAt
-			err = dq.SessionRepository.Save(ctx, session)
-			if err != nil {
-				return err
-			}
-		}
+	session, err := dq.getOrCreateSession(ctx, deviceLog)
+	if err != nil {
+		return err
 	}
 
-	// Create session if it doesn't exist
-	if session == nil {
-		dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Info("creating session from device log")
+	_, err = dq.getOrCreateDevice(ctx, session)
+	return err
+}
 
-		session, err = dq.CreateSessionFromLog(ctx, deviceLog)
-		if err != nil {
-			dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
-				Warn("could not create device session from log")
-			return err
-		}
+func (dq *DeviceAnalysisQueueHandler) getDeviceLog(
+	ctx context.Context,
+	payload []byte,
+) (*models.DeviceLog, error) {
+	var idPayload map[string]string
+	err := json.Unmarshal(payload, &idPayload)
+	if err != nil {
+		return nil, err
 	}
 
-	var device *models.Device
-	if session.DeviceID != "" {
-		device, err = dq.DeviceRepository.GetByID(ctx, session.DeviceID)
-		if err != nil {
-			if frame.ErrorIsNoRows(err) {
-				// Device ID provided but doesn't exist - will create it below
-				device = nil
-			} else {
-				// Actual database error
-				dq.Service.Log(ctx).WithField("deviceID", session.DeviceID).WithError(err).
-					Warn("error fetching device")
-				return err
-			}
-		}
+	deviceLogID := idPayload["id"]
+	if deviceLogID == "" {
+		dq.Service.Log(ctx).WithField("payload", idPayload).Warn("no device log id found in payload")
+		return nil, ErrDeviceLogIDMissing
 	}
 
-	if device == nil {
-		dq.Service.Log(ctx).WithField("sessionID", session.GetID()).Info("creating device from session")
-		device, err = dq.CreateDeviceFromSess(ctx, session)
-		if err != nil {
-			dq.Service.Log(ctx).WithError(err).
-				Warn("could not auto create device from session")
-			return err
+	deviceLog, err := dq.DeviceLogRepository.GetByID(ctx, deviceLogID)
+	if err != nil {
+		if frame.ErrorIsNoRows(err) {
+			dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log not found")
+			return nil, ErrDeviceLogNotFound
 		}
+		return nil, err
 	}
 
-	return nil
+	return deviceLog, nil
+}
+
+func (dq *DeviceAnalysisQueueHandler) getOrCreateSession(
+	ctx context.Context,
+	deviceLog *models.DeviceLog,
+) (*models.DeviceSession, error) {
+	if deviceLog.DeviceSessionID == "" {
+		return dq.createSessionFromLog(ctx, deviceLog)
+	}
+
+	session, err := dq.SessionRepository.GetByID(ctx, deviceLog.DeviceSessionID)
+	if err == nil {
+		return dq.updateSessionLastSeen(ctx, session, deviceLog)
+	}
+
+	if !frame.ErrorIsNoRows(err) {
+		dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
+			Warn("error fetching device session")
+		return nil, err
+	}
+
+	// Session ID provided but doesn't exist - create it
+	return dq.createSessionFromLog(ctx, deviceLog)
+}
+
+func (dq *DeviceAnalysisQueueHandler) updateSessionLastSeen(
+	ctx context.Context,
+	session *models.DeviceSession,
+	deviceLog *models.DeviceLog,
+) (*models.DeviceSession, error) {
+	session.LastSeen = deviceLog.CreatedAt
+	err := dq.SessionRepository.Save(ctx, session)
+	if err != nil {
+		return nil, err
+	}
+	return session, nil
+}
+
+func (dq *DeviceAnalysisQueueHandler) createSessionFromLog(
+	ctx context.Context,
+	deviceLog *models.DeviceLog,
+) (*models.DeviceSession, error) {
+	dq.Service.Log(ctx).WithField("deviceLogID", deviceLog.GetID()).Info("creating session from device log")
+
+	session, err := dq.CreateSessionFromLog(ctx, deviceLog)
+	if err != nil {
+		dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
+			Warn("could not create device session from log")
+		return nil, err
+	}
+	return session, nil
+}
+
+func (dq *DeviceAnalysisQueueHandler) getOrCreateDevice(
+	ctx context.Context,
+	session *models.DeviceSession,
+) (*models.Device, error) {
+	if session.DeviceID == "" {
+		return dq.createDeviceFromSession(ctx, session)
+	}
+
+	device, err := dq.DeviceRepository.GetByID(ctx, session.DeviceID)
+	if err == nil {
+		return device, nil
+	}
+
+	if !frame.ErrorIsNoRows(err) {
+		dq.Service.Log(ctx).WithField("deviceID", session.DeviceID).WithError(err).
+			Warn("error fetching device")
+		return nil, err
+	}
+
+	// Device ID provided but doesn't exist - create it
+	return dq.createDeviceFromSession(ctx, session)
+}
+
+func (dq *DeviceAnalysisQueueHandler) createDeviceFromSession(
+	ctx context.Context,
+	session *models.DeviceSession,
+) (*models.Device, error) {
+	dq.Service.Log(ctx).WithField("sessionID", session.GetID()).Info("creating device from session")
+
+	device, err := dq.CreateDeviceFromSess(ctx, session)
+	if err != nil {
+		dq.Service.Log(ctx).WithError(err).
+			Warn("could not auto create device from session")
+		return nil, err
+	}
+	return device, nil
 }
 
 func (dq *DeviceAnalysisQueueHandler) CreateDeviceFromSess(
