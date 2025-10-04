@@ -62,17 +62,10 @@ func main() {
 		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
 	}
 
-	deviceAnalysisQueueHandler := queue.DeviceAnalysisQueueHandler{
-		Service:             svc,
-		DeviceRepository:    repository.NewDeviceRepository(svc),
-		DeviceLogRepository: repository.NewDeviceLogRepository(svc),
-		SessionRepository:   repository.NewDeviceSessionRepository(svc),
-	}
-
 	deviceAnalysisQueue := frame.WithRegisterSubscriber(
 		cfg.QueueDeviceAnalysisName,
 		cfg.QueueDeviceAnalysis,
-		&deviceAnalysisQueueHandler,
+		queue.NewDeviceAnalysisQueueHandler(svc),
 	)
 	deviceAnalysisQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueDeviceAnalysisName,

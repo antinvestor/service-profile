@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
+	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
@@ -47,12 +49,12 @@ func (suite *DeviceBusinessTestSuite) CreateService(
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	deviceConfig, err := frame.ConfigFromEnv[config.DevicesConfig]()
+	cfg, err := frame.ConfigFromEnv[config.DevicesConfig]()
 	require.NoError(t, err)
 
-	deviceConfig.LogLevel = "debug"
-	deviceConfig.RunServiceSecurely = false
-	deviceConfig.ServerPort = ""
+	cfg.LogLevel = "debug"
+	cfg.RunServiceSecurely = false
+	cfg.ServerPort = ""
 
 	res := depOpts.ByIsDatabase(ctx)
 	testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
@@ -62,15 +64,23 @@ func (suite *DeviceBusinessTestSuite) CreateService(
 		cleanup(ctx)
 	})
 
-	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
-	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
+	cfg.DatabasePrimaryURL = []string{testDS.String()}
+	cfg.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
-		frame.WithConfig(&deviceConfig),
-		frame.WithDatastore(),
-		frametests.WithNoopDriver())
+		frame.WithConfig(&cfg),
+		frame.WithDatastore(), frametests.WithNoopDriver())
 
-	svc.Init(ctx)
+	deviceAnalysisQueue := frame.WithRegisterSubscriber(
+		cfg.QueueDeviceAnalysisName,
+		cfg.QueueDeviceAnalysis,
+		queue.NewDeviceAnalysisQueueHandler(svc),
+	)
+	deviceAnalysisQueuePublisher := frame.WithRegisterPublisher(
+		cfg.QueueDeviceAnalysisName,
+		cfg.QueueDeviceAnalysis,
+	)
+	svc.Init(ctx, deviceAnalysisQueue, deviceAnalysisQueuePublisher)
 
 	err = repository.Migrate(ctx, svc, "../../migrations/0001")
 	require.NoError(t, err)
@@ -170,13 +180,13 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-		name        string
-		id          string
-		deviceName  string
-		data        frame.JSONMap
-		expectError bool
-		expectNil   bool
-	},
+	name        string
+	id          string
+	deviceName  string
+	data        frame.JSONMap
+	expectError bool
+	expectNil   bool
+},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
@@ -630,12 +640,12 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-		name        string
-		setupDevice bool
-		profileID   string
-		searchQuery string
-		expectError bool
-	},
+	name        string
+	setupDevice bool
+	profileID   string
+	searchQuery string
+	expectError bool
+},
 ) {
 	// Create context with claims for the expected profile_id
 	testCtx := ctx
@@ -1211,4 +1221,92 @@ func (suite *DeviceBusinessTestSuite) processKeysResults(
 		keys = append(keys, result.Item()...)
 	}
 	return keys, nil
+}
+
+// TestLogDeviceActivity_AutoCreateDeviceAndSession validates that when DeviceID and SessionID
+// are provided to LogDeviceActivity, the device and session will be auto-created during device analysis.
+func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndSession() {
+	t := suite.T()
+
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+		svc, ctx := suite.CreateService(t, dep)
+		biz := business.NewDeviceBusiness(ctx, svc)
+
+		// Generate new IDs for device and session
+		deviceID := util.IDString()
+		sessionID := util.IDString()
+
+		// Prepare device log data with user agent and IP for session creation
+		logData := frame.JSONMap{
+			"userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+			"ip":        "192.168.1.100",
+			"action":    "login",
+			"tz":        "Africa/Nairobi",
+			"lang":      "en-US,en",
+			"cur":       "KES",
+			"curNm":     "Kenyan Shilling",
+			"code":      "+254",
+		}
+
+		// Step 1: Call LogDeviceActivity with new DeviceID and SessionID
+		deviceLog, err := biz.LogDeviceActivity(ctx, deviceID, sessionID, logData)
+		require.NoError(t, err)
+		require.NotNil(t, deviceLog)
+		assert.Equal(t, deviceID, deviceLog.GetDeviceId())
+		assert.Equal(t, sessionID, deviceLog.GetSessionId())
+
+		// Step 2: Verify device log was created
+		deviceLogRepo := repository.NewDeviceLogRepository(svc)
+		savedLog, err := deviceLogRepo.GetByID(ctx, deviceLog.GetId())
+		require.NoError(t, err)
+		assert.Equal(t, deviceID, savedLog.DeviceID)
+		assert.Equal(t, sessionID, savedLog.DeviceSessionID)
+
+		// Step 3: Verify device and session don't exist before queue processing
+		deviceRepo := repository.NewDeviceRepository(svc)
+		sessionRepo := repository.NewDeviceSessionRepository(svc)
+
+		_, sessionErr := sessionRepo.GetByID(ctx, sessionID)
+		assert.Error(t, sessionErr, "Session should not exist before queue processing")
+		_, deviceErr := deviceRepo.GetByID(ctx, deviceID)
+		assert.Error(t, deviceErr, "Device should not exist before queue processing")
+
+		// Step 4: Wait for queue to process and create device and session
+		// The queue handler will automatically process the device log and create both
+		sessionCreated, err := frametests.WaitForCheckedConditionWithResult(
+			ctx,
+			func() (*models.DeviceSession, error) {
+				return sessionRepo.GetByID(ctx, sessionID)
+			},
+			func(sess *models.DeviceSession, err error) bool {
+				return err == nil && sess != nil
+			},
+			5*time.Second,
+			100*time.Millisecond,
+		)
+		require.NoError(t, err)
+		require.NotNil(t, sessionCreated)
+		assert.Equal(t, sessionID, sessionCreated.GetID())
+		assert.Equal(t, deviceID, sessionCreated.DeviceID)
+		assert.Equal(t, logData.GetString("userAgent"), sessionCreated.UserAgent)
+		assert.Equal(t, logData.GetString("ip"), sessionCreated.IP)
+
+		deviceCreated, err := deviceRepo.GetByID(ctx, deviceID)
+		require.NoError(t, err)
+		require.NotNil(t, deviceCreated)
+		assert.Equal(t, deviceID, deviceCreated.GetID())
+		assert.NotEmpty(t, deviceCreated.Name)
+		assert.NotEmpty(t, deviceCreated.OS)
+
+		// Step 5: Verify we can retrieve the device through business layer
+		deviceObj, err := biz.GetDeviceByID(ctx, deviceID)
+		require.NoError(t, err)
+		assert.Equal(t, deviceID, deviceObj.GetId())
+
+		// Step 6: Verify we can retrieve device by session ID
+		deviceBySession, err := biz.GetDeviceBySessionID(ctx, sessionID)
+		require.NoError(t, err)
+		assert.Equal(t, deviceID, deviceBySession.GetId())
+		assert.Equal(t, sessionID, deviceBySession.GetSessionId())
+	})
 }

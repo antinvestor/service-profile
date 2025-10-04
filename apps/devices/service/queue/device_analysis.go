@@ -21,6 +21,17 @@ type DeviceAnalysisQueueHandler struct {
 	Service             *frame.Service
 }
 
+func NewDeviceAnalysisQueueHandler(
+	svc *frame.Service,
+) frame.SubscribeWorker {
+	return &DeviceAnalysisQueueHandler{
+		Service:             svc,
+		DeviceRepository:    repository.NewDeviceRepository(svc),
+		DeviceLogRepository: repository.NewDeviceLogRepository(svc),
+		SessionRepository:   repository.NewDeviceSessionRepository(svc),
+	}
+}
+
 func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]string, payload []byte) error {
 	var idPayload map[string]string
 	err := json.Unmarshal(payload, &idPayload)
@@ -47,47 +58,68 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]s
 	}
 
 	var session *models.DeviceSession
-	// The log is created with the device and session IDs, so we just need to update the session's LastSeen
-	if deviceLog.DeviceSessionID == "" {
-		dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log has no session ID, skipping")
+
+	if deviceLog.DeviceSessionID != "" {
+		session, err = dq.SessionRepository.GetByID(ctx, deviceLog.DeviceSessionID)
+		if err != nil {
+			if frame.ErrorIsNoRows(err) {
+				// Session ID provided but doesn't exist - will create it below
+				session = nil
+			} else {
+				// Actual database error
+				dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
+					Warn("error fetching device session")
+				return err
+			}
+		}
+
+		if session != nil {
+			// Update session's last seen timestamp
+			session.LastSeen = deviceLog.CreatedAt
+			err = dq.SessionRepository.Save(ctx, session)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Create session if it doesn't exist
+	if session == nil {
+		dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Info("creating session from device log")
 
 		session, err = dq.CreateSessionFromLog(ctx, deviceLog)
 		if err != nil {
 			dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
-				Warn("could not extract device session from log")
-			return nil
-		}
-	} else {
-		session, err = dq.SessionRepository.GetByID(ctx, deviceLog.DeviceSessionID)
-		if err != nil {
-			dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
-				Warn("device session not found")
-			return nil
-		}
-
-		// Update session's last seen timestamp
-		session.LastSeen = deviceLog.CreatedAt
-		err = dq.SessionRepository.Save(ctx, session)
-		if err != nil {
+				Warn("could not create device session from log")
 			return err
 		}
 	}
 
-	var deviceID string
+	var device *models.Device
 	if session.DeviceID != "" {
-		deviceID = session.DeviceID
-	} else {
-		device, err0 := dq.CreateDeviceFromSess(ctx, session)
-		if err0 != nil {
-			dq.Service.Log(ctx).WithError(err0).
-				Warn("could not extract device from session")
-			return nil
+		device, err = dq.DeviceRepository.GetByID(ctx, session.DeviceID)
+		if err != nil {
+			if frame.ErrorIsNoRows(err) {
+				// Device ID provided but doesn't exist - will create it below
+				device = nil
+			} else {
+				// Actual database error
+				dq.Service.Log(ctx).WithField("deviceID", session.DeviceID).WithError(err).
+					Warn("error fetching device")
+				return err
+			}
 		}
-		deviceID = device.ID
 	}
 
-	// Use deviceID for any device-related operations here
-	_ = deviceID // TODO: Implement device-specific logic
+	if device == nil {
+		dq.Service.Log(ctx).WithField("sessionID", session.GetID()).Info("creating device from session")
+		device, err = dq.CreateDeviceFromSess(ctx, session)
+		if err != nil {
+			dq.Service.Log(ctx).WithError(err).
+				Warn("could not auto create device from session")
+			return err
+		}
+	}
 
 	return nil
 }
@@ -103,11 +135,24 @@ func (dq *DeviceAnalysisQueueHandler) CreateDeviceFromSess(
 		OS:   ua.OSInfo().FullName,
 	}
 
+	// Use the device ID from the session if it was provided in the log
 	dev.GenID(ctx)
+	if session.DeviceID != "" {
+		dev.ID = session.DeviceID
+	}
 
 	err := dq.DeviceRepository.Save(ctx, dev)
 	if err != nil {
 		return nil, err
+	}
+
+	// Update session to link it to the device if not already linked
+	if session.DeviceID == "" {
+		session.DeviceID = dev.ID
+		err = dq.SessionRepository.Save(ctx, session)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return dev, nil
@@ -123,7 +168,12 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 		DeviceID: deviceLog.DeviceID,
 		LastSeen: deviceLog.CreatedAt,
 	}
+
+	// Use the session ID from the log if provided, otherwise generate one
 	sess.GenID(ctx)
+	if deviceLog.DeviceSessionID != "" {
+		sess.ID = deviceLog.DeviceSessionID
+	}
 
 	anyData, ok := data["userAgent"]
 	if ok {
