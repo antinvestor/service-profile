@@ -7,7 +7,6 @@ import (
 	apis "github.com/antinvestor/apis/go/common"
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/util"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -105,12 +104,10 @@ func setupGRPCServer(ctx context.Context, svc *frame.Service,
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(
-			recovery.UnaryServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
 			svc.UnaryAuthInterceptor(jwtAudience, cfg.GetOauth2Issuer()),
 			protovalidateinterceptor.UnaryServerInterceptor(validator)),
 
 		grpc.ChainStreamInterceptor(
-			recovery.StreamServerInterceptor(recovery.WithRecoveryHandlerContext(frame.RecoveryHandlerFun)),
 			svc.StreamAuthInterceptor(jwtAudience, cfg.GetOauth2Issuer()),
 			protovalidateinterceptor.StreamServerInterceptor(validator),
 		),

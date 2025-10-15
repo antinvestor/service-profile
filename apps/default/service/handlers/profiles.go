@@ -60,7 +60,8 @@ func (ps *ProfileServer) toAPIError(err error) error {
 	return grpcError.Err()
 }
 
-func (ps *ProfileServer) GetByID(ctx context.Context,
+//nolint:revive,staticcheck //this is a server implementation of grpc server
+func (ps *ProfileServer) GetById(ctx context.Context,
 	request *profilev1.GetByIdRequest) (*profilev1.GetByIdResponse, error) {
 	profileObj, err := ps.ProfileBusiness.GetByID(ctx, request.GetId())
 	if err != nil {
