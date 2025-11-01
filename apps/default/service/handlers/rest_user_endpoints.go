@@ -11,7 +11,8 @@ import (
 	"strconv"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/security"
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -43,7 +44,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 	log := ps.Service.Log(ctx).WithField("method", "RestListRelationshipsEndpoint")
 
 	// Validate claims
-	claims := frame.ClaimsFromContext(ctx)
+	claims := security.ClaimsFromContext(ctx)
 	if claims == nil {
 		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusInternalServerError)
 		return
@@ -70,7 +71,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 // buildRelationshipListRequest extracts URL parameters and constructs a ListRelationshipRequest.
 func (ps *ProfileServer) buildRelationshipListRequest(
 	urlQuery url.Values,
-	claims *frame.AuthenticationClaims,
+	claims *security.AuthenticationClaims,
 ) *profilev1.ListRelationshipRequest {
 	// Parse count parameter
 	countStr := urlQuery.Get("Count")
@@ -135,7 +136,7 @@ func (ps *ProfileServer) fetchRelationships(
 	// Get relationships from business layer
 	relationships, err := relationshipBusiness.ListRelationships(ctx, request)
 	if err != nil {
-		if !frame.ErrorIsNoRows(err) {
+		if !data.ErrorIsNoRows(err) {
 			return nil, "", err
 		}
 		relationships = []*models.Relationship{}
@@ -167,10 +168,10 @@ func (ps *ProfileServer) sendRelationshipListResponse(
 	rw http.ResponseWriter,
 	relationshipObjects []*profilev1.RelationshipObject,
 	lastRelationshipID string,
-	claims *frame.AuthenticationClaims,
+	claims *security.AuthenticationClaims,
 ) {
 	// Create response object
-	response := frame.JSONMap{
+	response := data.JSONMap{
 		"relationships":      relationshipObjects,
 		"count":              len(relationshipObjects),
 		"LastRelationshipID": lastRelationshipID,
@@ -186,7 +187,7 @@ func (ps *ProfileServer) sendRelationshipListResponse(
 
 func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request) {
 	ctx := req.Context()
-	claims := frame.ClaimsFromContext(ctx)
+	claims := security.ClaimsFromContext(ctx)
 
 	if claims == nil {
 		ps.writeError(ctx, rw, errors.New("claims can not be empty"), http.StatusForbidden)
@@ -202,7 +203,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	}
 
 	properties := profile.GetProperties().AsMap()
-	response := frame.JSONMap{
+	response := data.JSONMap{
 		"sub":      profile.GetId(),
 		"name":     properties[profileDefaultName],
 		"contacts": profile.GetContacts(),

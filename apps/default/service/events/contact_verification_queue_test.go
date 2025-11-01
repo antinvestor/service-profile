@@ -26,7 +26,7 @@ func TestContactVerificationQueueSuite(t *testing.T) {
 func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Name() {
 	t := cvqts.T()
 
-	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 		notificationCli := cvqts.GetNotificationCli(ctx)
 
@@ -38,7 +38,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Nam
 func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_PayloadType() {
 	t := cvqts.T()
 
-	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 		notificationCli := cvqts.GetNotificationCli(ctx)
 
@@ -54,7 +54,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Pay
 func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Validate() {
 	t := cvqts.T()
 
-	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 		notificationCli := cvqts.GetNotificationCli(ctx)
 
@@ -83,7 +83,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Val
 func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Execute_Success() {
 	t := cvqts.T()
 
-	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 		notificationCli := cvqts.GetNotificationCli(ctx)
 
@@ -117,7 +117,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Execute_InvalidPayload() {
 	t := cvqts.T()
 
-	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 		notificationCli := cvqts.GetNotificationCli(ctx)
 
@@ -134,7 +134,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Execute_NonExistentContact() {
 	t := cvqts.T()
 
-	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 		notificationCli := cvqts.GetNotificationCli(ctx)
 
@@ -158,7 +158,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 func (cvqts *ContactVerificationQueueTestSuite) TestNewContactVerificationQueue() {
 	t := cvqts.T()
 
-	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 		notificationCli := cvqts.GetNotificationCli(ctx)
 

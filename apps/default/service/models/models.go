@@ -5,7 +5,7 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 )
 
 // Profile type and relationship type constants.
@@ -49,22 +49,22 @@ func ProfileTypeIDToEnum(profileTypeID uint) profilev1.ProfileType {
 }
 
 type ProfileType struct {
-	frame.BaseModel
+	data.BaseModel
 	UID         uint `sql:"unique"`
 	Name        string
 	Description string
 }
 
 type Profile struct {
-	frame.BaseModel
-	Properties frame.JSONMap
+	data.BaseModel
+	Properties data.JSONMap
 
 	ProfileTypeID string `gorm:"type:varchar(50);index:profile_id"`
 	ProfileType   ProfileType
 }
 
 type Contact struct {
-	frame.BaseModel
+	data.BaseModel
 	Detail string `gorm:"type:varchar(50);uniqueIndex"`
 
 	ContactType        string `gorm:"type:varchar(50)"`
@@ -74,7 +74,7 @@ type Contact struct {
 
 	ProfileID string `gorm:"type:varchar(50);index:profile_id"`
 
-	Properties frame.JSONMap
+	Properties data.JSONMap
 
 	VerificationID string `gorm:"type:varchar(50)"`
 }
@@ -106,14 +106,14 @@ func (c *Contact) ToAPI(partial bool) *profilev1.ContactObject {
 }
 
 type Roster struct {
-	frame.BaseModel
+	data.BaseModel
 
 	ProfileID string `gorm:"type:varchar(50);uniqueIndex:roster_composite_index;index:profile_id"`
 
 	ContactID string `gorm:"type:varchar(50);uniqueIndex:roster_composite_index;"`
 	Contact   *Contact
 
-	Properties frame.JSONMap
+	Properties data.JSONMap
 }
 
 func (r *Roster) ToAPI() *profilev1.RosterObject {
@@ -126,7 +126,7 @@ func (r *Roster) ToAPI() *profilev1.RosterObject {
 }
 
 type Verification struct {
-	frame.BaseModel
+	data.BaseModel
 	ProfileID  string    `gorm:"type:varchar(50);index:profile_id" json:"profile_id"`
 	ContactID  string    `gorm:"type:varchar(50);index:contact_id" json:"contact_id"`
 	Code       string    `gorm:"type:varchar(255)"                 json:"code"`
@@ -135,7 +135,7 @@ type Verification struct {
 }
 
 type VerificationAttempt struct {
-	frame.BaseModel
+	data.BaseModel
 	VerificationID string `gorm:"type:varchar(50);index:verification_id"`
 
 	Data  string `gorm:"type:varchar(250)"`
@@ -147,7 +147,7 @@ type VerificationAttempt struct {
 }
 
 type Country struct {
-	frame.BaseModel
+	data.BaseModel
 	ISO3         string `gorm:"unique"`
 	ISO2         string `              sql:"unique"`
 	Name         string
@@ -158,7 +158,7 @@ type Country struct {
 }
 
 type Address struct {
-	frame.BaseModel
+	data.BaseModel
 	Name      string
 	AdminUnit string
 
@@ -167,11 +167,11 @@ type Address struct {
 	CountryID string `gorm:"type:varchar(50)"`
 	Country   *Country
 
-	Properties frame.JSONMap
+	Properties data.JSONMap
 }
 
 type ProfileAddress struct {
-	frame.BaseModel
+	data.BaseModel
 	Name string
 
 	AddressID string `gorm:"type:varchar(50);index:address_id"`
@@ -182,7 +182,7 @@ type ProfileAddress struct {
 }
 
 type RelationshipType struct {
-	frame.BaseModel
+	data.BaseModel
 	UID         uint `sql:"unique"`
 	Name        string
 	Description string
@@ -198,7 +198,7 @@ func RelationshipTypeIDToEnum(relationshipTypeID uint) profilev1.RelationshipTyp
 }
 
 type Relationship struct {
-	frame.BaseModel
+	data.BaseModel
 
 	ParentObject   string `gorm:"type:varchar(50)"`
 	ParentObjectID string `gorm:"type:varchar(50);index:parent_obj_id"`
@@ -209,7 +209,7 @@ type Relationship struct {
 	RelationshipTypeID string `gorm:"type:varchar(50);index:relationship_type_id"`
 	RelationshipType   *RelationshipType
 
-	Properties frame.JSONMap
+	Properties data.JSONMap
 }
 
 func (r *Relationship) ToAPI() *profilev1.RelationshipObject {

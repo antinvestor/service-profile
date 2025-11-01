@@ -5,8 +5,9 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/security"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
@@ -28,7 +29,7 @@ func (rts *RosterTestSuite) createRoster(
 	ctx context.Context,
 	rb business.RosterBusiness,
 	profileID string,
-	contacts map[string]frame.JSONMap,
+	contacts map[string]data.JSONMap,
 ) (map[string]*profilev1.RosterObject, error) {
 	var requestData []*profilev1.AddContactRequest
 	for detail, extra := range contacts {
@@ -38,7 +39,7 @@ func (rts *RosterTestSuite) createRoster(
 		})
 	}
 
-	claims := frame.ClaimsFromMap(map[string]string{
+	claims := security.ClaimsFromMap(map[string]string{
 		"sub":          profileID,
 		"tenant_id":    "tenantx",
 		"partition_id": "party",
@@ -62,7 +63,7 @@ func (rts *RosterTestSuite) createRoster(
 func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, _ *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, _ *definition.DependencyOption) {
 		contact := &models.Contact{
 			Detail:             "+256757546244",
 			ProfileID:          "ownersId123",
@@ -72,7 +73,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 		roster := &models.Roster{
 			Contact:    contact,
 			ProfileID:  "profile123",
-			Properties: frame.JSONMap{"key1": "value1"},
+			Properties: data.JSONMap{"key1": "value1"},
 		}
 
 		result := roster.ToAPI()
@@ -83,11 +84,11 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
-		rosterMap, err := rts.createRoster(ctx, rb, "profile123", map[string]frame.JSONMap{
+		rosterMap, err := rts.createRoster(ctx, rb, "profile123", map[string]data.JSONMap{
 			"roster@test.com": {"key1": "value1"},
 		})
 		require.NoError(t, err)
@@ -111,11 +112,11 @@ func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
-		rosterMap, err := rts.createRoster(ctx, rb, "profRemov123", map[string]frame.JSONMap{
+		rosterMap, err := rts.createRoster(ctx, rb, "profRemov123", map[string]data.JSONMap{
 			"rosterremove@test.com": {"key1": "value1"},
 		})
 		require.NoError(t, err)
@@ -138,7 +139,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
 func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
@@ -155,13 +156,13 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
 func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		rb := business.NewRosterBusiness(ctx, svc)
 
 		profileID := "searchProfileC1"
 
-		_, err := rts.createRoster(ctx, rb, profileID, map[string]frame.JSONMap{
+		_, err := rts.createRoster(ctx, rb, profileID, map[string]data.JSONMap{
 			"rostersearch@test.com":        {"name": "John Osogo", "age": "33"},
 			"searchrostercontact@test.com": {"name": "Thomas Balindhe", "age": "36"},
 			"+256755718293":                {"name": "Mary Osogo", "age": "21"},
@@ -250,7 +251,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				claims := frame.ClaimsFromMap(map[string]string{
+				claims := security.ClaimsFromMap(map[string]string{
 					"sub":          tt.profileID,
 					"tenant_id":    "tenantx",
 					"partition_id": "party",

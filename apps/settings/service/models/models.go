@@ -7,7 +7,7 @@ import (
 
 // SettingRef Table holds the templete details.
 type SettingRef struct {
-	frame.BaseModel
+	data.BaseModel
 
 	Name     string `gorm:"type:varchar(255)"`
 	Object   string `gorm:"type:varchar(255)"`
@@ -28,7 +28,7 @@ func (model *SettingRef) ToAPI() *settingsV1.Setting {
 }
 
 type SettingVal struct {
-	frame.BaseModel
+	data.BaseModel
 	Ref     string `gorm:"type:varchar(50);unique_index"`
 	Detail  string `gorm:"type:text"`
 	Version int
@@ -46,7 +46,7 @@ func (model *SettingVal) ToAPI(sRef *SettingRef) *settingsV1.SettingObject {
 
 // SettingAudit table holds a history of all the setting values overtime.
 type SettingAudit struct {
-	frame.BaseModel
+	data.BaseModel
 
 	Ref     string `gorm:"type:varchar(50);unique_index"`
 	Detail  string `gorm:"type:text"`

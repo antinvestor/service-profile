@@ -45,9 +45,9 @@ func (suite *QueueTestSuite) SetupSuite() {
 
 func (suite *QueueTestSuite) WithTestDependancies(
 	t *testing.T,
-	fn func(t *testing.T, dep *definition.DependancyOption),
+	fn func(t *testing.T, dep *definition.DependencyOption),
 ) {
-	options := []*definition.DependancyOption{
+	options := []*definition.DependencyOption{
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
 	}
 
@@ -56,7 +56,7 @@ func (suite *QueueTestSuite) WithTestDependancies(
 
 func (suite *QueueTestSuite) CreateService(
 	t *testing.T,
-	depOpts *definition.DependancyOption,
+	depOpts *definition.DependencyOption,
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
@@ -93,7 +93,7 @@ func (suite *QueueTestSuite) CreateService(
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create repositories
@@ -133,7 +133,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 		deviceLog := &models.DeviceLog{
 			DeviceID:        device.ID,
 			DeviceSessionID: session.ID,
-			Data: frame.JSONMap{
+			Data: data.JSONMap{
 				"action":    "page_view",
 				"userAgent": session.UserAgent,
 				"ip":        session.IP,
@@ -146,26 +146,26 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 		// Test cases
 		testCases := []struct {
 			name        string
-			payload     frame.JSONMap
+			payload     data.JSONMap
 			expectError bool
 		}{
 			{
 				name: "handle_valid_device_log",
-				payload: frame.JSONMap{
+				payload: data.JSONMap{
 					"id": deviceLog.ID,
 				},
 				expectError: false,
 			},
 			{
 				name: "handle_non-existent_log",
-				payload: frame.JSONMap{
+				payload: data.JSONMap{
 					"id": "non-existent-log",
 				},
 				expectError: false, // Handler should handle gracefully
 			},
 			{
 				name: "handle_empty_log_ID",
-				payload: frame.JSONMap{
+				payload: data.JSONMap{
 					"id": "",
 				},
 				expectError: false, // Handler should handle gracefully
@@ -188,7 +188,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateSessionFromLog() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create repositories
@@ -216,7 +216,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateSessionFromLog
 		// Create a device log with session data
 		deviceLog := &models.DeviceLog{
 			DeviceID: device.ID,
-			Data: frame.JSONMap{
+			Data: data.JSONMap{
 				"userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
 				"ip":        "192.168.1.1",
 				"tz":        "UTC",
@@ -238,7 +238,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateSessionFromLog
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateDeviceFromSess() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create repositories
@@ -273,7 +273,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateDeviceFromSess
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create handler
@@ -283,14 +283,14 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 
 		testCases := []struct {
 			name    string
-			data    frame.JSONMap
+			data    data.JSONMap
 			geoIP   *queue.GeoIP
 			wantTz  string
 			wantCur string
 		}{
 			{
 				name: "extract from data map",
-				data: frame.JSONMap{
+				data: data.JSONMap{
 					"tz":    "America/New_York",
 					"lang":  "en-US,en",
 					"cur":   "USD",
@@ -303,7 +303,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 			},
 			{
 				name: "extract from geoIP fallback",
-				data: frame.JSONMap{},
+				data: data.JSONMap{},
 				geoIP: &queue.GeoIP{
 					Timezone:           "Europe/London",
 					Languages:          "en-GB,en",
@@ -316,7 +316,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 			},
 			{
 				name: "data overrides geoIP",
-				data: frame.JSONMap{
+				data: data.JSONMap{
 					"tz":  "Asia/Tokyo",
 					"cur": "JPY",
 				},
@@ -342,7 +342,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create handler
@@ -352,14 +352,14 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 
 		testCases := []struct {
 			name     string
-			data     frame.JSONMap
+			data     data.JSONMap
 			geoIP    *queue.GeoIP
 			wantLat  float64
 			wantLong float64
 		}{
 			{
 				name: "extract from data map",
-				data: frame.JSONMap{
+				data: data.JSONMap{
 					"lat":  40.7128,
 					"long": -74.0060,
 				},
@@ -369,7 +369,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 			},
 			{
 				name: "extract from geoIP",
-				data: frame.JSONMap{},
+				data: data.JSONMap{},
 				geoIP: &queue.GeoIP{
 					Country:   "United States",
 					Region:    "New York",
@@ -382,7 +382,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 			},
 			{
 				name: "data overrides geoIP",
-				data: frame.JSONMap{
+				data: data.JSONMap{
 					"lat":  35.6762,
 					"long": 139.6503,
 				},
@@ -408,7 +408,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 }
 
 func (suite *QueueTestSuite) TestQueryIPGeo() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Test QueryIPGeo function

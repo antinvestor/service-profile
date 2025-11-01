@@ -2,24 +2,24 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
-	"buf.build/go/protovalidate"
+	"connectrpc.com/connect"
+	"connectrpc.com/otelconnect"
 	apis "github.com/antinvestor/apis/go/common"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/util"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/apis/go/notification/v1/notificationv1connect"
+	aconfig "github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/handlers"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/security"
+	securityconnect "github.com/pitabwire/frame/security/interceptors/connect"
+	securityhttp "github.com/pitabwire/frame/security/interceptors/http"
+	"github.com/pitabwire/frame/security/openid"
+	"github.com/pitabwire/util"
 )
 
 func main() {
@@ -27,14 +27,14 @@ func main() {
 	ctx := context.Background()
 
 	// Initialize configuration
-	cfg, err := frame.ConfigLoadWithOIDC[config.ProfileConfig](ctx)
+	cfg, err := config.LoadWithOIDC[aconfig.ProfileConfig](ctx)
 	if err != nil {
 		util.Log(ctx).With("err", err).Error("could not process configs")
 		return
 	}
 
 	// Create service
-	ctx, svc := frame.NewServiceWithContext(ctx, serviceName, frame.WithConfig(&cfg))
+	ctx, svc := frame.NewServiceWithContext(ctx, serviceName, frame.WithConfig(&cfg), frame.WithRegisterServerOauth2Client())
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
@@ -43,26 +43,20 @@ func main() {
 		return
 	}
 
-	// Register for JWT
-	err = svc.RegisterForJwt(ctx)
-	if err != nil {
-		log.WithError(err).Fatal("main -- could not register for jwt")
-	}
+	sm := svc.SecurityManager()
 
 	// Setup clients and services
-	notificationCli, nErr := setupNotificationClient(ctx, svc, cfg)
-	if err != nil {
+	notificationCli, nErr := setupNotificationClient(ctx, sm, cfg)
+	if nErr != nil {
 		log.WithError(nErr).Fatal("main -- Could not setup notification svc")
 	}
 
-	// Setup GRPC server
-	grpcServer, implementation := setupGRPCServer(ctx, svc, notificationCli, cfg, serviceName, log)
+	// Setup Connect server
+	connectHandler := setupConnectServer(ctx, svc, notificationCli)
 
-	// Setup HTTP handlers and proxy
-	serviceOptions, httpErr := setupHTTPHandlers(ctx, svc, implementation, cfg, grpcServer)
-	if err != nil {
-		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
-	}
+	// Setup HTTP handlers
+	// Start with datastore option
+	serviceOptions := []frame.Option{frame.WithDatastore(), frame.WithHTTPHandler(connectHandler)}
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueRelationshipConnectName,
@@ -89,7 +83,7 @@ func main() {
 		WithField("server grpc port", cfg.GrpcPort()).
 		Info(" Initiating server operations")
 
-	err = implementation.Service.Run(ctx, "")
+	err = svc.Run(ctx, "")
 	if err != nil {
 		log.WithError(err).Fatal("could not run Server")
 	}
@@ -99,7 +93,7 @@ func main() {
 func handleDatabaseMigration(
 	ctx context.Context,
 	svc *frame.Service,
-	cfg config.ProfileConfig,
+	cfg aconfig.ProfileConfig,
 	log *util.LogEntry,
 ) bool {
 	serviceOptions := []frame.Option{frame.WithDatastore()}
@@ -119,88 +113,46 @@ func handleDatabaseMigration(
 // setupNotificationClient creates and configures the notification client.
 func setupNotificationClient(
 	ctx context.Context,
-	svc *frame.Service,
-	cfg config.ProfileConfig) (*notificationv1.NotificationClient, error) {
+	clHolder security.InternalOauth2ClientHolder,
+	cfg aconfig.ProfileConfig) (*notificationv1.NotificationClient, error) {
 	return notificationv1.NewNotificationClient(ctx,
 		apis.WithEndpoint(cfg.NotificationServiceURI),
 		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
-		apis.WithTokenUsername(svc.JwtClientID()),
-		apis.WithTokenPassword(svc.JwtClientSecret()),
-		apis.WithScopes(frame.ConstSystemScopeInternal),
+		apis.WithTokenUsername(clHolder.JwtClientID()),
+		apis.WithTokenPassword(clHolder.JwtClientSecret()),
+		apis.WithScopes(openid.ConstSystemScopeInternal),
 		apis.WithAudiences("service_notifications"))
 }
 
-// setupGRPCServer initializes and configures the gRPC server.
-func setupGRPCServer(ctx context.Context, svc *frame.Service,
-	notificationCli *notificationv1.NotificationClient,
-	cfg config.ProfileConfig,
-	serviceName string,
-	log *util.LogEntry) (*grpc.Server, *handlers.ProfileServer) {
-	jwtAudience := cfg.Oauth2JwtVerifyAudience
-	if jwtAudience == "" {
-		jwtAudience = serviceName
-	}
+// setupConnectServer initializes and configures the gRPC server.
+func setupConnectServer(ctx context.Context, svc *frame.Service,
+	notificationCli *notificationv1.NotificationClient) http.Handler {
 
-	validator, err := protovalidate.New()
+	securityMan := svc.SecurityManager()
+
+	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
-		log.WithError(err).Fatal("could not load validator for proto messages")
+		util.Log(ctx).WithError(err).Fatal("could not configure open telemetry")
 	}
 
-	grpcServer := grpc.NewServer(
-		grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		grpc.ChainUnaryInterceptor(
-			svc.UnaryAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer),
-			protovalidateinterceptor.UnaryServerInterceptor(validator)),
+	validateInterceptor, err := securityconnect.NewValidationInterceptor()
+	if err != nil {
+		util.Log(ctx).WithError(err).Fatal("could not configure validation interceptor")
+	}
 
-		grpc.ChainStreamInterceptor(
-			svc.StreamAuthInterceptor(jwtAudience, cfg.Oauth2JwtVerifyIssuer),
-			protovalidateinterceptor.StreamServerInterceptor(validator),
-		),
-	)
+	authenticator := securityMan.GetAuthenticator(ctx)
+	authInterceptor := securityconnect.NewAuthInterceptor(authenticator)
 
 	implementation := handlers.NewProfileServer(ctx, svc, notificationCli)
-	profilev1.RegisterProfileServiceServer(grpcServer, implementation)
 
-	return grpcServer, implementation
-}
+	_, serverHandler := notificationv1connect.NewNotificationServiceHandler(
+		implementation, connect.WithInterceptors(authInterceptor, otelInterceptor, validateInterceptor))
 
-// setupHTTPHandlers configures HTTP handlers and proxy.
-func setupHTTPHandlers(
-	ctx context.Context,
-	svc *frame.Service,
-	implementation *handlers.ProfileServer,
-	cfg config.ProfileConfig,
-	grpcServer *grpc.Server,
-) ([]frame.Option, error) {
-	// Start with datastore option
-	serviceOptions := []frame.Option{frame.WithDatastore()}
+	publicRestHandler := securityhttp.AuthenticationMiddleware(implementation.NewSecureRouterV1(), authenticator)
 
-	// Add GRPC server option
-	grpcServerOpt := frame.WithGRPCServer(grpcServer)
-	serviceOptions = append(serviceOptions, grpcServerOpt)
+	mux := http.NewServeMux()
+	mux.Handle("/", serverHandler)
+	mux.Handle("/public/", http.StripPrefix("/public", publicRestHandler))
 
-	// Setup proxy
-	proxyOptions := apis.ProxyOptions{
-		GrpcServerEndpoint: fmt.Sprintf("localhost%s", cfg.GrpcPort()),
-		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
-	}
-
-	proxyMux, err := profilev1.CreateProxyHandler(ctx, proxyOptions)
-	if err != nil {
-		return nil, err
-	}
-
-	// Setup REST handlers
-	jwtAudience := cfg.Oauth2JwtVerifyAudience
-	if jwtAudience == "" {
-		jwtAudience = svc.Name()
-	}
-
-	profileServiceRestHandlers := svc.AuthenticationMiddleware(
-		implementation.NewSecureRouterV1(), jwtAudience, cfg.Oauth2JwtVerifyIssuer)
-
-	proxyMux.Handle("/public/", http.StripPrefix("/public", profileServiceRestHandlers))
-	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
-
-	return serviceOptions, nil
+	return mux
 }

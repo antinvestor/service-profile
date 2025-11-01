@@ -27,7 +27,7 @@ func TestClientSetupQueueSuite(t *testing.T) {
 func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Name() {
 	t := csqts.T()
 
-	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, _ := csqts.CreateService(t, dep)
 
 		queue := events.NewClientConnectedSetupQueue(svc)
@@ -38,7 +38,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Name() {
 func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_PayloadType() {
 	t := csqts.T()
 
-	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, _ := csqts.CreateService(t, dep)
 
 		queue := events.NewClientConnectedSetupQueue(svc)
@@ -53,7 +53,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_PayloadTyp
 func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Validate() {
 	t := csqts.T()
 
-	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
 		queue := events.NewClientConnectedSetupQueue(svc)
@@ -74,7 +74,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Validate()
 func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_Success() {
 	t := csqts.T()
 
-	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
 		// Create test data
@@ -114,7 +114,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_Su
 func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_InvalidPayload() {
 	t := csqts.T()
 
-	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
 		queue := events.NewClientConnectedSetupQueue(svc)
@@ -130,7 +130,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_In
 func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_NonExistentRelationship() {
 	t := csqts.T()
 
-	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
 		queue := events.NewClientConnectedSetupQueue(svc)
@@ -145,7 +145,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_No
 func (csqts *ClientSetupQueueTestSuite) TestNewClientConnectedSetupQueue() {
 	t := csqts.T()
 
-	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, _ := csqts.CreateService(t, dep)
 
 		queue := events.NewClientConnectedSetupQueue(svc)

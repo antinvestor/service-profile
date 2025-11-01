@@ -7,6 +7,8 @@ import (
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/security"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
@@ -63,7 +65,7 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 
 	logger := vq.Service.Log(ctx).WithField("payload", verification.GetID()).WithField("type", vq.Name())
 
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	contact, err := vq.ContactRepo.GetByID(ctx, verification.ContactID)
 	if err != nil {
@@ -81,7 +83,7 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		return errors.New("invalid service configuration")
 	}
 
-	variables := make(frame.JSONMap)
+	variables := make(data.JSONMap)
 	variables["verification_id"] = verification.GetID()
 	variables["code"] = verification.Code
 	variables["expiryDate"] = verification.ExpiresAt.String()

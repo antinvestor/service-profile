@@ -4,19 +4,23 @@ import (
 	"context"
 	"strings"
 
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type verificationRepository struct {
-	service *frame.Service
+	datastore.BaseRepository[*models.Verification]
 }
 
-func NewVerificationRepository(service *frame.Service) VerificationRepository {
+func NewVerificationRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) VerificationRepository {
 	repo := verificationRepository{
-		service: service,
+		BaseRepository: datastore.NewBaseRepository[*models.Verification](
+			ctx, dbPool, workMan, func() *models.Verification { return &models.Verification{} },
+		),
 	}
 	return &repo
 }
@@ -26,12 +30,12 @@ func (vr *verificationRepository) GetByID(
 	verificationID string,
 ) (*models.Verification, error) {
 	verification := &models.Verification{}
-	err := vr.service.DB(ctx, false).First(verification, "id = ?", verificationID).Error
+	err := vr.Pool().DB(ctx, false).First(verification, "id = ?", verificationID).Error
 	return verification, err
 }
 
 func (vr *verificationRepository) Save(ctx context.Context, verification *models.Verification) error {
-	err := vr.service.DB(ctx, false).Create(verification).Error
+	err := vr.Pool().DB(ctx, false).Create(verification).Error
 	if err != nil {
 		if !strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return err
@@ -45,7 +49,7 @@ func (vr *verificationRepository) GetAttempts(
 	verificationID string,
 ) ([]*models.VerificationAttempt, error) {
 	verificationAttemptList := make([]*models.VerificationAttempt, 0)
-	err := vr.service.DB(ctx, true).
+	err := vr.Pool().DB(ctx, true).
 		Preload(clause.Associations).
 		Where("verification_id = ?", verificationID).
 		Find(&verificationAttemptList).
@@ -57,7 +61,7 @@ func (vr *verificationRepository) SaveAttempt(
 	ctx context.Context,
 	verificationAttempt *models.VerificationAttempt,
 ) error {
-	err := vr.service.DB(ctx, false).Create(verificationAttempt).Error
+	err := vr.Pool().DB(ctx, false).Create(verificationAttempt).Error
 	if err != nil {
 		if !strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
 			return err

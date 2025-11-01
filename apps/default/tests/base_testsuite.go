@@ -11,6 +11,7 @@ import (
 	notificationv1_mocks "github.com/antinvestor/apis/go/notification/v1_mocks"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
@@ -19,7 +20,7 @@ import (
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
 
-	"github.com/antinvestor/service-profile/apps/default/config"
+	aconfig "github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -48,17 +49,17 @@ func (bs *BaseTestSuite) SetupSuite() {
 
 func (bs *BaseTestSuite) CreateService(
 	t *testing.T,
-	depOpts *definition.DependancyOption,
+	depOpts *definition.DependencyOption,
 ) (*frame.Service, context.Context) {
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 
 	ctx := t.Context()
-	profileConfig, err := frame.ConfigFromEnv[config.ProfileConfig]()
+	cfg, err := config.FromEnv[aconfig.ProfileConfig]()
 	require.NoError(t, err)
 
-	profileConfig.LogLevel = "debug"
-	profileConfig.RunServiceSecurely = false
-	profileConfig.ServerPort = ""
+	cfg.LogLevel = "debug"
+	cfg.RunServiceSecurely = false
+	cfg.ServerPort = ""
 
 	res := depOpts.ByIsDatabase(ctx)
 	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
@@ -68,21 +69,21 @@ func (bs *BaseTestSuite) CreateService(
 		cleanup(t.Context())
 	})
 
-	profileConfig.DatabasePrimaryURL = []string{testDS.String()}
-	profileConfig.DatabaseReplicaURL = []string{testDS.String()}
+	cfg.DatabasePrimaryURL = []string{testDS.String()}
+	cfg.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(t.Context(), "profile tests",
-		frame.WithConfig(&profileConfig),
+		frame.WithConfig(&cfg),
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
-		profileConfig.QueueRelationshipConnectName,
-		profileConfig.QueueRelationshipConnectURI,
+		cfg.QueueRelationshipConnectName,
+		cfg.QueueRelationshipConnectURI,
 	)
 	relationshipDisConnectQueuePublisher := frame.WithRegisterPublisher(
-		profileConfig.QueueRelationshipDisConnectName,
-		profileConfig.QueueRelationshipDisConnectURI,
+		cfg.QueueRelationshipDisConnectName,
+		cfg.QueueRelationshipDisConnectURI,
 	)
 
 	svc.Init(ctx,
@@ -166,11 +167,11 @@ func (bs *BaseTestSuite) TearDownSuite() {
 // WithTestDependancies Creates subtests with each known DependancyOption.
 func (bs *BaseTestSuite) WithTestDependancies(
 	t *testing.T,
-	testFn func(t *testing.T, dep *definition.DependancyOption),
+	testFn func(t *testing.T, dep *definition.DependencyOption),
 ) {
-	options := []*definition.DependancyOption{
+	options := []*definition.DependencyOption{
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
 	}
 
-	frametests.WithTestDependancies(t, options, testFn)
+	frametests.WithTestDependencies(t, options, testFn)
 }

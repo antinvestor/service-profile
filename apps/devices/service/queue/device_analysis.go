@@ -50,7 +50,7 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]s
 		return err
 	}
 
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	session, err := dq.getOrCreateSession(ctx, deviceLog)
 	if err != nil {
@@ -79,7 +79,7 @@ func (dq *DeviceAnalysisQueueHandler) getDeviceLog(
 
 	deviceLog, err := dq.DeviceLogRepository.GetByID(ctx, deviceLogID)
 	if err != nil {
-		if frame.ErrorIsNoRows(err) {
+		if data.ErrorIsNoRows(err) {
 			dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log not found")
 			return nil, ErrDeviceLogNotFound
 		}
@@ -102,7 +102,7 @@ func (dq *DeviceAnalysisQueueHandler) getOrCreateSession(
 		return dq.updateSessionLastSeen(ctx, session, deviceLog)
 	}
 
-	if !frame.ErrorIsNoRows(err) {
+	if !data.ErrorIsNoRows(err) {
 		dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
 			Warn("error fetching device session")
 		return nil, err
@@ -153,7 +153,7 @@ func (dq *DeviceAnalysisQueueHandler) getOrCreateDevice(
 		return device, nil
 	}
 
-	if !frame.ErrorIsNoRows(err) {
+	if !data.ErrorIsNoRows(err) {
 		dq.Service.Log(ctx).WithField("deviceID", session.DeviceID).WithError(err).
 			Warn("error fetching device")
 		return nil, err
@@ -265,7 +265,7 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 
 func (dq *DeviceAnalysisQueueHandler) ExtractLocaleData(
 	_ context.Context,
-	data frame.JSONMap,
+	data data.JSONMap,
 	geoIP *GeoIP,
 ) (*devicev1.Locale, error) {
 	locale := devicev1.Locale{}
@@ -302,10 +302,10 @@ func (dq *DeviceAnalysisQueueHandler) ExtractLocaleData(
 
 func (dq *DeviceAnalysisQueueHandler) ExtractLocationData(
 	_ context.Context,
-	data frame.JSONMap,
+	data data.JSONMap,
 	geoIP *GeoIP,
-) frame.JSONMap {
-	locationData := frame.JSONMap{}
+) data.JSONMap {
+	locationData := data.JSONMap{}
 
 	if geoIP != nil {
 		locationData["country"] = geoIP.Country

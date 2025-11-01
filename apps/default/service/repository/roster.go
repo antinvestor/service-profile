@@ -3,56 +3,44 @@ package repository
 import (
 	"context"
 	"strings"
-	"time"
 
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type rosterRepository struct {
-	service *frame.Service
+	datastore.BaseRepository[*models.Roster]
 }
 
-func (cr *rosterRepository) Search(
+func NewRosterRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) RosterRepository {
+	rosterRepo := rosterRepository{
+		BaseRepository: datastore.NewBaseRepository[*models.Roster](
+			ctx, dbPool, workMan, func() *models.Roster { return &models.Roster{} },
+		),
+	}
+	return &rosterRepo
+}
+
+func (rr *rosterRepository) Search(
 	ctx context.Context,
-	query *framedata.SearchQuery,
-) (frame.JobResultPipe[[]*models.Roster], error) {
-	return framedata.StableSearch[models.Roster](ctx, cr.service, query, func(
+	query *data.SearchQuery,
+) (workerpool.JobResultPipe[[]*models.Roster], error) {
+	return data.StableSearch[*models.Roster](ctx, rr.WorkManager(), query, func(
 		ctx context.Context,
-		query *framedata.SearchQuery,
+		query *data.SearchQuery,
 	) ([]*models.Roster, error) {
 		var rosterList []*models.Roster
 
-		paginator := query.Pagination
-
-		db := cr.service.DB(ctx, true).
+		db := rr.Pool().DB(ctx, true).
 			Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
-			Preload("Contact").
-			Limit(paginator.Limit).Offset(paginator.Offset)
+			Preload("Contact")
 
-		if query.Fields != nil {
-			startAt, sok := query.Fields["start_date"]
-			stopAt, stok := query.Fields["end_date"]
-			if sok && startAt != nil && stok && stopAt != nil {
-				startDate, ok1 := startAt.(*time.Time)
-				endDate, ok2 := stopAt.(*time.Time)
-				if ok1 && ok2 {
-					db = db.Where(
-						"rosters.created_at BETWEEN ? AND ? ",
-						startDate.Format("2020-01-31T00:00:00Z"),
-						endDate.Format("2020-01-31T00:00:00Z"),
-					)
-				}
-			}
-
-			profileID, pok := query.Fields["profile_id"]
-			if pok {
-				db = db.Where(" rosters.profile_id = ?", profileID)
-			}
-		}
+		rr.DefaultSearchFunction(ctx, db, query)
 
 		if query.Query != "" {
 			// Use TSVector with prefix matching for partial searches
@@ -79,18 +67,12 @@ func (cr *rosterRepository) Search(
 	})
 }
 
-func (cr *rosterRepository) GetByID(ctx context.Context, id string) (*models.Roster, error) {
-	roster := &models.Roster{}
-	err := cr.service.DB(ctx, true).Preload(clause.Associations).First(roster, "id = ?", id).Error
-	return roster, err
-}
-
-func (cr *rosterRepository) GetByContactAndProfileID(
+func (rr *rosterRepository) GetByContactAndProfileID(
 	ctx context.Context,
 	profileID, contactID string,
 ) (*models.Roster, error) {
 	roster := &models.Roster{}
-	err := cr.service.DB(ctx, true).
+	err := rr.Pool().DB(ctx, true).
 		Preload(clause.Associations).
 		Where("profile_id = ? AND contact_id = ?", profileID, contactID).
 		First(roster).
@@ -98,9 +80,9 @@ func (cr *rosterRepository) GetByContactAndProfileID(
 	return roster, err
 }
 
-func (cr *rosterRepository) GetByContactID(ctx context.Context, contactID string) ([]*models.Roster, error) {
+func (rr *rosterRepository) GetByContactID(ctx context.Context, contactID string) ([]*models.Roster, error) {
 	rosterList := make([]*models.Roster, 0)
-	err := cr.service.DB(ctx, true).
+	err := rr.Pool().DB(ctx, true).
 		Preload(clause.Associations).
 		Where("contact_id = ?", contactID).
 		Find(&rosterList).
@@ -108,36 +90,12 @@ func (cr *rosterRepository) GetByContactID(ctx context.Context, contactID string
 	return rosterList, err
 }
 
-func (cr *rosterRepository) GetByProfileID(ctx context.Context, profileID string) ([]*models.Roster, error) {
+func (rr *rosterRepository) GetByProfileID(ctx context.Context, profileID string) ([]*models.Roster, error) {
 	rosterList := make([]*models.Roster, 0)
-	err := cr.service.DB(ctx, true).
+	err := rr.Pool().DB(ctx, true).
 		Preload(clause.Associations).
 		Where("profile_id = ?", profileID).
 		Find(&rosterList).
 		Error
 	return rosterList, err
-}
-
-func (cr *rosterRepository) Save(ctx context.Context, roster *models.Roster) (*models.Roster, error) {
-	if roster.ID == "" {
-		roster.GenID(ctx)
-	}
-
-	err := cr.service.DB(ctx, false).Save(roster).Error
-	return roster, err
-}
-
-func (cr *rosterRepository) Delete(ctx context.Context, id string) error {
-	roster, err := cr.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
-	return cr.service.DB(ctx, false).Delete(roster).Error
-}
-
-func NewRosterRepository(service *frame.Service) RosterRepository {
-	rosterRepo := rosterRepository{
-		service: service,
-	}
-	return &rosterRepo
 }

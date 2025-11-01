@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/frame/data"
 	"gorm.io/gorm"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
@@ -32,10 +32,10 @@ func (dr *deviceRepository) GetByID(ctx context.Context, id string) (*models.Dev
 }
 
 func (dr *deviceRepository) Search(ctx context.Context,
-	query *framedata.SearchQuery) (frame.JobResultPipe[[]*models.Device], error) {
-	return framedata.StableSearch[models.Device](ctx, dr.service, query, func(
+	query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.Device], error) {
+	return data.StableSearch[models.Device](ctx, dr.service, query, func(
 		ctx context.Context,
-		query *framedata.SearchQuery,
+		query *data.SearchQuery,
 	) ([]*models.Device, error) {
 		var deviceList []*models.Device
 

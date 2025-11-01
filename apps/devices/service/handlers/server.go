@@ -108,7 +108,7 @@ func (ds *DevicesServer) Create(ctx context.Context, req *devicev1.CreateRequest
 	deviceID := util.IDString()
 
 	// Add device name to properties if provided
-	var properties frame.JSONMap = req.GetProperties().AsMap()
+	var properties data.JSONMap = req.GetProperties().AsMap()
 
 	if req.GetName() != "" {
 		properties["device_name"] = req.GetName()

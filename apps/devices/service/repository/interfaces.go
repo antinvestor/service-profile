@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/frame/data"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 )
@@ -13,7 +13,7 @@ import (
 type DeviceRepository interface {
 	Save(ctx context.Context, device *models.Device) error
 	GetByID(ctx context.Context, id string) (*models.Device, error)
-	Search(ctx context.Context, query *framedata.SearchQuery) (frame.JobResultPipe[[]*models.Device], error)
+	Search(ctx context.Context, query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.Device], error)
 	RemoveByID(ctx context.Context, id string) (*models.Device, error)
 }
 
@@ -28,7 +28,7 @@ type DeviceSessionRepository interface {
 type DeviceLogRepository interface {
 	Save(ctx context.Context, deviceLog *models.DeviceLog) error
 	GetByID(ctx context.Context, id string) (*models.DeviceLog, error)
-	GetByDeviceID(ctx context.Context, query *framedata.SearchQuery) (frame.JobResultPipe[[]*models.DeviceLog], error)
+	GetByDeviceID(ctx context.Context, query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.DeviceLog], error)
 }
 
 // DeviceKeyRepository defines the operations for managing matrix keys.

@@ -6,7 +6,7 @@ import (
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/frame/data"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
@@ -24,13 +24,13 @@ type DeviceBusiness interface {
 	SearchDevices(
 		ctx context.Context,
 		query *devicev1.SearchRequest,
-	) (frame.JobResultPipe[[]*devicev1.DeviceObject], error)
-	SaveDevice(ctx context.Context, id string, name string, data frame.JSONMap) (*devicev1.DeviceObject, error)
+	) (workerpool.JobResultPipe[[]*devicev1.DeviceObject], error)
+	SaveDevice(ctx context.Context, id string, name string, data data.JSONMap) (*devicev1.DeviceObject, error)
 	LinkDeviceToProfile(
 		ctx context.Context,
 		sessionID string,
 		profileID string,
-		data frame.JSONMap,
+		data data.JSONMap,
 	) (*devicev1.DeviceObject, error)
 	RemoveDevice(ctx context.Context, id string) error
 
@@ -39,21 +39,21 @@ type DeviceBusiness interface {
 		deviceID string,
 		_ devicev1.KeyType,
 		key []byte,
-		extra frame.JSONMap,
+		extra data.JSONMap,
 	) (*devicev1.KeyObject, error)
 	GetKeys(
 		ctx context.Context,
 		deviceID string,
 		_ devicev1.KeyType,
-	) (<-chan frame.JobResult[[]*devicev1.KeyObject], error)
-	RemoveKeys(ctx context.Context, id ...string) (<-chan frame.JobResult[[]*devicev1.KeyObject], error)
+	) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error)
+	RemoveKeys(ctx context.Context, id ...string) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error)
 
 	LogDeviceActivity(
 		ctx context.Context,
 		deviceID, sessionID string,
-		data frame.JSONMap,
+		data data.JSONMap,
 	) (*devicev1.DeviceLog, error)
-	GetDeviceLogs(ctx context.Context, deviceID string) (frame.JobResultPipe[[]*devicev1.DeviceLog], error)
+	GetDeviceLogs(ctx context.Context, deviceID string) (workerpool.JobResultPipe[[]*devicev1.DeviceLog], error)
 }
 
 type deviceBusiness struct {
@@ -81,7 +81,7 @@ func NewDeviceBusiness(_ context.Context, service *frame.Service) DeviceBusiness
 func (b *deviceBusiness) LogDeviceActivity(
 	ctx context.Context,
 	deviceID, sessionID string,
-	extra frame.JSONMap,
+	extra data.JSONMap,
 ) (*devicev1.DeviceLog, error) {
 	log := &models.DeviceLog{
 		DeviceID:        deviceID,
@@ -97,7 +97,7 @@ func (b *deviceBusiness) LogDeviceActivity(
 
 	// Publish to queue for further analysis
 	if b.cfg.QueueDeviceAnalysisName != "" {
-		payload := frame.JSONMap{"id": log.GetID()}
+		payload := data.JSONMap{"id": log.GetID()}
 		_ = b.service.Publish(ctx, b.cfg.QueueDeviceAnalysisName, payload, nil)
 	}
 
@@ -107,14 +107,14 @@ func (b *deviceBusiness) LogDeviceActivity(
 func (b *deviceBusiness) GetDeviceLogs(
 	ctx context.Context,
 	deviceID string,
-) (frame.JobResultPipe[[]*devicev1.DeviceLog], error) {
+) (workerpool.JobResultPipe[[]*devicev1.DeviceLog], error) {
 	resultPipe := frame.NewJob[[]*devicev1.DeviceLog](
-		func(ctx context.Context, result frame.JobResultPipe[[]*devicev1.DeviceLog]) error {
-			searchProperties := frame.JSONMap{
+		func(ctx context.Context, result workerpool.JobResultPipe[[]*devicev1.DeviceLog]) error {
+			searchProperties := data.JSONMap{
 				"device_id": deviceID,
 			}
 
-			q := framedata.NewSearchQuery("", searchProperties, 0, defaultMaxLogsCount)
+			q := data.NewSearchQuery("", searchProperties, 0, defaultMaxLogsCount)
 
 			logsResult, err := b.deviceLogRepo.GetByDeviceID(ctx, q)
 			if err != nil {
@@ -156,7 +156,7 @@ func (b *deviceBusiness) SaveDevice(
 	ctx context.Context,
 	id string,
 	name string,
-	data frame.JSONMap,
+	data data.JSONMap,
 ) (*devicev1.DeviceObject, error) {
 	sessionID := data.GetString("session_id")
 
@@ -198,9 +198,9 @@ func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev
 func (b *deviceBusiness) SearchDevices(
 	ctx context.Context,
 	query *devicev1.SearchRequest,
-) (frame.JobResultPipe[[]*devicev1.DeviceObject], error) {
+) (workerpool.JobResultPipe[[]*devicev1.DeviceObject], error) {
 	resultPipe := frame.NewJob[[]*devicev1.DeviceObject](
-		func(ctx context.Context, result frame.JobResultPipe[[]*devicev1.DeviceObject]) error {
+		func(ctx context.Context, result workerpool.JobResultPipe[[]*devicev1.DeviceObject]) error {
 			return b.processSearchRequest(ctx, query, result)
 		},
 	)
@@ -217,7 +217,7 @@ func (b *deviceBusiness) SearchDevices(
 func (b *deviceBusiness) processSearchRequest(
 	ctx context.Context,
 	query *devicev1.SearchRequest,
-	result frame.JobResultPipe[[]*devicev1.DeviceObject],
+	result workerpool.JobResultPipe[[]*devicev1.DeviceObject],
 ) error {
 	searchQuery := b.buildSearchQuery(ctx, query)
 
@@ -230,14 +230,14 @@ func (b *deviceBusiness) processSearchRequest(
 }
 
 // buildSearchQuery creates the search query from the request.
-func (b *deviceBusiness) buildSearchQuery(ctx context.Context, query *devicev1.SearchRequest) *framedata.SearchQuery {
+func (b *deviceBusiness) buildSearchQuery(ctx context.Context, query *devicev1.SearchRequest) *data.SearchQuery {
 	profileID := ""
-	claims := frame.ClaimsFromContext(ctx)
+	claims := security.ClaimsFromContext(ctx)
 	if claims != nil {
 		profileID, _ = claims.GetSubject()
 	}
 
-	searchProperties := frame.JSONMap{
+	searchProperties := data.JSONMap{
 		"profile_id": profileID,
 		"start_date": query.GetStartDate(),
 		"end_date":   query.GetEndDate(),
@@ -247,15 +247,15 @@ func (b *deviceBusiness) buildSearchQuery(ctx context.Context, query *devicev1.S
 		searchProperties[p] = query.GetQuery()
 	}
 
-	return framedata.NewSearchQuery(query.GetQuery(), searchProperties, int(query.GetPage()),
+	return data.NewSearchQuery(query.GetQuery(), searchProperties, int(query.GetPage()),
 		int(query.GetCount()))
 }
 
 // processSearchResults processes the search results and converts them to API objects.
 func (b *deviceBusiness) processSearchResults(
 	ctx context.Context,
-	devicesResult frame.JobResultPipe[[]*models.Device],
-	result frame.JobResultPipe[[]*devicev1.DeviceObject],
+	devicesResult workerpool.JobResultPipe[[]*models.Device],
+	result workerpool.JobResultPipe[[]*devicev1.DeviceObject],
 ) error {
 	var apiDevices []*devicev1.DeviceObject
 
@@ -309,7 +309,7 @@ func (b *deviceBusiness) LinkDeviceToProfile(
 	ctx context.Context,
 	sessionID string,
 	profileID string,
-	_ frame.JSONMap,
+	_ data.JSONMap,
 ) (*devicev1.DeviceObject, error) {
 	session, err := b.sessionRepo.GetByID(ctx, sessionID)
 	if err != nil {
@@ -343,7 +343,7 @@ func (b *deviceBusiness) AddKey(
 	deviceID string,
 	_ devicev1.KeyType,
 	key []byte,
-	extra frame.JSONMap,
+	extra data.JSONMap,
 ) (*devicev1.KeyObject, error) {
 	// Validate that the device exists before adding a key
 	_, err := b.deviceRepo.GetByID(ctx, deviceID)
@@ -369,8 +369,8 @@ func (b *deviceBusiness) GetKeys(
 	ctx context.Context,
 	deviceID string,
 	_ devicev1.KeyType,
-) (<-chan frame.JobResult[[]*devicev1.KeyObject], error) {
-	out := make(chan frame.JobResult[[]*devicev1.KeyObject])
+) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error) {
+	out := make(chan workerpool.JobResult[[]*devicev1.KeyObject])
 
 	go func() {
 		defer close(out)
@@ -395,8 +395,8 @@ func (b *deviceBusiness) GetKeys(
 func (b *deviceBusiness) RemoveKeys(
 	ctx context.Context,
 	id ...string,
-) (<-chan frame.JobResult[[]*devicev1.KeyObject], error) {
-	out := make(chan frame.JobResult[[]*devicev1.KeyObject])
+) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error) {
+	out := make(chan workerpool.JobResult[[]*devicev1.KeyObject])
 
 	go func() {
 		defer close(out)

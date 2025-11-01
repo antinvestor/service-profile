@@ -11,14 +11,14 @@ import (
 
 // Device represents a core device identity.
 type Device struct {
-	frame.BaseModel
+	data.BaseModel
 	ProfileID string `gorm:"index;size:40"`
 	Name      string `gorm:"size:255"`
 	OS        string `gorm:"size:255"`
 }
 
 func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
-	properties, _ := structpb.NewStruct(frame.JSONMap{"owner": d.ProfileID})
+	properties, _ := structpb.NewStruct(data.JSONMap{"owner": d.ProfileID})
 
 	obj := &devicev1.DeviceObject{
 		Id:         d.GetID(),
@@ -45,21 +45,21 @@ func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
 
 // DeviceSession represents a single session of a device.
 type DeviceSession struct {
-	frame.BaseModel
+	data.BaseModel
 	DeviceID  string `gorm:"index"`
 	UserAgent string `gorm:"size:512"`
 	IP        string `gorm:"size:45"`
 	Locale    []byte `gorm:"type:bytea"`
-	Location  frame.JSONMap
+	Location  data.JSONMap
 	LastSeen  time.Time
 }
 
 // DeviceKey holds encryption keys for a device.
 type DeviceKey struct {
-	frame.BaseModel
+	data.BaseModel
 	DeviceID string `gorm:"index"`
 	Key      []byte `gorm:"type:bytea"`
-	Extra    frame.JSONMap
+	Extra    data.JSONMap
 }
 
 func (k *DeviceKey) ToAPI() *devicev1.KeyObject {
@@ -73,10 +73,10 @@ func (k *DeviceKey) ToAPI() *devicev1.KeyObject {
 
 // DeviceLog records activities for a device.
 type DeviceLog struct {
-	frame.BaseModel
+	data.BaseModel
 	DeviceID        string `gorm:"index"`
 	DeviceSessionID string `gorm:"index"`
-	Data            frame.JSONMap
+	Data            data.JSONMap
 }
 
 func (dl *DeviceLog) ToAPI() *devicev1.DeviceLog {

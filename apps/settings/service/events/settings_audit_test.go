@@ -37,7 +37,7 @@ func (ats *AuditorTestSuite) TestSettingAuditor_Execute() {
 
 			args: args{
 				payload: &models.SettingAudit{
-					BaseModel: frame.BaseModel{
+					BaseModel: data.BaseModel{
 						ID:          "testingSaveId",
 						TenantID:    "tenantData",
 						PartitionID: "partitionData",
@@ -52,7 +52,7 @@ func (ats *AuditorTestSuite) TestSettingAuditor_Execute() {
 		},
 	}
 
-	ats.WithTestDependancies(t, func(t *testing.T, depOpt *definition.DependancyOption) {
+	ats.WithTestDependancies(t, func(t *testing.T, depOpt *definition.DependencyOption) {
 		svc, ctx := ats.CreateService(t, depOpt)
 
 		for _, tt := range tests {

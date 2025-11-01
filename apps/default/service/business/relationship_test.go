@@ -32,7 +32,7 @@ func (rts *RelationshipTestSuite) TestNewRelationshipBusiness() {
 		},
 	}
 
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := rts.CreateService(t, dep)
@@ -48,7 +48,7 @@ func (rts *RelationshipTestSuite) TestNewRelationshipBusiness() {
 
 func (rts *RelationshipTestSuite) Test_relationshipBusiness_CreateRelationship() {
 	t := rts.T()
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		profileBusiness := business.NewProfileBusiness(ctx, svc)
 
@@ -119,7 +119,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_CreateRelationship()
 
 func (rts *RelationshipTestSuite) Test_relationshipBusiness_DeleteRelationship() {
 	t := rts.T()
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 
 		profileBusiness := business.NewProfileBusiness(ctx, svc)
@@ -192,7 +192,7 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_DeleteRelationship()
 
 func (rts *RelationshipTestSuite) Test_relationshipBusiness_ListRelationships() {
 	t := rts.T()
-	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
 		profileBusiness := business.NewProfileBusiness(ctx, svc)
 

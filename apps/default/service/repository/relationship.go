@@ -4,20 +4,25 @@ import (
 	"context"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type relationshipRepository struct {
-	service *frame.Service
+	datastore.BaseRepository[*models.Relationship]
 }
 
-func (ar *relationshipRepository) GetByID(ctx context.Context, id string) (*models.Relationship, error) {
-	relationship := &models.Relationship{}
-	err := ar.service.DB(ctx, true).Preload(clause.Associations).First(relationship, "id = ?", id).Error
-	return relationship, err
+func NewRelationshipRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) RelationshipRepository {
+	repository := relationshipRepository{
+		BaseRepository: datastore.NewBaseRepository[*models.Relationship](
+			ctx, dbPool, workMan, func() *models.Relationship { return &models.Relationship{} },
+		),
+	}
+	return &repository
 }
 
 func (ar *relationshipRepository) List(
@@ -30,7 +35,7 @@ func (ar *relationshipRepository) List(
 ) ([]*models.Relationship, error) {
 	var relationshipList []*models.Relationship
 
-	database := ar.service.DB(ctx, true).Preload(clause.Associations)
+	database := ar.Pool().DB(ctx, true).Preload(clause.Associations)
 
 	if count > 0 {
 		database = database.Limit(count)
@@ -57,24 +62,12 @@ func (ar *relationshipRepository) List(
 	return relationshipList, err
 }
 
-func (ar *relationshipRepository) Save(ctx context.Context, relationship *models.Relationship) error {
-	return ar.service.DB(ctx, false).Save(relationship).Error
-}
-
-func (ar *relationshipRepository) Delete(ctx context.Context, id string) error {
-	relationship, err := ar.GetByID(ctx, id)
-	if err != nil {
-		return err
-	}
-	return ar.service.DB(ctx, false).Delete(relationship).Error
-}
-
 func (ar *relationshipRepository) RelationshipTypeByID(
 	ctx context.Context,
 	profileTypeID string,
 ) (*models.RelationshipType, error) {
 	relationshipType := &models.RelationshipType{}
-	err := ar.service.DB(ctx, true).First(relationshipType, "id = ?", profileTypeID).Error
+	err := ar.Pool().DB(ctx, true).First(relationshipType, "id = ?", profileTypeID).Error
 	return relationshipType, err
 }
 
@@ -84,13 +77,6 @@ func (ar *relationshipRepository) RelationshipType(
 ) (*models.RelationshipType, error) {
 	relationshipTypeUID := models.RelationshipTypeIDMap[profileType]
 	relationshipTypeM := &models.RelationshipType{}
-	err := ar.service.DB(ctx, true).First(relationshipTypeM, "uid = ?", relationshipTypeUID).Error
+	err := ar.Pool().DB(ctx, true).First(relationshipTypeM, "uid = ?", relationshipTypeUID).Error
 	return relationshipTypeM, err
-}
-
-func NewRelationshipRepository(service *frame.Service) RelationshipRepository {
-	repository := relationshipRepository{
-		service: service,
-	}
-	return &repository
 }

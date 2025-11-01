@@ -22,7 +22,7 @@ func (nb *settingsBusiness) Get(ctx context.Context, req *settingsV1.GetRequest)
 	ref := req.GetKey()
 	sRef, err := referenceRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
 		ref.GetName(), ref.GetObject(), ref.GetObjectId(), ref.GetLang())
-	if err != nil && !frame.ErrorIsNoRows(err) {
+	if err != nil && !data.ErrorIsNoRows(err) {
 		logger.WithError(err).Error("could not get settingRef")
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (nb *settingsBusiness) Set(ctx context.Context, req *settingsV1.SetRequest)
 	sRef, err := referenceRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
 		ref.GetName(), ref.GetObject(), ref.GetObjectId(), ref.GetLang())
 	if err != nil {
-		if !frame.ErrorIsNoRows(err) {
+		if !data.ErrorIsNoRows(err) {
 			logger.WithError(err).Error("error querying for setting ref")
 			return nil, err
 		}
@@ -79,7 +79,7 @@ func (nb *settingsBusiness) Set(ctx context.Context, req *settingsV1.SetRequest)
 	valRepo := repository.NewSettingValRepository(ctx, nb.service)
 	sVal, err := valRepo.GetByRef(ctx, sRef.GetID())
 	if err != nil {
-		if !frame.ErrorIsNoRows(err) {
+		if !data.ErrorIsNoRows(err) {
 			logger.WithError(err).Error("error querying for setting value")
 			return nil, err
 		}
@@ -125,7 +125,7 @@ func (nb *settingsBusiness) List(req *settingsV1.ListRequest, stream settingsV1.
 	for _, sRef := range settingsList {
 		sVal, getErr := valRepo.GetByRef(ctx, sRef.GetID())
 		if getErr != nil {
-			if !frame.ErrorIsNoRows(getErr) {
+			if !data.ErrorIsNoRows(getErr) {
 				logger.WithError(getErr).Error("error querying for setting value")
 				return getErr
 			}

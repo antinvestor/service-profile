@@ -48,7 +48,7 @@ func (ts *SettingsTestSuite) TestNewSettingsBusiness() {
 			wantErr:    require.Error},
 	}
 
-	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependancyOption) {
+	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependencyOption) {
 		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				var svc *frame.Service
@@ -70,7 +70,7 @@ func (ts *SettingsTestSuite) TestNewSettingsBusiness() {
 
 // Test_settingsBusiness_Set tests the Set method of the settings business.
 func (ts *SettingsTestSuite) Test_settingsBusiness_Set() {
-	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependancyOption) {
+	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependencyOption) {
 		svc, ctx := ts.CreateService(t, depOpt)
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
@@ -296,7 +296,7 @@ func (ts *SettingsTestSuite) Test_settingsBusiness_Get() {
 		},
 	}
 
-	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependancyOption) {
+	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependencyOption) {
 		svc, ctx := ts.CreateService(t, depOpt)
 
 		rRepo := repository.NewReferenceRepository(ctx, svc)
@@ -447,7 +447,7 @@ func (ts *SettingsTestSuite) Test_settingsBusiness_List() {
 		},
 	}
 
-	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependancyOption) {
+	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependencyOption) {
 		svc, ctx := ts.CreateService(t, depOpt)
 
 		rRepo := repository.NewReferenceRepository(ctx, svc)

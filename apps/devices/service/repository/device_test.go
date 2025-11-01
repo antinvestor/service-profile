@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
@@ -40,7 +40,7 @@ func (suite *DeviceRepositoryTestSuite) SetupSuite() {
 
 func (suite *DeviceRepositoryTestSuite) CreateService(
 	t *testing.T,
-	depOpts *definition.DependancyOption,
+	depOpts *definition.DependencyOption,
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
@@ -85,9 +85,9 @@ func (suite *DeviceRepositoryTestSuite) TearDownSuite() {
 // WithTestDependancies Creates subtests with each known DependancyOption.
 func (suite *DeviceRepositoryTestSuite) WithTestDependancies(
 	t *testing.T,
-	testFn func(t *testing.T, dep *definition.DependancyOption),
+	testFn func(t *testing.T, dep *definition.DependencyOption),
 ) {
-	options := []*definition.DependancyOption{
+	options := []*definition.DependencyOption{
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
 	}
 
@@ -129,7 +129,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		deviceRepo := repository.NewDeviceRepository(svc)
 
@@ -159,10 +159,10 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 				assert.Equal(t, tc.os, retrievedDevice.OS)
 
 				// Retrieve by ProfileID
-				searchProperties := frame.JSONMap{
+				searchProperties := data.JSONMap{
 					"profile_id": tc.profileID,
 				}
-				q := framedata.NewSearchQuery("", searchProperties, 0, 50)
+				q := data.NewSearchQuery("", searchProperties, 0, 50)
 				devicesResult, err := deviceRepo.Search(ctx, q)
 				require.NoError(t, err)
 
@@ -218,7 +218,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceSessionRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		sessionRepo := repository.NewDeviceSessionRepository(svc)
 
@@ -277,7 +277,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		logRepo := repository.NewDeviceLogRepository(svc)
 
@@ -287,7 +287,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 				log := &models.DeviceLog{
 					DeviceID:        tc.deviceID,
 					DeviceSessionID: tc.sessionID,
-					Data:            frame.JSONMap{"action": "test"},
+					Data:            data.JSONMap{"action": "test"},
 				}
 
 				err := logRepo.Save(ctx, log)
@@ -306,10 +306,10 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 				assert.Equal(t, tc.sessionID, retrievedLog.DeviceSessionID)
 
 				// Retrieve by device ID
-				searchProperties := frame.JSONMap{
+				searchProperties := data.JSONMap{
 					"device_id": tc.deviceID,
 				}
-				q := framedata.NewSearchQuery("", searchProperties, 0, 50)
+				q := data.NewSearchQuery("", searchProperties, 0, 50)
 				logsResult, err := logRepo.GetByDeviceID(ctx, q)
 				require.NoError(t, err)
 
@@ -359,7 +359,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		keyRepo := repository.NewDeviceKeyRepository(svc)
 
@@ -369,7 +369,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 				key := &models.DeviceKey{
 					DeviceID: tc.deviceID,
 					Key:      tc.key,
-					Extra:    frame.JSONMap{"type": "test"},
+					Extra:    data.JSONMap{"type": "test"},
 				}
 
 				err := keyRepo.Save(ctx, key)

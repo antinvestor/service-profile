@@ -4,7 +4,8 @@ import (
 	"context"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -18,16 +19,13 @@ type AddressBusiness interface {
 	ToAPI(address *models.Address) *profilev1.AddressObject
 }
 
-func NewAddressBusiness(_ context.Context, service *frame.Service) AddressBusiness {
-	addressRepo := repository.NewAddressRepository(service)
+func NewAddressBusiness(_ context.Context, addressRepo repository.AddressRepository) AddressBusiness {
 	return &addressBusiness{
-		service:     service,
 		addressRepo: addressRepo,
 	}
 }
 
 type addressBusiness struct {
-	service     *frame.Service
 	addressRepo repository.AddressRepository
 }
 
@@ -55,7 +53,7 @@ func (aB *addressBusiness) CreateAddress(
 	ctx context.Context,
 	request *profilev1.AddressObject,
 ) (*profilev1.AddressObject, error) {
-	logger := aB.service.Log(ctx).WithField("request", request)
+	logger := util.Log(ctx).WithField("request", request)
 
 	country, err := aB.addressRepo.CountryGetByAny(ctx, request.GetCountry())
 	if err != nil {
@@ -67,7 +65,7 @@ func (aB *addressBusiness) CreateAddress(
 	if err != nil {
 		logger.WithError(err).Warn("get address error")
 
-		if !frame.ErrorIsNoRows(err) {
+		if !data.ErrorIsNoRows(err) {
 			return nil, err
 		}
 
@@ -78,7 +76,7 @@ func (aB *addressBusiness) CreateAddress(
 			Country:   country,
 		}
 
-		saveErr := aB.addressRepo.Save(ctx, &a)
+		saveErr := aB.addressRepo.Create(ctx, &a)
 		if saveErr != nil {
 			return nil, saveErr
 		}

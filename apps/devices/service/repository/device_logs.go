@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/frame/data"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 )
@@ -32,11 +32,11 @@ func (dlr *deviceLogRepository) GetByID(ctx context.Context, id string) (*models
 
 func (dlr *deviceLogRepository) GetByDeviceID(
 	ctx context.Context,
-	query *framedata.SearchQuery,
-) (frame.JobResultPipe[[]*models.DeviceLog], error) {
-	return framedata.StableSearch[models.DeviceLog](ctx, dlr.service, query, func(
+	query *data.SearchQuery,
+) (workerpool.JobResultPipe[[]*models.DeviceLog], error) {
+	return data.StableSearch[models.DeviceLog](ctx, dlr.service, query, func(
 		ctx context.Context,
-		query *framedata.SearchQuery,
+		query *data.SearchQuery,
 	) ([]*models.DeviceLog, error) {
 		var deviceLogList []*models.DeviceLog
 

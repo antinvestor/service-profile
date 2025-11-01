@@ -8,7 +8,8 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	frevents "github.com/pitabwire/frame/events"
 	"github.com/pitabwire/util"
 	"github.com/ttacon/libphonenumber"
 
@@ -29,12 +30,12 @@ type ContactBusiness interface {
 	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
 	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
-	CreateContact(ctx context.Context, detail string, extra frame.JSONMap) (*models.Contact, error)
+	CreateContact(ctx context.Context, detail string, extra data.JSONMap) (*models.Contact, error)
 	UpdateContact(
 		ctx context.Context,
 		contactID string,
 		profileID string,
-		extra frame.JSONMap,
+		extra data.JSONMap,
 	) (*models.Contact, error)
 	RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error)
 	VerifyContact(
@@ -48,22 +49,21 @@ type ContactBusiness interface {
 	GetVerificationAttempts(ctx context.Context, verificationID string) ([]*models.VerificationAttempt, error)
 }
 
-func NewContactBusiness(_ context.Context, service *frame.Service) ContactBusiness {
-	cfg, _ := service.Config().(*config.ProfileConfig)
+func NewContactBusiness(_ context.Context, cfg *config.ProfileConfig,
+	evtMan frevents.Manager, contactRepository repository.ContactRepository,
+	verificationRepository repository.VerificationRepository) ContactBusiness {
 
 	return &contactBusiness{
-		cfg:               cfg,
-		service:           service,
-		contactRepository: repository.NewContactRepository(service),
-		verificationRepository: repository.NewVerificationRepository(
-			service,
-		),
+		cfg:                    cfg,
+		eventsMan:              evtMan,
+		contactRepository:      contactRepository,
+		verificationRepository: verificationRepository,
 	}
 }
 
 type contactBusiness struct {
-	service                *frame.Service
 	cfg                    *config.ProfileConfig
+	eventsMan              frevents.Manager
 	contactRepository      repository.ContactRepository
 	verificationRepository repository.VerificationRepository
 }
@@ -84,7 +84,7 @@ func ContactTypeFromDetail(_ context.Context, detail string) (string, error) {
 func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*models.Contact, error) {
 	contact, err := cb.contactRepository.GetByID(ctx, contactID)
 	if err != nil {
-		if frame.ErrorIsNoRows(err) {
+		if data.ErrorIsNoRows(err) {
 			return nil, service.ErrContactDoesNotExist
 		}
 	}
@@ -94,7 +94,7 @@ func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*mode
 func (cb *contactBusiness) GetByDetail(ctx context.Context, detail string) (*models.Contact, error) {
 	contact, err := cb.contactRepository.GetByDetail(ctx, detail)
 	if err != nil {
-		if frame.ErrorIsNoRows(err) {
+		if data.ErrorIsNoRows(err) {
 			return nil, service.ErrContactDoesNotExist
 		}
 	}
@@ -113,7 +113,7 @@ func (cb *contactBusiness) UpdateContact(
 	ctx context.Context,
 	contactID string,
 	profileID string,
-	extra frame.JSONMap,
+	extra data.JSONMap,
 ) (*models.Contact, error) {
 	contact, err := cb.contactRepository.GetByID(ctx, contactID)
 	if err != nil {
@@ -125,13 +125,17 @@ func (cb *contactBusiness) UpdateContact(
 
 	contact.Properties = contact.Properties.Update(extra)
 
-	return cb.contactRepository.Save(ctx, contact)
+	_, err = cb.contactRepository.Update(ctx, contact, "profile_id", "properties")
+	if err != nil {
+		return nil, err
+	}
+	return contact, nil
 }
 
 func (cb *contactBusiness) CreateContact(
 	ctx context.Context,
 	detail string,
-	extra frame.JSONMap,
+	extra data.JSONMap,
 ) (*models.Contact, error) {
 	detail = strings.ToLower(strings.TrimSpace(detail))
 
@@ -156,7 +160,7 @@ func (cb *contactBusiness) CreateContact(
 
 	contact.Properties = contact.Properties.Update(extra)
 
-	contact, err = cb.contactRepository.Save(ctx, contact)
+	err = cb.contactRepository.Create(ctx, contact)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +183,7 @@ func (cb *contactBusiness) VerifyContact(
 	code string,
 	durationToExpiry time.Duration,
 ) (*models.Verification, error) {
-	logger := cb.service.Log(ctx).WithField("contact", contact)
+	logger := util.Log(ctx).WithField("contact", contact)
 
 	if contact == nil {
 		return nil, errors.New("no contact specified")
@@ -208,7 +212,7 @@ func (cb *contactBusiness) VerifyContact(
 		verification.ID = verificationID
 	}
 
-	err := cb.service.Emit(ctx, events.VerificationEventHandlerName, verification)
+	err := cb.eventsMan.Emit(ctx, events.VerificationEventHandlerName, verification)
 	if err != nil {
 		logger.WithError(err).Error("could not emit verification attempt event")
 	}

@@ -54,7 +54,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_GetByID() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
@@ -116,14 +116,14 @@ func (suite *HandlersTestSuite) TestDevicesServer_Create() {
 		name        string
 		linkID      string
 		deviceName  string
-		data        frame.JSONMap
+		data        data.JSONMap
 		expectError bool
 	}{
 		{
 			name:       "create device successfully",
 			linkID:     "test-link-123",
 			deviceName: "Test Device",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"os":         "Linux",
 				"user_agent": "Test Agent",
 				"session_id": "test-session",
@@ -135,7 +135,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Create() {
 			name:       "create device with empty name",
 			linkID:     "test-link-456",
 			deviceName: "",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"session_id": "test-session-2",
 				"ip":         "127.0.0.1",
 			},
@@ -143,7 +143,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Create() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
@@ -180,14 +180,14 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 		setupDevice bool
 		deviceID    string
 		sessionID   string
-		data        frame.JSONMap
+		data        data.JSONMap
 		expectError bool
 	}{
 		{
 			name:        "log device activity successfully",
 			setupDevice: true,
 			sessionID:   "test-session",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"action": "page_view",
 				"url":    "https://example.com",
 			},
@@ -197,7 +197,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 			name:        "log with empty data",
 			setupDevice: true,
 			sessionID:   "test-session-2",
-			data:        frame.JSONMap{},
+			data:        data.JSONMap{},
 			expectError: false,
 		},
 		{
@@ -205,7 +205,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 			setupDevice: false,
 			deviceID:    "",
 			sessionID:   "test-session-3",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"action": "login",
 			},
 			expectError: false, // Current implementation allows empty device ID
@@ -215,14 +215,14 @@ func (suite *HandlersTestSuite) TestDevicesServer_Log() {
 			setupDevice: false,
 			deviceID:    "non-existent-device-123",
 			sessionID:   "test-session-4",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"action": "logout",
 			},
 			expectError: false, // Current implementation doesn't validate device existence
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
@@ -272,14 +272,14 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 		name        string
 		deviceID    string
 		sessionID   string
-		data        frame.JSONMap
+		data        data.JSONMap
 		expectError bool
 	}{
 		{
 			name:      "log device activity successfully",
 			deviceID:  "",
 			sessionID: "test-session",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"action": "page_view",
 				"url":    "https://example.com",
 			},
@@ -289,14 +289,14 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 			name:        "log with error data",
 			deviceID:    "h",
 			sessionID:   "test-session-2",
-			data:        frame.JSONMap{},
+			data:        data.JSONMap{},
 			expectError: true,
 		},
 		{
 			name:      "log with empty device ID",
 			deviceID:  "hellow",
 			sessionID: "test-session-3",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"action": "login",
 			},
 			expectError: false, // Current implementation allows empty device ID
@@ -305,7 +305,7 @@ func (suite *HandlersTestSuite) TestDevices_LogRequest() {
 			name:      "log with very long device ID",
 			deviceID:  "fasodeifwqoiejfpasdjfoiasdjfoisjdfljksjdflaksdjfosidjfsoidjfsoidjfoasdfasdfasdfsa",
 			sessionID: "test-session-4",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"action": "logout",
 			},
 			expectError: true, // Current implementation doesn't validate device existence
@@ -357,7 +357,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_AddKey() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 
 		// Create server
@@ -381,7 +381,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_AddKey() {
 					deviceID = "non-existent-device"
 				}
 
-				extras := frame.JSONMap{"test": "data"}
+				extras := data.JSONMap{"test": "data"}
 
 				req := &devicev1.AddKeyRequest{
 					DeviceId: deviceID,
@@ -441,7 +441,7 @@ func (suite *HandlersTestSuite) TestDevicesServer_Search() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		server := handlers.NewDeviceServer(ctx, svc)
 
@@ -458,12 +458,12 @@ func (suite *HandlersTestSuite) runSearchTestCase(
 	svc *frame.Service,
 	server *handlers.DevicesServer,
 	tc struct {
-		name        string
-		setupDevice bool
-		profileID   string
-		query       string
-		expectEmpty bool
-	},
+	name        string
+	setupDevice bool
+	profileID   string
+	query       string
+	expectEmpty bool
+},
 ) {
 	testCtx := suite.setupTestContext(ctx, tc.profileID)
 

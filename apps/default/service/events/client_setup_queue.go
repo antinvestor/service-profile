@@ -4,22 +4,28 @@ import (
 	"context"
 	"errors"
 
-	"github.com/pitabwire/frame"
-	"google.golang.org/protobuf/proto"
-
-	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/pitabwire/frame/data"
+	frevents "github.com/pitabwire/frame/events"
+	"github.com/pitabwire/frame/queue"
+	"github.com/pitabwire/util"
 )
 
 const ClientConnectedSetupQueueName = "client.connected.setup.queue"
 
 type ClientConnectedSetupQueue struct {
-	Service *frame.Service
+	eventsMan        frevents.Manager
+	relationshipRepo repository.RelationshipRepository
+
+	relationshipTopic queue.Publisher
 }
 
-func NewClientConnectedSetupQueue(service *frame.Service) *ClientConnectedSetupQueue {
+func NewClientConnectedSetupQueue(_ context.Context, relationshipTopic queue.Publisher,
+	eventsMan frevents.Manager, relationshipRepo repository.RelationshipRepository) *ClientConnectedSetupQueue {
 	return &ClientConnectedSetupQueue{
-		Service: service,
+		eventsMan:         eventsMan,
+		relationshipRepo:  relationshipRepo,
+		relationshipTopic: relationshipTopic,
 	}
 }
 
@@ -48,13 +54,12 @@ func (csq *ClientConnectedSetupQueue) Execute(ctx context.Context, payload any) 
 	}
 	relationshipID := *relationshipIDPtr
 
-	logger := csq.Service.Log(ctx).WithField("payload", relationshipID).WithField("type", csq.Name())
+	logger := util.Log(ctx).WithField("payload", relationshipID).WithField("type", csq.Name())
 	logger.Debug("handling csq")
 
-	relationshipRepo := repository.NewRelationshipRepository(csq.Service)
-	relationship, err := relationshipRepo.GetByID(ctx, relationshipID)
+	relationship, err := csq.relationshipRepo.GetByID(ctx, relationshipID)
 	if err != nil {
-		if frame.ErrorIsNoRows(err) {
+		if data.ErrorIsNoRows(err) {
 			logger.WithError(err).Error("no such relationship exists")
 			return nil
 		}
@@ -62,16 +67,8 @@ func (csq *ClientConnectedSetupQueue) Execute(ctx context.Context, payload any) 
 		return err
 	}
 
-	binaryProto, err := proto.Marshal(relationship.ToAPI())
-	if err != nil {
-		logger.WithError(err).Error("could not encode api object")
-		return err
-	}
-
-	profileConfig, _ := csq.Service.Config().(*config.ProfileConfig)
-
 	// Queue relationship for further processing by peripheral services
-	err = csq.Service.Publish(ctx, profileConfig.QueueRelationshipConnectName, binaryProto)
+	err = csq.relationshipTopic.Publish(ctx, relationship.ToAPI())
 	if err != nil {
 		logger.WithError(err).Error("could not publish relationship")
 		return err

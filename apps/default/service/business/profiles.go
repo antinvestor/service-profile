@@ -7,8 +7,10 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/frame/data"
+	frevents "github.com/pitabwire/frame/events"
+	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/workerpool"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/default/service"
@@ -21,7 +23,7 @@ type ProfileBusiness interface {
 	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, error)
 	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, error)
 
-	SearchProfile(ctx context.Context, request *profilev1.SearchRequest) (frame.JobResultPipe[[]*models.Profile], error)
+	SearchProfile(ctx context.Context, request *profilev1.SearchRequest) (workerpool.JobResultPipe[[]*models.Profile], error)
 
 	CreateProfile(ctx context.Context, request *profilev1.CreateRequest) (*profilev1.ProfileObject, error)
 
@@ -48,22 +50,24 @@ type ProfileBusiness interface {
 	ToAPI(ctx context.Context, profile *models.Profile) (*profilev1.ProfileObject, error)
 }
 
-func NewProfileBusiness(ctx context.Context, service *frame.Service) ProfileBusiness {
+func NewProfileBusiness(_ context.Context, eventsMan frevents.Manager,
+	contactBusiness ContactBusiness, addressBusiness AddressBusiness,
+	profileRepo repository.ProfileRepository) ProfileBusiness {
 	return &profileBusiness{
-		service:         service,
-		contactBusiness: NewContactBusiness(ctx, service),
-		addressBusiness: NewAddressBusiness(ctx, service),
-		profileRepo:     repository.NewProfileRepository(service),
+		contactBusiness: contactBusiness,
+		addressBusiness: addressBusiness,
+		profileRepo:     profileRepo,
+		eventsMan:       eventsMan,
 	}
 }
 
 type profileBusiness struct {
-	service *frame.Service
-
 	contactBusiness ContactBusiness
 	addressBusiness AddressBusiness
 
 	profileRepo repository.ProfileRepository
+
+	eventsMan frevents.Manager
 }
 
 func (pb *profileBusiness) ToAPI(ctx context.Context,
@@ -101,7 +105,7 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 func (pb *profileBusiness) GetByContact(
 	ctx context.Context,
 	contactData string) (*profilev1.ProfileObject, error) {
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	var contact *models.Contact
 
@@ -123,7 +127,7 @@ func (pb *profileBusiness) GetByContact(
 func (pb *profileBusiness) GetByID(
 	ctx context.Context,
 	profileID string) (*profilev1.ProfileObject, error) {
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
@@ -134,35 +138,28 @@ func (pb *profileBusiness) GetByID(
 }
 
 func (pb *profileBusiness) SearchProfile(ctx context.Context,
-	request *profilev1.SearchRequest) (frame.JobResultPipe[[]*models.Profile], error) {
+	request *profilev1.SearchRequest) (workerpool.JobResultPipe[[]*models.Profile], error) {
 	profileID := ""
-	claims := frame.ClaimsFromContext(ctx)
+	claims := security.ClaimsFromContext(ctx)
 	if claims != nil {
 		profileID, _ = claims.GetSubject()
 	}
 
-	searchProperties := frame.JSONMap{
-		"profile_id": profileID,
-		"start_date": request.GetStartDate(),
-		"end_date":   request.GetEndDate(),
-	}
-
-	for _, p := range request.GetProperties() {
-		searchProperties[p] = request.GetQuery()
-	}
-
-	query := framedata.NewSearchQuery(
-		request.GetQuery(), searchProperties,
-		int(request.GetPage()),
-		int(request.GetCount()),
-	)
+	query := data.NewSearchQuery(
+		request.GetQuery(),
+		data.WithSearchLimit(int(request.GetCount())),
+		data.WithSearchOffset(int(request.GetPage())),
+		data.WithSearchFiltersAndByValue(map[string]any{"profile_id": profileID}),
+		data.WithSearchFiltersOrByQuery(map[string]string{
+			"searchable": " @@ websearch_to_tsquery( 'english', ?) ",
+		}))
 
 	return pb.profileRepo.Search(ctx, query)
 }
 
 func (pb *profileBusiness) MergeProfile(ctx context.Context,
 	request *profilev1.MergeRequest) (*profilev1.ProfileObject, error) {
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	target, err := pb.profileRepo.GetByID(ctx, request.GetId())
 	if err != nil {
@@ -181,7 +178,7 @@ func (pb *profileBusiness) MergeProfile(ctx context.Context,
 		target.Properties[key] = value
 	}
 
-	err = pb.profileRepo.Save(ctx, target)
+	_, err = pb.profileRepo.Update(ctx, target, "properties")
 	if err != nil {
 		return nil, err
 	}
@@ -202,11 +199,11 @@ func (pb *profileBusiness) UpdateProfile(
 		return nil, err
 	}
 
-	requestProperties := frame.JSONMap{}
+	requestProperties := data.JSONMap{}
 	requestProperties = requestProperties.FromProtoStruct(request.GetProperties())
 	profile.Properties = profile.Properties.Update(requestProperties)
 
-	err = pb.profileRepo.Save(ctx, profile)
+	_, err = pb.profileRepo.Update(ctx, profile, "properties")
 	if err != nil {
 		return nil, err
 	}
@@ -217,7 +214,7 @@ func (pb *profileBusiness) UpdateProfile(
 func (pb *profileBusiness) CreateProfile(
 	ctx context.Context,
 	request *profilev1.CreateRequest) (*profilev1.ProfileObject, error) {
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	contactDetail := strings.TrimSpace(request.GetContact())
 
@@ -256,13 +253,13 @@ func (pb *profileBusiness) CreateProfile(
 	p.ProfileType = *pt
 	p.ProfileTypeID = pt.ID
 
-	err = pb.profileRepo.Save(ctx, &p)
+	err = pb.profileRepo.Create(ctx, &p)
 	if err != nil {
 		return nil, err
 	}
 
 	if contact == nil {
-		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, frame.JSONMap{})
+		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, data.JSONMap{})
 		if err != nil {
 			return nil, err
 		}
@@ -276,9 +273,9 @@ func (pb *profileBusiness) CreateProfile(
 	return pb.GetByID(ctx, contact.ProfileID)
 }
 
-// func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params frame.JSONMap) error {
+// func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params data.JSONMap) error {
 //
-//	storedPropertiesMap := make(frame.JSONMap)
+//	storedPropertiesMap := make(data.JSONMap)
 //	attributeMap, err := p.PropertiesToSearchOn.MarshalJSON()
 //	if err != nil {
 //		return err
@@ -328,7 +325,7 @@ func (pb *profileBusiness) AddAddress(
 func (pb *profileBusiness) AddContact(
 	ctx context.Context,
 	request *profilev1.AddContactRequest) (*profilev1.ProfileObject, string, error) {
-	claims := frame.ClaimsFromContext(ctx)
+	claims := security.ClaimsFromContext(ctx)
 	if claims == nil {
 		return nil, "", service.ErrContactProfileNotValid
 	}
@@ -372,7 +369,7 @@ func (pb *profileBusiness) AddContact(
 func (pb *profileBusiness) CreateContact(
 	ctx context.Context,
 	request *profilev1.CreateContactRequest) (*profilev1.ContactObject, error) {
-	requestProperties := frame.JSONMap{}
+	requestProperties := data.JSONMap{}
 	contact, err := pb.contactBusiness.CreateContact(
 		ctx,
 		request.GetContact(),
@@ -424,7 +421,7 @@ func (pb *profileBusiness) CheckVerification(
 	code string,
 	ipAddress string,
 ) (int, bool, error) {
-	logger := pb.service.Log(ctx).WithField("verificationID", verificationID)
+	logger := util.Log(ctx).WithField("verificationID", verificationID)
 
 	verification, err := pb.contactBusiness.GetVerification(ctx, verificationID)
 	if err != nil {
@@ -439,7 +436,7 @@ func (pb *profileBusiness) CheckVerification(
 	verificationAttempts := len(attempts) + 1
 
 	deviceID := ""
-	claim := frame.ClaimsFromContext(ctx)
+	claim := security.ClaimsFromContext(ctx)
 	if claim != nil {
 		deviceID = claim.DeviceID
 	}
@@ -461,7 +458,7 @@ func (pb *profileBusiness) CheckVerification(
 		codeMatches = true
 	}
 
-	err = pb.service.Emit(ctx, events.VerificationAttemptEventHandlerName, newAttempt)
+	err = pb.eventsMan.Emit(ctx, events.VerificationAttemptEventHandlerName, newAttempt)
 	if err != nil {
 		logger.WithError(err).Error("could not emit verification attempt event")
 	}

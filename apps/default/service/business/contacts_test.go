@@ -7,7 +7,7 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
@@ -77,7 +77,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 
 	type args struct {
 		detail string
-		extra  frame.JSONMap
+		extra  data.JSONMap
 	}
 	testCases := []struct {
 		name    string
@@ -90,11 +90,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with valid MSISDN",
 			args: args{
 				detail: "+256757546244", // Valid MSISDN
-				extra:  frame.JSONMap{"type": "msisdn"},
+				extra:  data.JSONMap{"type": "msisdn"},
 			},
 			want: &models.Contact{ // Expected result
 				Detail:     "+256757546244",
-				Properties: frame.JSONMap{"type": "msisdn"},
+				Properties: data.JSONMap{"type": "msisdn"},
 			},
 			wantErr: require.NoError, // No error expected
 		},
@@ -102,11 +102,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with valid Email",
 			args: args{
 				detail: "test@example.com", // Valid Email
-				extra:  frame.JSONMap{"type": "email"},
+				extra:  data.JSONMap{"type": "email"},
 			},
 			want: &models.Contact{ // Expected result
 				Detail:     "test@example.com",
-				Properties: frame.JSONMap{"type": "email"},
+				Properties: data.JSONMap{"type": "email"},
 			},
 			wantErr: require.NoError, // No error expected
 		},
@@ -114,7 +114,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with invalid detail",
 			args: args{
 				detail: "invalid-detail", // Invalid data, e.g., malformed MSISDN or email
-				extra:  frame.JSONMap{"type": "unknown"},
+				extra:  data.JSONMap{"type": "unknown"},
 			},
 			want:    nil,           // Expect no valid contact to be created
 			wantErr: require.Error, // Error is expected
@@ -123,7 +123,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			name: "Create contact with empty detail",
 			args: args{
 				detail: "", // Empty detail
-				extra:  frame.JSONMap{"type": "email"},
+				extra:  data.JSONMap{"type": "email"},
 			},
 			want:    nil,           // Contact should not be created with empty details
 			wantErr: require.Error, // Error is expected
@@ -136,13 +136,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			},
 			want: &models.Contact{
 				Detail:     "test2@example.com",
-				Properties: frame.JSONMap{},
+				Properties: data.JSONMap{},
 			},
 			wantErr: require.NoError, // No error expected if type can be inferred or defaults
 		},
 	}
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := cts.CreateService(t, dep)
@@ -193,7 +193,7 @@ func (cts *ContactTestSuite) createContacts(
 func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
@@ -284,7 +284,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 func (cts *ContactTestSuite) Test_contactBusiness_GetByID() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
@@ -403,7 +403,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 		},
 	}
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := cts.CreateService(t, dep)
@@ -430,19 +430,19 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact first
-		contact, err := cb.CreateContact(ctx, "update@testing.com", frame.JSONMap{
+		contact, err := cb.CreateContact(ctx, "update@testing.com", data.JSONMap{
 			"name": "Original Name",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		// Update the contact
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), util.IDString(), frame.JSONMap{
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), util.IDString(), data.JSONMap{
 			"name": "Updated Name",
 			"age":  "30",
 		})
@@ -453,7 +453,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 		require.Equal(t, "30", updated.Properties["age"])
 
 		// Test updating non-existent contact
-		_, err = cb.UpdateContact(ctx, util.IDString(), util.IDString(), frame.JSONMap{})
+		_, err = cb.UpdateContact(ctx, util.IDString(), util.IDString(), data.JSONMap{})
 		require.Error(t, err)
 	})
 }
@@ -461,18 +461,18 @@ func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact with profile ID
-		contact, err := cb.CreateContact(ctx, "remove@testing.com", frame.JSONMap{})
+		contact, err := cb.CreateContact(ctx, "remove@testing.com", data.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		profileID := util.IDString()
 		// Update contact to link to profile
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, frame.JSONMap{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, data.JSONMap{})
 		require.NoError(t, err)
 		require.Equal(t, profileID, updated.ProfileID)
 
@@ -495,18 +495,18 @@ func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
 func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact first
-		contact, err := cb.CreateContact(ctx, "verify@testing.com", frame.JSONMap{})
+		contact, err := cb.CreateContact(ctx, "verify@testing.com", data.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 
 		// Link to profile
 		profileID := util.IDString()
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, frame.JSONMap{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, data.JSONMap{})
 		require.NoError(t, err)
 
 		// Verify contact
@@ -535,17 +535,17 @@ func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
 func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Create a contact and verification using the business layer
-		contact, err := cb.CreateContact(ctx, "verify@example.com", frame.JSONMap{})
+		contact, err := cb.CreateContact(ctx, "verify@example.com", data.JSONMap{})
 		require.NoError(t, err)
 
 		profileID := util.IDString()
-		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, frame.JSONMap{})
+		updated, err := cb.UpdateContact(ctx, contact.GetID(), profileID, data.JSONMap{})
 		require.NoError(t, err)
 
 		verification, err := cb.VerifyContact(ctx, updated, "", "123456", 0)
@@ -569,7 +569,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 func (cts *ContactTestSuite) Test_contactBusiness_GetVerificationAttempts() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
@@ -604,7 +604,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerificationAttempts() {
 func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		_, ctx := cts.CreateService(t, dep)
 
 		// Create a contact
@@ -631,25 +631,25 @@ func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
 		cb := business.NewContactBusiness(ctx, svc)
 		profileID := util.IDString()
 
 		// Create multiple contacts for the same profile using valid email formats only
-		contact1, err := cb.CreateContact(ctx, "test1@example.com", frame.JSONMap{"type": "email"})
+		contact1, err := cb.CreateContact(ctx, "test1@example.com", data.JSONMap{"type": "email"})
 		require.NoError(t, err)
 
 		// Update contact with profile ID
-		_, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, frame.JSONMap{})
+		_, err = cb.UpdateContact(ctx, contact1.GetID(), profileID, data.JSONMap{})
 		require.NoError(t, err)
 
-		contact2, err := cb.CreateContact(ctx, "test2@example.com", frame.JSONMap{"type": "email"})
+		contact2, err := cb.CreateContact(ctx, "test2@example.com", data.JSONMap{"type": "email"})
 		require.NoError(t, err)
 
 		// Update contact with profile ID
-		_, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, frame.JSONMap{})
+		_, err = cb.UpdateContact(ctx, contact2.GetID(), profileID, data.JSONMap{})
 		require.NoError(t, err)
 
 		// Test getting contacts by profile
@@ -667,12 +667,12 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 	t := cts.T()
 
-	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 		cb := business.NewContactBusiness(ctx, svc)
 
 		// Test with empty detail
-		contact, err := cb.CreateContact(ctx, "", frame.JSONMap{})
+		contact, err := cb.CreateContact(ctx, "", data.JSONMap{})
 		require.Error(t, err)
 		require.Nil(t, contact)
 
@@ -683,7 +683,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 		require.Equal(t, "test@example.com", contact.Detail)
 
 		// Test with empty extra map
-		contact, err = cb.CreateContact(ctx, "test2@example.com", frame.JSONMap{})
+		contact, err = cb.CreateContact(ctx, "test2@example.com", data.JSONMap{})
 		require.NoError(t, err)
 		require.NotNil(t, contact)
 		require.Equal(t, "test2@example.com", contact.Detail)

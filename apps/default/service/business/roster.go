@@ -6,25 +6,25 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/framedata"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/workerpool"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 type RosterBusiness interface {
-	Search(ctx context.Context, request *profilev1.SearchRosterRequest) (frame.JobResultPipe[[]*models.Roster], error)
+	Search(ctx context.Context, request *profilev1.SearchRosterRequest) (workerpool.JobResultPipe[[]*models.Roster], error)
 	GetByID(ctx context.Context, rosterID string) (*models.Roster, error)
 	CreateRoster(ctx context.Context, request *profilev1.AddRosterRequest) ([]*profilev1.RosterObject, error)
 	RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, error)
 }
 
-func NewRosterBusiness(ctx context.Context, service *frame.Service) RosterBusiness {
-	rosterRepo := repository.NewRosterRepository(service)
+func NewRosterBusiness(_ context.Context, contactBusiness ContactBusiness, rosterRepo repository.RosterRepository) RosterBusiness {
 	return &rosterBusiness{
-		service:          service,
 		rosterRepository: rosterRepo,
-		contactBusiness:  NewContactBusiness(ctx, service),
+		contactBusiness:  contactBusiness,
 	}
 }
 
@@ -35,38 +35,37 @@ type rosterBusiness struct {
 }
 
 func (rb *rosterBusiness) GetByID(ctx context.Context, rosterID string) (*models.Roster, error) {
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	return rb.rosterRepository.GetByID(ctx, rosterID)
 }
 
 func (rb *rosterBusiness) Search(ctx context.Context,
-	request *profilev1.SearchRosterRequest) (frame.JobResultPipe[[]*models.Roster], error) {
-	ctx = frame.SkipTenancyChecksOnClaims(ctx)
+	request *profilev1.SearchRosterRequest) (workerpool.JobResultPipe[[]*models.Roster], error) {
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	profileID := request.GetProfileId()
-	claims := frame.ClaimsFromContext(ctx)
+	claims := security.ClaimsFromContext(ctx)
 	if claims != nil {
 		if claims.GetServiceName() == "" || profileID == "" {
 			profileID, _ = claims.GetSubject()
 		}
 	}
 
-	searchProperties := frame.JSONMap{
-		"profile_id": profileID,
-		"start_date": request.GetStartDate(),
-		"end_date":   request.GetEndDate(),
+	searchProperties := map[string]string{
+		"contacts.detail": " % ? ",
 	}
 
 	for _, p := range request.GetProperties() {
 		searchProperties[p] = request.GetQuery()
 	}
 
-	query := framedata.NewSearchQuery(
-		request.GetQuery(), searchProperties,
-		int(request.GetPage()),
-		int(request.GetCount()),
-	)
+	query := data.NewSearchQuery(
+		request.GetQuery(),
+		data.WithSearchLimit(int(request.GetCount())),
+		data.WithSearchOffset(int(request.GetPage())),
+		data.WithSearchFiltersAndByValue(map[string]any{"roster.profile_id": profileID}),
+		data.WithSearchFiltersOrByQuery(searchProperties))
 
 	return rb.rosterRepository.Search(ctx, query)
 }
@@ -75,7 +74,7 @@ func (rb *rosterBusiness) CreateRoster(
 	ctx context.Context,
 	request *profilev1.AddRosterRequest,
 ) ([]*profilev1.RosterObject, error) {
-	claims := frame.ClaimsFromContext(ctx)
+	claims := security.ClaimsFromContext(ctx)
 
 	if claims == nil {
 		return nil, errors.New("no claims found in context")
@@ -92,7 +91,7 @@ func (rb *rosterBusiness) CreateRoster(
 		var contact *models.Contact
 		var roster *models.Roster
 
-		requestExtras := frame.JSONMap{}
+		requestExtras := data.JSONMap{}
 
 		contact, err = rb.contactBusiness.CreateContact(
 			ctx,
@@ -105,11 +104,11 @@ func (rb *rosterBusiness) CreateRoster(
 
 		roster, err = rb.rosterRepository.GetByContactAndProfileID(ctx, profileID, contact.GetID())
 		if err != nil {
-			if !frame.ErrorIsNoRows(err) {
+			if !data.ErrorIsNoRows(err) {
 				return nil, err
 			}
 
-			rosterExtras := frame.JSONMap{}
+			rosterExtras := data.JSONMap{}
 
 			roster = &models.Roster{
 				ProfileID:  profileID,
@@ -118,7 +117,7 @@ func (rb *rosterBusiness) CreateRoster(
 				Properties: rosterExtras.FromProtoStruct(newRoster.GetExtras()),
 			}
 
-			roster, err = rb.rosterRepository.Save(ctx, roster)
+			err = rb.rosterRepository.Create(ctx, roster)
 			if err != nil {
 				return nil, err
 			}

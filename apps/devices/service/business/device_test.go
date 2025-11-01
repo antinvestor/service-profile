@@ -45,7 +45,7 @@ func (suite *DeviceBusinessTestSuite) SetupSuite() {
 
 func (suite *DeviceBusinessTestSuite) CreateService(
 	t *testing.T,
-	depOpts *definition.DependancyOption,
+	depOpts *definition.DependencyOption,
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
@@ -98,9 +98,9 @@ func (suite *DeviceBusinessTestSuite) TearDownSuite() {
 // WithTestDependancies Creates subtests with each known DependancyOption.
 func (suite *DeviceBusinessTestSuite) WithTestDependancies(
 	t *testing.T,
-	testFn func(t *testing.T, dep *definition.DependancyOption),
+	testFn func(t *testing.T, dep *definition.DependencyOption),
 ) {
-	options := []*definition.DependancyOption{
+	options := []*definition.DependencyOption{
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
 	}
 
@@ -180,13 +180,13 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-		name        string
-		id          string
-		deviceName  string
-		data        frame.JSONMap
-		expectError bool
-		expectNil   bool
-	},
+	name        string
+	id          string
+	deviceName  string
+	data        data.JSONMap
+	expectError bool
+	expectNil   bool
+},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
@@ -236,7 +236,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 		name        string
 		id          string
 		deviceName  string
-		data        frame.JSONMap
+		data        data.JSONMap
 		expectError bool
 		expectNil   bool
 	}{
@@ -244,7 +244,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 			name:       "save device with existing ID",
 			id:         "existing-device-id",
 			deviceName: "Test Device",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"profile_id": "profile-123",
 				"os":         "Linux",
 				"user_agent": "Mozilla/5.0",
@@ -258,7 +258,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 			name:       "save device with empty ID returns error",
 			id:         "",
 			deviceName: "Test Device",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"profile_id": "profile-456",
 				"os":         "Windows",
 				"session_id": "test-session-2",
@@ -270,7 +270,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 			name:       "save device with empty ID and session logs activity but returns error",
 			id:         "",
 			deviceName: "Minimal Device",
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"profile_id": "profile-789",
 				"session_id": "test-session-3",
 			},
@@ -279,7 +279,7 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -318,7 +318,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -386,7 +386,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -439,13 +439,13 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 		setupDevice bool
 		deviceID    string
 		sessionID   string
-		data        frame.JSONMap
+		data        data.JSONMap
 		expectError bool
 	}{
 		{
 			name:        "valid activity log",
 			setupDevice: true,
-			data: frame.JSONMap{
+			data: data.JSONMap{
 				"action": "login",
 				"result": "success",
 			},
@@ -454,12 +454,12 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 		{
 			name:        "empty data",
 			setupDevice: true,
-			data:        frame.JSONMap{},
+			data:        data.JSONMap{},
 			expectError: false,
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -516,7 +516,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 		deviceID    string
 		keyType     devicev1.KeyType
 		key         []byte
-		extra       frame.JSONMap
+		extra       data.JSONMap
 		expectError bool
 	}{
 		{
@@ -524,7 +524,7 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 			setupDevice: true,
 			keyType:     devicev1.KeyType_MATRIX_KEY,
 			key:         []byte("test-encryption-key"),
-			extra: frame.JSONMap{
+			extra: data.JSONMap{
 				"algorithm": "AES256",
 			},
 			expectError: false,
@@ -534,12 +534,12 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 			setupDevice: true,
 			keyType:     devicev1.KeyType_NOTIFICATION_KEY,
 			key:         []byte("test-signing-key"),
-			extra:       frame.JSONMap{},
+			extra:       data.JSONMap{},
 			expectError: false,
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -597,7 +597,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -640,12 +640,12 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-		name        string
-		setupDevice bool
-		profileID   string
-		searchQuery string
-		expectError bool
-	},
+	name        string
+	setupDevice bool
+	profileID   string
+	searchQuery string
+	expectError bool
+},
 ) {
 	// Create context with claims for the expected profile_id
 	testCtx := ctx
@@ -734,7 +734,7 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -774,7 +774,7 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -843,7 +843,7 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -916,7 +916,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -976,7 +976,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithKeys(
 	var keyIDs []string
 	for i := range keyCount {
 		keyResult, keyErr := biz.AddKey(ctx, deviceID, devicev1.KeyType_MATRIX_KEY,
-			[]byte(fmt.Sprintf("test-key-data-%d", i)), frame.JSONMap{
+			[]byte(fmt.Sprintf("test-key-data-%d", i)), data.JSONMap{
 				"index": strconv.Itoa(i),
 			})
 		if keyErr != nil {
@@ -996,7 +996,7 @@ func (suite *DeviceBusinessTestSuite) generateNonExistentKeyIDs(count int) []str
 }
 
 func (suite *DeviceBusinessTestSuite) processRemoveKeysResults(
-	keysChan <-chan frame.JobResult[[]*devicev1.KeyObject],
+	keysChan <-chan workerpool.JobResult[[]*devicev1.KeyObject],
 ) ([]*devicev1.KeyObject, error) {
 	var removedKeys []*devicev1.KeyObject
 	for result := range keysChan {
@@ -1038,7 +1038,7 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -1070,7 +1070,7 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 					sessionID = tc.sessionID
 				}
 
-				linkedDevice, err := biz.LinkDeviceToProfile(ctx, sessionID, tc.profileID, frame.JSONMap{
+				linkedDevice, err := biz.LinkDeviceToProfile(ctx, sessionID, tc.profileID, data.JSONMap{
 					"link_reason": "test",
 				})
 
@@ -1116,7 +1116,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithProfile(
 
 // Helper method to process search results channel.
 func (suite *DeviceBusinessTestSuite) processSearchResults(
-	ctx context.Context, devicesChan frame.JobResultPipe[[]*devicev1.DeviceObject],
+	ctx context.Context, devicesChan workerpool.JobResultPipe[[]*devicev1.DeviceObject],
 ) ([]*devicev1.DeviceObject, error) {
 	var devices []*devicev1.DeviceObject
 	for {
@@ -1151,7 +1151,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceForLogs(
 
 	deviceID := device.GetID()
 	if addLog {
-		_, logErr := biz.LogDeviceActivity(ctx, deviceID, "test-session-10", frame.JSONMap{
+		_, logErr := biz.LogDeviceActivity(ctx, deviceID, "test-session-10", data.JSONMap{
 			"action": "test_action",
 		})
 		if logErr != nil {
@@ -1163,7 +1163,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceForLogs(
 
 // Helper method to process device logs results channel.
 func (suite *DeviceBusinessTestSuite) processDeviceLogsResults(
-	ctx context.Context, logsChan frame.JobResultPipe[[]*devicev1.DeviceLog],
+	ctx context.Context, logsChan workerpool.JobResultPipe[[]*devicev1.DeviceLog],
 ) ([]*devicev1.DeviceLog, error) {
 	var logs []*devicev1.DeviceLog
 	for {
@@ -1199,7 +1199,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithKey(
 
 	deviceID := device.GetID()
 	if addKey {
-		_, keyErr := biz.AddKey(ctx, deviceID, keyType, []byte("test-key-data"), frame.JSONMap{
+		_, keyErr := biz.AddKey(ctx, deviceID, keyType, []byte("test-key-data"), data.JSONMap{
 			"test": "data",
 		})
 		if keyErr != nil {
@@ -1211,7 +1211,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithKey(
 
 // Helper method to process keys results channel.
 func (suite *DeviceBusinessTestSuite) processKeysResults(
-	keysChan <-chan frame.JobResult[[]*devicev1.KeyObject],
+	keysChan <-chan workerpool.JobResult[[]*devicev1.KeyObject],
 ) ([]*devicev1.KeyObject, error) {
 	var keys []*devicev1.KeyObject
 	for result := range keysChan {
@@ -1228,7 +1228,7 @@ func (suite *DeviceBusinessTestSuite) processKeysResults(
 func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndSession() {
 	t := suite.T()
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := suite.CreateService(t, dep)
 		biz := business.NewDeviceBusiness(ctx, svc)
 
@@ -1237,7 +1237,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 		sessionID := util.IDString()
 
 		// Prepare device log data with user agent and IP for session creation
-		logData := frame.JSONMap{
+		logData := data.JSONMap{
 			"userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
 			"ip":        "192.168.1.100",
 			"action":    "login",

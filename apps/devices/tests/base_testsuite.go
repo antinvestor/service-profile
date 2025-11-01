@@ -38,7 +38,7 @@ func (bs *BaseTestSuite) SetupSuite() {
 
 func (bs *BaseTestSuite) CreateService(
 	t *testing.T,
-	depOpts *definition.DependancyOption,
+	depOpts *definition.DependencyOption,
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
@@ -83,9 +83,9 @@ func (bs *BaseTestSuite) TearDownSuite() {
 // WithTestDependancies Creates subtests with each known DependancyOption.
 func (bs *BaseTestSuite) WithTestDependancies(
 	t *testing.T,
-	testFn func(t *testing.T, dep *definition.DependancyOption),
+	testFn func(t *testing.T, dep *definition.DependencyOption),
 ) {
-	options := []*definition.DependancyOption{
+	options := []*definition.DependencyOption{
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -43,8 +44,8 @@ func NewRelationshipBusiness(
 	_ context.Context,
 	service *frame.Service,
 	profileBiz ProfileBusiness,
+	relationshipRepo repository.RelationshipRepository,
 ) RelationshipBusiness {
-	relationshipRepo := repository.NewRelationshipRepository(service)
 
 	return &relationshipBusiness{
 		service:          service,
@@ -103,7 +104,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 	if err != nil {
 		logger.WithError(err).Warn("get existing relationship error")
 
-		if !frame.ErrorIsNoRows(err) {
+		if !data.ErrorIsNoRows(err) {
 			return nil, err
 		}
 	}
@@ -119,7 +120,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 		return nil, err
 	}
 
-	requestProperties := frame.JSONMap{}
+	requestProperties := data.JSONMap{}
 
 	relationship := models.Relationship{
 		ParentObject:       request.GetParent(),
@@ -135,7 +136,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 		relationship.ID = request.GetId()
 	}
 
-	err = rb.relationshipRepo.Save(ctx, &relationship)
+	err = rb.relationshipRepo.Create(ctx, &relationship)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +152,7 @@ func (rb *relationshipBusiness) DeleteRelationship(
 ) (*profilev1.RelationshipObject, error) {
 	relationship, err := rb.relationshipRepo.GetByID(ctx, request.GetId())
 	if err != nil {
-		if frame.ErrorIsNoRows(err) {
+		if data.ErrorIsNoRows(err) {
 			return nil, errors.New("relationship not found")
 		}
 		return nil, err

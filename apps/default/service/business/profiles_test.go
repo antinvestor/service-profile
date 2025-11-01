@@ -7,7 +7,7 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -30,7 +30,7 @@ func TestProfileSuite(t *testing.T) {
 func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 	t := pts.T()
 
-	requestProp, _ := structpb.NewStruct(frame.JSONMap{
+	requestProp, _ := structpb.NewStruct(data.JSONMap{
 		"name": "Profile Tester",
 	})
 	testcases := []struct {
@@ -49,7 +49,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 		},
 	}
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := pts.CreateService(t, dep)
@@ -75,16 +75,16 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 
 		var profileAvailable []string
 		pbc := business.NewProfileBusiness(ctx, svc)
 
-		prop1 := frame.JSONMap{
+		prop1 := data.JSONMap{
 			"name": "Profile Tester Get",
 		}
-		prop2 := frame.JSONMap{
+		prop2 := data.JSONMap{
 			"name": "Profile Tester Get 2",
 		}
 
@@ -151,11 +151,11 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
-		properties := frame.JSONMap{
+		properties := data.JSONMap{
 			"name": "Get By Contact Test",
 		}
 		// Create a profile first
@@ -201,11 +201,11 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
-		properties := frame.JSONMap{
+		properties := data.JSONMap{
 			"name": "Original Name",
 		}
 		// Create a profile first
@@ -221,7 +221,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 			return
 		}
 
-		reqProperties := frame.JSONMap{
+		reqProperties := data.JSONMap{
 			"name": "Updated Name",
 			"age":  "30",
 		}
@@ -255,11 +255,11 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
-		properties := frame.JSONMap{
+		properties := data.JSONMap{
 			"name": "Target Profile",
 		}
 		// Create target profile
@@ -275,7 +275,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 			return
 		}
 
-		mergeProperties := frame.JSONMap{
+		mergeProperties := data.JSONMap{
 			"age":     "25",
 			"country": "Kenya",
 		}
@@ -323,11 +323,11 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 func (pts *ProfileTestSuite) Test_profileBusiness_GetContactByID() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
-		properties := frame.JSONMap{
+		properties := data.JSONMap{
 			"name": "Get Contact Test",
 		}
 		// Create a profile first
@@ -368,11 +368,11 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetContactByID() {
 func (pts *ProfileTestSuite) Test_profileBusiness_VerifyContact() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
-		properties := frame.JSONMap{
+		properties := data.JSONMap{
 			"name": "Verify Contact Test",
 		}
 		// Create a profile first
@@ -409,13 +409,13 @@ func (pts *ProfileTestSuite) Test_profileBusiness_VerifyContact() {
 func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
 		verificationRepo := repository.NewVerificationRepository(svc)
 
-		properties := frame.JSONMap{
+		properties := data.JSONMap{
 			"name": "Check Verify Test",
 		}
 		// Create a profile and verify contact first
@@ -473,7 +473,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_WrongCode() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 		verificationRepo := repository.NewVerificationRepository(svc)
@@ -524,7 +524,7 @@ func (pts *ProfileTestSuite) setupVerificationForTest(
 	verificationRepo repository.VerificationRepository,
 	email string,
 ) string {
-	properties := frame.JSONMap{
+	properties := data.JSONMap{
 		"name": "Check Verify Test",
 	}
 	// Create a profile and verify contact first
@@ -568,12 +568,12 @@ func (pts *ProfileTestSuite) setupVerificationForTest(
 func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 	t := pts.T()
 
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependancyOption) {
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
 		pb := business.NewProfileBusiness(ctx, svc)
 
 		t.Run("empty contact", func(t *testing.T) {
-			properties := frame.JSONMap{
+			properties := data.JSONMap{
 				"name": "Invalid Contact Test",
 			}
 
@@ -590,7 +590,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 		})
 
 		t.Run("invalid contact format", func(t *testing.T) {
-			properties := frame.JSONMap{
+			properties := data.JSONMap{
 				"name": "Invalid Contact Test 2",
 			}
 
