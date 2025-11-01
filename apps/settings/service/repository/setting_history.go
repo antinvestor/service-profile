@@ -4,32 +4,33 @@ import (
 	"context"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/workerpool"
 )
 
 type SettingAuditRepository interface {
+	datastore.BaseRepository[*models.SettingAudit]
 	GetByRef(ctx context.Context, ref string) ([]models.SettingAudit, error)
-	Save(ctx context.Context, sAudit *models.SettingAudit) error
 }
 
 type settingAuditRepository struct {
-	service *frame.Service
+	datastore.BaseRepository[*models.SettingAudit]
 }
 
-func NewSettingAuditRepository(_ context.Context, service *frame.Service) SettingAuditRepository {
-	return &settingAuditRepository{service: service}
+func NewSettingAuditRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) SettingAuditRepository {
+	return &settingAuditRepository{
+		BaseRepository: datastore.NewBaseRepository[*models.SettingAudit](
+			ctx, dbPool, workMan, func() *models.SettingAudit { return &models.SettingAudit{} },
+		),
+	}
 }
 
 func (repo *settingAuditRepository) GetByRef(ctx context.Context, ref string) ([]models.SettingAudit, error) {
 	var settingAudit []models.SettingAudit
-	svc := repo.service
-	err := svc.DB(ctx, false).Find(&settingAudit, "ref = ?", ref).Error
+	err := repo.Pool().DB(ctx, false).Find(&settingAudit, "ref = ?", ref).Error
 	if err != nil {
 		return nil, err
 	}
 	return settingAudit, nil
-}
-
-func (repo *settingAuditRepository) Save(ctx context.Context, sAudit *models.SettingAudit) error {
-	return repo.service.DB(ctx, false).Save(sAudit).Error
 }

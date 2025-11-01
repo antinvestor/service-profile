@@ -6,11 +6,17 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/util"
 )
 
 type SettingsAuditor struct {
-	Service *frame.Service
+	auditRepo repository.SettingAuditRepository
+}
+
+func NewSettingsAuditor(auditRepo repository.SettingAuditRepository) *SettingsAuditor {
+	return &SettingsAuditor{
+		auditRepo: auditRepo,
+	}
 }
 
 func (e *SettingsAuditor) Name() string {
@@ -40,11 +46,10 @@ func (e *SettingsAuditor) Execute(ctx context.Context, payload interface{}) erro
 		return errors.New("payload is not of type models.SettingAudit")
 	}
 
-	log := e.Service.Log(ctx).WithField("type", e.Name())
-	log.WithField("payload", audit).Info("handling event")
+	log := util.Log(ctx).WithField("type", e.Name())
+	log.WithField("payload", audit).Debug("handling event")
 
-	auditRepo := repository.NewSettingAuditRepository(ctx, e.Service)
-	err := auditRepo.Save(ctx, audit)
+	err := e.auditRepo.Create(ctx, audit)
 	if err != nil {
 		log.WithError(err).Warn("could not save audit to db")
 		return err

@@ -4,10 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/antinvestor/service-profile/apps/settings/config"
+	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
 	"github.com/antinvestor/service-profile/apps/settings/service/events"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
@@ -42,7 +44,7 @@ func (bs *SettingsBaseTestSuite) CreateService(
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	cfg, err := frame.ConfigFromEnv[config.SettingsConfig]()
+	cfg, err := config.FromEnv[aconfig.SettingsConfig]()
 	require.NoError(t, err)
 
 	cfg.LogLevel = "debug"
@@ -65,12 +67,15 @@ func (bs *SettingsBaseTestSuite) CreateService(
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())
 
-	eventList := frame.WithRegisterEvents(
-		&events.SettingsAuditor{Service: svc})
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	auditRepo := repository.NewSettingAuditRepository(ctx, dbPool, svc.WorkManager())
+
+	eventList := frame.WithRegisterEvents(events.NewSettingsAuditor(auditRepo))
 
 	svc.Init(ctx, eventList)
 
-	err = repository.Migrate(ctx, svc, "../../migrations/0001")
+	err = repository.Migrate(ctx, svc.DatastoreManager(), dbPool, "../../migrations/0001")
 	require.NoError(t, err)
 
 	err = svc.Run(ctx, "")
@@ -92,5 +97,5 @@ func (bs *SettingsBaseTestSuite) WithTestDependancies(
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
 	}
 
-	frametests.WithTestDependancies(t, options, testFn)
+	frametests.WithTestDependencies(t, options, testFn)
 }

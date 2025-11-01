@@ -1,7 +1,7 @@
 package models
 
 import (
-	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
+	settingsv1 "github.com/antinvestor/apis/go/settings/v1"
 	"github.com/pitabwire/frame/data"
 )
 
@@ -16,8 +16,8 @@ type SettingRef struct {
 	Module   string `gorm:"type:varchar(255)"`
 }
 
-func (model *SettingRef) ToAPI() *settingsV1.Setting {
-	setting := settingsV1.Setting{
+func (model *SettingRef) ToAPI() *settingsv1.Setting {
+	setting := settingsv1.Setting{
 		Name:     model.Name,
 		Object:   model.Object,
 		ObjectId: model.ObjectID,
@@ -34,8 +34,8 @@ type SettingVal struct {
 	Version int
 }
 
-func (model *SettingVal) ToAPI(sRef *SettingRef) *settingsV1.SettingObject {
-	response := settingsV1.SettingObject{
+func (model *SettingVal) ToAPI(sRef *SettingRef) *settingsv1.SettingObject {
+	response := settingsv1.SettingObject{
 		Id:      model.ID,
 		Key:     sRef.ToAPI(),
 		Value:   model.Detail,

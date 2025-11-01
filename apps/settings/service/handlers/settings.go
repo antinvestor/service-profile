@@ -3,43 +3,85 @@ package handlers
 import (
 	"context"
 
-	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
+	"connectrpc.com/connect"
+	commonv1 "github.com/antinvestor/apis/go/common/v1"
+	settingsv1 "github.com/antinvestor/apis/go/settings/v1"
+	"github.com/antinvestor/apis/go/settings/v1/settingsv1connect"
 	"github.com/antinvestor/service-profile/apps/settings/service/business"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
+	"github.com/antinvestor/service-profile/internal/errorutil"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
 )
 
 type SettingsServer struct {
-	Service *frame.Service
-	settingsV1.UnimplementedSettingsServiceServer
+	settingBusiness business.SettingsBusiness
+	settingsv1connect.UnimplementedSettingsServiceHandler
 }
 
-func (server *SettingsServer) newSettingsBusiness(ctx context.Context) (business.SettingsBusiness, error) {
-	return business.NewSettingsBusiness(ctx, server.Service)
+func NewSettingsServer(ctx context.Context, svc *frame.Service) *SettingsServer {
+
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	refRepo := repository.NewReferenceRepository(ctx, dbPool, workMan)
+	valRepo := repository.NewSettingValRepository(ctx, dbPool, workMan)
+
+	return &SettingsServer{
+		settingBusiness: business.NewSettingsBusiness(refRepo, valRepo),
+	}
 }
 
 // Get a single setting and its stored value.
-func (server *SettingsServer) Get(ctx context.Context, req *settingsV1.GetRequest) (*settingsV1.GetResponse, error) {
-	notificationBusiness, err := server.newSettingsBusiness(ctx)
+func (s *SettingsServer) Get(ctx context.Context, req *connect.Request[settingsv1.GetRequest]) (*connect.Response[settingsv1.GetResponse], error) {
+	resp, err := s.settingBusiness.Get(ctx, req.Msg)
 	if err != nil {
 		return nil, err
 	}
-	return notificationBusiness.Get(ctx, req)
+	return connect.NewResponse(resp), nil
 }
 
 // Set save the setting value appropriately.
-func (server *SettingsServer) Set(ctx context.Context, req *settingsV1.SetRequest) (*settingsV1.SetResponse, error) {
-	notificationBusiness, err := server.newSettingsBusiness(ctx)
+func (s *SettingsServer) Set(ctx context.Context, req *connect.Request[settingsv1.SetRequest]) (*connect.Response[settingsv1.SetResponse], error) {
+	resp, err := s.settingBusiness.Set(ctx, req.Msg)
 	if err != nil {
 		return nil, err
 	}
-	return notificationBusiness.Set(ctx, req)
+	return connect.NewResponse(resp), nil
 }
 
 // List Pulls all setting values that match some criteria in the name & any other setting properties.
-func (server *SettingsServer) List(req *settingsV1.ListRequest, stream settingsV1.SettingsService_ListServer) error {
-	settingsBusiness, err := server.newSettingsBusiness(stream.Context())
+func (s *SettingsServer) List(ctx context.Context, req *connect.Request[settingsv1.ListRequest], stream *connect.ServerStream[settingsv1.ListResponse]) error {
+	response, err := s.settingBusiness.List(ctx, req.Msg)
+
 	if err != nil {
 		return err
 	}
-	return settingsBusiness.List(req, stream)
+	return stream.Send(&settingsv1.ListResponse{Data: response})
+}
+
+// Search Streams setting values that match some criteria in the name & any other setting properties.
+func (s *SettingsServer) Search(ctx context.Context, req *connect.Request[commonv1.SearchRequest], stream *connect.ServerStream[settingsv1.SearchResponse]) error {
+	resp, err := s.settingBusiness.Search(ctx, req.Msg)
+
+	if err != nil {
+		return err
+	}
+
+	for {
+		result, ok := resp.ReadResult(ctx)
+
+		if !ok {
+			return nil
+		}
+
+		if result.IsError() {
+			return errorutil.ErrToAPI(result.Error())
+		}
+
+		err = stream.Send(&settingsv1.SearchResponse{Data: result.Item()})
+		if err != nil {
+			return errorutil.ErrToAPI(err)
+		}
+	}
 }

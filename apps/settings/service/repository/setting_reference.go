@@ -5,11 +5,13 @@ import (
 	"fmt"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/workerpool"
 )
 
 type ReferenceRepository interface {
-	GetByID(ctx context.Context, id string) (*models.SettingRef, error)
+	datastore.BaseRepository[*models.SettingRef]
 	GetByName(ctx context.Context, module string, name string) (*models.SettingRef, error)
 	GetByNameAndLanguage(ctx context.Context, module string, name string, language string) (*models.SettingRef, error)
 	GetByNameAndObject(
@@ -27,7 +29,7 @@ type ReferenceRepository interface {
 		objectID string,
 		language string,
 	) (*models.SettingRef, error)
-	Search(
+	SearchRef(
 		ctx context.Context,
 		module string,
 		query string,
@@ -35,15 +37,18 @@ type ReferenceRepository interface {
 		objectID string,
 		language string,
 	) ([]*models.SettingRef, error)
-	Save(ctx context.Context, settingRef *models.SettingRef) error
 }
 
 type referenceRepository struct {
-	service *frame.Service
+	datastore.BaseRepository[*models.SettingRef]
 }
 
-func NewReferenceRepository(_ context.Context, service *frame.Service) ReferenceRepository {
-	return &referenceRepository{service: service}
+func NewReferenceRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) ReferenceRepository {
+	return &referenceRepository{
+		BaseRepository: datastore.NewBaseRepository[*models.SettingRef](
+			ctx, dbPool, workMan, func() *models.SettingRef { return &models.SettingRef{} },
+		),
+	}
 }
 
 func (repo *referenceRepository) GetByName(
@@ -79,7 +84,7 @@ func (repo *referenceRepository) GetByNameAndObjectAndLanguage(
 ) (*models.SettingRef, error) {
 	var settingRef models.SettingRef
 
-	refQuery := repo.service.DB(ctx, true).Where("module = ? AND name = ?", module, name)
+	refQuery := repo.Pool().DB(ctx, true).Where("module = ? AND name = ?", module, name)
 	if objectID != "" && object != "" {
 		refQuery = refQuery.Where(" object = ? AND object_id = ? ", object, objectID)
 	}
@@ -95,7 +100,7 @@ func (repo *referenceRepository) GetByNameAndObjectAndLanguage(
 	return &settingRef, nil
 }
 
-func (repo *referenceRepository) Search(
+func (repo *referenceRepository) SearchRef(
 	ctx context.Context,
 	module string,
 	query string,
@@ -107,7 +112,7 @@ func (repo *referenceRepository) Search(
 
 	queryStr := fmt.Sprintf("%%%s%%", query)
 
-	refQuery := repo.service.DB(ctx, true).Where(" name iLike ?", queryStr)
+	refQuery := repo.Pool().DB(ctx, true).Where(" name iLike ?", queryStr)
 
 	if module != "" {
 		refQuery = refQuery.Where(" module = ? ", module)
@@ -126,17 +131,4 @@ func (repo *referenceRepository) Search(
 		return nil, err
 	}
 	return settingRefs, nil
-}
-
-func (repo *referenceRepository) GetByID(ctx context.Context, id string) (*models.SettingRef, error) {
-	ref := models.SettingRef{}
-	err := repo.service.DB(ctx, true).First(&ref, "id = ?", id).Error
-	if err != nil {
-		return nil, err
-	}
-	return &ref, nil
-}
-
-func (repo *referenceRepository) Save(ctx context.Context, settingRef *models.SettingRef) error {
-	return repo.service.DB(ctx, false).Save(settingRef).Error
 }

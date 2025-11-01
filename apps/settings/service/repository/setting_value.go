@@ -4,41 +4,33 @@ import (
 	"context"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/workerpool"
 )
 
 type SettingValRepository interface {
-	GetByID(ctx context.Context, id string) (*models.SettingVal, error)
-	GetByRef(ctx context.Context, id string) (*models.SettingVal, error)
-	Save(ctx context.Context, settingVal *models.SettingVal) error
+	datastore.BaseRepository[*models.SettingVal]
+	GetByRef(ctx context.Context, id ...string) ([]*models.SettingVal, error)
 }
 
 type settingValRepository struct {
-	service *frame.Service
+	datastore.BaseRepository[*models.SettingVal]
 }
 
-func NewSettingValRepository(_ context.Context, service *frame.Service) SettingValRepository {
-	return &settingValRepository{service: service}
+func NewSettingValRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) SettingValRepository {
+	return &settingValRepository{
+		BaseRepository: datastore.NewBaseRepository[*models.SettingVal](
+			ctx, dbPool, workMan, func() *models.SettingVal { return &models.SettingVal{} },
+		),
+	}
 }
 
-func (repo *settingValRepository) GetByID(ctx context.Context, id string) (*models.SettingVal, error) {
-	settingVal := models.SettingVal{}
-	err := repo.service.DB(ctx, true).First(&settingVal, "id = ?", id).Error
+func (repo *settingValRepository) GetByRef(ctx context.Context, reference ...string) ([]*models.SettingVal, error) {
+	var settingVal []*models.SettingVal
+	err := repo.Pool().DB(ctx, true).Find(&settingVal, "ref IN ?", reference).Error
 	if err != nil {
 		return nil, err
 	}
-	return &settingVal, nil
-}
-
-func (repo *settingValRepository) GetByRef(ctx context.Context, id string) (*models.SettingVal, error) {
-	settingVal := models.SettingVal{}
-	err := repo.service.DB(ctx, true).First(&settingVal, "ref = ?", id).Error
-	if err != nil {
-		return nil, err
-	}
-	return &settingVal, nil
-}
-
-func (repo *settingValRepository) Save(ctx context.Context, sVal *models.SettingVal) error {
-	return repo.service.DB(ctx, false).Save(sVal).Error
+	return settingVal, nil
 }

@@ -2,44 +2,61 @@ package business
 
 import (
 	"context"
+	"errors"
 
-	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
+	commonv1 "github.com/antinvestor/apis/go/common/v1"
+	settingsv1 "github.com/antinvestor/apis/go/settings/v1"
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
-	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/workerpool"
+	"github.com/pitabwire/util"
 )
 
-type settingsBusiness struct {
-	service *frame.Service
+type SettingsBusiness interface {
+	Get(context.Context, *settingsv1.GetRequest) (*settingsv1.GetResponse, error)
+	List(context.Context, *settingsv1.ListRequest) ([]*settingsv1.SettingObject, error)
+	Set(context.Context, *settingsv1.SetRequest) (*settingsv1.SetResponse, error)
+	Search(ctx context.Context, msg *commonv1.SearchRequest) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error)
 }
 
-func (nb *settingsBusiness) Get(ctx context.Context, req *settingsV1.GetRequest) (*settingsV1.GetResponse, error) {
-	logger := nb.service.Log(ctx).WithField("request", req)
+type settingsBusiness struct {
+	refRepo repository.ReferenceRepository
+	valRepo repository.SettingValRepository
+}
+
+func NewSettingsBusiness(refRepo repository.ReferenceRepository, valRepo repository.SettingValRepository) SettingsBusiness {
+
+	return &settingsBusiness{
+		refRepo: refRepo,
+		valRepo: valRepo,
+	}
+}
+
+func (nb *settingsBusiness) Get(ctx context.Context, req *settingsv1.GetRequest) (*settingsv1.GetResponse, error) {
+	logger := util.Log(ctx).WithField("request", req)
 	logger.Debug("handling get request")
 
-	referenceRepo := repository.NewReferenceRepository(ctx, nb.service)
 	ref := req.GetKey()
-	sRef, err := referenceRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
+	sRef, err := nb.refRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
 		ref.GetName(), ref.GetObject(), ref.GetObjectId(), ref.GetLang())
 	if err != nil && !data.ErrorIsNoRows(err) {
 		logger.WithError(err).Error("could not get settingRef")
 		return nil, err
 	}
 	if sRef != nil {
-		valRepo := repository.NewSettingValRepository(ctx, nb.service)
-		sVal, valErr := valRepo.GetByRef(ctx, sRef.GetID())
+		sValList, valErr := nb.valRepo.GetByRef(ctx, sRef.GetID())
 		if valErr != nil {
 			logger.WithError(valErr).Error("could not get settingRef")
 			return nil, valErr
 		}
-		return &settingsV1.GetResponse{
-			Data: sVal.ToAPI(sRef),
+		return &settingsv1.GetResponse{
+			Data: sValList[0].ToAPI(sRef),
 		}, nil
 	}
-	return &settingsV1.GetResponse{
+	return &settingsv1.GetResponse{
 
-		Data: &settingsV1.SettingObject{
+		Data: &settingsv1.SettingObject{
 			Id:    "",
 			Key:   req.GetKey(),
 			Value: "",
@@ -47,14 +64,13 @@ func (nb *settingsBusiness) Get(ctx context.Context, req *settingsV1.GetRequest)
 	}, nil
 }
 
-func (nb *settingsBusiness) Set(ctx context.Context, req *settingsV1.SetRequest) (*settingsV1.SetResponse, error) {
-	logger := nb.service.Log(ctx).WithField("request", req)
+func (nb *settingsBusiness) Set(ctx context.Context, req *settingsv1.SetRequest) (*settingsv1.SetResponse, error) {
+	logger := util.Log(ctx).WithField("request", req)
 	logger.Debug("handling set/update setting")
 
-	referenceRepo := repository.NewReferenceRepository(ctx, nb.service)
 	ref := req.GetKey()
 
-	sRef, err := referenceRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
+	sRef, err := nb.refRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
 		ref.GetName(), ref.GetObject(), ref.GetObjectId(), ref.GetLang())
 	if err != nil {
 		if !data.ErrorIsNoRows(err) {
@@ -69,15 +85,15 @@ func (nb *settingsBusiness) Set(ctx context.Context, req *settingsV1.SetRequest)
 			Language: ref.GetLang(),
 			Module:   ref.GetModule(),
 		}
-		err = referenceRepo.Save(ctx, sRef)
+		err = nb.refRepo.Create(ctx, sRef)
 		if err != nil {
 			logger.WithError(err).Error("error saving setting ref")
 			return nil, err
 		}
 	}
 
-	valRepo := repository.NewSettingValRepository(ctx, nb.service)
-	sVal, err := valRepo.GetByRef(ctx, sRef.GetID())
+	var sVal *models.SettingVal
+	sValList, err := nb.valRepo.GetByRef(ctx, sRef.GetID())
 	if err != nil {
 		if !data.ErrorIsNoRows(err) {
 			logger.WithError(err).Error("error querying for setting value")
@@ -88,63 +104,66 @@ func (nb *settingsBusiness) Set(ctx context.Context, req *settingsV1.SetRequest)
 			Ref:     sRef.GetID(),
 			Version: 0,
 		}
+	} else {
+		sVal = sValList[0]
 	}
 
 	sVal.Detail = req.GetValue()
-	sVal.Version++
-	err = valRepo.Save(ctx, sVal)
+	if sVal.Version == 0 {
+		err = nb.valRepo.Create(ctx, sVal)
+	} else {
+		_, err = nb.valRepo.Update(ctx, sVal, "detail")
+	}
 	if err != nil {
 		logger.WithError(err).Error("error saving setting value")
 		return nil, err
 	}
-	return &settingsV1.SetResponse{
+	return &settingsv1.SetResponse{
 		Data: sVal.ToAPI(sRef),
 	}, nil
 }
 
-func (nb *settingsBusiness) List(req *settingsV1.ListRequest, stream settingsV1.SettingsService_ListServer) error {
-	ctx := stream.Context()
+func (nb *settingsBusiness) List(ctx context.Context, req *settingsv1.ListRequest) ([]*settingsv1.SettingObject, error) {
 
-	logger := nb.service.Log(ctx).WithField("request", req)
+	logger := util.Log(ctx).WithField("request", req)
 
 	logger.Info("handling setting list request")
 
-	referenceRepo := repository.NewReferenceRepository(ctx, nb.service)
-
 	setting := req.GetKey()
-	settingsList, err := referenceRepo.Search(ctx, setting.GetModule(),
+	settingsList, err := nb.refRepo.SearchRef(ctx, setting.GetModule(),
 		setting.GetName(), setting.GetObject(), setting.GetObjectId(), setting.GetLang())
 	if err != nil {
 		logger.WithError(err).Warn("failed to search for settings")
-		return err
+		return nil, err
 	}
 
-	valRepo := repository.NewSettingValRepository(ctx, nb.service)
-
-	var results []*settingsV1.SettingObject
+	var results []*settingsv1.SettingObject
+	var referenceList []string
+	sRefMap := map[string]*models.SettingRef{}
 	for _, sRef := range settingsList {
-		sVal, getErr := valRepo.GetByRef(ctx, sRef.GetID())
-		if getErr != nil {
-			if !data.ErrorIsNoRows(getErr) {
-				logger.WithError(getErr).Error("error querying for setting value")
-				return getErr
-			}
+		referenceList = append(referenceList, sRef.GetID())
+		sRefMap[sRef.GetID()] = sRef
+	}
 
-			sVal = &models.SettingVal{
-				Ref:     sRef.GetID(),
-				Version: 0,
-			}
+	sValList, getErr := nb.valRepo.GetByRef(ctx, referenceList...)
+	if getErr != nil {
+		if !data.ErrorIsNoRows(getErr) {
+			logger.WithError(getErr).Error("error querying for setting value")
+			return results, getErr
 		}
-
-		results = append(results, sVal.ToAPI(sRef))
 	}
 
-	err = stream.Send(&settingsV1.ListResponse{
-		Data: results})
-	if err != nil {
-		logger.WithError(err).Warn(" unable to send a result")
-		return err
+	for _, val := range sValList {
+		sRef, ok := sRefMap[val.Ref]
+		if ok {
+			results = append(results, val.ToAPI(sRef))
+		}
 	}
 
-	return nil
+	return results, nil
+}
+
+func (nb *settingsBusiness) Search(ctx context.Context, msg *commonv1.SearchRequest) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error) {
+
+	return nil, errors.New("not implemented")
 }
