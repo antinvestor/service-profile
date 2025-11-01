@@ -1,17 +1,16 @@
 package business_test
 
 import (
-	"reflect"
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type AddressTestSuite struct {
@@ -37,7 +36,10 @@ func (ats *AddressTestSuite) TestNewAddressBusiness() {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)
 
-				if got := business.NewAddressBusiness(ctx, svc); got == nil {
+				dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+				addressRepo := repository.NewAddressRepository(ctx, dbPool, svc.WorkManager())
+
+				if got := business.NewAddressBusiness(ctx, addressRepo); got == nil {
 					t.Errorf("NewAddressBusiness() = %v, want non nil address business", got)
 				}
 			})
@@ -73,7 +75,10 @@ func (ats *AddressTestSuite) Test_addressBusiness_CreateAddress() {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := ats.CreateService(t, dep)
 
-				aB := business.NewAddressBusiness(ctx, svc)
+				dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+				addressRepo := repository.NewAddressRepository(ctx, dbPool, svc.WorkManager())
+
+				aB := business.NewAddressBusiness(ctx, addressRepo)
 				got, err := aB.CreateAddress(ctx, tt.request)
 				tt.wantErr(t, err)
 
@@ -93,6 +98,9 @@ func (ats *AddressTestSuite) Test_addressBusiness_GetByProfile() {
 	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := ats.CreateService(t, dep)
 
+		dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+		addressRepo := repository.NewAddressRepository(ctx, dbPool, svc.WorkManager())
+
 		testProfiles, err := ats.CreateTestProfiles(ctx, svc, []string{"testing@ant.com"})
 		if err != nil {
 			t.Errorf(" CreateProfile failed with %+v", err)
@@ -101,7 +109,7 @@ func (ats *AddressTestSuite) Test_addressBusiness_GetByProfile() {
 
 		profile := testProfiles[0]
 
-		addBuss := business.NewAddressBusiness(ctx, svc)
+		addBuss := business.NewAddressBusiness(ctx, addressRepo)
 
 		adObj := &profilev1.AddressObject{
 			Name:    "Linked address",
@@ -129,64 +137,6 @@ func (ats *AddressTestSuite) Test_addressBusiness_GetByProfile() {
 
 		if len(addresses) == 0 {
 			t.Errorf(" GetByProfile failed with %+v", err)
-		}
-	})
-}
-
-func (ats *AddressTestSuite) Test_addressBusiness_LinkAddressToProfile() {
-	t := ats.T()
-
-	type args struct {
-		profileID string
-		name      string
-		address   *profilev1.AddressObject
-	}
-	testCases := []struct {
-		name    string
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-
-	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		for _, tt := range testCases {
-			t.Run(tt.name, func(t *testing.T) {
-				svc, ctx := ats.CreateService(t, dep)
-
-				aB := business.NewAddressBusiness(ctx, svc)
-				if err := aB.LinkAddressToProfile(ctx, tt.args.profileID, tt.args.name, tt.args.address); (err != nil) != tt.wantErr {
-					t.Errorf("LinkAddressToProfile() error = %v, wantErr %+v", err, tt.wantErr)
-				}
-			})
-		}
-	})
-}
-
-func (ats *AddressTestSuite) Test_addressBusiness_ToAPI() {
-	t := ats.T()
-
-	type args struct {
-		address *models.Address
-	}
-	tests := []struct {
-		name string
-		args args
-		want *profilev1.AddressObject
-	}{
-		// TODO: Add test cases.
-	}
-
-	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				svc, ctx := ats.CreateService(t, dep)
-
-				aB := business.NewAddressBusiness(ctx, svc)
-				if got := aB.ToAPI(tt.args.address); !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("ToAPI() = %v, want %v", got, tt.want)
-				}
-			})
 		}
 	})
 }

@@ -5,12 +5,11 @@ import (
 	"errors"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/data"
-
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/util"
 )
 
 // Constants for pagination and limits.
@@ -42,20 +41,17 @@ type RelationshipBusiness interface {
 
 func NewRelationshipBusiness(
 	_ context.Context,
-	service *frame.Service,
 	profileBiz ProfileBusiness,
 	relationshipRepo repository.RelationshipRepository,
 ) RelationshipBusiness {
 
 	return &relationshipBusiness{
-		service:          service,
 		profileBusiness:  profileBiz,
 		relationshipRepo: relationshipRepo,
 	}
 }
 
 type relationshipBusiness struct {
-	service          *frame.Service
 	profileBusiness  ProfileBusiness
 	relationshipRepo repository.RelationshipRepository
 }
@@ -90,7 +86,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 	ctx context.Context,
 	request *profilev1.AddRelationshipRequest,
 ) (*profilev1.RelationshipObject, error) {
-	logger := rb.service.Log(ctx).WithField("request", request)
+	logger := util.Log(ctx).WithField("request", request)
 
 	relationships, err := rb.relationshipRepo.List(
 		ctx,

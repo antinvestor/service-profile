@@ -13,7 +13,7 @@ require (
 	github.com/antinvestor/apis/go/settings v1.47.4
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.2
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.64.8
+	github.com/pitabwire/frame v1.64.9
 	github.com/pitabwire/util v0.3.5
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1

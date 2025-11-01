@@ -3,9 +3,8 @@ package repository
 import (
 	"context"
 
-	"github.com/pitabwire/frame"
-
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/pitabwire/frame"
 )
 
 type deviceSessionRepository struct {

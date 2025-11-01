@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame/data"
 	frevents "github.com/pitabwire/frame/events"
@@ -20,8 +21,13 @@ type ClientConnectedSetupQueue struct {
 	relationshipTopic queue.Publisher
 }
 
-func NewClientConnectedSetupQueue(_ context.Context, relationshipTopic queue.Publisher,
-	eventsMan frevents.Manager, relationshipRepo repository.RelationshipRepository) *ClientConnectedSetupQueue {
+func NewClientConnectedSetupQueue(ctx context.Context, cfg *config.ProfileConfig,
+	qMan queue.Manager, eventsMan frevents.Manager, relationshipRepo repository.RelationshipRepository) *ClientConnectedSetupQueue {
+
+	relationshipTopic, err := qMan.GetPublisher(cfg.QueueRelationshipConnectName)
+	if err != nil {
+		util.Log(ctx).WithError(err).Fatal("could not get  publisher")
+	}
 	return &ClientConnectedSetupQueue{
 		eventsMan:         eventsMan,
 		relationshipRepo:  relationshipRepo,

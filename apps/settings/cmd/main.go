@@ -7,16 +7,15 @@ import (
 	"buf.build/go/protovalidate"
 	apis "github.com/antinvestor/apis/go/common"
 	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
+	"github.com/antinvestor/service-profile/apps/settings/config"
+	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/util"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/antinvestor/service-profile/apps/settings/config"
-	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
-	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 )
 
 func main() {

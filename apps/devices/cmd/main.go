@@ -6,6 +6,10 @@ import (
 	"buf.build/go/protovalidate"
 	apis "github.com/antinvestor/apis/go/common"
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	"github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
+	"github.com/antinvestor/service-profile/apps/devices/service/queue"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/util"
@@ -13,11 +17,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
-	"github.com/antinvestor/service-profile/apps/devices/service/queue"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
 func main() {

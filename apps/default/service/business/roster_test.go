@@ -5,16 +5,19 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/security"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
-
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type RosterTestSuite struct {
@@ -23,6 +26,23 @@ type RosterTestSuite struct {
 
 func TestRosterSuite(t *testing.T) {
 	suite.Run(t, new(RosterTestSuite))
+}
+
+func (rts *RosterTestSuite) getRosterBusiness(ctx context.Context, svc *frame.Service) business.RosterBusiness {
+	evtsMan := svc.EventsManager(ctx)
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	cfg := svc.Config().(*config.ProfileConfig)
+
+	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
+	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
+
+	contactBusiness := business.NewContactBusiness(ctx, cfg, evtsMan, contactRepo, verificationRepo)
+
+	rosterRepo := repository.NewRosterRepository(ctx, dbPool, workMan)
+	return business.NewRosterBusiness(ctx, contactBusiness, rosterRepo)
+
 }
 
 func (rts *RosterTestSuite) createRoster(
@@ -86,7 +106,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
-		rb := business.NewRosterBusiness(ctx, svc)
+		rb := rts.getRosterBusiness(ctx, svc)
 
 		rosterMap, err := rts.createRoster(ctx, rb, "profile123", map[string]data.JSONMap{
 			"roster@test.com": {"key1": "value1"},
@@ -114,7 +134,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
-		rb := business.NewRosterBusiness(ctx, svc)
+		rb := rts.getRosterBusiness(ctx, svc)
 
 		rosterMap, err := rts.createRoster(ctx, rb, "profRemov123", map[string]data.JSONMap{
 			"rosterremove@test.com": {"key1": "value1"},
@@ -141,7 +161,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
-		rb := business.NewRosterBusiness(ctx, svc)
+		rb := rts.getRosterBusiness(ctx, svc)
 
 		rosterID := "nonexistent"
 
@@ -158,7 +178,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := rts.CreateService(t, dep)
-		rb := business.NewRosterBusiness(ctx, svc)
+		rb := rts.getRosterBusiness(ctx, svc)
 
 		profileID := "searchProfileC1"
 
@@ -170,7 +190,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 		})
 		require.NoError(t, err)
 
-		tests := []struct {
+		testCases := []struct {
 			name        string
 			request     *profilev1.SearchRosterRequest
 			wantError   require.ErrorAssertionFunc
@@ -249,7 +269,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			},
 		}
 
-		for _, tt := range tests {
+		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
 				claims := security.ClaimsFromMap(map[string]string{
 					"sub":          tt.profileID,

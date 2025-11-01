@@ -8,13 +8,14 @@ import (
 	"connectrpc.com/otelconnect"
 	apis "github.com/antinvestor/apis/go/common"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
-	"github.com/antinvestor/apis/go/notification/v1/notificationv1connect"
+	"github.com/antinvestor/apis/go/profile/v1/profilev1connect"
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/handlers"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
 	securityconnect "github.com/pitabwire/frame/security/interceptors/connect"
 	securityhttp "github.com/pitabwire/frame/security/interceptors/http"
@@ -66,13 +67,20 @@ func main() {
 		cfg.QueueRelationshipDisConnectName,
 		cfg.QueueRelationshipDisConnectURI,
 	)
+
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	evtsMan := svc.EventsManager(ctx)
+	qMan := svc.QueueManager(ctx)
+
 	// Register queue handlers
 	serviceOptions = append(serviceOptions,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.WithRegisterEvents(
-			events.NewClientConnectedSetupQueue(svc),
-			events.NewContactVerificationQueue(svc, notificationCli),
-			events.NewContactVerificationAttemptedQueue(svc),
+			events.NewClientConnectedSetupQueue(ctx, &cfg, qMan, evtsMan, repository.NewRelationshipRepository(ctx, dbPool, workMan)),
+			events.NewContactVerificationQueue(&cfg, repository.NewContactRepository(ctx, dbPool, workMan), repository.NewVerificationRepository(ctx, dbPool, workMan), notificationCli),
+			events.NewContactVerificationAttemptedQueue(repository.NewContactRepository(ctx, dbPool, workMan), repository.NewVerificationRepository(ctx, dbPool, workMan)),
 		))
 
 	// Initialize the service with all options
@@ -101,7 +109,9 @@ func handleDatabaseMigration(
 	if cfg.DoDatabaseMigrate() {
 		svc.Init(ctx, serviceOptions...)
 
-		err := repository.Migrate(ctx, svc, cfg.GetDatabaseMigrationPath())
+		dbMan := svc.DatastoreManager()
+		dbPool := dbMan.GetPool(ctx, datastore.DefaultPoolName)
+		err := repository.Migrate(ctx, dbMan, dbPool, cfg.GetDatabaseMigrationPath())
 		if err != nil {
 			log.WithError(err).Fatal("main -- Could not migrate successfully")
 		}
@@ -145,7 +155,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service,
 
 	implementation := handlers.NewProfileServer(ctx, svc, notificationCli)
 
-	_, serverHandler := notificationv1connect.NewNotificationServiceHandler(
+	_, serverHandler := profilev1connect.NewProfileServiceHandler(
 		implementation, connect.WithInterceptors(authInterceptor, otelInterceptor, validateInterceptor))
 
 	publicRestHandler := securityhttp.AuthenticationMiddleware(implementation.NewSecureRouterV1(), authenticator)

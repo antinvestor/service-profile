@@ -5,26 +5,23 @@ import (
 	"errors"
 	"time"
 
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/security"
-
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/util"
 )
 
 const VerificationAttemptEventHandlerName = "contact.verification.attempt.queue"
 
 type ContactVerificationAttemptedQueue struct {
-	Service          *frame.Service
 	ContactRepo      repository.ContactRepository
 	VerificationRepo repository.VerificationRepository
 }
 
-func NewContactVerificationAttemptedQueue(service *frame.Service) *ContactVerificationAttemptedQueue {
+func NewContactVerificationAttemptedQueue(contactRepo repository.ContactRepository, verificationRepo repository.VerificationRepository) *ContactVerificationAttemptedQueue {
 	return &ContactVerificationAttemptedQueue{
-		Service:          service,
-		ContactRepo:      repository.NewContactRepository(service),
-		VerificationRepo: repository.NewVerificationRepository(service),
+		ContactRepo:      contactRepo,
+		VerificationRepo: verificationRepo,
 	}
 }
 func (vaq *ContactVerificationAttemptedQueue) Name() string {
@@ -53,7 +50,7 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 		return errors.New("invalid payload type, expected *models.VerificationAttempt")
 	}
 
-	logger := vaq.Service.Log(ctx).WithField("attempt", attempt.GetID()).WithField("type", vaq.Name())
+	logger := util.Log(ctx).WithField("attempt", attempt.GetID()).WithField("type", vaq.Name())
 
 	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
@@ -80,7 +77,7 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 	}
 
 	verification.VerifiedAt = time.Now()
-	err = vaq.VerificationRepo.Save(ctx, verification)
+	_, err = vaq.VerificationRepo.Update(ctx, verification, "verified_at")
 	if err != nil {
 		logger.WithError(err).Error("Failed to save verification")
 		return err
@@ -88,7 +85,7 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 
 	contact.VerificationID = verification.ID
 
-	_, err = vaq.ContactRepo.Save(ctx, contact)
+	_, err = vaq.ContactRepo.Update(ctx, contact, "verification_id")
 	if err != nil {
 		logger.WithError(err).Error("Failed to save contact")
 		return nil

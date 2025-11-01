@@ -6,34 +6,33 @@ import (
 
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/security"
-	"google.golang.org/protobuf/types/known/structpb"
-
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/util"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 const VerificationEventHandlerName = "contact.verification.queue"
 
 type ContactVerificationQueue struct {
-	Service          *frame.Service
-	ContactRepo      repository.ContactRepository
-	VerificationRepo repository.VerificationRepository
-	NotificationCli  *notificationv1.NotificationClient
+	cfg              *config.ProfileConfig
+	contactRepo      repository.ContactRepository
+	verificationRepo repository.VerificationRepository
+	notificationCli  *notificationv1.NotificationClient
 }
 
 func NewContactVerificationQueue(
-	service *frame.Service,
-	notificationCli *notificationv1.NotificationClient,
+	cfg *config.ProfileConfig, contactRepo repository.ContactRepository,
+	verificationRepo repository.VerificationRepository, notificationCli *notificationv1.NotificationClient,
 ) *ContactVerificationQueue {
 	return &ContactVerificationQueue{
-		Service:          service,
-		ContactRepo:      repository.NewContactRepository(service),
-		VerificationRepo: repository.NewVerificationRepository(service),
-		NotificationCli:  notificationCli,
+		cfg:              cfg,
+		contactRepo:      contactRepo,
+		verificationRepo: verificationRepo,
+		notificationCli:  notificationCli,
 	}
 }
 
@@ -63,24 +62,19 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		return errors.New(" invalid payload type, expected *models.Verification")
 	}
 
-	logger := vq.Service.Log(ctx).WithField("payload", verification.GetID()).WithField("type", vq.Name())
+	logger := util.Log(ctx).WithField("payload", verification.GetID()).WithField("type", vq.Name())
 
 	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
-	contact, err := vq.ContactRepo.GetByID(ctx, verification.ContactID)
+	contact, err := vq.contactRepo.GetByID(ctx, verification.ContactID)
 	if err != nil {
 		return err
 	}
 
-	err = vq.VerificationRepo.Save(ctx, verification)
+	err = vq.verificationRepo.Create(ctx, verification)
 	if err != nil {
 		logger.WithError(err).Error("Failed to save verification")
 		return err
-	}
-
-	profileConfig, ok := vq.Service.Config().(*config.ProfileConfig)
-	if !ok {
-		return errors.New("invalid service configuration")
 	}
 
 	variables := make(data.JSONMap)
@@ -100,11 +94,11 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		Recipient: recipient,
 		Payload:   variablePayload,
 		Language:  contact.Language,
-		Template:  profileConfig.MessageTemplateContactVerification,
+		Template:  vq.cfg.MessageTemplateContactVerification,
 		OutBound:  true,
 	}
 
-	_, err = vq.NotificationCli.Send(ctx, []*notificationv1.Notification{nMessages})
+	_, err = vq.notificationCli.Send(ctx, []*notificationv1.Notification{nMessages})
 	if err != nil {
 		logger.WithError(err).Error("Failed to send out verification")
 		return err

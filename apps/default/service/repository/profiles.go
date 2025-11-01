@@ -4,13 +4,12 @@ import (
 	"context"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
-
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type profileRepository struct {

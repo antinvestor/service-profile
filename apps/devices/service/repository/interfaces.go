@@ -3,10 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/data"
-
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/workerpool"
 )
 
 // DeviceRepository defines the operations for managing devices in storage.

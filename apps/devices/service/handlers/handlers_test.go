@@ -7,17 +7,17 @@ import (
 	"buf.build/go/protovalidate"
 	commonMocks "github.com/antinvestor/apis/go/common/mocks"
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/antinvestor/service-profile/apps/devices/service/tests"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-
-	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	"github.com/antinvestor/service-profile/apps/devices/service/tests"
 )
 
 type HandlersTestSuite struct {
@@ -458,12 +458,12 @@ func (suite *HandlersTestSuite) runSearchTestCase(
 	svc *frame.Service,
 	server *handlers.DevicesServer,
 	tc struct {
-	name        string
-	setupDevice bool
-	profileID   string
-	query       string
-	expectEmpty bool
-},
+		name        string
+		setupDevice bool
+		profileID   string
+		query       string
+		expectEmpty bool
+	},
 ) {
 	testCtx := suite.setupTestContext(ctx, tc.profileID)
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"time"
 
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
-
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/pitabwire/frame/workerpool"
 )
 
 type deviceLogRepository struct {

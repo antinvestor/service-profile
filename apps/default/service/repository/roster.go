@@ -2,15 +2,13 @@ package repository
 
 import (
 	"context"
-	"strings"
 
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
-
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type rosterRepository struct {
@@ -30,40 +28,19 @@ func (rr *rosterRepository) Search(
 	ctx context.Context,
 	query *data.SearchQuery,
 ) (workerpool.JobResultPipe[[]*models.Roster], error) {
+
+	rr.Pool()
+
 	return data.StableSearch[*models.Roster](ctx, rr.WorkManager(), query, func(
 		ctx context.Context,
-		query *data.SearchQuery,
+		sq *data.SearchQuery,
 	) ([]*models.Roster, error) {
-		var rosterList []*models.Roster
 
 		db := rr.Pool().DB(ctx, true).
 			Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
 			Preload("Contact")
 
-		rr.DefaultSearchFunction(ctx, db, query)
-
-		if query.Query != "" {
-			// Use TSVector with prefix matching for partial searches
-			// Handle multi-word queries by replacing spaces with & (AND operator)
-			searchQuery := strings.ReplaceAll(query.Query, " ", " & ") + ":*"
-
-			// Hybrid approach: Use indexed rosters.search_properties for roster properties
-			// and LIKE search for contact details (emails/phones) since TSVector doesn't
-			// support partial matching within email tokens
-			searchTerm := "%" + query.Query + "%"
-			db = db.Where(
-				"rosters.search_properties @@ to_tsquery('simple', ?) OR "+
-					"contacts.detail ILIKE ?",
-				searchQuery, searchTerm,
-			)
-		}
-
-		err := db.Find(&rosterList).Error
-		if err != nil {
-			return nil, err
-		}
-
-		return rosterList, nil
+		return rr.SearchFunc(ctx, db, sq)
 	})
 }
 

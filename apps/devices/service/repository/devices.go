@@ -4,47 +4,52 @@ import (
 	"context"
 	"time"
 
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/data"
-	"gorm.io/gorm"
-
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/workerpool"
+	"gorm.io/gorm"
 )
 
 type deviceRepository struct {
-	service *frame.Service
+	datastore.BaseRepository[*models.Device]
 }
 
-func NewDeviceRepository(service *frame.Service) DeviceRepository {
-	return &deviceRepository{service: service}
+func NewDeviceRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) DeviceRepository {
+	return &deviceRepository{
+		BaseRepository: datastore.NewBaseRepository[*models.Device](
+			ctx, dbPool, workMan, func() *models.Device { return &models.Device{} },
+		),
+	}
 }
 
 func (dr *deviceRepository) Save(ctx context.Context, device *models.Device) error {
-	return dr.service.DB(ctx, false).Save(device).Error
+	return dr.Pool().DB(ctx, false).Save(device).Error
 }
 
 func (dr *deviceRepository) GetByID(ctx context.Context, id string) (*models.Device, error) {
-	var device models.Device
-	if err := dr.service.DB(ctx, true).First(&device, "id = ?", id).Error; err != nil {
+	device, err := dr.BaseRepository.GetByID(ctx, id)
+	if err != nil {
 		return nil, err
 	}
-	return &device, nil
+	return device, nil
 }
 
 func (dr *deviceRepository) Search(ctx context.Context,
 	query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.Device], error) {
-	return data.StableSearch[models.Device](ctx, dr.service, query, func(
+	return data.StableSearch[*models.Device](ctx, dr.WorkManager(), query, func(
 		ctx context.Context,
-		query *data.SearchQuery,
+		sq *data.SearchQuery,
 	) ([]*models.Device, error) {
 		var deviceList []*models.Device
 
-		paginator := query.Pagination
-		db := dr.service.DB(ctx, true).
+		paginator := sq.Pagination
+		db := dr.Pool().DB(ctx, true).
 			Limit(paginator.Limit).Offset(paginator.Offset)
 
-		db = dr.applyFieldFilters(db, query.Fields)
-		db = dr.applyTextSearch(db, query.Query)
+		db = dr.applyFieldFilters(db, sq.Fields)
+		db = dr.applyTextSearch(db, sq.Query)
 
 		err := db.Find(&deviceList).Error
 		if err != nil {
@@ -113,12 +118,12 @@ func (dr *deviceRepository) applyTextSearch(db *gorm.DB, searchQuery string) *go
 }
 
 func (dr *deviceRepository) RemoveByID(ctx context.Context, id string) (*models.Device, error) {
-	var device models.Device
-	if err := dr.service.DB(ctx, true).First(&device, "id = ?", id).Error; err != nil {
+	device, err := dr.BaseRepository.GetByID(ctx, id)
+	if err != nil {
 		return nil, err
 	}
-	if err := dr.service.DB(ctx, false).Delete(&device).Error; err != nil {
+	if err := dr.Pool().DB(ctx, false).Delete(device).Error; err != nil {
 		return nil, err
 	}
-	return &device, nil
+	return device, nil
 }

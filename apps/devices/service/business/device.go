@@ -5,12 +5,13 @@ import (
 	"errors"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/data"
-
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/workerpool"
 )
 
 const defaultMaxLogsCount = 1000

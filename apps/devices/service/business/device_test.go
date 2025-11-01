@@ -9,20 +9,21 @@ import (
 	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/frametests"
-	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/pitabwire/frame/frametests/deps/testpostgres"
-	"github.com/pitabwire/util"
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/frametests"
+	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/workerpool"
+	"github.com/pitabwire/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 const (
@@ -180,13 +181,13 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-	name        string
-	id          string
-	deviceName  string
-	data        data.JSONMap
-	expectError bool
-	expectNil   bool
-},
+		name        string
+		id          string
+		deviceName  string
+		data        data.JSONMap
+		expectError bool
+		expectNil   bool
+	},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
@@ -640,12 +641,12 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-	name        string
-	setupDevice bool
-	profileID   string
-	searchQuery string
-	expectError bool
-},
+		name        string
+		setupDevice bool
+		profileID   string
+		searchQuery string
+		expectError bool
+	},
 ) {
 	// Create context with claims for the expected profile_id
 	testCtx := ctx

@@ -4,9 +4,8 @@ import (
 	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // Device represents a core device identity.
@@ -18,13 +17,13 @@ type Device struct {
 }
 
 func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
-	properties, _ := structpb.NewStruct(data.JSONMap{"owner": d.ProfileID})
+	ownerProperties := data.JSONMap{"owner": d.ProfileID}
 
 	obj := &devicev1.DeviceObject{
 		Id:         d.GetID(),
 		Name:       d.Name,
 		Os:         d.OS,
-		Properties: properties,
+		Properties: ownerProperties.ToProtoStruct(),
 	}
 
 	if session != nil {
@@ -32,10 +31,12 @@ func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
 		obj.UserAgent = session.UserAgent
 		obj.Ip = session.IP
 
-		var locale devicev1.Locale
-		_ = protojson.Unmarshal(session.Locale, &locale)
-
-		obj.Locale = &locale
+		if len(session.Locale) > 0 {
+			var locale devicev1.Locale
+			if err := protojson.Unmarshal(session.Locale, &locale); err == nil {
+				obj.Locale = &locale
+			}
+		}
 		obj.Location = session.Location.ToProtoStruct()
 		obj.LastSeen = session.LastSeen.String()
 	}

@@ -7,16 +7,18 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/pitabwire/util"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-
+	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/util"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type ContactTestSuite struct {
@@ -25,6 +27,19 @@ type ContactTestSuite struct {
 
 func TestContactSuite(t *testing.T) {
 	suite.Run(t, new(ContactTestSuite))
+}
+
+func (cts *ContactTestSuite) getContactBusiness(ctx context.Context, svc *frame.Service) (business.ContactBusiness, repository.VerificationRepository) {
+	evtsMan := svc.EventsManager(ctx)
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	cfg := svc.Config().(*config.ProfileConfig)
+
+	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
+	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
+
+	return business.NewContactBusiness(ctx, cfg, evtsMan, contactRepo, verificationRepo), verificationRepo
 }
 
 func (cts *ContactTestSuite) TestGeneratePin() {
@@ -147,7 +162,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := cts.CreateService(t, dep)
 
-				cb := business.NewContactBusiness(ctx, svc)
+				cb, _ := cts.getContactBusiness(ctx, svc)
 				got, err := cb.CreateContact(ctx, tt.args.detail, tt.args.extra)
 				tt.wantErr(t, err, fmt.Sprintf("CreateContact(ctx, %v, %v)", tt.args.detail, tt.args.extra))
 
@@ -196,7 +211,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, _ := cts.getContactBusiness(ctx, svc)
 		existingContacts, err := cts.createContacts(ctx, cb, "+256757546215", "+256757532244", "bwire@gmail.com")
 		require.NoError(t, err)
 
@@ -287,7 +302,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByID() {
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, _ := cts.getContactBusiness(ctx, svc)
 		existingContacts, err := cts.createContacts(ctx, cb, "+256757592215", "+254757532244", "bwireid@gmail.com")
 		require.NoError(t, err)
 
@@ -408,7 +423,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := cts.CreateService(t, dep)
 
-				cb := business.NewContactBusiness(ctx, svc)
+				cb, _ := cts.getContactBusiness(ctx, svc)
 				existingContacts, err := cts.createContacts(ctx, cb, tt.args.contactDetails...)
 				require.NoError(t, err)
 
@@ -432,7 +447,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Create a contact first
 		contact, err := cb.CreateContact(ctx, "update@testing.com", data.JSONMap{
@@ -463,7 +478,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Create a contact with profile ID
 		contact, err := cb.CreateContact(ctx, "remove@testing.com", data.JSONMap{})
@@ -497,7 +512,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Create a contact first
 		contact, err := cb.CreateContact(ctx, "verify@testing.com", data.JSONMap{})
@@ -538,7 +553,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Create a contact and verification using the business layer
 		contact, err := cb.CreateContact(ctx, "verify@example.com", data.JSONMap{})
@@ -572,7 +587,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerificationAttempts() {
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, verificationRepo := cts.getContactBusiness(ctx, svc)
 
 		// Create a verification first
 		verification := &models.Verification{
@@ -582,8 +597,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerificationAttempts() {
 		}
 		verification.GenID(ctx)
 
-		verificationRepo := repository.NewVerificationRepository(svc)
-		err := verificationRepo.Save(ctx, verification)
+		err := verificationRepo.Create(ctx, verification)
 		require.NoError(t, err)
 
 		// Note: Using verification repository to save attempts since VerificationAttemptRepository may not exist
@@ -634,7 +648,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
 
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, _ := cts.getContactBusiness(ctx, svc)
 		profileID := util.IDString()
 
 		// Create multiple contacts for the same profile using valid email formats only
@@ -669,7 +683,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cts.CreateService(t, dep)
-		cb := business.NewContactBusiness(ctx, svc)
+		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Test with empty detail
 		contact, err := cb.CreateContact(ctx, "", data.JSONMap{})

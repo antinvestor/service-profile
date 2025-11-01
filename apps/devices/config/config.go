@@ -1,9 +1,9 @@
 package config
 
-import "github.com/pitabwire/frame"
+import "github.com/pitabwire/frame/config"
 
 type DevicesConfig struct {
-	frame.ConfigurationDefault
+	config.ConfigurationDefault
 
 	PartitionServiceURI string `envDefault:"127.0.0.1:7003" env:"PARTITION_SERVICE_URI"`
 

@@ -7,12 +7,13 @@ import (
 	"strings"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/mssola/user_agent"
-	"github.com/pitabwire/frame"
-	"google.golang.org/protobuf/encoding/protojson"
-
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/mssola/user_agent"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/security"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 var (

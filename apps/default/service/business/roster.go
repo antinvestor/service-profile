@@ -5,13 +5,12 @@ import (
 	"errors"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
-
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 type RosterBusiness interface {
@@ -53,7 +52,8 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 	}
 
 	searchProperties := map[string]string{
-		"contacts.detail": " % ? ",
+		"contacts.detail":    " % ? ",
+		"rosters.searchable": " @@ websearch_to_tsquery( 'english', ?) ",
 	}
 
 	for _, p := range request.GetProperties() {
@@ -64,7 +64,7 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 		request.GetQuery(),
 		data.WithSearchLimit(int(request.GetCount())),
 		data.WithSearchOffset(int(request.GetPage())),
-		data.WithSearchFiltersAndByValue(map[string]any{"roster.profile_id": profileID}),
+		data.WithSearchFiltersAndByValue(map[string]any{"rosters.profile_id": profileID}),
 		data.WithSearchFiltersOrByQuery(searchProperties))
 
 	return rb.rosterRepository.Search(ctx, query)

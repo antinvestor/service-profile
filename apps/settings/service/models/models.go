@@ -2,7 +2,7 @@ package models
 
 import (
 	settingsV1 "github.com/antinvestor/apis/go/settings/v1"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 )
 
 // SettingRef Table holds the templete details.

@@ -7,16 +7,18 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
-	"google.golang.org/protobuf/types/known/structpb"
-
+	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type ProfileTestSuite struct {
@@ -25,6 +27,25 @@ type ProfileTestSuite struct {
 
 func TestProfileSuite(t *testing.T) {
 	suite.Run(t, new(ProfileTestSuite))
+}
+
+func (pts *ProfileTestSuite) getProfileBusiness(ctx context.Context, svc *frame.Service) (business.ProfileBusiness, repository.VerificationRepository) {
+	evtsMan := svc.EventsManager(ctx)
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	cfg := svc.Config().(*config.ProfileConfig)
+
+	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
+	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
+
+	contactBusiness := business.NewContactBusiness(ctx, cfg, evtsMan, contactRepo, verificationRepo)
+
+	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
+	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
+
+	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
+	return business.NewProfileBusiness(ctx, evtsMan, contactBusiness, addressBusiness, profileRepo), verificationRepo
 }
 
 func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
@@ -53,7 +74,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
 				svc, ctx := pts.CreateService(t, dep)
-				pb := business.NewProfileBusiness(ctx, svc)
+				pb, _ := pts.getProfileBusiness(ctx, svc)
 				got, err := pb.CreateProfile(ctx, tt.request)
 				if (err != nil) != tt.wantErr {
 					t.Errorf("CreateProfile() error = %v, wantErr %v", err, tt.wantErr)
@@ -79,7 +100,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 		svc, ctx := pts.CreateService(t, dep)
 
 		var profileAvailable []string
-		pbc := business.NewProfileBusiness(ctx, svc)
+		pbc, _ := pts.getProfileBusiness(ctx, svc)
 
 		prop1 := data.JSONMap{
 			"name": "Profile Tester Get",
@@ -109,7 +130,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 			profileAvailable = append(profileAvailable, got.GetId())
 		}
 
-		tests := []struct {
+		testCases := []struct {
 			name      string
 			profileID string
 			wantErr   bool
@@ -130,9 +151,9 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 				wantErr:   true,
 			},
 		}
-		for _, tt := range tests {
+		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
-				pb := business.NewProfileBusiness(ctx, svc)
+				pb, _ := pts.getProfileBusiness(ctx, svc)
 
 				p, err := pb.GetByID(ctx, tt.profileID)
 				if (err != nil) != tt.wantErr {
@@ -153,7 +174,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
-		pb := business.NewProfileBusiness(ctx, svc)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
 			"name": "Get By Contact Test",
@@ -203,7 +224,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
-		pb := business.NewProfileBusiness(ctx, svc)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
 			"name": "Original Name",
@@ -257,7 +278,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
-		pb := business.NewProfileBusiness(ctx, svc)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
 			"name": "Target Profile",
@@ -325,7 +346,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetContactByID() {
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
-		pb := business.NewProfileBusiness(ctx, svc)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
 			"name": "Get Contact Test",
@@ -370,7 +391,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_VerifyContact() {
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
-		pb := business.NewProfileBusiness(ctx, svc)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
 			"name": "Verify Contact Test",
@@ -411,9 +432,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
-		pb := business.NewProfileBusiness(ctx, svc)
-
-		verificationRepo := repository.NewVerificationRepository(svc)
+		pb, verificationRepo := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
 			"name": "Check Verify Test",
@@ -447,7 +466,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 			return verificationRepo.GetByID(ctx, verificationID)
 		}, 5*time.Second, 100*time.Millisecond)
 		if err != nil {
-			t.Errorf("VerificationRepo.GetByID() error = %v", err)
+			t.Errorf("verificationRepo.GetByID() error = %v", err)
 			return
 		}
 		require.NotNil(t, result)
@@ -475,8 +494,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_WrongCode() 
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
-		pb := business.NewProfileBusiness(ctx, svc)
-		verificationRepo := repository.NewVerificationRepository(svc)
+		pb, verificationRepo := pts.getProfileBusiness(ctx, svc)
 
 		// Setup: Create profile and verification
 		verificationID := pts.setupVerificationForTest(ctx, t, pb, verificationRepo, "test2@example.com")
@@ -556,7 +574,7 @@ func (pts *ProfileTestSuite) setupVerificationForTest(
 		return verificationRepo.GetByID(ctx, verificationID)
 	}, 5*time.Second, 100*time.Millisecond)
 	if err != nil {
-		t.Errorf("VerificationRepo.GetByID() error = %v", err)
+		t.Errorf("verificationRepo.GetByID() error = %v", err)
 		return ""
 	}
 	require.NotNil(t, result)
@@ -570,7 +588,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := pts.CreateService(t, dep)
-		pb := business.NewProfileBusiness(ctx, svc)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		t.Run("empty contact", func(t *testing.T) {
 			properties := data.JSONMap{

@@ -1,21 +1,33 @@
 package events_test
 
 import (
+	"context"
 	"testing"
-
-	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/pitabwire/util"
-	"github.com/stretchr/testify/require"
-	"github.com/stretchr/testify/suite"
 
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/util"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
 )
 
 type ContactVerificationAttemptQueueTestSuite struct {
 	tests.BaseTestSuite
+}
+
+func (cvaqts *ContactVerificationAttemptQueueTestSuite) getVerificationAttemptEvtQ(ctx context.Context, svc *frame.Service) (*events.ContactVerificationAttemptedQueue, repository.VerificationRepository) {
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
+	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
+
+	return events.NewContactVerificationAttemptedQueue(contactRepo, verificationRepo), verificationRepo
 }
 
 func TestContactVerificationAttemptQueueSuite(t *testing.T) {
@@ -26,9 +38,9 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 	t := cvaqts.T()
 
 	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, _ := cvaqts.CreateService(t, dep)
+		svc, ctx := cvaqts.CreateService(t, dep)
 
-		queue := events.NewContactVerificationAttemptedQueue(svc)
+		queue, _ := cvaqts.getVerificationAttemptEvtQ(ctx, svc)
 		require.Equal(t, events.VerificationAttemptEventHandlerName, queue.Name())
 	})
 }
@@ -37,9 +49,9 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 	t := cvaqts.T()
 
 	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, _ := cvaqts.CreateService(t, dep)
+		svc, ctx := cvaqts.CreateService(t, dep)
 
-		queue := events.NewContactVerificationAttemptedQueue(svc)
+		queue, _ := cvaqts.getVerificationAttemptEvtQ(ctx, svc)
 		payloadType := queue.PayloadType()
 
 		// Should return a pointer to models.VerificationAttempt
@@ -54,7 +66,7 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvaqts.CreateService(t, dep)
 
-		queue := events.NewContactVerificationAttemptedQueue(svc)
+		queue, _ := cvaqts.getVerificationAttemptEvtQ(ctx, svc)
 
 		// Test valid payload
 		validPayload := &models.VerificationAttempt{
@@ -84,15 +96,16 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvaqts.CreateService(t, dep)
 
+		queue, verificationRepo := cvaqts.getVerificationAttemptEvtQ(ctx, svc)
+
 		// Create test verification first
-		verificationRepo := repository.NewVerificationRepository(svc)
 		verification := &models.Verification{
 			ProfileID: util.IDString(),
 			ContactID: util.IDString(),
 			Code:      "123456",
 		}
 		verification.GenID(ctx)
-		err := verificationRepo.Save(ctx, verification)
+		err := verificationRepo.Create(ctx, verification)
 		require.NoError(t, err)
 
 		// Create verification attempt
@@ -105,8 +118,6 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 			RequestID:      util.IDString(),
 		}
 		attempt.GenID(ctx)
-
-		queue := events.NewContactVerificationAttemptedQueue(svc)
 
 		// Execute the queue handler
 		err = queue.Execute(ctx, attempt)
@@ -126,26 +137,12 @@ func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestContactVerificationA
 	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvaqts.CreateService(t, dep)
 
-		queue := events.NewContactVerificationAttemptedQueue(svc)
+		queue, _ := cvaqts.getVerificationAttemptEvtQ(ctx, svc)
 
 		// Test with invalid payload type
 		invalidPayload := "invalid"
 		err := queue.Execute(ctx, invalidPayload)
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid payload type, expected *models.VerificationAttempt")
-	})
-}
-
-func (cvaqts *ContactVerificationAttemptQueueTestSuite) TestNewContactVerificationAttemptedQueue() {
-	t := cvaqts.T()
-
-	cvaqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, _ := cvaqts.CreateService(t, dep)
-
-		queue := events.NewContactVerificationAttemptedQueue(svc)
-		require.NotNil(t, queue)
-		require.Equal(t, svc, queue.Service)
-		require.NotNil(t, queue.ContactRepo)
-		require.NotNil(t, queue.VerificationRepo)
 	})
 }

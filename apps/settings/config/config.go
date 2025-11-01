@@ -1,9 +1,9 @@
 package config
 
-import "github.com/pitabwire/frame"
+import "github.com/pitabwire/frame/config"
 
 type SettingsConfig struct {
-	frame.ConfigurationDefault
+	config.ConfigurationDefault
 
 	SecurelyRunService bool `default:"true" envconfig:"SECURELY_RUN_SERVICE"`
 }

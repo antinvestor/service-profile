@@ -4,16 +4,15 @@ import (
 	"context"
 	"testing"
 
+	"github.com/antinvestor/service-profile/apps/settings/config"
+	"github.com/antinvestor/service-profile/apps/settings/service/events"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
-
-	"github.com/antinvestor/service-profile/apps/settings/config"
-	"github.com/antinvestor/service-profile/apps/settings/service/events"
-	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 )
 
 const (

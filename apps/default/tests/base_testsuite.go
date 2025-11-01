@@ -10,8 +10,13 @@ import (
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
 	notificationv1_mocks "github.com/antinvestor/apis/go/notification/v1_mocks"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	aconfig "github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
@@ -19,11 +24,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
-
-	aconfig "github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 const PostgresqlDBImage = "postgres:latest"
@@ -34,6 +34,13 @@ const (
 
 type BaseTestSuite struct {
 	frametests.FrameBaseTestSuite
+
+	ContactRepo      repository.ContactRepository
+	VerificationRepo repository.VerificationRepository
+	AddressRepo      repository.AddressRepository
+	ProfileRepo      repository.ProfileRepository
+	RosterRepo       repository.RosterRepository
+	RelationshipRepo repository.RelationshipRepository
 }
 
 func initResources(_ context.Context) []definition.TestResource {
@@ -86,16 +93,25 @@ func (bs *BaseTestSuite) CreateService(
 		cfg.QueueRelationshipDisConnectURI,
 	)
 
+	evtsMan := svc.EventsManager(ctx)
+	qMan := svc.QueueManager(ctx)
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
+	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
+	relationshipRepo := repository.NewRelationshipRepository(ctx, dbPool, workMan)
+
 	svc.Init(ctx,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.WithRegisterEvents(
-			events.NewClientConnectedSetupQueue(svc),
-			events.NewContactVerificationQueue(svc, bs.GetNotificationCli(ctx)),
-			events.NewContactVerificationAttemptedQueue(svc),
+			events.NewClientConnectedSetupQueue(ctx, &cfg, qMan, evtsMan, relationshipRepo),
+			events.NewContactVerificationQueue(&cfg, contactRepo, verificationRepo, bs.GetNotificationCli(ctx)),
+			events.NewContactVerificationAttemptedQueue(contactRepo, verificationRepo),
 		),
 	)
 
-	err = repository.Migrate(ctx, svc, "../../migrations/0001")
+	err = repository.Migrate(ctx, svc.DatastoreManager(), dbPool, "../../migrations/0001")
 	require.NoError(t, err)
 
 	err = svc.Run(ctx, "")
@@ -138,10 +154,9 @@ func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.N
 
 func (bs *BaseTestSuite) CreateTestProfiles(
 	ctx context.Context,
-	svc *frame.Service,
+	profileBiz business.ProfileBusiness,
 	contacts []string,
 ) ([]*profilev1.ProfileObject, error) {
-	profBuss := business.NewProfileBusiness(ctx, svc)
 
 	var profileSlice []*profilev1.ProfileObject
 
@@ -149,7 +164,7 @@ func (bs *BaseTestSuite) CreateTestProfiles(
 		prof := &profilev1.CreateRequest{
 			Contact: contact,
 		}
-		profile, err := profBuss.CreateProfile(ctx, prof)
+		profile, err := profileBiz.CreateProfile(ctx, prof)
 		if err != nil {
 			return nil, err
 		}

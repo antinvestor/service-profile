@@ -11,11 +11,9 @@ import (
 	"strconv"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/security"
-
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 const (
@@ -130,11 +128,9 @@ func (ps *ProfileServer) fetchRelationships(
 	ctx context.Context,
 	request *profilev1.ListRelationshipRequest,
 ) ([]*profilev1.RelationshipObject, string, error) {
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
-	relationshipBusiness := business.NewRelationshipBusiness(ctx, ps.Service, profileBusiness)
 
 	// Get relationships from business layer
-	relationships, err := relationshipBusiness.ListRelationships(ctx, request)
+	relationships, err := ps.relationshipBusiness.ListRelationships(ctx, request)
 	if err != nil {
 		if !data.ErrorIsNoRows(err) {
 			return nil, "", err
@@ -147,7 +143,7 @@ func (ps *ProfileServer) fetchRelationships(
 	lastRelationshipID := ""
 
 	for _, relationship := range relationships {
-		relationshipObject, err0 := relationshipBusiness.ToAPI(ctx, relationship, request.GetInvertRelation())
+		relationshipObject, err0 := ps.relationshipBusiness.ToAPI(ctx, relationship, request.GetInvertRelation())
 		if err0 != nil {
 			return nil, "", err0
 		}
@@ -194,9 +190,8 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	profileBusiness := business.NewProfileBusiness(ctx, ps.Service)
 	subject, _ := claims.GetSubject()
-	profile, err := profileBusiness.GetByID(ctx, subject)
+	profile, err := ps.profileBusiness.GetByID(ctx, subject)
 	if err != nil {
 		ps.writeError(ctx, rw, err, http.StatusInternalServerError)
 		return
