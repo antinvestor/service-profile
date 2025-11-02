@@ -3,13 +3,14 @@ package business
 import (
 	"context"
 	"errors"
+	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/queue"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
 )
@@ -35,20 +36,6 @@ type DeviceBusiness interface {
 	) (*devicev1.DeviceObject, error)
 	RemoveDevice(ctx context.Context, id string) error
 
-	AddKey(
-		ctx context.Context,
-		deviceID string,
-		_ devicev1.KeyType,
-		key []byte,
-		extra data.JSONMap,
-	) (*devicev1.KeyObject, error)
-	GetKeys(
-		ctx context.Context,
-		deviceID string,
-		_ devicev1.KeyType,
-	) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error)
-	RemoveKeys(ctx context.Context, id ...string) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error)
-
 	LogDeviceActivity(
 		ctx context.Context,
 		deviceID, sessionID string,
@@ -58,24 +45,29 @@ type DeviceBusiness interface {
 }
 
 type deviceBusiness struct {
-	cfg           *config.DevicesConfig
+	cfg *config.DevicesConfig
+
+	qMan    queue.Manager
+	workMan workerpool.Manager
+
 	deviceRepo    repository.DeviceRepository
 	deviceLogRepo repository.DeviceLogRepository
 	sessionRepo   repository.DeviceSessionRepository
 	deviceKeyRepo repository.DeviceKeyRepository
-	service       *frame.Service
 }
 
 // NewDeviceBusiness creates a new instance of DeviceBusiness.
-func NewDeviceBusiness(_ context.Context, service *frame.Service) DeviceBusiness {
-	cfg, _ := service.Config().(*config.DevicesConfig)
+func NewDeviceBusiness(_ context.Context, cfg *config.DevicesConfig, qMan queue.Manager, workMan workerpool.Manager, deviceRepo repository.DeviceRepository,
+	deviceLogRepo repository.DeviceLogRepository, sessionRepo repository.DeviceSessionRepository,
+	deviceKeyRepo repository.DeviceKeyRepository) DeviceBusiness {
 	return &deviceBusiness{
 		cfg:           cfg,
-		deviceRepo:    repository.NewDeviceRepository(service),
-		deviceLogRepo: repository.NewDeviceLogRepository(service),
-		sessionRepo:   repository.NewDeviceSessionRepository(service),
-		deviceKeyRepo: repository.NewDeviceKeyRepository(service),
-		service:       service,
+		qMan:          qMan,
+		workMan:       workMan,
+		deviceRepo:    deviceRepo,
+		deviceLogRepo: deviceLogRepo,
+		sessionRepo:   sessionRepo,
+		deviceKeyRepo: deviceKeyRepo,
 	}
 }
 
@@ -92,14 +84,14 @@ func (b *deviceBusiness) LogDeviceActivity(
 
 	log.GenID(ctx)
 
-	if err := b.deviceLogRepo.Save(ctx, log); err != nil {
+	if err := b.deviceLogRepo.Create(ctx, log); err != nil {
 		return nil, err
 	}
 
 	// Publish to queue for further analysis
 	if b.cfg.QueueDeviceAnalysisName != "" {
 		payload := data.JSONMap{"id": log.GetID()}
-		_ = b.service.Publish(ctx, b.cfg.QueueDeviceAnalysisName, payload, nil)
+		_ = b.qMan.Publish(ctx, b.cfg.QueueDeviceAnalysisName, payload, nil)
 	}
 
 	return log.ToAPI(), nil
@@ -109,15 +101,10 @@ func (b *deviceBusiness) GetDeviceLogs(
 	ctx context.Context,
 	deviceID string,
 ) (workerpool.JobResultPipe[[]*devicev1.DeviceLog], error) {
-	resultPipe := frame.NewJob[[]*devicev1.DeviceLog](
+	resultPipe := workerpool.NewJob[[]*devicev1.DeviceLog](
 		func(ctx context.Context, result workerpool.JobResultPipe[[]*devicev1.DeviceLog]) error {
-			searchProperties := data.JSONMap{
-				"device_id": deviceID,
-			}
 
-			q := data.NewSearchQuery("", searchProperties, 0, defaultMaxLogsCount)
-
-			logsResult, err := b.deviceLogRepo.GetByDeviceID(ctx, q)
+			logsResult, err := b.deviceLogRepo.GetByDeviceID(ctx, deviceID)
 			if err != nil {
 				return err
 			}
@@ -145,7 +132,7 @@ func (b *deviceBusiness) GetDeviceLogs(
 		},
 	)
 
-	err := frame.SubmitJob(ctx, b.service, resultPipe)
+	err := workerpool.SubmitJob(ctx, b.workMan, resultPipe)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +162,7 @@ func (b *deviceBusiness) SaveDevice(
 		return nil, err
 	}
 	dev.Name = name
-	err = b.deviceRepo.Save(ctx, dev)
+	_, err = b.deviceRepo.Update(ctx, dev, "name")
 	if err != nil {
 		return nil, err
 	}
@@ -200,13 +187,13 @@ func (b *deviceBusiness) SearchDevices(
 	ctx context.Context,
 	query *devicev1.SearchRequest,
 ) (workerpool.JobResultPipe[[]*devicev1.DeviceObject], error) {
-	resultPipe := frame.NewJob[[]*devicev1.DeviceObject](
+	resultPipe := workerpool.NewJob[[]*devicev1.DeviceObject](
 		func(ctx context.Context, result workerpool.JobResultPipe[[]*devicev1.DeviceObject]) error {
 			return b.processSearchRequest(ctx, query, result)
 		},
 	)
 
-	err := frame.SubmitJob(ctx, b.service, resultPipe)
+	err := workerpool.SubmitJob(ctx, b.workMan, resultPipe)
 	if err != nil {
 		return nil, err
 	}
@@ -238,18 +225,28 @@ func (b *deviceBusiness) buildSearchQuery(ctx context.Context, query *devicev1.S
 		profileID, _ = claims.GetSubject()
 	}
 
-	searchProperties := data.JSONMap{
-		"profile_id": profileID,
-		"start_date": query.GetStartDate(),
-		"end_date":   query.GetEndDate(),
+	startDate, err := time.Parse(time.RFC3339, query.GetStartDate())
+	if err != nil {
+		startDate = time.Now().Add(-24 * time.Hour)
 	}
+	endDate, err := time.Parse(time.RFC3339, query.GetEndDate())
+	if err != nil {
+		endDate = time.Now()
+	}
+
+	searchProperties := map[string]string{}
 
 	for _, p := range query.GetProperties() {
-		searchProperties[p] = query.GetQuery()
+		searchProperties[p] = " = ?"
 	}
 
-	return data.NewSearchQuery(query.GetQuery(), searchProperties, int(query.GetPage()),
-		int(query.GetCount()))
+	return data.NewSearchQuery(query.GetQuery(), data.WithSearchLimit(int(query.GetCount())),
+		data.WithSearchOffset(int(query.GetPage())), data.WithSearchByTimePeriod(&data.TimePeriod{
+			Field:     "created_at",
+			StartDate: &startDate,
+			StopDate:  &endDate,
+		}), data.WithSearchFiltersAndByValue(map[string]any{"profile_id": profileID}),
+		data.WithSearchFiltersOrByQuery(searchProperties))
 }
 
 // processSearchResults processes the search results and converts them to API objects.
@@ -325,7 +322,7 @@ func (b *deviceBusiness) LinkDeviceToProfile(
 	if device.ProfileID == "" {
 		device.ProfileID = profileID
 
-		err = b.deviceRepo.Save(ctx, device)
+		_, err = b.deviceRepo.Update(ctx, device, "profile_id")
 		if err != nil {
 			return nil, err
 		}
@@ -337,86 +334,4 @@ func (b *deviceBusiness) LinkDeviceToProfile(
 func (b *deviceBusiness) RemoveDevice(ctx context.Context, id string) error {
 	_, err := b.deviceRepo.RemoveByID(ctx, id)
 	return err
-}
-
-func (b *deviceBusiness) AddKey(
-	ctx context.Context,
-	deviceID string,
-	_ devicev1.KeyType,
-	key []byte,
-	extra data.JSONMap,
-) (*devicev1.KeyObject, error) {
-	// Validate that the device exists before adding a key
-	_, err := b.deviceRepo.GetByID(ctx, deviceID)
-	if err != nil {
-		return nil, err
-	}
-
-	deviceKey := &models.DeviceKey{
-		DeviceID: deviceID,
-		Key:      key,
-		Extra:    extra,
-	}
-
-	err = b.deviceKeyRepo.Save(ctx, deviceKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return deviceKey.ToAPI(), nil
-}
-
-func (b *deviceBusiness) GetKeys(
-	ctx context.Context,
-	deviceID string,
-	_ devicev1.KeyType,
-) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error) {
-	out := make(chan workerpool.JobResult[[]*devicev1.KeyObject])
-
-	go func() {
-		defer close(out)
-
-		keys, err := b.deviceKeyRepo.GetByDeviceID(ctx, deviceID)
-		if err != nil {
-			out <- frame.ErrorResult[[]*devicev1.KeyObject](err)
-			return
-		}
-
-		apiKeys := make([]*devicev1.KeyObject, len(keys))
-		for i, key := range keys {
-			apiKeys[i] = key.ToAPI()
-		}
-
-		out <- frame.Result[[]*devicev1.KeyObject](apiKeys)
-	}()
-
-	return out, nil
-}
-
-func (b *deviceBusiness) RemoveKeys(
-	ctx context.Context,
-	id ...string,
-) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error) {
-	out := make(chan workerpool.JobResult[[]*devicev1.KeyObject])
-
-	go func() {
-		defer close(out)
-
-		var removedKeys []*devicev1.KeyObject
-
-		for _, keyID := range id {
-			removedKey, err := b.deviceKeyRepo.RemoveByID(ctx, keyID)
-			if err != nil {
-				out <- frame.ErrorResult[[]*devicev1.KeyObject](err)
-				return
-			}
-			if removedKey != nil {
-				removedKeys = append(removedKeys, removedKey.ToAPI())
-			}
-		}
-
-		out <- frame.Result[[]*devicev1.KeyObject](removedKeys)
-	}()
-
-	return out, nil
 }

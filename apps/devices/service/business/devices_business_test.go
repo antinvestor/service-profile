@@ -9,12 +9,13 @@ import (
 	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/antinvestor/service-profile/apps/devices/config"
+	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
@@ -50,7 +51,7 @@ func (suite *DeviceBusinessTestSuite) CreateService(
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	cfg, err := frame.ConfigFromEnv[config.DevicesConfig]()
+	cfg, err := config.FromEnv[aconfig.DevicesConfig]()
 	require.NoError(t, err)
 
 	cfg.LogLevel = "debug"
@@ -105,7 +106,7 @@ func (suite *DeviceBusinessTestSuite) WithTestDependancies(
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
 	}
 
-	frametests.WithTestDependancies(t, options, testFn)
+	frametests.WithTestDependencies(t, options, testFn)
 }
 
 func TestDeviceBusinessTestSuite(t *testing.T) {
@@ -181,13 +182,13 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-		name        string
-		id          string
-		deviceName  string
-		data        data.JSONMap
-		expectError bool
-		expectNil   bool
-	},
+	name        string
+	id          string
+	deviceName  string
+	data        data.JSONMap
+	expectError bool
+	expectNil   bool
+},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
@@ -641,12 +642,12 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	svc *frame.Service,
 	biz business.DeviceBusiness,
 	tc struct {
-		name        string
-		setupDevice bool
-		profileID   string
-		searchQuery string
-		expectError bool
-	},
+	name        string
+	setupDevice bool
+	profileID   string
+	searchQuery string
+	expectError bool
+},
 ) {
 	// Create context with claims for the expected profile_id
 	testCtx := ctx

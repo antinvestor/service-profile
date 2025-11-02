@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/antinvestor/service-profile/apps/devices/config"
+	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
@@ -41,7 +42,7 @@ func (bs *BaseTestSuite) CreateService(
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	profileConfig, err := frame.ConfigFromEnv[config.DevicesConfig]()
+	profileConfig, err := config.FromEnv[aconfig.DevicesConfig]()
 	require.NoError(t, err)
 
 	profileConfig.LogLevel = "debug"
@@ -88,5 +89,5 @@ func (bs *BaseTestSuite) WithTestDependancies(
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
 	}
 
-	frametests.WithTestDependancies(t, options, testFn)
+	frametests.WithTestDependencies(t, options, testFn)
 }

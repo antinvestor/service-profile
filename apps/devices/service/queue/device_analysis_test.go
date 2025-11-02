@@ -6,11 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/antinvestor/service-profile/apps/devices/config"
+	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
@@ -51,7 +52,7 @@ func (suite *QueueTestSuite) WithTestDependancies(
 		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
 	}
 
-	frametests.WithTestDependancies(t, options, fn)
+	frametests.WithTestDependencies(t, options, fn)
 }
 
 func (suite *QueueTestSuite) CreateService(
@@ -60,7 +61,7 @@ func (suite *QueueTestSuite) CreateService(
 ) (*frame.Service, context.Context) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	deviceConfig, err := frame.ConfigFromEnv[config.DevicesConfig]()
+	deviceConfig, err := config.FromEnv[aconfig.DevicesConfig]()
 	require.NoError(t, err)
 
 	deviceConfig.LogLevel = "debug"

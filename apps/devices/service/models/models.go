@@ -88,3 +88,11 @@ func (dl *DeviceLog) ToAPI() *devicev1.DeviceLog {
 		Extra:     dl.Data.ToProtoStruct(),
 	}
 }
+
+// DevicePresence records availablity of a device.
+type DevicePresence struct {
+	data.BaseModel
+	DeviceID string `gorm:"index"`
+	State    string
+	Data     data.JSONMap
+}

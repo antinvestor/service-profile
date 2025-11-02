@@ -10,9 +10,11 @@ import (
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/mssola/user_agent"
-	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/client"
 	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/queue"
 	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -27,17 +29,19 @@ type DeviceAnalysisQueueHandler struct {
 	DeviceRepository    repository.DeviceRepository
 	DeviceLogRepository repository.DeviceLogRepository
 	SessionRepository   repository.DeviceSessionRepository
-	Service             *frame.Service
+
+	cli client.Manager
 }
 
 func NewDeviceAnalysisQueueHandler(
-	svc *frame.Service,
-) frame.SubscribeWorker {
+	cli client.Manager, deviceRepository repository.DeviceRepository,
+	deviceLogRepository repository.DeviceLogRepository, sessionRepository repository.DeviceSessionRepository,
+) queue.SubscribeWorker {
 	return &DeviceAnalysisQueueHandler{
-		Service:             svc,
-		DeviceRepository:    repository.NewDeviceRepository(svc),
-		DeviceLogRepository: repository.NewDeviceLogRepository(svc),
-		SessionRepository:   repository.NewDeviceSessionRepository(svc),
+		cli:                 cli,
+		DeviceRepository:    deviceRepository,
+		DeviceLogRepository: deviceLogRepository,
+		SessionRepository:   sessionRepository,
 	}
 }
 
@@ -74,14 +78,14 @@ func (dq *DeviceAnalysisQueueHandler) getDeviceLog(
 
 	deviceLogID := idPayload["id"]
 	if deviceLogID == "" {
-		dq.Service.Log(ctx).WithField("payload", idPayload).Warn("no device log id found in payload")
+		util.Log(ctx).WithField("payload", idPayload).Warn("no device log id found in payload")
 		return nil, ErrDeviceLogIDMissing
 	}
 
 	deviceLog, err := dq.DeviceLogRepository.GetByID(ctx, deviceLogID)
 	if err != nil {
 		if data.ErrorIsNoRows(err) {
-			dq.Service.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log not found")
+			util.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log not found")
 			return nil, ErrDeviceLogNotFound
 		}
 		return nil, err
@@ -104,7 +108,7 @@ func (dq *DeviceAnalysisQueueHandler) getOrCreateSession(
 	}
 
 	if !data.ErrorIsNoRows(err) {
-		dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
+		util.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
 			Warn("error fetching device session")
 		return nil, err
 	}
@@ -119,7 +123,7 @@ func (dq *DeviceAnalysisQueueHandler) updateSessionLastSeen(
 	deviceLog *models.DeviceLog,
 ) (*models.DeviceSession, error) {
 	session.LastSeen = deviceLog.CreatedAt
-	err := dq.SessionRepository.Save(ctx, session)
+	_, err := dq.SessionRepository.Update(ctx, session, "last_seen")
 	if err != nil {
 		return nil, err
 	}
@@ -130,11 +134,11 @@ func (dq *DeviceAnalysisQueueHandler) createSessionFromLog(
 	ctx context.Context,
 	deviceLog *models.DeviceLog,
 ) (*models.DeviceSession, error) {
-	dq.Service.Log(ctx).WithField("deviceLogID", deviceLog.GetID()).Info("creating session from device log")
+	util.Log(ctx).WithField("deviceLogID", deviceLog.GetID()).Info("creating session from device log")
 
 	session, err := dq.CreateSessionFromLog(ctx, deviceLog)
 	if err != nil {
-		dq.Service.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
+		util.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
 			Warn("could not create device session from log")
 		return nil, err
 	}
@@ -155,7 +159,7 @@ func (dq *DeviceAnalysisQueueHandler) getOrCreateDevice(
 	}
 
 	if !data.ErrorIsNoRows(err) {
-		dq.Service.Log(ctx).WithField("deviceID", session.DeviceID).WithError(err).
+		util.Log(ctx).WithField("deviceID", session.DeviceID).WithError(err).
 			Warn("error fetching device")
 		return nil, err
 	}
@@ -168,11 +172,11 @@ func (dq *DeviceAnalysisQueueHandler) createDeviceFromSession(
 	ctx context.Context,
 	session *models.DeviceSession,
 ) (*models.Device, error) {
-	dq.Service.Log(ctx).WithField("sessionID", session.GetID()).Info("creating device from session")
+	util.Log(ctx).WithField("sessionID", session.GetID()).Info("creating device from session")
 
 	device, err := dq.CreateDeviceFromSess(ctx, session)
 	if err != nil {
-		dq.Service.Log(ctx).WithError(err).
+		util.Log(ctx).WithError(err).
 			Warn("could not auto create device from session")
 		return nil, err
 	}
@@ -196,7 +200,7 @@ func (dq *DeviceAnalysisQueueHandler) CreateDeviceFromSess(
 		dev.ID = session.DeviceID
 	}
 
-	err := dq.DeviceRepository.Save(ctx, dev)
+	err := dq.DeviceRepository.Create(ctx, dev)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +208,7 @@ func (dq *DeviceAnalysisQueueHandler) CreateDeviceFromSess(
 	// Update session to link it to the device if not already linked
 	if session.DeviceID == "" {
 		session.DeviceID = dev.ID
-		err = dq.SessionRepository.Save(ctx, session)
+		_, err = dq.SessionRepository.Update(ctx, session, "device_id")
 		if err != nil {
 			return nil, err
 		}
@@ -217,7 +221,7 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 	ctx context.Context,
 	deviceLog *models.DeviceLog,
 ) (*models.DeviceSession, error) {
-	data := deviceLog.Data
+	logData := deviceLog.Data
 
 	sess := &models.DeviceSession{
 		DeviceID: deviceLog.DeviceID,
@@ -230,18 +234,18 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 		sess.ID = deviceLog.DeviceSessionID
 	}
 
-	anyData, ok := data["userAgent"]
+	anyData, ok := logData["userAgent"]
 	if ok {
 		sess.UserAgent, _ = anyData.(string)
 	}
 
-	anyData, ok = data["ip"]
+	anyData, ok = logData["ip"]
 	if ok {
 		sess.IP, _ = anyData.(string)
 
-		geoIP, _ := QueryIPGeo(ctx, dq.Service, sess.IP)
+		geoIP, _ := QueryIPGeo(ctx, dq.cli, sess.IP)
 
-		locale, err0 := dq.ExtractLocaleData(ctx, data, geoIP)
+		locale, err0 := dq.ExtractLocaleData(ctx, logData, geoIP)
 		if err0 != nil {
 			return nil, err0
 		}
@@ -253,10 +257,10 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 
 		sess.Locale = localeBytes
 
-		sess.Location = dq.ExtractLocationData(ctx, data, geoIP)
+		sess.Location = dq.ExtractLocationData(ctx, logData, geoIP)
 	}
 
-	err := dq.SessionRepository.Save(ctx, sess)
+	err := dq.SessionRepository.Create(ctx, sess)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +307,7 @@ func (dq *DeviceAnalysisQueueHandler) ExtractLocaleData(
 
 func (dq *DeviceAnalysisQueueHandler) ExtractLocationData(
 	_ context.Context,
-	data data.JSONMap,
+	extractData data.JSONMap,
 	geoIP *GeoIP,
 ) data.JSONMap {
 	locationData := data.JSONMap{}
@@ -316,12 +320,12 @@ func (dq *DeviceAnalysisQueueHandler) ExtractLocationData(
 		locationData["longitude"] = geoIP.Longitude
 	}
 
-	rawData, ok := data["lat"]
+	rawData, ok := extractData["lat"]
 	if ok {
 		locationData["latitude"] = rawData
 	}
 
-	rawData, ok = data["long"]
+	rawData, ok = extractData["long"]
 	if ok {
 		locationData["longitude"] = rawData
 	}

@@ -4,35 +4,38 @@ import (
 	"context"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
-	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/workerpool"
 )
 
 // DeviceRepository defines the operations for managing devices in storage.
 type DeviceRepository interface {
-	Save(ctx context.Context, device *models.Device) error
-	GetByID(ctx context.Context, id string) (*models.Device, error)
-	Search(ctx context.Context, query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.Device], error)
+	datastore.BaseRepository[*models.Device]
 	RemoveByID(ctx context.Context, id string) (*models.Device, error)
 }
 
 // DeviceSessionRepository defines the operations for managing device sessions.
 type DeviceSessionRepository interface {
-	Save(ctx context.Context, session *models.DeviceSession) error
-	GetByID(ctx context.Context, id string) (*models.DeviceSession, error)
+	datastore.BaseRepository[*models.DeviceSession]
 	GetLastByDeviceID(ctx context.Context, deviceID string) (*models.DeviceSession, error)
 }
 
 // DeviceLogRepository defines the operations for managing device logs.
 type DeviceLogRepository interface {
-	Save(ctx context.Context, deviceLog *models.DeviceLog) error
-	GetByID(ctx context.Context, id string) (*models.DeviceLog, error)
-	GetByDeviceID(ctx context.Context, query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.DeviceLog], error)
+	datastore.BaseRepository[*models.DeviceLog]
+	GetByDeviceID(ctx context.Context, deviceID string) (workerpool.JobResultPipe[[]*models.DeviceLog], error)
+}
+
+// DevicePresenceRepository defines the operations for managing device presence.
+type DevicePresenceRepository interface {
+	datastore.BaseRepository[*models.DevicePresence]
+	GetByDeviceID(ctx context.Context, deviceID string) (workerpool.JobResultPipe[[]*models.DevicePresence], error)
+	GetLatestByDeviceID(ctx context.Context, deviceID string) (*models.DevicePresence, error)
 }
 
 // DeviceKeyRepository defines the operations for managing matrix keys.
 type DeviceKeyRepository interface {
-	Save(ctx context.Context, key *models.DeviceKey) error
+	datastore.BaseRepository[*models.DeviceKey]
 	GetByDeviceID(ctx context.Context, deviceID string) ([]*models.DeviceKey, error)
 	RemoveByID(ctx context.Context, id string) (*models.DeviceKey, error)
 }
