@@ -39,8 +39,9 @@ type keysBusiness struct {
 }
 
 // NewKeysBusiness creates a new instance of DeviceBusiness.
-func NewKeysBusiness(_ context.Context, cfg *config.DevicesConfig, qMan queue.Manager,
-	workMan workerpool.Manager, deviceRepo repository.DeviceRepository, deviceKeyRepo repository.DeviceKeyRepository) KeysBusiness {
+func NewKeysBusiness(_ context.Context, cfg *config.DevicesConfig,
+	qMan queue.Manager, workMan workerpool.Manager, deviceRepo repository.DeviceRepository,
+	deviceKeyRepo repository.DeviceKeyRepository) KeysBusiness {
 	return &keysBusiness{
 		cfg:           cfg,
 		qMan:          qMan,

@@ -38,13 +38,18 @@ func NewDeviceServer(ctx context.Context, svc *frame.Service) *DevicesServer {
 	deviceSessionRepo := repository.NewDeviceSessionRepository(ctx, dbPool, workMan)
 	deviceRepo := repository.NewDeviceRepository(ctx, dbPool, workMan)
 	deviceKeyRepo := repository.NewDeviceKeyRepository(ctx, dbPool, workMan)
+	devicePresenceRepo := repository.NewDevicePresenceRepository(ctx, dbPool, workMan)
+
+	deviceBusiness := business.NewDeviceBusiness(ctx, cfg, qMan, workMan, deviceRepo, deviceLogRepo, deviceSessionRepo)
+	keyBusiness := business.NewKeysBusiness(ctx, cfg, qMan, workMan, deviceRepo, deviceKeyRepo)
+	presenceBusiness := business.NewPresenceBusiness(ctx, cfg, qMan, workMan, deviceRepo, devicePresenceRepo)
+	notifyBusiness := business.NewNotifyBusiness(ctx, cfg, qMan, workMan, keyBusiness, deviceRepo)
 
 	return &DevicesServer{
-		deviceBusiness: business.NewDeviceBusiness(ctx, cfg, qMan, workMan, deviceRepo, deviceLogRepo, deviceSessionRepo, deviceKeyRepo),
-
-		presenceBusiness: business.NewPresenceBusiness(),
-		keyBusiness:      business.NewKeysBusiness(),
-		notifyBusiness:   business.NewNotifyBusiness(),
+		deviceBusiness:   deviceBusiness,
+		presenceBusiness: presenceBusiness,
+		keyBusiness:      keyBusiness,
+		notifyBusiness:   notifyBusiness,
 	}
 }
 

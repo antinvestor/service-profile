@@ -53,13 +53,12 @@ type deviceBusiness struct {
 	deviceRepo    repository.DeviceRepository
 	deviceLogRepo repository.DeviceLogRepository
 	sessionRepo   repository.DeviceSessionRepository
-	deviceKeyRepo repository.DeviceKeyRepository
 }
 
 // NewDeviceBusiness creates a new instance of DeviceBusiness.
-func NewDeviceBusiness(_ context.Context, cfg *config.DevicesConfig, qMan queue.Manager, workMan workerpool.Manager, deviceRepo repository.DeviceRepository,
-	deviceLogRepo repository.DeviceLogRepository, sessionRepo repository.DeviceSessionRepository,
-	deviceKeyRepo repository.DeviceKeyRepository) DeviceBusiness {
+func NewDeviceBusiness(_ context.Context, cfg *config.DevicesConfig, qMan queue.Manager,
+	workMan workerpool.Manager, deviceRepo repository.DeviceRepository,
+	deviceLogRepo repository.DeviceLogRepository, sessionRepo repository.DeviceSessionRepository) DeviceBusiness {
 	return &deviceBusiness{
 		cfg:           cfg,
 		qMan:          qMan,
@@ -67,7 +66,6 @@ func NewDeviceBusiness(_ context.Context, cfg *config.DevicesConfig, qMan queue.
 		deviceRepo:    deviceRepo,
 		deviceLogRepo: deviceLogRepo,
 		sessionRepo:   sessionRepo,
-		deviceKeyRepo: deviceKeyRepo,
 	}
 }
 

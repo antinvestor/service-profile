@@ -163,7 +163,7 @@ func (n notifyBusiness) getActiveDeviceKey(ctx context.Context, deviceID string,
 		return nil, errors.New("multiple key types matched notification request; specify key_type")
 	}
 
-	return nil, nil
+	return keyGroups, nil
 }
 
 func (n notifyBusiness) Notify(ctx context.Context, req *devicev1.NotifyRequest) error {

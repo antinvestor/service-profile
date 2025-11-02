@@ -92,7 +92,25 @@ func (dl *DeviceLog) ToAPI() *devicev1.DeviceLog {
 // DevicePresence records availablity of a device.
 type DevicePresence struct {
 	data.BaseModel
-	DeviceID string `gorm:"index"`
-	State    string
-	Data     data.JSONMap
+	DeviceID      string                  `gorm:"index"`
+	ProfileID     string                  `gorm:"index"`
+	Status        devicev1.PresenceStatus `gorm:"type:int"`
+	StatusMessage string
+	ExpiryTime    *time.Time
+	Data          data.JSONMap
+}
+
+func (p *DevicePresence) ToAPI() *devicev1.PresenceObject {
+
+	presence := &devicev1.PresenceObject{
+		DeviceId:      p.DeviceID,
+		ProfileId:     p.ProfileID,
+		Status:        p.Status,
+		StatusMessage: p.StatusMessage,
+		Extras:        p.Data.ToProtoStruct(),
+	}
+
+	presence.LastActive = p.CreatedAt.UTC().Format(time.RFC3339)
+
+	return presence
 }
