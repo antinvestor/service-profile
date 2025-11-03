@@ -3,10 +3,11 @@ package repository
 import (
 	"context"
 
-	"github.com/antinvestor/service-profile/apps/settings/service/models"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
+
+	"github.com/antinvestor/service-profile/apps/settings/service/models"
 )
 
 type SettingValRepository interface {

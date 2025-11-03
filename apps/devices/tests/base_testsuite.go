@@ -4,25 +4,75 @@ import (
 	"context"
 	"testing"
 
-	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
-)
 
-const PostgresqlDBImage = "postgres:latest"
+	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/apps/devices/service/queue"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+)
 
 const (
 	DefaultRandomStringLength = 8
 )
 
-type BaseTestSuite struct {
+type DeviceBaseTestSuite struct {
 	frametests.FrameBaseTestSuite
+}
+
+type DepsBuilder struct {
+	DeviceRepo    repository.DeviceRepository
+	DeviceLogRepo repository.DeviceLogRepository
+	SessionRepo   repository.DeviceSessionRepository
+	KeyRepo       repository.DeviceKeyRepository
+	PresenceRepo  repository.DevicePresenceRepository
+
+	DeviceBusiness business.DeviceBusiness
+	KeyBusiness    business.KeysBusiness
+
+	AnalysisQueueHandler queue.DeviceAnalysisQueueHandler
+}
+
+func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+	workMan := svc.WorkManager()
+	qMan := svc.QueueManager(ctx)
+
+	cfg, _ := svc.Config().(*aconfig.DevicesConfig)
+
+	deviceRepo := repository.NewDeviceRepository(ctx, dbPool, workMan)
+	deviceLogRepo := repository.NewDeviceLogRepository(ctx, dbPool, workMan)
+	sessionRepo := repository.NewDeviceSessionRepository(ctx, dbPool, workMan)
+	keyRepo := repository.NewDeviceKeyRepository(ctx, dbPool, workMan)
+	presenceRepo := repository.NewDevicePresenceRepository(ctx, dbPool, workMan)
+
+	deviceBusiness := business.NewDeviceBusiness(ctx, cfg, qMan, workMan, deviceRepo, deviceLogRepo, sessionRepo)
+	keyBusiness := business.NewKeysBusiness(ctx, cfg, qMan, workMan, deviceRepo, keyRepo)
+
+	return &DepsBuilder{
+		DeviceRepo:    deviceRepo,
+		SessionRepo:   sessionRepo,
+		DeviceLogRepo: deviceLogRepo,
+
+		KeyRepo:      keyRepo,
+		PresenceRepo: presenceRepo,
+
+		DeviceBusiness: deviceBusiness,
+		KeyBusiness:    keyBusiness,
+
+		AnalysisQueueHandler: queue.DeviceAnalysisQueueHandler{
+			DeviceRepository:    deviceRepo,
+			DeviceLogRepository: deviceLogRepo,
+			SessionRepository:   sessionRepo,
+		},
+	}
 }
 
 func initResources(_ context.Context) []definition.TestResource {
@@ -31,41 +81,54 @@ func initResources(_ context.Context) []definition.TestResource {
 	return resources
 }
 
-func (bs *BaseTestSuite) SetupSuite() {
+func (bs *DeviceBaseTestSuite) SetupSuite() {
 	bs.InitResourceFunc = initResources
 	bs.FrameBaseTestSuite.SetupSuite()
 }
 
-func (bs *BaseTestSuite) CreateService(
+func (bs *DeviceBaseTestSuite) CreateService(
 	t *testing.T,
 	depOpts *definition.DependencyOption,
-) (*frame.Service, context.Context) {
+) (context.Context, *frame.Service, *DepsBuilder) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	profileConfig, err := config.FromEnv[aconfig.DevicesConfig]()
+	deviceConfig, err := config.FromEnv[aconfig.DevicesConfig]()
 	require.NoError(t, err)
 
-	profileConfig.LogLevel = "debug"
-	profileConfig.RunServiceSecurely = false
-	profileConfig.ServerPort = ""
+	deviceConfig.LogLevel = "debug"
+	deviceConfig.RunServiceSecurely = false
+	deviceConfig.ServerPort = ""
 
 	res := depOpts.ByIsDatabase(ctx)
-	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
+	testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
 	require.NoError(t, err0)
 
 	t.Cleanup(func() {
-		cleanup(t.Context())
+		cleanup(ctx)
 	})
 
-	profileConfig.DatabasePrimaryURL = []string{testDS.String()}
-	profileConfig.DatabaseReplicaURL = []string{testDS.String()}
+	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
+	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
 
-	ctx, svc := frame.NewServiceWithContext(t.Context(), "profile tests",
-		frame.WithConfig(&profileConfig),
+	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
+		frame.WithConfig(&deviceConfig),
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())
 
-	svc.Init(ctx)
+	depsBuilder := BuildRepos(ctx, svc)
+
+	analysisQueueTopic := frame.WithRegisterPublisher(
+		deviceConfig.QueueDeviceAnalysisName,
+		deviceConfig.QueueDeviceAnalysis,
+	)
+
+	analysisQueue := frame.WithRegisterSubscriber(
+		deviceConfig.QueueDeviceAnalysisName,
+		deviceConfig.QueueDeviceAnalysis,
+		&depsBuilder.AnalysisQueueHandler,
+	)
+
+	svc.Init(ctx, analysisQueueTopic, analysisQueue)
 
 	err = repository.Migrate(ctx, svc, "../../migrations/0001")
 	require.NoError(t, err)
@@ -73,15 +136,15 @@ func (bs *BaseTestSuite) CreateService(
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)
 
-	return svc, ctx
+	return ctx, svc, depsBuilder
 }
 
-func (bs *BaseTestSuite) TearDownSuite() {
+func (bs *DeviceBaseTestSuite) TearDownSuite() {
 	bs.FrameBaseTestSuite.TearDownSuite()
 }
 
-// WithTestDependancies Creates subtests with each known DependancyOption.
-func (bs *BaseTestSuite) WithTestDependancies(
+// WithTestDependencies Creates subtests with each known DependancyOption.
+func (bs *DeviceBaseTestSuite) WithTestDependencies(
 	t *testing.T,
 	testFn func(t *testing.T, dep *definition.DependencyOption),
 ) {

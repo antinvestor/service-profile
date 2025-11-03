@@ -7,12 +7,9 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
 	apis "github.com/antinvestor/apis/go/common"
-	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
+	"github.com/antinvestor/apis/go/notification"
+	"github.com/antinvestor/apis/go/notification/v1/notificationv1connect"
 	"github.com/antinvestor/apis/go/profile/v1/profilev1connect"
-	aconfig "github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/handlers"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -21,6 +18,11 @@ import (
 	securityhttp "github.com/pitabwire/frame/security/interceptors/http"
 	"github.com/pitabwire/frame/security/openid"
 	"github.com/pitabwire/util"
+
+	aconfig "github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/handlers"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 func main() {
@@ -35,7 +37,12 @@ func main() {
 	}
 
 	// Create service
-	ctx, svc := frame.NewServiceWithContext(ctx, serviceName, frame.WithConfig(&cfg), frame.WithRegisterServerOauth2Client())
+	ctx, svc := frame.NewServiceWithContext(
+		ctx,
+		serviceName,
+		frame.WithConfig(&cfg),
+		frame.WithRegisterServerOauth2Client(),
+	)
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
@@ -78,9 +85,23 @@ func main() {
 	serviceOptions = append(serviceOptions,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.WithRegisterEvents(
-			events.NewClientConnectedSetupQueue(ctx, &cfg, qMan, evtsMan, repository.NewRelationshipRepository(ctx, dbPool, workMan)),
-			events.NewContactVerificationQueue(&cfg, repository.NewContactRepository(ctx, dbPool, workMan), repository.NewVerificationRepository(ctx, dbPool, workMan), notificationCli),
-			events.NewContactVerificationAttemptedQueue(repository.NewContactRepository(ctx, dbPool, workMan), repository.NewVerificationRepository(ctx, dbPool, workMan)),
+			events.NewClientConnectedSetupQueue(
+				ctx,
+				&cfg,
+				qMan,
+				evtsMan,
+				repository.NewRelationshipRepository(ctx, dbPool, workMan),
+			),
+			events.NewContactVerificationQueue(
+				&cfg,
+				repository.NewContactRepository(ctx, dbPool, workMan),
+				repository.NewVerificationRepository(ctx, dbPool, workMan),
+				notificationCli,
+			),
+			events.NewContactVerificationAttemptedQueue(
+				repository.NewContactRepository(ctx, dbPool, workMan),
+				repository.NewVerificationRepository(ctx, dbPool, workMan),
+			),
 		))
 
 	// Initialize the service with all options
@@ -124,8 +145,8 @@ func handleDatabaseMigration(
 func setupNotificationClient(
 	ctx context.Context,
 	clHolder security.InternalOauth2ClientHolder,
-	cfg aconfig.ProfileConfig) (*notificationv1.NotificationClient, error) {
-	return notificationv1.NewNotificationClient(ctx,
+	cfg aconfig.ProfileConfig) (notificationv1connect.NotificationServiceClient, error) {
+	return notification.NewClient(ctx,
 		apis.WithEndpoint(cfg.NotificationServiceURI),
 		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
 		apis.WithTokenUsername(clHolder.JwtClientID()),
@@ -136,8 +157,7 @@ func setupNotificationClient(
 
 // setupConnectServer initializes and configures the gRPC server.
 func setupConnectServer(ctx context.Context, svc *frame.Service,
-	notificationCli *notificationv1.NotificationClient) http.Handler {
-
+	notificationCli notificationv1connect.NotificationServiceClient) http.Handler {
 	securityMan := svc.SecurityManager()
 
 	otelInterceptor, err := otelconnect.NewInterceptor()

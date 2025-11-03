@@ -5,28 +5,32 @@ import (
 	"testing"
 	"time"
 
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type ContactVerificationQueueTestSuite struct {
-	tests.BaseTestSuite
+	tests.ProfileBaseTestSuite
 }
 
 func TestContactVerificationQueueSuite(t *testing.T) {
 	suite.Run(t, new(ContactVerificationQueueTestSuite))
 }
 
-func (cvqts *ContactVerificationQueueTestSuite) getVerificationEvtQ(ctx context.Context, svc *frame.Service) (*events.ContactVerificationQueue, repository.ContactRepository) {
+func (cvqts *ContactVerificationQueueTestSuite) getVerificationEvtQ(
+	ctx context.Context,
+	svc *frame.Service,
+) (*events.ContactVerificationQueue, repository.ContactRepository) {
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
@@ -35,7 +39,12 @@ func (cvqts *ContactVerificationQueueTestSuite) getVerificationEvtQ(ctx context.
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	return events.NewContactVerificationQueue(cfg, contactRepo, verificationRepo, cvqts.GetNotificationCli(ctx)), contactRepo
+	return events.NewContactVerificationQueue(
+		cfg,
+		contactRepo,
+		verificationRepo,
+		cvqts.GetNotificationCli(ctx),
+	), contactRepo
 }
 
 func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Name() {

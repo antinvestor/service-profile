@@ -7,12 +7,13 @@ import (
 	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/queue"
 	"github.com/pitabwire/frame/workerpool"
+
+	"github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
 type PresenceBusiness interface {
@@ -42,7 +43,10 @@ func NewPresenceBusiness(_ context.Context, cfg *config.DevicesConfig, qMan queu
 	}
 }
 
-func (p presenceBusiness) UpdatePresence(ctx context.Context, req *devicev1.UpdatePresenceRequest) (*devicev1.PresenceObject, error) {
+func (p presenceBusiness) UpdatePresence(
+	ctx context.Context,
+	req *devicev1.UpdatePresenceRequest,
+) (*devicev1.PresenceObject, error) {
 	if req == nil {
 		return nil, errors.New("request cannot be nil")
 	}

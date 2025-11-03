@@ -7,11 +7,6 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
@@ -19,17 +14,26 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type ProfileTestSuite struct {
-	tests.BaseTestSuite
+	tests.ProfileBaseTestSuite
 }
 
 func TestProfileSuite(t *testing.T) {
 	suite.Run(t, new(ProfileTestSuite))
 }
 
-func (pts *ProfileTestSuite) getProfileBusiness(ctx context.Context, svc *frame.Service) (business.ProfileBusiness, repository.VerificationRepository) {
+func (pts *ProfileTestSuite) getProfileBusiness(
+	ctx context.Context,
+	svc *frame.Service,
+) (business.ProfileBusiness, repository.VerificationRepository) {
 	evtsMan := svc.EventsManager(ctx)
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)

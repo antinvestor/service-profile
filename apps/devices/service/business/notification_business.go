@@ -7,17 +7,18 @@ import (
 	"strings"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	"github.com/pitabwire/frame/queue"
+	"github.com/pitabwire/frame/workerpool"
+
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business/notifier"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	"github.com/pitabwire/frame/queue"
-	"github.com/pitabwire/frame/workerpool"
 )
 
 type NotifyBusiness interface {
 	RegisterKey(ctx context.Context, req *devicev1.RegisterKeyRequest) (*devicev1.KeyObject, error)
 	DeRegisterKey(ctx context.Context, req *devicev1.DeRegisterKeyRequest) error
-	Notify(ctx context.Context, req *devicev1.NotifyRequest) error
+	Notify(ctx context.Context, req *devicev1.NotifyRequest) ([]*devicev1.NotifyResult, error)
 }
 
 type notifyBusiness struct {
@@ -32,8 +33,14 @@ type notifyBusiness struct {
 }
 
 // NewNotifyBusiness creates a new instance of NotificationBusiness.
-func NewNotifyBusiness(_ context.Context, cfg *config.DevicesConfig, qMan queue.Manager,
-	workMan workerpool.Manager, keyBusiness KeysBusiness, deviceRepo repository.DeviceRepository) NotifyBusiness {
+func NewNotifyBusiness(
+	ctx context.Context,
+	cfg *config.DevicesConfig,
+	qMan queue.Manager,
+	workMan workerpool.Manager,
+	keyBusiness KeysBusiness,
+	deviceRepo repository.DeviceRepository,
+) (NotifyBusiness, error) {
 	n := &notifyBusiness{
 		cfg:     cfg,
 		qMan:    qMan,
@@ -43,14 +50,22 @@ func NewNotifyBusiness(_ context.Context, cfg *config.DevicesConfig, qMan queue.
 		deviceRepo:   deviceRepo,
 	}
 
-	n.notifiers = map[devicev1.KeyType]notifier.Notifier{
-		devicev1.KeyType_FCM_TOKEN: notifier.NewFCMNotifier(cfg, keyBusiness, deviceRepo),
+	fcmNotifier, err := notifier.NewFCMNotifier(ctx, cfg)
+	if err != nil {
+		return nil, err
 	}
 
-	return n
+	n.notifiers = map[devicev1.KeyType]notifier.Notifier{
+		devicev1.KeyType_FCM_TOKEN: fcmNotifier,
+	}
+
+	return n, nil
 }
 
-func (n notifyBusiness) RegisterKey(ctx context.Context, req *devicev1.RegisterKeyRequest) (*devicev1.KeyObject, error) {
+func (n notifyBusiness) RegisterKey(
+	ctx context.Context,
+	req *devicev1.RegisterKeyRequest,
+) (*devicev1.KeyObject, error) {
 	if req == nil {
 		return nil, errors.New("request cannot be nil")
 	}
@@ -113,13 +128,13 @@ func (n notifyBusiness) DeRegisterKey(ctx context.Context, req *devicev1.DeRegis
 	return nil
 }
 
-func (n notifyBusiness) getActiveDeviceKey(ctx context.Context, deviceID string, requestedType devicev1.KeyType, keyID string) (map[devicev1.KeyType][]*devicev1.KeyObject, error) {
-
-	var typeFilter []devicev1.KeyType
-	if requestedType != devicev1.KeyType(0) {
-		typeFilter = []devicev1.KeyType{requestedType}
-	}
-	keysCh, err := n.keysBusiness.GetKeys(ctx, deviceID, typeFilter)
+func (n notifyBusiness) getActiveDeviceKey(
+	ctx context.Context,
+	deviceID string,
+	requestedType devicev1.KeyType,
+	keyID string,
+) (map[devicev1.KeyType][]*devicev1.KeyObject, error) {
+	keysCh, err := n.keysBusiness.GetKeys(ctx, deviceID, requestedType)
 	if err != nil {
 		return nil, err
 	}
@@ -134,10 +149,6 @@ func (n notifyBusiness) getActiveDeviceKey(ctx context.Context, deviceID string,
 		}
 
 		for _, key := range res.Item() {
-			if key == nil {
-				continue
-			}
-
 			if targetKeyID != "" && key.GetId() != targetKeyID {
 				continue
 			}
@@ -166,40 +177,44 @@ func (n notifyBusiness) getActiveDeviceKey(ctx context.Context, deviceID string,
 	return keyGroups, nil
 }
 
-func (n notifyBusiness) Notify(ctx context.Context, req *devicev1.NotifyRequest) error {
+func (n notifyBusiness) Notify(ctx context.Context, req *devicev1.NotifyRequest) ([]*devicev1.NotifyResult, error) {
 	if req == nil {
-		return errors.New("request cannot be nil")
+		return nil, errors.New("request cannot be nil")
 	}
 
 	deviceID := strings.TrimSpace(req.GetDeviceId())
 	if deviceID == "" {
-		return errors.New("device id is required")
+		return nil, errors.New("device id is required")
 	}
 
 	if _, err := n.deviceRepo.GetByID(ctx, deviceID); err != nil {
-		return err
+		return nil, err
 	}
 
 	requestedType := req.GetKeyType()
 
 	keyGroups, err := n.getActiveDeviceKey(ctx, deviceID, requestedType, req.GetKeyId())
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	var allResponses []*devicev1.NotifyResult
 
 	for keyType, keys := range keyGroups {
 		notifyHandler, notifyErr := n.notifierFor(keyType)
 		if notifyErr != nil {
-			return notifyErr
+			return nil, notifyErr
 		}
 
-		notifyErr = notifyHandler.Notify(ctx, req, keys)
+		response, notifyErr := notifyHandler.Notify(ctx, req, keys...)
 		if notifyErr != nil {
-			return notifyErr
+			return nil, notifyErr
 		}
+
+		allResponses = append(allResponses, response...)
 	}
 
-	return nil
+	return allResponses, nil
 }
 
 func (n notifyBusiness) notifierFor(keyType devicev1.KeyType) (notifier.Notifier, error) {

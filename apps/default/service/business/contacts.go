@@ -8,15 +8,16 @@ import (
 	"time"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame/data"
+	frevents "github.com/pitabwire/frame/events"
+	"github.com/pitabwire/util"
+	"github.com/ttacon/libphonenumber"
+
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/pitabwire/frame/data"
-	frevents "github.com/pitabwire/frame/events"
-	"github.com/pitabwire/util"
-	"github.com/ttacon/libphonenumber"
 )
 
 var (
@@ -51,7 +52,6 @@ type ContactBusiness interface {
 func NewContactBusiness(_ context.Context, cfg *config.ProfileConfig,
 	evtMan frevents.Manager, contactRepository repository.ContactRepository,
 	verificationRepository repository.VerificationRepository) ContactBusiness {
-
 	return &contactBusiness{
 		cfg:                    cfg,
 		eventsMan:              evtMan,

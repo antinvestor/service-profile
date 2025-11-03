@@ -6,18 +6,22 @@ import (
 
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	settingsv1 "github.com/antinvestor/apis/go/settings/v1"
-	"github.com/antinvestor/service-profile/apps/settings/service/models"
-	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/workerpool"
 	"github.com/pitabwire/util"
+
+	"github.com/antinvestor/service-profile/apps/settings/service/models"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 )
 
 type SettingsBusiness interface {
 	Get(context.Context, *settingsv1.GetRequest) (*settingsv1.GetResponse, error)
 	List(context.Context, *settingsv1.ListRequest) ([]*settingsv1.SettingObject, error)
 	Set(context.Context, *settingsv1.SetRequest) (*settingsv1.SetResponse, error)
-	Search(ctx context.Context, msg *commonv1.SearchRequest) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error)
+	Search(
+		ctx context.Context,
+		msg *commonv1.SearchRequest,
+	) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error)
 }
 
 type settingsBusiness struct {
@@ -25,8 +29,10 @@ type settingsBusiness struct {
 	valRepo repository.SettingValRepository
 }
 
-func NewSettingsBusiness(refRepo repository.ReferenceRepository, valRepo repository.SettingValRepository) SettingsBusiness {
-
+func NewSettingsBusiness(
+	refRepo repository.ReferenceRepository,
+	valRepo repository.SettingValRepository,
+) SettingsBusiness {
 	return &settingsBusiness{
 		refRepo: refRepo,
 		valRepo: valRepo,
@@ -123,8 +129,10 @@ func (nb *settingsBusiness) Set(ctx context.Context, req *settingsv1.SetRequest)
 	}, nil
 }
 
-func (nb *settingsBusiness) List(ctx context.Context, req *settingsv1.ListRequest) ([]*settingsv1.SettingObject, error) {
-
+func (nb *settingsBusiness) List(
+	ctx context.Context,
+	req *settingsv1.ListRequest,
+) ([]*settingsv1.SettingObject, error) {
 	logger := util.Log(ctx).WithField("request", req)
 
 	logger.Info("handling setting list request")
@@ -163,7 +171,9 @@ func (nb *settingsBusiness) List(ctx context.Context, req *settingsv1.ListReques
 	return results, nil
 }
 
-func (nb *settingsBusiness) Search(ctx context.Context, msg *commonv1.SearchRequest) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error) {
-
+func (nb *settingsBusiness) Search(
+	ctx context.Context,
+	msg *commonv1.SearchRequest,
+) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error) {
 	return nil, errors.New("not implemented")
 }

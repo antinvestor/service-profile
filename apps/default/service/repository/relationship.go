@@ -4,18 +4,23 @@ import (
 	"context"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
+
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type relationshipRepository struct {
 	datastore.BaseRepository[*models.Relationship]
 }
 
-func NewRelationshipRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) RelationshipRepository {
+func NewRelationshipRepository(
+	ctx context.Context,
+	dbPool pool.Pool,
+	workMan workerpool.Manager,
+) RelationshipRepository {
 	repository := relationshipRepository{
 		BaseRepository: datastore.NewBaseRepository[*models.Relationship](
 			ctx, dbPool, workMan, func() *models.Relationship { return &models.Relationship{} },

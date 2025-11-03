@@ -6,10 +6,6 @@ import (
 	"testing"
 
 	settingsv1 "github.com/antinvestor/apis/go/settings/v1"
-	"github.com/antinvestor/service-profile/apps/settings/service/business"
-	"github.com/antinvestor/service-profile/apps/settings/service/models"
-	"github.com/antinvestor/service-profile/apps/settings/service/repository"
-	"github.com/antinvestor/service-profile/apps/settings/tests"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
@@ -17,6 +13,11 @@ import (
 	"github.com/stretchr/testify/suite"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/protobuf/proto"
+
+	"github.com/antinvestor/service-profile/apps/settings/service/business"
+	"github.com/antinvestor/service-profile/apps/settings/service/models"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
+	"github.com/antinvestor/service-profile/apps/settings/tests"
 )
 
 type SettingsTestSuite struct {
@@ -27,8 +28,10 @@ func TestSettings(t *testing.T) {
 	suite.Run(t, new(SettingsTestSuite))
 }
 
-func (ts *SettingsTestSuite) getSettingBusiness(ctx context.Context, svc *frame.Service) (business.SettingsBusiness, repository.ReferenceRepository, repository.SettingValRepository) {
-
+func (ts *SettingsTestSuite) getSettingBusiness(
+	ctx context.Context,
+	svc *frame.Service,
+) (business.SettingsBusiness, repository.ReferenceRepository, repository.SettingValRepository) {
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 

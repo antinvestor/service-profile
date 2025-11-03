@@ -3,14 +3,15 @@ package events_test
 import (
 	"testing"
 
-	"github.com/antinvestor/service-profile/apps/settings/service/events"
-	"github.com/antinvestor/service-profile/apps/settings/service/models"
-	"github.com/antinvestor/service-profile/apps/settings/service/repository"
-	"github.com/antinvestor/service-profile/apps/settings/tests"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/settings/service/events"
+	"github.com/antinvestor/service-profile/apps/settings/service/models"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
+	"github.com/antinvestor/service-profile/apps/settings/tests"
 )
 
 type AuditorTestSuite struct {

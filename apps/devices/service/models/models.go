@@ -58,17 +58,27 @@ type DeviceSession struct {
 // DeviceKey holds encryption keys for a device.
 type DeviceKey struct {
 	data.BaseModel
-	DeviceID string `gorm:"index"`
-	Key      []byte `gorm:"type:bytea"`
-	Extra    data.JSONMap
+	DeviceID  string `gorm:"index"`
+	KeyType   devicev1.KeyType
+	Key       []byte `gorm:"type:bytea"`
+	ExpiresAt *time.Time
+	Extra     data.JSONMap
 }
 
 func (k *DeviceKey) ToAPI() *devicev1.KeyObject {
+	expiryTime := ""
+	if k.ExpiresAt != nil && k.ExpiresAt.IsZero() {
+		expiryTime = k.ExpiresAt.UTC().Format(time.RFC3339)
+	}
 	return &devicev1.KeyObject{
-		Id:       k.GetID(),
-		DeviceId: k.DeviceID,
-		Key:      k.Key,
-		Extra:    k.Extra.ToProtoStruct(),
+		Id:        k.GetID(),
+		DeviceId:  k.DeviceID,
+		KeyType:   0,
+		Key:       k.Key,
+		CreatedAt: k.CreatedAt.UTC().Format(time.RFC3339),
+		ExpiresAt: expiryTime,
+		IsActive:  false,
+		Extra:     k.Extra.ToProtoStruct(),
 	}
 }
 
@@ -101,7 +111,6 @@ type DevicePresence struct {
 }
 
 func (p *DevicePresence) ToAPI() *devicev1.PresenceObject {
-
 	presence := &devicev1.PresenceObject{
 		DeviceId:      p.DeviceID,
 		ProfileId:     p.ProfileID,

@@ -5,11 +5,6 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
@@ -18,10 +13,16 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"gorm.io/gorm"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type RosterTestSuite struct {
-	tests.BaseTestSuite
+	tests.ProfileBaseTestSuite
 }
 
 func TestRosterSuite(t *testing.T) {
@@ -42,7 +43,6 @@ func (rts *RosterTestSuite) getRosterBusiness(ctx context.Context, svc *frame.Se
 
 	rosterRepo := repository.NewRosterRepository(ctx, dbPool, workMan)
 	return business.NewRosterBusiness(ctx, contactBusiness, rosterRepo)
-
 }
 
 func (rts *RosterTestSuite) createRoster(

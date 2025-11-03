@@ -5,10 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
+
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 const VerificationAttemptEventHandlerName = "contact.verification.attempt.queue"
@@ -18,7 +19,10 @@ type ContactVerificationAttemptedQueue struct {
 	VerificationRepo repository.VerificationRepository
 }
 
-func NewContactVerificationAttemptedQueue(contactRepo repository.ContactRepository, verificationRepo repository.VerificationRepository) *ContactVerificationAttemptedQueue {
+func NewContactVerificationAttemptedQueue(
+	contactRepo repository.ContactRepository,
+	verificationRepo repository.VerificationRepository,
+) *ContactVerificationAttemptedQueue {
 	return &ContactVerificationAttemptedQueue{
 		ContactRepo:      contactRepo,
 		VerificationRepo: verificationRepo,

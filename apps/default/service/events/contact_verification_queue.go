@@ -4,15 +4,18 @@ import (
 	"context"
 	"errors"
 
+	"connectrpc.com/connect"
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/apis/go/notification/v1/notificationv1connect"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 const VerificationEventHandlerName = "contact.verification.queue"
@@ -21,12 +24,12 @@ type ContactVerificationQueue struct {
 	cfg              *config.ProfileConfig
 	contactRepo      repository.ContactRepository
 	verificationRepo repository.VerificationRepository
-	notificationCli  *notificationv1.NotificationClient
+	notificationCli  notificationv1connect.NotificationServiceClient
 }
 
 func NewContactVerificationQueue(
 	cfg *config.ProfileConfig, contactRepo repository.ContactRepository,
-	verificationRepo repository.VerificationRepository, notificationCli *notificationv1.NotificationClient,
+	verificationRepo repository.VerificationRepository, notificationCli notificationv1connect.NotificationServiceClient,
 ) *ContactVerificationQueue {
 	return &ContactVerificationQueue{
 		cfg:              cfg,
@@ -98,7 +101,11 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		OutBound:  true,
 	}
 
-	_, err = vq.notificationCli.Send(ctx, []*notificationv1.Notification{nMessages})
+	req := connect.NewRequest(&notificationv1.SendRequest{
+		Data: []*notificationv1.Notification{nMessages},
+	})
+
+	_, err = vq.notificationCli.Send(ctx, req)
 	if err != nil {
 		logger.WithError(err).Error("Failed to send out verification")
 		return err

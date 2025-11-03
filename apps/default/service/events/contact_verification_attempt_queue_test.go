@@ -4,23 +4,27 @@ import (
 	"context"
 	"testing"
 
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type ContactVerificationAttemptQueueTestSuite struct {
-	tests.BaseTestSuite
+	tests.ProfileBaseTestSuite
 }
 
-func (cvaqts *ContactVerificationAttemptQueueTestSuite) getVerificationAttemptEvtQ(ctx context.Context, svc *frame.Service) (*events.ContactVerificationAttemptedQueue, repository.VerificationRepository) {
+func (cvaqts *ContactVerificationAttemptQueueTestSuite) getVerificationAttemptEvtQ(
+	ctx context.Context,
+	svc *frame.Service,
+) (*events.ContactVerificationAttemptedQueue, repository.VerificationRepository) {
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 

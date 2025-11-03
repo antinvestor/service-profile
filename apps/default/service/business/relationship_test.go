@@ -5,26 +5,30 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type RelationshipTestSuite struct {
-	tests.BaseTestSuite
+	tests.ProfileBaseTestSuite
 }
 
 func TestRelationshipSuite(t *testing.T) {
 	suite.Run(t, new(RelationshipTestSuite))
 }
 
-func (rts *RelationshipTestSuite) getRelationshipBusiness(ctx context.Context, svc *frame.Service) (business.RelationshipBusiness, business.ProfileBusiness) {
+func (rts *RelationshipTestSuite) getRelationshipBusiness(
+	ctx context.Context,
+	svc *frame.Service,
+) (business.RelationshipBusiness, business.ProfileBusiness) {
 	evtsMan := svc.EventsManager(ctx)
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
@@ -119,7 +123,6 @@ func (rts *RelationshipTestSuite) Test_relationshipBusiness_CreateRelationship()
 		}
 		for _, tt := range testsCases {
 			t.Run(tt.name, func(t *testing.T) {
-
 				got, err1 := aB.CreateRelationship(ctx, tt.args.request)
 				if (err1 != nil) != tt.wantErr {
 					t.Errorf("CreateRelationship() error = %v, wantErr %v", err1, tt.wantErr)

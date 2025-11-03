@@ -1,21 +1,17 @@
 package repository_test
 
 import (
-	"context"
 	"testing"
 
-	"github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/tests"
 )
 
 const (
@@ -23,74 +19,7 @@ const (
 )
 
 type DeviceRepositoryTestSuite struct {
-	frametests.FrameBaseTestSuite
-}
-
-func initResources(_ context.Context) []definition.TestResource {
-	pg := testpostgres.NewWithOpts("service_devices", definition.WithUserName("ant"))
-	resources := []definition.TestResource{pg}
-	return resources
-}
-
-func (suite *DeviceRepositoryTestSuite) SetupSuite() {
-	suite.InitResourceFunc = initResources
-	suite.FrameBaseTestSuite.SetupSuite()
-}
-
-func (suite *DeviceRepositoryTestSuite) CreateService(
-	t *testing.T,
-	depOpts *definition.DependencyOption,
-) (*frame.Service, context.Context) {
-	ctx := t.Context()
-	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	deviceConfig, err := frame.ConfigFromEnv[config.DevicesConfig]()
-	require.NoError(t, err)
-
-	deviceConfig.LogLevel = "debug"
-	deviceConfig.RunServiceSecurely = false
-	deviceConfig.ServerPort = ""
-
-	res := depOpts.ByIsDatabase(ctx)
-	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
-	require.NoError(t, err0)
-
-	t.Cleanup(func() {
-		cleanup(t.Context())
-	})
-
-	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
-	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
-
-	ctx, svc := frame.NewServiceWithContext(t.Context(), "device tests",
-		frame.WithConfig(&deviceConfig),
-		frame.WithDatastore(),
-		frametests.WithNoopDriver())
-
-	svc.Init(ctx)
-
-	err = repository.Migrate(ctx, svc, "../../migrations/0001")
-	require.NoError(t, err)
-
-	err = svc.Run(ctx, "")
-	require.NoError(t, err)
-
-	return svc, ctx
-}
-
-func (suite *DeviceRepositoryTestSuite) TearDownSuite() {
-	suite.FrameBaseTestSuite.TearDownSuite()
-}
-
-// WithTestDependancies Creates subtests with each known DependancyOption.
-func (suite *DeviceRepositoryTestSuite) WithTestDependancies(
-	t *testing.T,
-	testFn func(t *testing.T, dep *definition.DependencyOption),
-) {
-	options := []*definition.DependencyOption{
-		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
-	}
-
-	frametests.WithTestDependancies(t, options, testFn)
+	tests.DeviceBaseTestSuite
 }
 
 func TestDeviceRepositoryTestSuite(t *testing.T) {
@@ -128,9 +57,8 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		deviceRepo := repository.NewDeviceRepository(svc)
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -141,7 +69,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 					OS:        tc.os,
 				}
 
-				err := deviceRepo.Save(ctx, device)
+				err := deps.DeviceRepo.Create(ctx, device)
 				if tc.expectError {
 					assert.Error(t, err)
 					return
@@ -150,7 +78,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 				assert.NotEmpty(t, device.GetID())
 
 				// Retrieve by ID
-				retrievedDevice, err := deviceRepo.GetByID(ctx, device.GetID())
+				retrievedDevice, err := deps.DeviceRepo.GetByID(ctx, device.GetID())
 				require.NoError(t, err)
 				assert.Equal(t, device.GetID(), retrievedDevice.GetID())
 				assert.Equal(t, tc.profileID, retrievedDevice.ProfileID)
@@ -161,8 +89,9 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 				searchProperties := data.JSONMap{
 					"profile_id": tc.profileID,
 				}
-				q := data.NewSearchQuery("", searchProperties, 0, 50)
-				devicesResult, err := deviceRepo.Search(ctx, q)
+				q := data.NewSearchQuery("", data.WithSearchFiltersAndByValue(searchProperties),
+					data.WithSearchOffset(0), data.WithSearchLimit(50))
+				devicesResult, err := deps.DeviceRepo.Search(ctx, q)
 				require.NoError(t, err)
 
 				// Read results from the pipe
@@ -181,12 +110,12 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 				assert.Equal(t, device.GetID(), devices[0].GetID())
 
 				// Remove device
-				removedDevice, err := deviceRepo.RemoveByID(ctx, device.GetID())
+				removedDevice, err := deps.DeviceRepo.RemoveByID(ctx, device.GetID())
 				require.NoError(t, err)
 				assert.Equal(t, device.GetID(), removedDevice.GetID())
 
 				// Verify removal
-				_, err = deviceRepo.GetByID(ctx, device.GetID())
+				_, err = deps.DeviceRepo.GetByID(ctx, device.GetID())
 				assert.Error(t, err)
 			})
 		}
@@ -217,9 +146,8 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceSessionRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		sessionRepo := repository.NewDeviceSessionRepository(svc)
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -230,7 +158,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceSessionRepository() {
 					IP:        tc.ip,
 				}
 
-				err := sessionRepo.Save(ctx, session)
+				err := deps.SessionRepo.Create(ctx, session)
 				if tc.expectError {
 					assert.Error(t, err)
 					return
@@ -239,7 +167,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceSessionRepository() {
 				assert.NotEmpty(t, session.GetID())
 
 				// Retrieve by ID
-				retrievedSession, err := sessionRepo.GetByID(ctx, session.GetID())
+				retrievedSession, err := deps.SessionRepo.GetByID(ctx, session.GetID())
 				require.NoError(t, err)
 				assert.Equal(t, session.GetID(), retrievedSession.GetID())
 				assert.Equal(t, tc.deviceID, retrievedSession.DeviceID)
@@ -247,7 +175,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceSessionRepository() {
 				assert.Equal(t, tc.ip, retrievedSession.IP)
 
 				// Retrieve last by device ID
-				lastSession, err := sessionRepo.GetLastByDeviceID(ctx, tc.deviceID)
+				lastSession, err := deps.SessionRepo.GetLastByDeviceID(ctx, tc.deviceID)
 				require.NoError(t, err)
 				assert.Equal(t, session.GetID(), lastSession.GetID())
 			})
@@ -276,9 +204,8 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		logRepo := repository.NewDeviceLogRepository(svc)
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -289,7 +216,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 					Data:            data.JSONMap{"action": "test"},
 				}
 
-				err := logRepo.Save(ctx, log)
+				err := deps.DeviceLogRepo.Create(ctx, log)
 				if tc.expectError {
 					assert.Error(t, err)
 					return
@@ -298,18 +225,14 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceLogRepository() {
 				assert.NotEmpty(t, log.GetID())
 
 				// Retrieve by ID
-				retrievedLog, err := logRepo.GetByID(ctx, log.GetID())
+				retrievedLog, err := deps.DeviceLogRepo.GetByID(ctx, log.GetID())
 				require.NoError(t, err)
 				assert.Equal(t, log.GetID(), retrievedLog.GetID())
 				assert.Equal(t, tc.deviceID, retrievedLog.DeviceID)
 				assert.Equal(t, tc.sessionID, retrievedLog.DeviceSessionID)
 
 				// Retrieve by device ID
-				searchProperties := data.JSONMap{
-					"device_id": tc.deviceID,
-				}
-				q := data.NewSearchQuery("", searchProperties, 0, 50)
-				logsResult, err := logRepo.GetByDeviceID(ctx, q)
+				logsResult, err := deps.DeviceLogRepo.GetByDeviceID(ctx, tc.deviceID)
 				require.NoError(t, err)
 
 				// Read results from the pipe
@@ -358,9 +281,8 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 		},
 	}
 
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		keyRepo := repository.NewDeviceKeyRepository(svc)
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -371,7 +293,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 					Extra:    data.JSONMap{"type": "test"},
 				}
 
-				err := keyRepo.Save(ctx, key)
+				err := deps.KeyRepo.Create(ctx, key)
 				if tc.expectError {
 					assert.Error(t, err)
 					return
@@ -380,7 +302,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 				assert.NotEmpty(t, key.GetID())
 
 				// Retrieve by device ID
-				keys, err := keyRepo.GetByDeviceID(ctx, tc.deviceID)
+				keys, err := deps.KeyRepo.GetByDeviceID(ctx, tc.deviceID)
 				require.NoError(t, err)
 				assert.Len(t, keys, 1)
 				assert.Equal(t, key.GetID(), keys[0].GetID())
@@ -388,12 +310,12 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 				assert.Equal(t, tc.key, keys[0].Key)
 
 				// Remove key
-				removedKey, err := keyRepo.RemoveByID(ctx, key.GetID())
+				removedKey, err := deps.KeyRepo.RemoveByID(ctx, key.GetID())
 				require.NoError(t, err)
 				assert.Equal(t, key.GetID(), removedKey.GetID())
 
 				// Verify removal
-				keys, err = keyRepo.GetByDeviceID(ctx, tc.deviceID)
+				keys, err = deps.KeyRepo.GetByDeviceID(ctx, tc.deviceID)
 				require.NoError(t, err)
 				assert.Empty(t, keys)
 			})

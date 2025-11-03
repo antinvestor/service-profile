@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 
+	"github.com/pitabwire/util"
+
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
-	"github.com/pitabwire/util"
 )
 
 type SettingsAuditor struct {

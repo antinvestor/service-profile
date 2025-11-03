@@ -4,10 +4,11 @@ import (
 	"context"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
+
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 type AddressBusiness interface {

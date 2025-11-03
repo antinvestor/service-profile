@@ -11,9 +11,10 @@ import (
 	"strconv"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/security"
+
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 const (
@@ -128,7 +129,6 @@ func (ps *ProfileServer) fetchRelationships(
 	ctx context.Context,
 	request *profilev1.ListRelationshipRequest,
 ) ([]*profilev1.RelationshipObject, string, error) {
-
 	// Get relationships from business layer
 	relationships, err := ps.relationshipBusiness.ListRelationships(ctx, request)
 	if err != nil {

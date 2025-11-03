@@ -6,16 +6,15 @@ import (
 	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/queue"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
-)
 
-const defaultMaxLogsCount = 1000
+	"github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+)
 
 // DeviceBusiness defines the interface for device-related business logic.
 // It abstracts the underlying data storage and provides methods for interacting
@@ -101,7 +100,6 @@ func (b *deviceBusiness) GetDeviceLogs(
 ) (workerpool.JobResultPipe[[]*devicev1.DeviceLog], error) {
 	resultPipe := workerpool.NewJob[[]*devicev1.DeviceLog](
 		func(ctx context.Context, result workerpool.JobResultPipe[[]*devicev1.DeviceLog]) error {
-
 			logsResult, err := b.deviceLogRepo.GetByDeviceID(ctx, deviceID)
 			if err != nil {
 				return err

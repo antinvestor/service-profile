@@ -4,16 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/antinvestor/apis/go/common"
 	"github.com/antinvestor/apis/go/common/mocks"
 	commonv1 "github.com/antinvestor/apis/go/common/v1"
 	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
+	"github.com/antinvestor/apis/go/notification/v1/notificationv1connect"
 	notificationv1_mocks "github.com/antinvestor/apis/go/notification/v1_mocks"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	aconfig "github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -24,6 +20,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/grpc"
+
+	aconfig "github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 const PostgresqlDBImage = "postgres:latest"
@@ -32,7 +33,7 @@ const (
 	DefaultRandomStringLength = 8
 )
 
-type BaseTestSuite struct {
+type ProfileBaseTestSuite struct {
 	frametests.FrameBaseTestSuite
 
 	ContactRepo      repository.ContactRepository
@@ -49,12 +50,12 @@ func initResources(_ context.Context) []definition.TestResource {
 	return resources
 }
 
-func (bs *BaseTestSuite) SetupSuite() {
+func (bs *ProfileBaseTestSuite) SetupSuite() {
 	bs.InitResourceFunc = initResources
 	bs.FrameBaseTestSuite.SetupSuite()
 }
 
-func (bs *BaseTestSuite) CreateService(
+func (bs *ProfileBaseTestSuite) CreateService(
 	t *testing.T,
 	depOpts *definition.DependencyOption,
 ) (*frame.Service, context.Context) {
@@ -120,9 +121,9 @@ func (bs *BaseTestSuite) CreateService(
 	return svc, ctx
 }
 
-func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.NotificationClient {
-	mockNotificationService := notificationv1_mocks.NewMockNotificationServiceClient(bs.Ctrl)
-	mockNotificationService.EXPECT().Send(gomock.Any(), gomock.Any()).DoAndReturn(
+func (bs *ProfileBaseTestSuite) GetNotificationCli(_ context.Context) notificationv1connect.NotificationServiceClient {
+	notificationCli := notificationv1_mocks.NewMockNotificationServiceClient(bs.Ctrl)
+	notificationCli.EXPECT().Send(gomock.Any(), gomock.Any()).DoAndReturn(
 		func(ctx context.Context, _ *notificationv1.SendRequest, _ ...grpc.CallOption) (grpc.ServerStreamingClient[notificationv1.SendResponse], error) {
 			// Return a successful response with a generated message ID
 			const randomIDLength = 6
@@ -147,17 +148,15 @@ func (bs *BaseTestSuite) GetNotificationCli(_ context.Context) *notificationv1.N
 			return mockStream, nil
 		}).
 		AnyTimes()
-	notificationCli := notificationv1.Init(&common.GrpcClientBase{}, mockNotificationService)
 
 	return notificationCli
 }
 
-func (bs *BaseTestSuite) CreateTestProfiles(
+func (bs *ProfileBaseTestSuite) CreateTestProfiles(
 	ctx context.Context,
 	profileBiz business.ProfileBusiness,
 	contacts []string,
 ) ([]*profilev1.ProfileObject, error) {
-
 	var profileSlice []*profilev1.ProfileObject
 
 	for _, contact := range contacts {
@@ -175,12 +174,12 @@ func (bs *BaseTestSuite) CreateTestProfiles(
 	return profileSlice, nil
 }
 
-func (bs *BaseTestSuite) TearDownSuite() {
+func (bs *ProfileBaseTestSuite) TearDownSuite() {
 	bs.FrameBaseTestSuite.TearDownSuite()
 }
 
 // WithTestDependancies Creates subtests with each known DependancyOption.
-func (bs *BaseTestSuite) WithTestDependancies(
+func (bs *ProfileBaseTestSuite) WithTestDependancies(
 	t *testing.T,
 	testFn func(t *testing.T, dep *definition.DependencyOption),
 ) {

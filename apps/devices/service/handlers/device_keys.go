@@ -7,10 +7,18 @@ import (
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 )
 
-func (ds *DevicesServer) AddKey(ctx context.Context, req *connect.Request[devicev1.AddKeyRequest]) (*connect.Response[devicev1.AddKeyResponse], error) {
-
+func (ds *DevicesServer) AddKey(
+	ctx context.Context,
+	req *connect.Request[devicev1.AddKeyRequest],
+) (*connect.Response[devicev1.AddKeyResponse], error) {
 	msg := req.Msg
-	deviceKey, err := ds.keyBusiness.AddKey(ctx, msg.GetDeviceId(), msg.GetKeyType(), msg.GetData(), msg.GetExtras().AsMap())
+	deviceKey, err := ds.keyBusiness.AddKey(
+		ctx,
+		msg.GetDeviceId(),
+		msg.GetKeyType(),
+		msg.GetData(),
+		msg.GetExtras().AsMap(),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -20,8 +28,9 @@ func (ds *DevicesServer) AddKey(ctx context.Context, req *connect.Request[device
 }
 
 func (ds *DevicesServer) RemoveKey(
-	ctx context.Context, req *connect.Request[devicev1.RemoveKeyRequest]) (*connect.Response[devicev1.RemoveKeyResponse], error) {
-
+	ctx context.Context,
+	req *connect.Request[devicev1.RemoveKeyRequest],
+) (*connect.Response[devicev1.RemoveKeyResponse], error) {
 	var keyIDList []string
 	response, err := ds.keyBusiness.RemoveKeys(ctx, req.Msg.GetId()...)
 	if err != nil {
@@ -42,10 +51,11 @@ func (ds *DevicesServer) RemoveKey(
 }
 
 func (ds *DevicesServer) SearchKey(
-	ctx context.Context, req *connect.Request[devicev1.SearchKeyRequest]) (*connect.Response[devicev1.SearchKeyResponse], error) {
-
+	ctx context.Context,
+	req *connect.Request[devicev1.SearchKeyRequest],
+) (*connect.Response[devicev1.SearchKeyResponse], error) {
 	msg := req.Msg
-	response, err := ds.keyBusiness.GetKeys(ctx, msg.GetDeviceId(), msg.GetKeyTypes())
+	response, err := ds.keyBusiness.GetKeys(ctx, msg.GetDeviceId(), msg.GetKeyTypes()...)
 	if err != nil {
 		return nil, err
 	}
@@ -56,13 +66,10 @@ func (ds *DevicesServer) SearchKey(
 			return nil, res.Error()
 		}
 
-		for _, key := range res.Item() {
-			keyObjList = append(keyObjList, key)
-		}
+		keyObjList = append(keyObjList, res.Item()...)
 	}
 
 	return connect.NewResponse(&devicev1.SearchKeyResponse{
 		Data: keyObjList,
 	}), nil
-
 }

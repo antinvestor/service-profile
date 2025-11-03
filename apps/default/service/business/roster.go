@@ -5,22 +5,29 @@ import (
 	"errors"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
+
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 type RosterBusiness interface {
-	Search(ctx context.Context, request *profilev1.SearchRosterRequest) (workerpool.JobResultPipe[[]*models.Roster], error)
+	Search(
+		ctx context.Context,
+		request *profilev1.SearchRosterRequest,
+	) (workerpool.JobResultPipe[[]*models.Roster], error)
 	GetByID(ctx context.Context, rosterID string) (*models.Roster, error)
 	CreateRoster(ctx context.Context, request *profilev1.AddRosterRequest) ([]*profilev1.RosterObject, error)
 	RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, error)
 }
 
-func NewRosterBusiness(_ context.Context, contactBusiness ContactBusiness, rosterRepo repository.RosterRepository) RosterBusiness {
+func NewRosterBusiness(
+	_ context.Context,
+	contactBusiness ContactBusiness,
+	rosterRepo repository.RosterRepository,
+) RosterBusiness {
 	return &rosterBusiness{
 		rosterRepository: rosterRepo,
 		contactBusiness:  contactBusiness,
@@ -28,7 +35,6 @@ func NewRosterBusiness(_ context.Context, contactBusiness ContactBusiness, roste
 }
 
 type rosterBusiness struct {
-	service          *frame.Service
 	rosterRepository repository.RosterRepository
 	contactBusiness  ContactBusiness
 }

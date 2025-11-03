@@ -7,14 +7,15 @@ import (
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
 	"github.com/antinvestor/apis/go/settings/v1/settingsv1connect"
-	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
-	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
-	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
 	securityconnect "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
+
+	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
+	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 )
 
 func main() {
@@ -27,7 +28,12 @@ func main() {
 		return
 	}
 
-	ctx, svc := frame.NewServiceWithContext(ctx, serviceName, frame.WithConfig(&cfg), frame.WithRegisterServerOauth2Client())
+	ctx, svc := frame.NewServiceWithContext(
+		ctx,
+		serviceName,
+		frame.WithConfig(&cfg),
+		frame.WithRegisterServerOauth2Client(),
+	)
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
@@ -80,7 +86,6 @@ func handleDatabaseMigration(
 
 // setupConnectServer initializes and configures the gRPC server.
 func setupConnectServer(ctx context.Context, svc *frame.Service) http.Handler {
-
 	securityMan := svc.SecurityManager()
 
 	otelInterceptor, err := otelconnect.NewInterceptor()

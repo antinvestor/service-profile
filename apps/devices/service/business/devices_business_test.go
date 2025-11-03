@@ -9,22 +9,20 @@ import (
 	"time"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/business"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
-	"github.com/antinvestor/service-profile/apps/devices/service/queue"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/antinvestor/service-profile/apps/devices/tests"
 )
 
 const (
@@ -32,81 +30,7 @@ const (
 )
 
 type DeviceBusinessTestSuite struct {
-	frametests.FrameBaseTestSuite
-}
-
-func initResources(_ context.Context) []definition.TestResource {
-	pg := testpostgres.NewWithOpts("service_devices", definition.WithUserName("ant"))
-	return []definition.TestResource{pg}
-}
-
-func (suite *DeviceBusinessTestSuite) SetupSuite() {
-	suite.InitResourceFunc = initResources
-	suite.FrameBaseTestSuite.SetupSuite()
-}
-
-func (suite *DeviceBusinessTestSuite) CreateService(
-	t *testing.T,
-	depOpts *definition.DependencyOption,
-) (*frame.Service, context.Context) {
-	ctx := t.Context()
-	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	cfg, err := config.FromEnv[aconfig.DevicesConfig]()
-	require.NoError(t, err)
-
-	cfg.LogLevel = "debug"
-	cfg.RunServiceSecurely = false
-	cfg.ServerPort = ""
-
-	res := depOpts.ByIsDatabase(ctx)
-	testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
-	require.NoError(t, err0)
-
-	t.Cleanup(func() {
-		cleanup(ctx)
-	})
-
-	cfg.DatabasePrimaryURL = []string{testDS.String()}
-	cfg.DatabaseReplicaURL = []string{testDS.String()}
-
-	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
-		frame.WithConfig(&cfg),
-		frame.WithDatastore(), frametests.WithNoopDriver())
-
-	deviceAnalysisQueue := frame.WithRegisterSubscriber(
-		cfg.QueueDeviceAnalysisName,
-		cfg.QueueDeviceAnalysis,
-		queue.NewDeviceAnalysisQueueHandler(svc),
-	)
-	deviceAnalysisQueuePublisher := frame.WithRegisterPublisher(
-		cfg.QueueDeviceAnalysisName,
-		cfg.QueueDeviceAnalysis,
-	)
-	svc.Init(ctx, deviceAnalysisQueue, deviceAnalysisQueuePublisher)
-
-	err = repository.Migrate(ctx, svc, "../../migrations/0001")
-	require.NoError(t, err)
-
-	err = svc.Run(ctx, "")
-	require.NoError(t, err)
-
-	return svc, ctx
-}
-
-func (suite *DeviceBusinessTestSuite) TearDownSuite() {
-	suite.FrameBaseTestSuite.TearDownSuite()
-}
-
-// WithTestDependancies Creates subtests with each known DependancyOption.
-func (suite *DeviceBusinessTestSuite) WithTestDependancies(
-	t *testing.T,
-	testFn func(t *testing.T, dep *definition.DependencyOption),
-) {
-	options := []*definition.DependencyOption{
-		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
-	}
-
-	frametests.WithTestDependencies(t, options, testFn)
+	tests.DeviceBaseTestSuite
 }
 
 func TestDeviceBusinessTestSuite(t *testing.T) {
@@ -115,16 +39,17 @@ func TestDeviceBusinessTestSuite(t *testing.T) {
 
 func (suite *DeviceBusinessTestSuite) createTestDeviceWithSession(
 	ctx context.Context,
-	svc *frame.Service,
+	deviceRepo repository.DeviceRepository,
+	sessionRepo repository.DeviceSessionRepository,
 	deviceID, sessionID string,
 ) error {
 	device := &models.Device{
 		Name: "Original Name",
 		OS:   "Original OS",
 	}
-	device.GenID(ctx)
+
 	device.ID = deviceID
-	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+	err := deviceRepo.Create(ctx, device)
 	if err != nil {
 		return err
 	}
@@ -134,23 +59,23 @@ func (suite *DeviceBusinessTestSuite) createTestDeviceWithSession(
 		UserAgent: "Test Agent",
 		IP:        "127.0.0.1",
 	}
-	session.GenID(ctx)
+
 	if sessionID != "" {
 		session.ID = sessionID
 	}
-	return repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+	return sessionRepo.Create(ctx, session)
 }
 
 func (suite *DeviceBusinessTestSuite) verifyDeviceActivityLogged(
 	ctx context.Context,
-	biz business.DeviceBusiness,
+	deviceBusiness business.DeviceBusiness,
 	deviceID, sessionID string,
 ) error {
 	if sessionID == "" || deviceID == "" {
 		return nil
 	}
 
-	deviceLogsChan, err := biz.GetDeviceLogs(ctx, deviceID)
+	deviceLogsChan, err := deviceBusiness.GetDeviceLogs(ctx, deviceID)
 	if err != nil {
 		return err
 	}
@@ -179,16 +104,17 @@ func (suite *DeviceBusinessTestSuite) verifyDeviceActivityLogged(
 func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	ctx context.Context,
 	t *testing.T,
-	svc *frame.Service,
-	biz business.DeviceBusiness,
+	deviceRepo repository.DeviceRepository,
+	sessionRepo repository.DeviceSessionRepository,
+	deviceBusiness business.DeviceBusiness,
 	tc struct {
-	name        string
-	id          string
-	deviceName  string
-	data        data.JSONMap
-	expectError bool
-	expectNil   bool
-},
+		name        string
+		id          string
+		deviceName  string
+		data        data.JSONMap
+		expectError bool
+		expectNil   bool
+	},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
@@ -197,12 +123,12 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 		if ok {
 			sessionID = rawDat.(string)
 		}
-		err := suite.createTestDeviceWithSession(ctx, svc, tc.id, sessionID)
+		err := suite.createTestDeviceWithSession(ctx, deviceRepo, sessionRepo, tc.id, sessionID)
 		require.NoError(t, err)
 	}
 
 	// Execute SaveDevice
-	result, err := biz.SaveDevice(ctx, tc.id, tc.deviceName, tc.data)
+	result, err := deviceBusiness.SaveDevice(ctx, tc.id, tc.deviceName, tc.data)
 
 	// Verify error expectations
 	if tc.expectError {
@@ -227,7 +153,7 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 		sessionID = rawDat.(string)
 	}
 	if !tc.expectError && tc.id != "" && sessionID != "" {
-		err = suite.verifyDeviceActivityLogged(ctx, biz, tc.id, sessionID)
+		err = suite.verifyDeviceActivityLogged(ctx, deviceBusiness, tc.id, sessionID)
 		assert.NoError(t, err)
 	}
 }
@@ -281,13 +207,12 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				suite.runSaveDeviceTestCase(ctx, t, svc, biz, tc)
+				suite.runSaveDeviceTestCase(ctx, t, deps.DeviceRepo, deps.SessionRepo, deps.DeviceBusiness, tc)
 			})
 		}
 	})
@@ -320,9 +245,8 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -333,8 +257,8 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 						Name: "Test Device",
 						OS:   "Linux",
 					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+
+					err := deps.DeviceRepo.Create(ctx, device)
 					require.NoError(t, err)
 					deviceID = device.GetID()
 
@@ -344,14 +268,14 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 						UserAgent: "Test Agent",
 						IP:        "127.0.0.1",
 					}
-					session.GenID(ctx)
-					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+
+					err = deps.SessionRepo.Create(ctx, session)
 					require.NoError(t, err)
 				} else {
 					deviceID = tc.deviceID
 				}
 
-				device, err := biz.GetDeviceByID(ctx, deviceID)
+				device, err := deps.DeviceBusiness.GetDeviceByID(ctx, deviceID)
 
 				if tc.expectError {
 					require.Error(t, err)
@@ -388,9 +312,8 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -401,8 +324,8 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 						Name: "Test Device",
 						OS:   "Linux",
 					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+
+					err := deps.DeviceRepo.Create(ctx, device)
 					require.NoError(t, err)
 
 					// Create a session for the device
@@ -411,15 +334,15 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceBySessionID() {
 						UserAgent: "Test Agent",
 						IP:        "127.0.0.1",
 					}
-					session.GenID(ctx)
-					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+
+					err = deps.SessionRepo.Create(ctx, session)
 					require.NoError(t, err)
 					sessionID = session.GetID()
 				} else {
 					sessionID = tc.sessionID
 				}
 
-				device, err := biz.GetDeviceBySessionID(ctx, sessionID)
+				device, err := deps.DeviceBusiness.GetDeviceBySessionID(ctx, sessionID)
 
 				if tc.expectError {
 					require.Error(t, err)
@@ -461,9 +384,8 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -474,8 +396,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 						Name: "Test Device",
 						OS:   "Linux",
 					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+					err := deps.DeviceRepo.Create(ctx, device)
 					require.NoError(t, err)
 					deviceID = device.GetID()
 
@@ -485,8 +406,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 						UserAgent: "Test Agent",
 						IP:        "127.0.0.1",
 					}
-					session.GenID(ctx)
-					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+					err = deps.SessionRepo.Create(ctx, session)
 					require.NoError(t, err)
 					sessionID = session.GetID()
 				} else {
@@ -494,7 +414,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity() {
 					sessionID = tc.sessionID
 				}
 
-				log, err := biz.LogDeviceActivity(ctx, deviceID, sessionID, tc.data)
+				log, err := deps.DeviceBusiness.LogDeviceActivity(ctx, deviceID, sessionID, tc.data)
 
 				if tc.expectError {
 					require.Error(t, err)
@@ -541,9 +461,8 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -554,15 +473,14 @@ func (suite *DeviceBusinessTestSuite) TestAddKey() {
 						Name: "Test Device",
 						OS:   "Linux",
 					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+					err := deps.DeviceRepo.Create(ctx, device)
 					require.NoError(t, err)
 					deviceID = device.GetID()
 				} else {
 					deviceID = tc.deviceID
 				}
 
-				keyObj, err := biz.AddKey(ctx, deviceID, tc.keyType, tc.key, tc.extra)
+				keyObj, err := deps.KeyBusiness.AddKey(ctx, deviceID, tc.keyType, tc.key, tc.extra)
 
 				if tc.expectError {
 					require.Error(t, err)
@@ -599,9 +517,8 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -612,15 +529,15 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 						Name: "Test Device",
 						OS:   "Linux",
 					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+
+					err := deps.DeviceRepo.Create(ctx, device)
 					require.NoError(t, err)
 					deviceID = device.GetID()
 				} else {
 					deviceID = tc.deviceID
 				}
 
-				err := biz.RemoveDevice(ctx, deviceID)
+				err := deps.DeviceBusiness.RemoveDevice(ctx, deviceID)
 
 				if tc.expectError {
 					require.Error(t, err)
@@ -628,7 +545,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 					require.NoError(t, err)
 
 					// Verify device is removed
-					_, err = biz.GetDeviceByID(ctx, deviceID)
+					_, err = deps.DeviceBusiness.GetDeviceByID(ctx, deviceID)
 					require.Error(t, err)
 				}
 			})
@@ -639,27 +556,28 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	ctx context.Context,
 	t *testing.T,
-	svc *frame.Service,
-	biz business.DeviceBusiness,
+	deviceRepo repository.DeviceRepository,
+	sessionRepo repository.DeviceSessionRepository,
+	deviceBusiness business.DeviceBusiness,
 	tc struct {
-	name        string
-	setupDevice bool
-	profileID   string
-	searchQuery string
-	expectError bool
-},
+		name        string
+		setupDevice bool
+		profileID   string
+		searchQuery string
+		expectError bool
+	},
 ) {
 	// Create context with claims for the expected profile_id
 	testCtx := ctx
 	if tc.profileID != "" {
 		// Create claims with the profile_id as subject
-		claims := &frame.AuthenticationClaims{}
+		claims := &security.AuthenticationClaims{}
 		claims.Subject = tc.profileID
 		testCtx = claims.ClaimsToContext(ctx)
 	}
 
 	if tc.setupDevice {
-		err := suite.createDeviceWithProfile(testCtx, svc, tc.profileID)
+		err := suite.createDeviceWithProfile(testCtx, deviceRepo, sessionRepo, tc.profileID)
 		require.NoError(t, err)
 	}
 
@@ -667,7 +585,7 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 		Query: tc.searchQuery,
 	}
 
-	devicesChan, err := biz.SearchDevices(testCtx, query)
+	devicesChan, err := deviceBusiness.SearchDevices(testCtx, query)
 	if tc.expectError {
 		require.Error(t, err)
 		return
@@ -736,13 +654,12 @@ func (suite *DeviceBusinessTestSuite) TestSearchDevices() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				suite.runSearchDevicesTestCase(ctx, t, svc, biz, tc)
+				suite.runSearchDevicesTestCase(ctx, t, deps.DeviceRepo, deps.SessionRepo, deps.DeviceBusiness, tc)
 			})
 		}
 	})
@@ -776,9 +693,8 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -786,13 +702,18 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceLogs() {
 				if tc.setupDevice {
 					// Create a device first
 					var err error
-					deviceID, err = suite.createDeviceForLogs(ctx, svc, tc.name == "get logs for device with logs", biz)
+					deviceID, err = suite.createDeviceForLogs(
+						ctx,
+						tc.name == "get logs for device with logs",
+						deps.DeviceRepo,
+						deps.DeviceBusiness,
+					)
 					require.NoError(t, err)
 				} else {
 					deviceID = tc.deviceID
 				}
 
-				logsChan, logErr := biz.GetDeviceLogs(ctx, deviceID)
+				logsChan, logErr := deps.DeviceBusiness.GetDeviceLogs(ctx, deviceID)
 				require.NoError(t, logErr)
 				assert.NotNil(t, logsChan)
 
@@ -845,9 +766,8 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -855,13 +775,19 @@ func (suite *DeviceBusinessTestSuite) TestGetKeys() {
 				if tc.setupDevice {
 					// Create a device first
 					var err error
-					deviceID, err = suite.createDeviceWithKey(ctx, svc, biz, tc.setupKey, tc.keyType)
+					deviceID, err = suite.createDeviceWithKey(
+						ctx,
+						deps.DeviceRepo,
+						deps.KeyBusiness,
+						tc.setupKey,
+						tc.keyType,
+					)
 					require.NoError(t, err)
 				} else {
 					deviceID = tc.deviceID
 				}
 
-				keysChan, err := biz.GetKeys(ctx, deviceID, tc.keyType)
+				keysChan, err := deps.KeyBusiness.GetKeys(ctx, deviceID, tc.keyType)
 				if tc.expectError {
 					require.Error(t, err)
 					return
@@ -918,16 +844,15 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
 				var keysToRemove []string
 				if tc.setupDevice {
 					// Create a device first
-					_, keyIDs, err := suite.createDeviceWithKeys(ctx, svc, biz, tc.setupKeys)
+					_, keyIDs, err := suite.createDeviceWithKeys(ctx, deps.DeviceRepo, deps.KeyBusiness, tc.setupKeys)
 					require.NoError(t, err)
 
 					// Select keys to remove
@@ -939,7 +864,7 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 					keysToRemove = suite.generateNonExistentKeyIDs(tc.removeCount)
 				}
 
-				keysChan, err := biz.RemoveKeys(ctx, keysToRemove...)
+				keysChan, err := deps.KeyBusiness.RemoveKeys(ctx, keysToRemove...)
 				require.NoError(t, err)
 				assert.NotNil(t, keysChan)
 
@@ -959,8 +884,8 @@ func (suite *DeviceBusinessTestSuite) TestRemoveKeys() {
 
 func (suite *DeviceBusinessTestSuite) createDeviceWithKeys(
 	ctx context.Context,
-	svc *frame.Service,
-	biz business.DeviceBusiness,
+	deviceRepo repository.DeviceRepository,
+	keyBusiness business.KeysBusiness,
 	keyCount int,
 ) (string, []string, error) {
 	// Create a device directly using repository
@@ -968,8 +893,8 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithKeys(
 		Name: "Remove Key Test Device",
 		OS:   "Linux",
 	}
-	device.GenID(ctx)
-	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+
+	err := deviceRepo.Create(ctx, device)
 	if err != nil {
 		return "", nil, err
 	}
@@ -977,7 +902,7 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithKeys(
 
 	var keyIDs []string
 	for i := range keyCount {
-		keyResult, keyErr := biz.AddKey(ctx, deviceID, devicev1.KeyType_MATRIX_KEY,
+		keyResult, keyErr := keyBusiness.AddKey(ctx, deviceID, devicev1.KeyType_MATRIX_KEY,
 			[]byte(fmt.Sprintf("test-key-data-%d", i)), data.JSONMap{
 				"index": strconv.Itoa(i),
 			})
@@ -1040,9 +965,8 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 		},
 	}
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
@@ -1054,8 +978,8 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 						Name:      "Link Test Device",
 						OS:        "Linux",
 					}
-					device.GenID(ctx)
-					err := repository.NewDeviceRepository(svc).Save(ctx, device)
+
+					err := deps.DeviceRepo.Create(ctx, device)
 					require.NoError(t, err)
 
 					// Create a session for the device
@@ -1064,15 +988,15 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 						UserAgent: "Test Agent",
 						IP:        "127.0.0.1",
 					}
-					session.GenID(ctx)
-					err = repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+
+					err = deps.SessionRepo.Create(ctx, session)
 					require.NoError(t, err)
 					sessionID = session.GetID()
 				} else {
 					sessionID = tc.sessionID
 				}
 
-				linkedDevice, err := biz.LinkDeviceToProfile(ctx, sessionID, tc.profileID, data.JSONMap{
+				linkedDevice, err := deps.DeviceBusiness.LinkDeviceToProfile(ctx, sessionID, tc.profileID, data.JSONMap{
 					"link_reason": "test",
 				})
 
@@ -1093,7 +1017,8 @@ func (suite *DeviceBusinessTestSuite) TestLinkDeviceToProfile() {
 // Helper method to create device with profile for search testing.
 func (suite *DeviceBusinessTestSuite) createDeviceWithProfile(
 	ctx context.Context,
-	svc *frame.Service,
+	deviceRepo repository.DeviceRepository,
+	sessionRepo repository.DeviceSessionRepository,
 	profileID string,
 ) error {
 	device := &models.Device{
@@ -1101,8 +1026,8 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithProfile(
 		Name:      "Search Test Device",
 		OS:        "Linux",
 	}
-	device.GenID(ctx)
-	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+
+	err := deviceRepo.Create(ctx, device)
 	if err != nil {
 		return err
 	}
@@ -1112,8 +1037,8 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithProfile(
 		UserAgent: "Test Agent",
 		IP:        "127.0.0.1",
 	}
-	session.GenID(ctx)
-	return repository.NewDeviceSessionRepository(svc).Save(ctx, session)
+
+	return sessionRepo.Create(ctx, session)
 }
 
 // Helper method to process search results channel.
@@ -1137,23 +1062,23 @@ func (suite *DeviceBusinessTestSuite) processSearchResults(
 // Helper method to create device for logs testing.
 func (suite *DeviceBusinessTestSuite) createDeviceForLogs(
 	ctx context.Context,
-	svc *frame.Service,
 	addLog bool,
-	biz business.DeviceBusiness,
+	deviceRepo repository.DeviceRepository,
+	deviceBusiness business.DeviceBusiness,
 ) (string, error) {
 	device := &models.Device{
 		Name: "Log Test Device",
 		OS:   "Linux",
 	}
-	device.GenID(ctx)
-	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+
+	err := deviceRepo.Create(ctx, device)
 	if err != nil {
 		return "", err
 	}
 
 	deviceID := device.GetID()
 	if addLog {
-		_, logErr := biz.LogDeviceActivity(ctx, deviceID, "test-session-10", data.JSONMap{
+		_, logErr := deviceBusiness.LogDeviceActivity(ctx, deviceID, "test-session-10", data.JSONMap{
 			"action": "test_action",
 		})
 		if logErr != nil {
@@ -1184,8 +1109,8 @@ func (suite *DeviceBusinessTestSuite) processDeviceLogsResults(
 // Helper method to create device with key for keys testing.
 func (suite *DeviceBusinessTestSuite) createDeviceWithKey(
 	ctx context.Context,
-	svc *frame.Service,
-	biz business.DeviceBusiness,
+	deviceRepo repository.DeviceRepository,
+	keyBusiness business.KeysBusiness,
 	addKey bool,
 	keyType devicev1.KeyType,
 ) (string, error) {
@@ -1193,15 +1118,15 @@ func (suite *DeviceBusinessTestSuite) createDeviceWithKey(
 		Name: "Key Test Device",
 		OS:   "Linux",
 	}
-	device.GenID(ctx)
-	err := repository.NewDeviceRepository(svc).Save(ctx, device)
+
+	err := deviceRepo.Create(ctx, device)
 	if err != nil {
 		return "", err
 	}
 
 	deviceID := device.GetID()
 	if addKey {
-		_, keyErr := biz.AddKey(ctx, deviceID, keyType, []byte("test-key-data"), data.JSONMap{
+		_, keyErr := keyBusiness.AddKey(ctx, deviceID, keyType, []byte("test-key-data"), data.JSONMap{
 			"test": "data",
 		})
 		if keyErr != nil {
@@ -1230,9 +1155,8 @@ func (suite *DeviceBusinessTestSuite) processKeysResults(
 func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndSession() {
 	t := suite.T()
 
-	suite.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-		biz := business.NewDeviceBusiness(ctx, svc)
+	suite.WithTestDependencies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		// Generate new IDs for device and session
 		deviceID := util.IDString()
@@ -1251,22 +1175,21 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 		}
 
 		// Step 1: Call LogDeviceActivity with new DeviceID and SessionID
-		deviceLog, err := biz.LogDeviceActivity(ctx, deviceID, sessionID, logData)
+		deviceLog, err := deps.DeviceBusiness.LogDeviceActivity(ctx, deviceID, sessionID, logData)
 		require.NoError(t, err)
 		require.NotNil(t, deviceLog)
 		assert.Equal(t, deviceID, deviceLog.GetDeviceId())
 		assert.Equal(t, sessionID, deviceLog.GetSessionId())
 
 		// Step 2: Verify device log was created
-		deviceLogRepo := repository.NewDeviceLogRepository(svc)
-		savedLog, err := deviceLogRepo.GetByID(ctx, deviceLog.GetId())
+		savedLog, err := deps.DeviceLogRepo.GetByID(ctx, deviceLog.GetId())
 		require.NoError(t, err)
 		assert.Equal(t, deviceID, savedLog.DeviceID)
 		assert.Equal(t, sessionID, savedLog.DeviceSessionID)
 
 		// Step 3: Verify device and session don't exist before queue processing
-		deviceRepo := repository.NewDeviceRepository(svc)
-		sessionRepo := repository.NewDeviceSessionRepository(svc)
+		deviceRepo := deps.DeviceRepo
+		sessionRepo := deps.SessionRepo
 
 		_, sessionErr := sessionRepo.GetByID(ctx, sessionID)
 		require.Error(t, sessionErr, "Session should not exist before queue processing")
@@ -1301,12 +1224,12 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 		assert.NotEmpty(t, deviceCreated.OS)
 
 		// Step 5: Verify we can retrieve the device through business layer
-		deviceObj, err := biz.GetDeviceByID(ctx, deviceID)
+		deviceObj, err := deps.DeviceBusiness.GetDeviceByID(ctx, deviceID)
 		require.NoError(t, err)
 		assert.Equal(t, deviceID, deviceObj.GetId())
 
 		// Step 6: Verify we can retrieve device by session ID
-		deviceBySession, err := biz.GetDeviceBySessionID(ctx, sessionID)
+		deviceBySession, err := deps.DeviceBusiness.GetDeviceBySessionID(ctx, sessionID)
 		require.NoError(t, err)
 		assert.Equal(t, deviceID, deviceBySession.GetId())
 		assert.Equal(t, sessionID, deviceBySession.GetSessionId())

@@ -3,10 +3,11 @@ package repository
 import (
 	"context"
 
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 )
 
 type deviceRepository struct {
@@ -26,7 +27,8 @@ func (dr *deviceRepository) RemoveByID(ctx context.Context, id string) (*models.
 	if err != nil {
 		return nil, err
 	}
-	if err := dr.Pool().DB(ctx, false).Delete(device).Error; err != nil {
+	err = dr.Pool().DB(ctx, false).Delete(device).Error
+	if err != nil {
 		return nil, err
 	}
 	return device, nil

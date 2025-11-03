@@ -6,15 +6,12 @@ import (
 	"connectrpc.com/connect"
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/antinvestor/apis/go/device/v1/devicev1connect"
-	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/business"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/util"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/business"
 )
 
 type DevicesServer struct {
@@ -26,25 +23,9 @@ type DevicesServer struct {
 	notifyBusiness   business.NotifyBusiness
 }
 
-func NewDeviceServer(ctx context.Context, svc *frame.Service) *DevicesServer {
-
-	qMan := svc.QueueManager(ctx)
-	workMan := svc.WorkManager()
-	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
-
-	cfg := svc.Config().(*aconfig.DevicesConfig)
-
-	deviceLogRepo := repository.NewDeviceLogRepository(ctx, dbPool, workMan)
-	deviceSessionRepo := repository.NewDeviceSessionRepository(ctx, dbPool, workMan)
-	deviceRepo := repository.NewDeviceRepository(ctx, dbPool, workMan)
-	deviceKeyRepo := repository.NewDeviceKeyRepository(ctx, dbPool, workMan)
-	devicePresenceRepo := repository.NewDevicePresenceRepository(ctx, dbPool, workMan)
-
-	deviceBusiness := business.NewDeviceBusiness(ctx, cfg, qMan, workMan, deviceRepo, deviceLogRepo, deviceSessionRepo)
-	keyBusiness := business.NewKeysBusiness(ctx, cfg, qMan, workMan, deviceRepo, deviceKeyRepo)
-	presenceBusiness := business.NewPresenceBusiness(ctx, cfg, qMan, workMan, deviceRepo, devicePresenceRepo)
-	notifyBusiness := business.NewNotifyBusiness(ctx, cfg, qMan, workMan, keyBusiness, deviceRepo)
-
+func NewDeviceServer(_ context.Context, deviceBusiness business.DeviceBusiness,
+	presenceBusiness business.PresenceBusiness, keyBusiness business.KeysBusiness,
+	notifyBusiness business.NotifyBusiness) *DevicesServer {
 	return &DevicesServer{
 		deviceBusiness:   deviceBusiness,
 		presenceBusiness: presenceBusiness,
@@ -55,8 +36,10 @@ func NewDeviceServer(ctx context.Context, svc *frame.Service) *DevicesServer {
 
 // GetById retrieves a device by ID
 // nolint: revive,staticcheck,nolintlint // This is an api implementation
-func (ds *DevicesServer) GetById(ctx context.Context, req *connect.Request[devicev1.GetByIdRequest]) (*connect.Response[devicev1.GetByIdResponse], error) {
-
+func (ds *DevicesServer) GetById(
+	ctx context.Context,
+	req *connect.Request[devicev1.GetByIdRequest],
+) (*connect.Response[devicev1.GetByIdResponse], error) {
 	var devicesList []*devicev1.DeviceObject
 	var lastError error
 
@@ -98,8 +81,11 @@ func (ds *DevicesServer) GetBySessionId(
 	}), nil
 }
 
-func (ds *DevicesServer) Search(ctx context.Context, req *connect.Request[devicev1.SearchRequest], stream *connect.ServerStream[devicev1.SearchResponse]) error {
-
+func (ds *DevicesServer) Search(
+	ctx context.Context,
+	req *connect.Request[devicev1.SearchRequest],
+	stream *connect.ServerStream[devicev1.SearchResponse],
+) error {
 	// Always process the search, even for empty queries
 	response, err := ds.deviceBusiness.SearchDevices(ctx, req.Msg)
 	if err != nil {
@@ -125,7 +111,10 @@ func (ds *DevicesServer) Search(ctx context.Context, req *connect.Request[device
 	}
 }
 
-func (ds *DevicesServer) Create(ctx context.Context, req *connect.Request[devicev1.CreateRequest]) (*connect.Response[devicev1.CreateResponse], error) {
+func (ds *DevicesServer) Create(
+	ctx context.Context,
+	req *connect.Request[devicev1.CreateRequest],
+) (*connect.Response[devicev1.CreateResponse], error) {
 	// Generate a device ID for tracking
 	deviceID := util.IDString()
 
@@ -156,8 +145,10 @@ func (ds *DevicesServer) Create(ctx context.Context, req *connect.Request[device
 	}), nil
 }
 
-func (ds *DevicesServer) Update(ctx context.Context, req *connect.Request[devicev1.UpdateRequest]) (*connect.Response[devicev1.UpdateResponse], error) {
-
+func (ds *DevicesServer) Update(
+	ctx context.Context,
+	req *connect.Request[devicev1.UpdateRequest],
+) (*connect.Response[devicev1.UpdateResponse], error) {
 	msg := req.Msg
 	device, err := ds.deviceBusiness.SaveDevice(
 		ctx, msg.GetId(), msg.GetName(), msg.GetProperties().AsMap(),
@@ -171,8 +162,10 @@ func (ds *DevicesServer) Update(ctx context.Context, req *connect.Request[device
 	}), nil
 }
 
-func (ds *DevicesServer) Link(ctx context.Context, req *connect.Request[devicev1.LinkRequest]) (*connect.Response[devicev1.LinkResponse], error) {
-
+func (ds *DevicesServer) Link(
+	ctx context.Context,
+	req *connect.Request[devicev1.LinkRequest],
+) (*connect.Response[devicev1.LinkResponse], error) {
 	msg := req.Msg
 	device, err := ds.deviceBusiness.LinkDeviceToProfile(
 		ctx, msg.GetId(), msg.GetProfileId(), msg.GetProperties().AsMap(),
@@ -186,8 +179,10 @@ func (ds *DevicesServer) Link(ctx context.Context, req *connect.Request[devicev1
 	}), nil
 }
 
-func (ds *DevicesServer) Remove(ctx context.Context, req *connect.Request[devicev1.RemoveRequest]) (*connect.Response[devicev1.RemoveResponse], error) {
-
+func (ds *DevicesServer) Remove(
+	ctx context.Context,
+	req *connect.Request[devicev1.RemoveRequest],
+) (*connect.Response[devicev1.RemoveResponse], error) {
 	msg := req.Msg
 
 	dev, err := ds.deviceBusiness.GetDeviceByID(ctx, msg.GetId())
@@ -205,8 +200,10 @@ func (ds *DevicesServer) Remove(ctx context.Context, req *connect.Request[device
 	}), nil
 }
 
-func (ds *DevicesServer) Log(ctx context.Context, req *connect.Request[devicev1.LogRequest]) (*connect.Response[devicev1.LogResponse], error) {
-
+func (ds *DevicesServer) Log(
+	ctx context.Context,
+	req *connect.Request[devicev1.LogRequest],
+) (*connect.Response[devicev1.LogResponse], error) {
 	msg := req.Msg
 
 	payload := msg.GetExtras().AsMap()
@@ -222,8 +219,11 @@ func (ds *DevicesServer) Log(ctx context.Context, req *connect.Request[devicev1.
 	}), nil
 }
 
-func (ds *DevicesServer) ListLogs(ctx context.Context, req *connect.Request[devicev1.ListLogsRequest], stream *connect.ServerStream[devicev1.ListLogsResponse]) error {
-
+func (ds *DevicesServer) ListLogs(
+	ctx context.Context,
+	req *connect.Request[devicev1.ListLogsRequest],
+	stream *connect.ServerStream[devicev1.ListLogsResponse],
+) error {
 	response, err := ds.deviceBusiness.GetDeviceLogs(ctx, req.Msg.GetDeviceId())
 	if err != nil {
 		return err

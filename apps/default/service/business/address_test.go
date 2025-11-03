@@ -1,24 +1,50 @@
 package business_test
 
 import (
+	"context"
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type AddressTestSuite struct {
-	tests.BaseTestSuite
+	tests.ProfileBaseTestSuite
 }
 
 func TestAddressSuite(t *testing.T) {
 	suite.Run(t, new(AddressTestSuite))
+}
+
+func (ats *AddressTestSuite) getProfileBusiness(
+	ctx context.Context,
+	svc *frame.Service,
+) (business.ProfileBusiness, repository.AddressRepository) {
+	evtsMan := svc.EventsManager(ctx)
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	cfg := svc.Config().(*config.ProfileConfig)
+
+	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
+	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
+
+	contactBusiness := business.NewContactBusiness(ctx, cfg, evtsMan, contactRepo, verificationRepo)
+
+	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
+	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
+
+	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
+	return business.NewProfileBusiness(ctx, evtsMan, contactBusiness, addressBusiness, profileRepo), addressRepo
 }
 
 func (ats *AddressTestSuite) TestNewAddressBusiness() {
@@ -98,10 +124,9 @@ func (ats *AddressTestSuite) Test_addressBusiness_GetByProfile() {
 	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := ats.CreateService(t, dep)
 
-		dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
-		addressRepo := repository.NewAddressRepository(ctx, dbPool, svc.WorkManager())
+		profileBusiness, addressRepo := ats.getProfileBusiness(ctx, svc)
 
-		testProfiles, err := ats.CreateTestProfiles(ctx, svc, []string{"testing@ant.com"})
+		testProfiles, err := ats.CreateTestProfiles(ctx, profileBusiness, []string{"testing@ant.com"})
 		if err != nil {
 			t.Errorf(" CreateProfile failed with %+v", err)
 			return

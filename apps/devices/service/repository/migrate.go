@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 )
 
 func Migrate(ctx context.Context, svc *frame.Service, migrationPath string) error {

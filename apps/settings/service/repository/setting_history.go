@@ -3,10 +3,11 @@ package repository
 import (
 	"context"
 
-	"github.com/antinvestor/service-profile/apps/settings/service/models"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
+
+	"github.com/antinvestor/service-profile/apps/settings/service/models"
 )
 
 type SettingAuditRepository interface {
@@ -18,7 +19,11 @@ type settingAuditRepository struct {
 	datastore.BaseRepository[*models.SettingAudit]
 }
 
-func NewSettingAuditRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) SettingAuditRepository {
+func NewSettingAuditRepository(
+	ctx context.Context,
+	dbPool pool.Pool,
+	workMan workerpool.Manager,
+) SettingAuditRepository {
 	return &settingAuditRepository{
 		BaseRepository: datastore.NewBaseRepository[*models.SettingAudit](
 			ctx, dbPool, workMan, func() *models.SettingAudit { return &models.SettingAudit{} },

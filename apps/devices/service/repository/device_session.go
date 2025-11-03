@@ -3,17 +3,22 @@ package repository
 import (
 	"context"
 
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
 )
 
 type deviceSessionRepository struct {
 	datastore.BaseRepository[*models.DeviceSession]
 }
 
-func NewDeviceSessionRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) DeviceSessionRepository {
+func NewDeviceSessionRepository(
+	ctx context.Context,
+	dbPool pool.Pool,
+	workMan workerpool.Manager,
+) DeviceSessionRepository {
 	return &deviceSessionRepository{
 
 		BaseRepository: datastore.NewBaseRepository[*models.DeviceSession](

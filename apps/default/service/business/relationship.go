@@ -5,11 +5,12 @@ import (
 	"errors"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/util"
+
 	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/util"
 )
 
 // Constants for pagination and limits.
@@ -44,7 +45,6 @@ func NewRelationshipBusiness(
 	profileBiz ProfileBusiness,
 	relationshipRepo repository.RelationshipRepository,
 ) RelationshipBusiness {
-
 	return &relationshipBusiness{
 		profileBusiness:  profileBiz,
 		relationshipRepo: relationshipRepo,

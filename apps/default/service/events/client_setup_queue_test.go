@@ -5,29 +5,33 @@ import (
 	"testing"
 
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/apps/default/tests"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests"
 )
 
 type ClientSetupQueueTestSuite struct {
-	tests.BaseTestSuite
+	tests.ProfileBaseTestSuite
 }
 
 func TestClientSetupQueueSuite(t *testing.T) {
 	suite.Run(t, new(ClientSetupQueueTestSuite))
 }
 
-func (csqts *ClientSetupQueueTestSuite) getConnectedSetupEvtQ(ctx context.Context, svc *frame.Service) (*events.ClientConnectedSetupQueue, business.ProfileBusiness, repository.RelationshipRepository) {
+func (csqts *ClientSetupQueueTestSuite) getConnectedSetupEvtQ(
+	ctx context.Context,
+	svc *frame.Service,
+) (*events.ClientConnectedSetupQueue, business.ProfileBusiness, repository.RelationshipRepository) {
 	evtsMan := svc.EventsManager(ctx)
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
@@ -47,7 +51,13 @@ func (csqts *ClientSetupQueueTestSuite) getConnectedSetupEvtQ(ctx context.Contex
 
 	relationshipRepo := repository.NewRelationshipRepository(ctx, dbPool, workMan)
 
-	return events.NewClientConnectedSetupQueue(ctx, cfg, svc.QueueManager(ctx), evtsMan, relationshipRepo), profileBusiness, relationshipRepo
+	return events.NewClientConnectedSetupQueue(
+		ctx,
+		cfg,
+		svc.QueueManager(ctx),
+		evtsMan,
+		relationshipRepo,
+	), profileBusiness, relationshipRepo
 }
 
 func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Name() {

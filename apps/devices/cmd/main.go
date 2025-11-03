@@ -1,35 +1,42 @@
 package main
 
 import (
-	"fmt"
+	"net/http"
 
-	"buf.build/go/protovalidate"
-	apis "github.com/antinvestor/apis/go/common"
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/antinvestor/service-profile/apps/devices/config"
+	"connectrpc.com/connect"
+	"connectrpc.com/otelconnect"
+	"github.com/antinvestor/apis/go/device/v1/devicev1connect"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/security"
+	securityconnect "github.com/pitabwire/frame/security/interceptors/connect"
+	"github.com/pitabwire/util"
+	"golang.org/x/net/context"
+
+	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	protovalidateinterceptor "github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/protovalidate"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/util"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
 	serviceName := "service_devices"
 
 	ctx := context.Background()
-	cfg, err := frame.ConfigLoadWithOIDC[config.DevicesConfig](ctx)
+	cfg, err := config.LoadWithOIDC[aconfig.DevicesConfig](ctx)
 	if err != nil {
 		util.Log(ctx).With("err", err).Error("could not process configs")
 		return
 	}
 
-	ctx, svc := frame.NewServiceWithContext(ctx, serviceName, frame.WithConfig(&cfg))
+	ctx, svc := frame.NewServiceWithContext(
+		ctx,
+		serviceName,
+		frame.WithConfig(&cfg),
+		frame.WithRegisterServerOauth2Client(),
+	)
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
@@ -46,24 +53,46 @@ func main() {
 		return
 	}
 
-	err = svc.RegisterForJwt(ctx)
+	securityMan := svc.SecurityManager()
+	queueMan := svc.QueueManager(ctx)
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	deviceLogRepo := repository.NewDeviceLogRepository(ctx, dbPool, workMan)
+	deviceSessionRepo := repository.NewDeviceSessionRepository(ctx, dbPool, workMan)
+	deviceRepo := repository.NewDeviceRepository(ctx, dbPool, workMan)
+	deviceKeyRepo := repository.NewDeviceKeyRepository(ctx, dbPool, workMan)
+	devicePresenceRepo := repository.NewDevicePresenceRepository(ctx, dbPool, workMan)
+
+	deviceBusiness := business.NewDeviceBusiness(
+		ctx,
+		&cfg,
+		queueMan,
+		workMan,
+		deviceRepo,
+		deviceLogRepo,
+		deviceSessionRepo,
+	)
+	keyBusiness := business.NewKeysBusiness(ctx, &cfg, queueMan, workMan, deviceRepo, deviceKeyRepo)
+	presenceBusiness := business.NewPresenceBusiness(ctx, &cfg, queueMan, workMan, deviceRepo, devicePresenceRepo)
+	notifyBusiness, err := business.NewNotifyBusiness(ctx, &cfg, queueMan, workMan, keyBusiness, deviceRepo)
 	if err != nil {
-		log.WithError(err).Fatal("main -- could not register fo jwt")
+		util.Log(ctx).WithError(err).Fatal("could not configure device server")
 	}
 
-	// Setup GRPC server
-	grpcServer, implementation := setupGRPCServer(ctx, svc, cfg, log)
+	implementation := handlers.NewDeviceServer(ctx, deviceBusiness, presenceBusiness, keyBusiness, notifyBusiness)
 
-	// Setup HTTP handlers and proxy
-	serviceOptions, httpErr := setupHTTPHandlers(ctx, cfg, grpcServer)
-	if err != nil {
-		log.WithError(httpErr).Fatal("could not setup HTTP handlers")
-	}
+	// Setup Connect server
+	connectHandler := setupConnectServer(ctx, securityMan, implementation)
+
+	// Setup HTTP handlers
+	// Start with datastore option
+	serviceOptions = []frame.Option{frame.WithDatastore(), frame.WithHTTPHandler(connectHandler)}
 
 	deviceAnalysisQueue := frame.WithRegisterSubscriber(
 		cfg.QueueDeviceAnalysisName,
 		cfg.QueueDeviceAnalysis,
-		queue.NewDeviceAnalysisQueueHandler(svc),
+		queue.NewDeviceAnalysisQueueHandler(svc.HTTPClientManager(), deviceRepo, deviceLogRepo, deviceSessionRepo),
 	)
 	deviceAnalysisQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueDeviceAnalysisName,
@@ -76,72 +105,36 @@ func main() {
 	svc.Init(ctx, serviceOptions...)
 
 	log.
-		WithField("server http port", cfg.HTTPPort()).
-		WithField("server grpc port", cfg.GrpcPort()).
+		WithField("server port", cfg.HTTPPort()).
 		Info(" Initiating server operations")
-	defer implementation.Service.Stop(ctx)
-	err = implementation.Service.Run(ctx, "")
+	defer svc.Stop(ctx)
+	err = svc.Run(ctx, "")
 	if err != nil {
 		log.WithError(err).Fatal("could not run Server ")
 	}
 }
 
-// setupGRPCServer initializes and configures the gRPC server.
-func setupGRPCServer(ctx context.Context, svc *frame.Service,
-	cfg config.DevicesConfig,
-	log *util.LogEntry) (*grpc.Server, *handlers.DevicesServer) {
-	jwtAudience := cfg.Oauth2JwtVerifyAudience
-	if jwtAudience == "" {
-		jwtAudience = svc.Name()
-	}
-
-	validator, err := protovalidate.New()
-	if err != nil {
-		log.WithError(err).Fatal("could not load validator for proto messages")
-	}
-
-	grpcServer := grpc.NewServer(
-		grpc.StatsHandler(otelgrpc.NewServerHandler()),
-		grpc.ChainUnaryInterceptor(
-			svc.UnaryAuthInterceptor(jwtAudience, cfg.GetOauth2Issuer()),
-			protovalidateinterceptor.UnaryServerInterceptor(validator)),
-
-		grpc.ChainStreamInterceptor(
-			svc.StreamAuthInterceptor(jwtAudience, cfg.GetOauth2Issuer()),
-			protovalidateinterceptor.StreamServerInterceptor(validator),
-		),
-	)
-
-	implementation := handlers.NewDeviceServer(ctx, svc)
-	devicev1.RegisterDeviceServiceServer(grpcServer, implementation)
-
-	return grpcServer, implementation
-}
-
-// setupHTTPHandlers configures HTTP handlers and proxy.
-func setupHTTPHandlers(
+// setupConnectServer initializes and configures the gRPC server.
+func setupConnectServer(
 	ctx context.Context,
-	cfg config.DevicesConfig, grpcServer *grpc.Server,
-) ([]frame.Option, error) {
-	// Start with datastore option
-	serviceOptions := []frame.Option{frame.WithDatastore()}
-
-	// Add GRPC server option
-	grpcServerOpt := frame.WithGRPCServer(grpcServer)
-	serviceOptions = append(serviceOptions, grpcServerOpt)
-
-	// Setup proxy
-	proxyOptions := apis.ProxyOptions{
-		GrpcServerEndpoint: fmt.Sprintf("localhost%s", cfg.GrpcPort()),
-		GrpcServerDialOpts: []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())},
-	}
-
-	proxyMux, err := devicev1.CreateProxyHandler(ctx, proxyOptions)
+	securityMan security.Manager,
+	implementation *handlers.DevicesServer,
+) http.Handler {
+	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
-		return nil, err
+		util.Log(ctx).WithError(err).Fatal("could not configure open telemetry")
 	}
 
-	serviceOptions = append(serviceOptions, frame.WithHTTPHandler(proxyMux))
+	validateInterceptor, err := securityconnect.NewValidationInterceptor()
+	if err != nil {
+		util.Log(ctx).WithError(err).Fatal("could not configure validation interceptor")
+	}
 
-	return serviceOptions, nil
+	authenticator := securityMan.GetAuthenticator(ctx)
+	authInterceptor := securityconnect.NewAuthInterceptor(authenticator)
+
+	_, serverHandler := devicev1connect.NewDeviceServiceHandler(
+		implementation, connect.WithInterceptors(authInterceptor, otelInterceptor, validateInterceptor))
+
+	return serverHandler
 }

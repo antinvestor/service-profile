@@ -4,18 +4,23 @@ import (
 	"context"
 	"strings"
 
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
+
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 type verificationRepository struct {
 	datastore.BaseRepository[*models.Verification]
 }
 
-func NewVerificationRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) VerificationRepository {
+func NewVerificationRepository(
+	ctx context.Context,
+	dbPool pool.Pool,
+	workMan workerpool.Manager,
+) VerificationRepository {
 	repo := verificationRepository{
 		BaseRepository: datastore.NewBaseRepository[*models.Verification](
 			ctx, dbPool, workMan, func() *models.Verification { return &models.Verification{} },

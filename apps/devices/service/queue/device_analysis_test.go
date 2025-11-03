@@ -1,25 +1,19 @@
 package queue_test
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 	"time"
 
-	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
-	"github.com/antinvestor/service-profile/apps/devices/service/queue"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/pitabwire/frame/frametests/deps/testpostgres"
-	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/queue"
+	"github.com/antinvestor/service-profile/apps/devices/tests"
 )
 
 const (
@@ -27,88 +21,16 @@ const (
 )
 
 type QueueTestSuite struct {
-	frametests.FrameBaseTestSuite
+	tests.DeviceBaseTestSuite
 }
 
 func TestQueueTestSuite(t *testing.T) {
 	suite.Run(t, new(QueueTestSuite))
 }
 
-func initResources(_ context.Context) []definition.TestResource {
-	pg := testpostgres.NewWithOpts("service_devices", definition.WithUserName("ant"))
-	return []definition.TestResource{pg}
-}
-
-func (suite *QueueTestSuite) SetupSuite() {
-	suite.InitResourceFunc = initResources
-	suite.FrameBaseTestSuite.SetupSuite()
-}
-
-func (suite *QueueTestSuite) WithTestDependancies(
-	t *testing.T,
-	fn func(t *testing.T, dep *definition.DependencyOption),
-) {
-	options := []*definition.DependencyOption{
-		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), suite.Resources()),
-	}
-
-	frametests.WithTestDependencies(t, options, fn)
-}
-
-func (suite *QueueTestSuite) CreateService(
-	t *testing.T,
-	depOpts *definition.DependencyOption,
-) (*frame.Service, context.Context) {
-	ctx := t.Context()
-	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	deviceConfig, err := config.FromEnv[aconfig.DevicesConfig]()
-	require.NoError(t, err)
-
-	deviceConfig.LogLevel = "debug"
-	deviceConfig.RunServiceSecurely = false
-	deviceConfig.ServerPort = ""
-
-	res := depOpts.ByIsDatabase(ctx)
-	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
-	require.NoError(t, err0)
-
-	t.Cleanup(func() {
-		cleanup(ctx)
-	})
-
-	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
-	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
-
-	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
-		frame.WithConfig(&deviceConfig),
-		frame.WithDatastore(),
-		frametests.WithNoopDriver())
-
-	// Skip queue initialization for basic functionality tests
-	// This allows us to test the core logic without queue dependencies
-
-	err = repository.Migrate(ctx, svc, deviceConfig.GetDatabaseMigrationPath())
-	require.NoError(t, err)
-
-	return svc, ctx
-}
-
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-
-		// Create repositories
-		deviceRepo := repository.NewDeviceRepository(svc)
-		sessionRepo := repository.NewDeviceSessionRepository(svc)
-		logRepo := repository.NewDeviceLogRepository(svc)
-
-		// Create handler
-		handler := queue.DeviceAnalysisQueueHandler{
-			DeviceRepository:    deviceRepo,
-			DeviceLogRepository: logRepo,
-			SessionRepository:   sessionRepo,
-			Service:             svc,
-		}
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		// Create a device first
 		device := &models.Device{
@@ -116,7 +38,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 			OS:   "Linux",
 		}
 		device.GenID(ctx)
-		err := deviceRepo.Save(ctx, device)
+		err := deps.DeviceRepo.Create(ctx, device)
 		require.NoError(t, err)
 
 		// Create a session
@@ -127,7 +49,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 			LastSeen:  time.Now(),
 		}
 		session.GenID(ctx)
-		err = sessionRepo.Save(ctx, session)
+		err = deps.SessionRepo.Create(ctx, session)
 		require.NoError(t, err)
 
 		// Create a device log
@@ -141,7 +63,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 			},
 		}
 		deviceLog.GenID(ctx)
-		err = logRepo.Save(ctx, deviceLog)
+		err = deps.DeviceLogRepo.Create(ctx, deviceLog)
 		require.NoError(t, err)
 
 		// Test cases
@@ -177,7 +99,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 			t.Run(tc.name, func(t *testing.T) {
 				// Convert payload to expected format
 				payloadBytes, _ := json.Marshal(tc.payload)
-				handleErr := handler.Handle(ctx, nil, payloadBytes)
+				handleErr := deps.AnalysisQueueHandler.Handle(ctx, nil, payloadBytes)
 				if tc.expectError {
 					assert.Error(t, handleErr)
 				} else {
@@ -189,21 +111,8 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_Handle() {
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateSessionFromLog() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-
-		// Create repositories
-		deviceRepo := repository.NewDeviceRepository(svc)
-		sessionRepo := repository.NewDeviceSessionRepository(svc)
-		logRepo := repository.NewDeviceLogRepository(svc)
-
-		// Create handler
-		handler := queue.DeviceAnalysisQueueHandler{
-			DeviceRepository:    deviceRepo,
-			DeviceLogRepository: logRepo,
-			SessionRepository:   sessionRepo,
-			Service:             svc,
-		}
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		// Create a device first
 		device := &models.Device{
@@ -211,7 +120,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateSessionFromLog
 			OS:   "Linux",
 		}
 		device.GenID(ctx)
-		err := deviceRepo.Save(ctx, device)
+		err := deps.DeviceRepo.Create(ctx, device)
 		require.NoError(t, err)
 
 		// Create a device log with session data
@@ -228,7 +137,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateSessionFromLog
 		deviceLog.GenID(ctx)
 
 		// Test CreateSessionFromLog
-		session, err := handler.CreateSessionFromLog(ctx, deviceLog)
+		session, err := deps.AnalysisQueueHandler.CreateSessionFromLog(ctx, deviceLog)
 		require.NoError(t, err)
 		assert.NotNil(t, session)
 		assert.Equal(t, device.ID, session.DeviceID)
@@ -239,21 +148,8 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateSessionFromLog
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateDeviceFromSess() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-
-		// Create repositories
-		deviceRepo := repository.NewDeviceRepository(svc)
-		sessionRepo := repository.NewDeviceSessionRepository(svc)
-		logRepo := repository.NewDeviceLogRepository(svc)
-
-		// Create handler
-		handler := queue.DeviceAnalysisQueueHandler{
-			DeviceRepository:    deviceRepo,
-			DeviceLogRepository: logRepo,
-			SessionRepository:   sessionRepo,
-			Service:             svc,
-		}
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		// Create a session
 		session := &models.DeviceSession{
@@ -264,7 +160,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateDeviceFromSess
 		session.GenID(ctx)
 
 		// Test CreateDeviceFromSess
-		device, err := handler.CreateDeviceFromSess(ctx, session)
+		device, err := deps.AnalysisQueueHandler.CreateDeviceFromSess(ctx, session)
 		require.NoError(t, err)
 		assert.NotNil(t, device)
 		assert.NotEmpty(t, device.ID)
@@ -274,13 +170,8 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_CreateDeviceFromSess
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-
-		// Create handler
-		handler := queue.DeviceAnalysisQueueHandler{
-			Service: svc,
-		}
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		testCases := []struct {
 			name    string
@@ -332,7 +223,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				locale, err := handler.ExtractLocaleData(ctx, tc.data, tc.geoIP)
+				locale, err := deps.AnalysisQueueHandler.ExtractLocaleData(ctx, tc.data, tc.geoIP)
 				require.NoError(t, err)
 				assert.NotNil(t, locale)
 				assert.Equal(t, tc.wantTz, locale.GetTimezone())
@@ -343,13 +234,8 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocaleData() 
 }
 
 func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
-
-		// Create handler
-		handler := queue.DeviceAnalysisQueueHandler{
-			Service: svc,
-		}
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, _, deps := suite.CreateService(t, dep)
 
 		testCases := []struct {
 			name     string
@@ -398,7 +284,7 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				locationData := handler.ExtractLocationData(ctx, tc.data, tc.geoIP)
+				locationData := deps.AnalysisQueueHandler.ExtractLocationData(ctx, tc.data, tc.geoIP)
 				assert.NotNil(t, locationData)
 
 				assert.InDelta(t, tc.wantLat, locationData["latitude"], 0.0001)
@@ -409,11 +295,11 @@ func (suite *QueueTestSuite) TestDeviceAnalysisQueueHandler_ExtractLocationData(
 }
 
 func (suite *QueueTestSuite) TestQueryIPGeo() {
-	suite.WithTestDependancies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := suite.CreateService(t, dep)
+	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc, _ := suite.CreateService(t, dep)
 
 		// Test QueryIPGeo function
-		geoIP, err := queue.QueryIPGeo(ctx, svc, "8.8.8.8")
+		geoIP, err := queue.QueryIPGeo(ctx, svc.HTTPClientManager(), "8.8.8.8")
 
 		// Note: This test may fail due to external API rate limiting
 		// The important thing is that the function executes without panic

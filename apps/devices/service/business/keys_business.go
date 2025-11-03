@@ -2,14 +2,16 @@ package business
 
 import (
 	"context"
+	"slices"
 
 	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/models"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/queue"
 	"github.com/pitabwire/frame/workerpool"
+
+	"github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
 type KeysBusiness interface {
@@ -23,7 +25,7 @@ type KeysBusiness interface {
 	GetKeys(
 		ctx context.Context,
 		deviceID string,
-		_ []devicev1.KeyType,
+		keys ...devicev1.KeyType,
 	) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error)
 	RemoveKeys(ctx context.Context, id ...string) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error)
 }
@@ -54,7 +56,7 @@ func NewKeysBusiness(_ context.Context, cfg *config.DevicesConfig,
 func (b *keysBusiness) AddKey(
 	ctx context.Context,
 	deviceID string,
-	_ devicev1.KeyType,
+	keyType devicev1.KeyType,
 	key []byte,
 	extra data.JSONMap,
 ) (*devicev1.KeyObject, error) {
@@ -66,6 +68,7 @@ func (b *keysBusiness) AddKey(
 
 	deviceKey := &models.DeviceKey{
 		DeviceID: deviceID,
+		KeyType:  keyType,
 		Key:      key,
 		Extra:    extra,
 	}
@@ -81,7 +84,7 @@ func (b *keysBusiness) AddKey(
 func (b *keysBusiness) GetKeys(
 	ctx context.Context,
 	deviceID string,
-	_ []devicev1.KeyType,
+	keyType ...devicev1.KeyType,
 ) (<-chan workerpool.JobResult[[]*devicev1.KeyObject], error) {
 	out := make(chan workerpool.JobResult[[]*devicev1.KeyObject])
 
@@ -96,7 +99,9 @@ func (b *keysBusiness) GetKeys(
 
 		apiKeys := make([]*devicev1.KeyObject, len(keys))
 		for i, key := range keys {
-			apiKeys[i] = key.ToAPI()
+			if len(keyType) == 0 || slices.Contains(keyType, key.KeyType) {
+				apiKeys[i] = key.ToAPI()
+			}
 		}
 
 		out <- workerpool.Result[[]*devicev1.KeyObject](apiKeys)

@@ -4,34 +4,37 @@ import (
 	"context"
 	"errors"
 
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame/data"
 	frevents "github.com/pitabwire/frame/events"
 	"github.com/pitabwire/frame/queue"
 	"github.com/pitabwire/util"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 const ClientConnectedSetupQueueName = "client.connected.setup.queue"
 
 type ClientConnectedSetupQueue struct {
 	eventsMan        frevents.Manager
+	queueMan         queue.Manager
 	relationshipRepo repository.RelationshipRepository
 
-	relationshipTopic queue.Publisher
+	relationshipTopicName string
 }
 
-func NewClientConnectedSetupQueue(ctx context.Context, cfg *config.ProfileConfig,
-	qMan queue.Manager, eventsMan frevents.Manager, relationshipRepo repository.RelationshipRepository) *ClientConnectedSetupQueue {
-
-	relationshipTopic, err := qMan.GetPublisher(cfg.QueueRelationshipConnectName)
-	if err != nil {
-		util.Log(ctx).WithError(err).Fatal("could not get  publisher")
-	}
+func NewClientConnectedSetupQueue(
+	_ context.Context,
+	cfg *config.ProfileConfig,
+	queueMan queue.Manager,
+	eventsMan frevents.Manager,
+	relationshipRepo repository.RelationshipRepository,
+) *ClientConnectedSetupQueue {
 	return &ClientConnectedSetupQueue{
-		eventsMan:         eventsMan,
-		relationshipRepo:  relationshipRepo,
-		relationshipTopic: relationshipTopic,
+		eventsMan:             eventsMan,
+		queueMan:              queueMan,
+		relationshipRepo:      relationshipRepo,
+		relationshipTopicName: cfg.QueueRelationshipConnectName,
 	}
 }
 
@@ -73,8 +76,13 @@ func (csq *ClientConnectedSetupQueue) Execute(ctx context.Context, payload any) 
 		return err
 	}
 
+	relationshipTopic, err := csq.queueMan.GetPublisher(csq.relationshipTopicName)
+	if err != nil {
+		util.Log(ctx).WithError(err).Fatal("could not get  publisher")
+	}
+
 	// Queue relationship for further processing by peripheral services
-	err = csq.relationshipTopic.Publish(ctx, relationship.ToAPI())
+	err = relationshipTopic.Publish(ctx, relationship.ToAPI())
 	if err != nil {
 		logger.WithError(err).Error("could not publish relationship")
 		return err
