@@ -3,7 +3,7 @@ package notifier
 import (
 	"context"
 
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 )
 
 type Notifier interface {

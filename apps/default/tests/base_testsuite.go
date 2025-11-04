@@ -4,12 +4,10 @@ import (
 	"context"
 	"testing"
 
-	"github.com/antinvestor/apis/go/common/mocks"
-	commonv1 "github.com/antinvestor/apis/go/common/v1"
-	notificationv1 "github.com/antinvestor/apis/go/notification/v1"
-	"github.com/antinvestor/apis/go/notification/v1/notificationv1connect"
-	notificationv1_mocks "github.com/antinvestor/apis/go/notification/v1_mocks"
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
+	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
+	notificationv1mocks "github.com/antinvestor/apis/go/notification/mocks"
+	"github.com/gojuno/minimock/v3"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -18,8 +16,6 @@ import (
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/mock/gomock"
-	"google.golang.org/grpc"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
@@ -68,6 +64,7 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	cfg.LogLevel = "debug"
 	cfg.RunServiceSecurely = false
 	cfg.ServerPort = ""
+	cfg.DatabaseMigrate = true
 
 	res := depOpts.ByIsDatabase(ctx)
 	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
@@ -94,8 +91,8 @@ func (bs *ProfileBaseTestSuite) CreateService(
 		cfg.QueueRelationshipDisConnectURI,
 	)
 
-	evtsMan := svc.EventsManager(ctx)
-	qMan := svc.QueueManager(ctx)
+	evtsMan := svc.EventsManager()
+	qMan := svc.QueueManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
@@ -107,12 +104,12 @@ func (bs *ProfileBaseTestSuite) CreateService(
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.WithRegisterEvents(
 			events.NewClientConnectedSetupQueue(ctx, &cfg, qMan, evtsMan, relationshipRepo),
-			events.NewContactVerificationQueue(&cfg, contactRepo, verificationRepo, bs.GetNotificationCli(ctx)),
+			events.NewContactVerificationQueue(&cfg, contactRepo, verificationRepo, bs.GetNotificationCli(t)),
 			events.NewContactVerificationAttemptedQueue(contactRepo, verificationRepo),
 		),
 	)
 
-	err = repository.Migrate(ctx, svc.DatastoreManager(), dbPool, "../../migrations/0001")
+	err = repository.Migrate(ctx, svc.DatastoreManager(), "../../migrations/0001")
 	require.NoError(t, err)
 
 	err = svc.Run(ctx, "")
@@ -121,33 +118,12 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	return svc, ctx
 }
 
-func (bs *ProfileBaseTestSuite) GetNotificationCli(_ context.Context) notificationv1connect.NotificationServiceClient {
-	notificationCli := notificationv1_mocks.NewMockNotificationServiceClient(bs.Ctrl)
-	notificationCli.EXPECT().Send(gomock.Any(), gomock.Any()).DoAndReturn(
-		func(ctx context.Context, _ *notificationv1.SendRequest, _ ...grpc.CallOption) (grpc.ServerStreamingClient[notificationv1.SendResponse], error) {
-			// Return a successful response with a generated message ID
-			const randomIDLength = 6
-			resp := &notificationv1.SendResponse{
-				Data: []*commonv1.StatusResponse{
-					{
-						Id:         util.IDString(),
-						State:      commonv1.STATE_ACTIVE,
-						Status:     commonv1.STATUS_SUCCESSFUL,
-						ExternalId: util.RandomString(randomIDLength),
-					},
-				},
-			}
+func (bs *ProfileBaseTestSuite) GetNotificationCli(t *testing.T) notificationv1connect.NotificationServiceClient {
+	mc := minimock.NewController(t)
 
-			// Create a custom mock implementation
-			mockStream := mocks.NewMockServerStreamingClient[notificationv1.SendResponse](ctx)
-			err := mockStream.SendMsg(resp)
-			if err != nil {
-				return nil, err
-			}
+	notificationCli := notificationv1mocks.NewNotificationServiceClientMock(mc)
 
-			return mockStream, nil
-		}).
-		AnyTimes()
+	notificationCli.SendMock.Optional().Return(nil, nil)
 
 	return notificationCli
 }

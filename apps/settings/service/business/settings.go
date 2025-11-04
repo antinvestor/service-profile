@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	commonv1 "github.com/antinvestor/apis/go/common/v1"
-	settingsv1 "github.com/antinvestor/apis/go/settings/v1"
+	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
+	settingsv1 "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/workerpool"
 	"github.com/pitabwire/util"

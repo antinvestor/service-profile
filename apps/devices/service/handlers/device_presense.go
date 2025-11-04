@@ -3,8 +3,8 @@ package handlers
 import (
 	"context"
 
+	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
 )
 
 func (ds *DevicesServer) UpdatePresence(

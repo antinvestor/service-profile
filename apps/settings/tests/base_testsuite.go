@@ -19,8 +19,6 @@ import (
 )
 
 const (
-	PostgresqlDBImage = "postgres:latest"
-
 	DefaultRandomStringLength = 8
 )
 
@@ -50,6 +48,7 @@ func (bs *SettingsBaseTestSuite) CreateService(
 
 	cfg.LogLevel = "debug"
 	cfg.RunServiceSecurely = false
+	cfg.DatabaseMigrate = true
 	cfg.ServerPort = ""
 
 	res := depOpts.ByIsDatabase(ctx)
@@ -76,7 +75,7 @@ func (bs *SettingsBaseTestSuite) CreateService(
 
 	svc.Init(ctx, eventList)
 
-	err = repository.Migrate(ctx, svc.DatastoreManager(), dbPool, "../../migrations/0001")
+	err = repository.Migrate(ctx, svc.DatastoreManager(), "../../migrations/0001")
 	require.NoError(t, err)
 
 	err = svc.Run(ctx, "")

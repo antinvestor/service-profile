@@ -4,12 +4,12 @@ import (
 	"context"
 	"net/http"
 
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
+	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
 	apis "github.com/antinvestor/apis/go/common"
 	"github.com/antinvestor/apis/go/notification"
-	"github.com/antinvestor/apis/go/notification/v1/notificationv1connect"
-	"github.com/antinvestor/apis/go/profile/v1/profilev1connect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -78,8 +78,8 @@ func main() {
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
-	evtsMan := svc.EventsManager(ctx)
-	qMan := svc.QueueManager(ctx)
+	evtsMan := svc.EventsManager()
+	qMan := svc.QueueManager()
 
 	// Register queue handlers
 	serviceOptions = append(serviceOptions,
@@ -130,9 +130,7 @@ func handleDatabaseMigration(
 	if cfg.DoDatabaseMigrate() {
 		svc.Init(ctx, serviceOptions...)
 
-		dbMan := svc.DatastoreManager()
-		dbPool := dbMan.GetPool(ctx, datastore.DefaultPoolName)
-		err := repository.Migrate(ctx, dbMan, dbPool, cfg.GetDatabaseMigrationPath())
+		err := repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
 		if err != nil {
 			log.WithError(err).Fatal("main -- Could not migrate successfully")
 		}

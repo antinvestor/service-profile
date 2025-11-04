@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
+	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
+	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
-	"github.com/antinvestor/apis/go/notification/v1/notificationv1connect"
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
-	"github.com/antinvestor/apis/go/profile/v1/profilev1connect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"google.golang.org/grpc/metadata"
@@ -44,7 +44,7 @@ func NewProfileServer(
 	svc *frame.Service,
 	notificationCli notificationv1connect.NotificationServiceClient,
 ) *ProfileServer {
-	evtsMan := svc.EventsManager(ctx)
+	evtsMan := svc.EventsManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
@@ -286,7 +286,7 @@ func (ps *ProfileServer) CheckVerification(
 			Id: request.Msg.GetId(),
 			CheckAttempts: int32(
 				verificationAttempts,
-			), //nolint:gosec G115 - verificationAttempts is bounded by business logic
+			), //nolint:gosec //G115 - verificationAttempts is bounded by business logic
 			Success: verified,
 		}), nil
 }

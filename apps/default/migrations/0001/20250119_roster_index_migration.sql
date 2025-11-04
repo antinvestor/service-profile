@@ -2,8 +2,7 @@
 -- Recreate with 'simple' configuration and handle empty jsonb_to_tsv properly
 ALTER TABLE rosters
     ADD COLUMN searchable tsvector GENERATED ALWAYS AS (
-        jsonb_to_tsv(COALESCE(properties, '{}'::jsonb)) || ' ' ||
-        to_tsvector('english', COALESCE(description, ''))
+        jsonb_to_tsv(COALESCE(properties, '{}'::jsonb))
         ) STORED;
 
 -- Recreate the GIN index

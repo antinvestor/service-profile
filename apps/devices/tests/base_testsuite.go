@@ -43,7 +43,7 @@ type DepsBuilder struct {
 func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 	workMan := svc.WorkManager()
-	qMan := svc.QueueManager(ctx)
+	qMan := svc.QueueManager()
 
 	cfg, _ := svc.Config().(*aconfig.DevicesConfig)
 
@@ -92,12 +92,13 @@ func (bs *DeviceBaseTestSuite) CreateService(
 ) (context.Context, *frame.Service, *DepsBuilder) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
-	deviceConfig, err := config.FromEnv[aconfig.DevicesConfig]()
+	cfg, err := config.FromEnv[aconfig.DevicesConfig]()
 	require.NoError(t, err)
 
-	deviceConfig.LogLevel = "debug"
-	deviceConfig.RunServiceSecurely = false
-	deviceConfig.ServerPort = ""
+	cfg.LogLevel = "debug"
+	cfg.RunServiceSecurely = false
+	cfg.DatabaseMigrate = true
+	cfg.ServerPort = ""
 
 	res := depOpts.ByIsDatabase(ctx)
 	testDS, cleanup, err0 := res.GetRandomisedDS(ctx, depOpts.Prefix())
@@ -107,30 +108,30 @@ func (bs *DeviceBaseTestSuite) CreateService(
 		cleanup(ctx)
 	})
 
-	deviceConfig.DatabasePrimaryURL = []string{testDS.String()}
-	deviceConfig.DatabaseReplicaURL = []string{testDS.String()}
+	cfg.DatabasePrimaryURL = []string{testDS.String()}
+	cfg.DatabaseReplicaURL = []string{testDS.String()}
 
 	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
-		frame.WithConfig(&deviceConfig),
+		frame.WithConfig(&cfg),
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())
 
 	depsBuilder := BuildRepos(ctx, svc)
 
 	analysisQueueTopic := frame.WithRegisterPublisher(
-		deviceConfig.QueueDeviceAnalysisName,
-		deviceConfig.QueueDeviceAnalysis,
+		cfg.QueueDeviceAnalysisName,
+		cfg.QueueDeviceAnalysis,
 	)
 
 	analysisQueue := frame.WithRegisterSubscriber(
-		deviceConfig.QueueDeviceAnalysisName,
-		deviceConfig.QueueDeviceAnalysis,
+		cfg.QueueDeviceAnalysisName,
+		cfg.QueueDeviceAnalysis,
 		&depsBuilder.AnalysisQueueHandler,
 	)
 
 	svc.Init(ctx, analysisQueueTopic, analysisQueue)
 
-	err = repository.Migrate(ctx, svc, "../../migrations/0001")
+	err = repository.Migrate(ctx, svc.DatastoreManager(), "../../migrations/0001")
 	require.NoError(t, err)
 
 	err = svc.Run(ctx, "")

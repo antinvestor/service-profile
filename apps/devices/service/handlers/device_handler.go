@@ -3,9 +3,9 @@ package handlers
 import (
 	"context"
 
+	"buf.build/gen/go/antinvestor/device/connectrpc/go/device/v1/devicev1connect"
+	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
-	"github.com/antinvestor/apis/go/device/v1/devicev1connect"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
 	"google.golang.org/grpc/codes"

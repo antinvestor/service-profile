@@ -5,9 +5,9 @@ import (
 	"errors"
 	"strings"
 
+	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	firebase "firebase.google.com/go/v4"
 	"firebase.google.com/go/v4/messaging"
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"

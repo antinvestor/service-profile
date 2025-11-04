@@ -3,9 +3,9 @@ package main
 import (
 	"net/http"
 
+	"buf.build/gen/go/antinvestor/device/connectrpc/go/device/v1/devicev1connect"
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
-	"github.com/antinvestor/apis/go/device/v1/devicev1connect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -45,7 +45,7 @@ func main() {
 	if cfg.DoDatabaseMigrate() {
 		svc.Init(ctx, serviceOptions...)
 
-		err = repository.Migrate(ctx, svc, cfg.GetDatabaseMigrationPath())
+		err = repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
 		if err != nil {
 			log.WithError(err).Fatal("main -- Could not migrate successfully because : %+v", err)
 		}
@@ -54,7 +54,7 @@ func main() {
 	}
 
 	securityMan := svc.SecurityManager()
-	queueMan := svc.QueueManager(ctx)
+	queueMan := svc.QueueManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 

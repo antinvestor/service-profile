@@ -3,10 +3,10 @@ package handlers
 import (
 	"context"
 
+	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
+	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/settings/v1/settingsv1connect"
+	settingsv1 "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
 	"connectrpc.com/connect"
-	commonv1 "github.com/antinvestor/apis/go/common/v1"
-	settingsv1 "github.com/antinvestor/apis/go/settings/v1"
-	"github.com/antinvestor/apis/go/settings/v1/settingsv1connect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 

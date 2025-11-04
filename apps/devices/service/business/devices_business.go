@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/queue"
 	"github.com/pitabwire/frame/security"

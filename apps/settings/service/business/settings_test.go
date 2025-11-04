@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	settingsv1 "github.com/antinvestor/apis/go/settings/v1"
+	settingsv1 "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"

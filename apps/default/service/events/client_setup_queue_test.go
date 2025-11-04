@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
@@ -32,7 +32,7 @@ func (csqts *ClientSetupQueueTestSuite) getConnectedSetupEvtQ(
 	ctx context.Context,
 	svc *frame.Service,
 ) (*events.ClientConnectedSetupQueue, business.ProfileBusiness, repository.RelationshipRepository) {
-	evtsMan := svc.EventsManager(ctx)
+	evtsMan := svc.EventsManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
@@ -54,7 +54,7 @@ func (csqts *ClientSetupQueueTestSuite) getConnectedSetupEvtQ(
 	return events.NewClientConnectedSetupQueue(
 		ctx,
 		cfg,
-		svc.QueueManager(ctx),
+		svc.QueueManager(),
 		evtsMan,
 		relationshipRepo,
 	), profileBusiness, relationshipRepo

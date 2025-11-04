@@ -6,7 +6,7 @@ import (
 	"errors"
 	"strings"
 
-	devicev1 "github.com/antinvestor/apis/go/device/v1"
+	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"github.com/mssola/user_agent"
 	"github.com/pitabwire/frame/client"
 	"github.com/pitabwire/frame/data"

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
@@ -34,7 +34,7 @@ func (cts *ContactTestSuite) getContactBusiness(
 	ctx context.Context,
 	svc *frame.Service,
 ) (business.ContactBusiness, repository.VerificationRepository) {
-	evtsMan := svc.EventsManager(ctx)
+	evtsMan := svc.EventsManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 

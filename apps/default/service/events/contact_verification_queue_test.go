@@ -29,6 +29,7 @@ func TestContactVerificationQueueSuite(t *testing.T) {
 
 func (cvqts *ContactVerificationQueueTestSuite) getVerificationEvtQ(
 	ctx context.Context,
+	t *testing.T,
 	svc *frame.Service,
 ) (*events.ContactVerificationQueue, repository.ContactRepository) {
 	workMan := svc.WorkManager()
@@ -43,7 +44,7 @@ func (cvqts *ContactVerificationQueueTestSuite) getVerificationEvtQ(
 		cfg,
 		contactRepo,
 		verificationRepo,
-		cvqts.GetNotificationCli(ctx),
+		cvqts.GetNotificationCli(t),
 	), contactRepo
 }
 
@@ -53,7 +54,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Nam
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 
-		queue, _ := cvqts.getVerificationEvtQ(ctx, svc)
+		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 		require.Equal(t, events.VerificationEventHandlerName, queue.Name())
 	})
 }
@@ -64,7 +65,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Pay
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 
-		queue, _ := cvqts.getVerificationEvtQ(ctx, svc)
+		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 		payloadType := queue.PayloadType()
 
 		// Should return a pointer to models.Verification
@@ -79,7 +80,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Val
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 
-		queue, _ := cvqts.getVerificationEvtQ(ctx, svc)
+		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 
 		// Test valid payload
 		validPayload := &models.Verification{
@@ -106,7 +107,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
-		queue, contactRepo := cvqts.getVerificationEvtQ(ctx, svc)
+		queue, contactRepo := cvqts.getVerificationEvtQ(ctx, t, svc)
 
 		// Create test contact first
 		contact := &models.Contact{
@@ -138,7 +139,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := cvqts.CreateService(t, dep)
 
-		queue, _ := cvqts.getVerificationEvtQ(ctx, svc)
+		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 
 		// Test with invalid payload type
 		invalidPayload := "invalid"
@@ -163,7 +164,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 		}
 		verification.GenID(ctx)
 
-		queue, _ := cvqts.getVerificationEvtQ(ctx, svc)
+		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 
 		// Execute should handle non-existent contact gracefully
 		err := queue.Execute(ctx, verification)
