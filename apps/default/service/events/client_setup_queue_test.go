@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -31,23 +30,12 @@ func TestClientSetupQueueSuite(t *testing.T) {
 func (csqts *ClientSetupQueueTestSuite) getConnectedSetupEvtQ(
 	ctx context.Context,
 	svc *frame.Service,
-) (*events.ClientConnectedSetupQueue, business.ProfileBusiness, repository.RelationshipRepository) {
+) (*events.ClientConnectedSetupQueue, repository.RelationshipRepository) {
 	evtsMan := svc.EventsManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
 	cfg := svc.Config().(*config.ProfileConfig)
-
-	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
-	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
-
-	contactBusiness := business.NewContactBusiness(ctx, cfg, evtsMan, contactRepo, verificationRepo)
-
-	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
-	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
-
-	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
-	profileBusiness := business.NewProfileBusiness(ctx, evtsMan, contactBusiness, addressBusiness, profileRepo)
 
 	relationshipRepo := repository.NewRelationshipRepository(ctx, dbPool, workMan)
 
@@ -57,7 +45,7 @@ func (csqts *ClientSetupQueueTestSuite) getConnectedSetupEvtQ(
 		svc.QueueManager(),
 		evtsMan,
 		relationshipRepo,
-	), profileBusiness, relationshipRepo
+	), relationshipRepo
 }
 
 func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Name() {
@@ -66,7 +54,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Name() {
 	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
-		queue, _, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
+		queue, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
 		require.Equal(t, events.ClientConnectedSetupQueueName, queue.Name())
 	})
 }
@@ -77,7 +65,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_PayloadTyp
 	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
-		queue, _, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
+		queue, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
 		payloadType := queue.PayloadType()
 
 		// Should return a pointer to string
@@ -92,7 +80,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Validate()
 	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
-		queue, _, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
+		queue, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
 
 		// Test valid payload
 		validPayload := "test-relationship-id"
@@ -113,7 +101,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_Su
 	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
-		queue, profileBusiness, relationshipRepo := csqts.getConnectedSetupEvtQ(ctx, svc)
+		queue, relationshipRepo := csqts.getConnectedSetupEvtQ(ctx, svc)
 
 		// Create a test relationship
 		relationship := &models.Relationship{
@@ -137,8 +125,6 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_Su
 		// Execute the queue handler
 		err = queue.Execute(ctx, &relationshipID)
 		require.NoError(t, err)
-
-		_ = profileBusiness
 	})
 }
 
@@ -148,7 +134,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_In
 	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
-		queue, _, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
+		queue, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
 
 		// Test with invalid payload type
 		invalidPayload := 123
@@ -164,7 +150,7 @@ func (csqts *ClientSetupQueueTestSuite) TestClientConnectedSetupQueue_Execute_No
 	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
-		queue, _, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
+		queue, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
 		nonExistentID := util.IDString()
 
 		// Execute with non-existent relationship ID - should not return error (logs and continues)
@@ -179,7 +165,7 @@ func (csqts *ClientSetupQueueTestSuite) TestNewClientConnectedSetupQueue() {
 	csqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		svc, ctx := csqts.CreateService(t, dep)
 
-		queue, _, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
+		queue, _ := csqts.getConnectedSetupEvtQ(ctx, svc)
 		require.NotNil(t, queue)
 	})
 }

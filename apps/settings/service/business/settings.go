@@ -172,8 +172,8 @@ func (nb *settingsBusiness) List(
 }
 
 func (nb *settingsBusiness) Search(
-	ctx context.Context,
-	msg *commonv1.SearchRequest,
+	_ context.Context,
+	_ *commonv1.SearchRequest,
 ) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error) {
 	return nil, errors.New("not implemented")
 }

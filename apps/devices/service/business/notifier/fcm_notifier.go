@@ -40,12 +40,17 @@ func NewFCMNotifier(ctx context.Context, cfg *config.DevicesConfig) (Notifier, e
 	}, nil
 }
 
-func (f *fcmNotifier) Register(ctx context.Context, req *devicev1.RegisterKeyRequest) (*devicev1.KeyObject, error) {
+func (f *fcmNotifier) Register(_ context.Context, req *devicev1.RegisterKeyRequest) (*devicev1.KeyObject, error) {
 	if req == nil {
 		return nil, errors.New("request cannot be nil")
 	}
 
-	return nil, nil
+	// FCM tokens are registered directly by the client and validated on notify.
+	// The actual token storage is handled by the keys business layer.
+	// This method simply validates the request and returns a KeyObject.
+	return &devicev1.KeyObject{
+		KeyType: devicev1.KeyType_FCM_TOKEN,
+	}, nil
 }
 
 func (f *fcmNotifier) DeRegister(_ context.Context, _ *devicev1.KeyObject) error {
@@ -61,44 +66,69 @@ func (f *fcmNotifier) Notify(
 		return nil, errors.New("request cannot be nil")
 	}
 
-	var responses []*devicev1.NotifyResult
+	if len(keys) == 0 {
+		return []*devicev1.NotifyResult{}, nil
+	}
+
+	// Pre-allocate responses slice with estimated capacity for better performance
+	responses := make([]*devicev1.NotifyResult, 0, len(keys)*len(req.GetNotifications()))
+	notifications := req.GetNotifications()
+	batchSize := f.batchMaxSize()
 
 	for _, key := range keys {
 		if key == nil || key.GetKeyType() != devicev1.KeyType_FCM_TOKEN {
 			continue
 		}
 
-		// Create a list containing up to 500 messages.
-		var messages []*messaging.Message
+		// Process notifications in batches
+		messages := make([]*messaging.Message, 0, batchSize)
 
-		for _, message := range req.GetNotifications() {
+		for _, message := range notifications {
 			messages = append(messages, f.toFCMMessage(ctx, key, message))
 
-			if len(messages) >= f.batchMaxSize() {
-				br, err := f.client.SendEach(ctx, messages)
+			// Send batch when it reaches max size
+			if len(messages) >= batchSize {
+				batchResponses, err := f.sendBatch(ctx, messages)
 				if err != nil {
+					util.Log(ctx).WithError(err).Error("failed to send FCM batch")
 					return nil, err
 				}
-				util.Log(ctx).
-					WithField("response", br).
-					Debug("notification batch sent via FCM")
-				messages = []*messaging.Message{}
-
-				responses = append(responses, f.toNotifyResult(br)...)
+				responses = append(responses, batchResponses...)
+				messages = make([]*messaging.Message, 0, batchSize)
 			}
 		}
 
-		br, err := f.client.SendEach(ctx, messages)
-		if err != nil {
-			return nil, err
+		// Send remaining messages
+		if len(messages) > 0 {
+			batchResponses, err := f.sendBatch(ctx, messages)
+			if err != nil {
+				util.Log(ctx).WithError(err).Error("failed to send FCM batch")
+				return nil, err
+			}
+			responses = append(responses, batchResponses...)
 		}
-		responses = append(responses, f.toNotifyResult(br)...)
-		util.Log(ctx).
-			WithField("response", br).
-			Debug("notification batch sent via FCM")
 	}
 
 	return responses, nil
+}
+
+func (f *fcmNotifier) sendBatch(ctx context.Context, messages []*messaging.Message) ([]*devicev1.NotifyResult, error) {
+	if len(messages) == 0 {
+		return []*devicev1.NotifyResult{}, nil
+	}
+
+	br, err := f.client.SendEach(ctx, messages)
+	if err != nil {
+		return nil, err
+	}
+
+	util.Log(ctx).
+		WithField("batch_size", len(messages)).
+		WithField("success_count", br.SuccessCount).
+		WithField("failure_count", br.FailureCount).
+		Debug("FCM notification batch sent")
+
+	return f.toNotifyResult(br), nil
 }
 
 func (f *fcmNotifier) batchMaxSize() int {
@@ -134,7 +164,8 @@ func (f *fcmNotifier) toFCMMessage(
 }
 
 func (f *fcmNotifier) toNotifyResult(br *messaging.BatchResponse) []*devicev1.NotifyResult {
-	var response []*devicev1.NotifyResult
+	// Pre-allocate with exact capacity for better performance
+	response := make([]*devicev1.NotifyResult, 0, len(br.Responses))
 
 	for _, resp := range br.Responses {
 		message := "ok"

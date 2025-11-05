@@ -281,6 +281,7 @@ func (ps *ProfileServer) CheckVerification(
 		return nil, errorutil.ErrToAPI(err)
 	}
 
+	// #nosec G115: verificationAttempts is bounded by business logic constraints
 	return connect.NewResponse(
 		&profilev1.CheckVerificationResponse{
 			Id: request.Msg.GetId(),

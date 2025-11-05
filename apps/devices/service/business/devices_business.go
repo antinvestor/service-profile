@@ -17,6 +17,13 @@ import (
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
+const (
+	// deviceLogRetentionDays defines the default retention period for device logs.
+	deviceLogRetentionDays = 30
+	// deviceLogFutureClockSkewDays accounts for clock skew in device timestamps.
+	deviceLogFutureClockSkewDays = 1
+)
+
 // DeviceBusiness defines the interface for device-related business logic.
 // It abstracts the underlying data storage and provides methods for interacting
 // with device data in a consistent and transactional manner.
@@ -224,11 +231,11 @@ func (b *deviceBusiness) buildSearchQuery(ctx context.Context, query *devicev1.S
 
 	startDate, err := time.Parse(time.RFC3339, query.GetStartDate())
 	if err != nil {
-		startDate = time.Now().Add(-30 * 24 * time.Hour) // 30 days ago
+		startDate = time.Now().Add(-time.Duration(deviceLogRetentionDays) * 24 * time.Hour)
 	}
 	endDate, err := time.Parse(time.RFC3339, query.GetEndDate())
 	if err != nil {
-		endDate = time.Now().Add(24 * time.Hour) // 1 day in the future to account for clock skew
+		endDate = time.Now().Add(time.Duration(deviceLogFutureClockSkewDays) * 24 * time.Hour)
 	}
 
 	searchProperties := map[string]any{}

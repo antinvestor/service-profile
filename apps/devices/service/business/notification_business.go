@@ -56,7 +56,12 @@ func NewNotifyBusiness(
 	}
 
 	n.notifiers = map[devicev1.KeyType]notifier.Notifier{
-		devicev1.KeyType_FCM_TOKEN: fcmNotifier,
+		devicev1.KeyType_FCM_TOKEN:        fcmNotifier,
+		devicev1.KeyType_MATRIX_KEY:       nil,
+		devicev1.KeyType_NOTIFICATION_KEY: nil,
+		devicev1.KeyType_CURVE25519_KEY:   nil,
+		devicev1.KeyType_ED25519_KEY:      nil,
+		devicev1.KeyType_PICKLE_KEY:       nil,
 	}
 
 	return n, nil
