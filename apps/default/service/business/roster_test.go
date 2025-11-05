@@ -200,18 +200,16 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			{
 				name: "Valid search request with matching data",
 				request: &profilev1.SearchRosterRequest{
-					Query:      "searchrostercontact@test.com",
-					Properties: []string{"name", "age"},
+					Query: "searchrostercontact@test.com",
 				},
 				profileID:   profileID,
 				wantError:   require.NoError,
-				resultCount: 1,
+				resultCount: 2,
 			},
 			{
 				name: "Valid search request partial contact match",
 				request: &profilev1.SearchRosterRequest{
-					Query:      "+25675571829",
-					Properties: []string{"name", "age"},
+					Query: "+25675571829",
 				},
 				profileID:   profileID,
 				wantError:   require.NoError,
@@ -220,8 +218,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			{
 				name: "Valid search request partial properties match",
 				request: &profilev1.SearchRosterRequest{
-					Query:      "Osogo",
-					Properties: []string{"name", "age"},
+					Query: "Osogo",
 				},
 				profileID:   profileID,
 				wantError:   require.NoError,
@@ -230,8 +227,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			{
 				name: "Valid cross field partial match",
 				request: &profilev1.SearchRosterRequest{
-					Query:      "search",
-					Properties: []string{"name", "age"},
+					Query: "search",
+					// Properties: []string{"name", "age"},
 				},
 				profileID:   profileID,
 				wantError:   require.NoError,
@@ -240,8 +237,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			{
 				name: "Request with non-existent profile ID",
 				request: &profilev1.SearchRosterRequest{
-					Query:      "non existent profile",
-					Properties: []string{"name", "age"},
+					Query: "non existent profile",
+					// Properties: []string{"name", "age"},
 				},
 				profileID:   "nonExistentProfileId",
 				wantError:   require.NoError,
@@ -250,8 +247,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			{
 				name: "Empty search request",
 				request: &profilev1.SearchRosterRequest{
-					Query:      "",
-					Properties: []string{"name", "age"},
+					Query: "",
+					// Properties: []string{"name", "age"},
 				},
 				profileID:   profileID,
 				wantError:   require.NoError,
@@ -260,8 +257,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 			{
 				name: "Empty search request with wrong profile",
 				request: &profilev1.SearchRosterRequest{
-					Query:      "",
-					Properties: []string{"name", "age"},
+					Query: "",
+					// Properties: []string{"name", "age"},
 				},
 				profileID:   "funnyProfileId",
 				wantError:   require.NoError,
@@ -283,9 +280,8 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				require.NoError(t, err0)
 
 				var rosterList []*models.Roster
-				for {
-					result, ok := jobResult.ReadResult(ctx)
-					if result == nil || result.IsError() || !ok {
+				for result := range jobResult.ResultChan() {
+					if result == nil || result.IsError() {
 						break
 					}
 					rosterList = append(rosterList, result.Item()...)

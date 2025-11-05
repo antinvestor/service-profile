@@ -89,7 +89,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 				searchProperties := data.JSONMap{
 					"profile_id": tc.profileID,
 				}
-				q := data.NewSearchQuery("", data.WithSearchFiltersAndByValue(searchProperties),
+				q := data.NewSearchQuery(data.WithSearchFiltersAndByValue(searchProperties),
 					data.WithSearchOffset(0), data.WithSearchLimit(50))
 				devicesResult, err := deps.DeviceRepo.Search(ctx, q)
 				require.NoError(t, err)

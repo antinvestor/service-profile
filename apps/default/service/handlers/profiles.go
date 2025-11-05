@@ -286,7 +286,7 @@ func (ps *ProfileServer) CheckVerification(
 			Id: request.Msg.GetId(),
 			CheckAttempts: int32(
 				verificationAttempts,
-			), //nolint:gosec //G115 - verificationAttempts is bounded by business logic
+			),
 			Success: verified,
 		}), nil
 }

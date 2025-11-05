@@ -3,23 +3,23 @@ module github.com/antinvestor/service-profile
 go 1.25.2
 
 require (
-	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.10-20251104143109-494ff901da1f.1
-	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20251104143135-99ffe7bf824a.2
-	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.10-20251104143135-99ffe7bf824a.1
-	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20251104143223-3e8a06bb88d4.2
-	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.10-20251104143223-3e8a06bb88d4.1
-	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20251104143318-f93e48f1ccbb.2
-	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.10-20251104143318-f93e48f1ccbb.1
-	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20251104143340-8b70e86f9da1.2
-	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.10-20251104143340-8b70e86f9da1.1
+	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.10-20251104183629-02dfa9355307.1
+	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20251104183704-bebecd3f55c5.2
+	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.10-20251104183704-bebecd3f55c5.1
+	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20251104183814-0a16cadd9e5d.2
+	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.10-20251104183814-0a16cadd9e5d.1
+	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20251104183907-bd2327635adb.2
+	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.10-20251104183907-bd2327635adb.1
+	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20251104183931-1e21a92668e6.2
+	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.10-20251104183931-1e21a92668e6.1
 	connectrpc.com/connect v1.19.1
 	connectrpc.com/otelconnect v0.8.0
 	firebase.google.com/go/v4 v4.18.0
-	github.com/antinvestor/apis/go/common v1.47.9
+	github.com/antinvestor/apis/go/common v1.47.12
 	github.com/antinvestor/apis/go/notification v1.47.13
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.64.10
+	github.com/pitabwire/frame v1.64.17
 	github.com/pitabwire/util v0.3.5
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
@@ -70,7 +70,7 @@ require (
 	github.com/docker/go-connections v0.6.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/ebitengine/purego v0.9.0 // indirect
-	github.com/envoyproxy/go-control-plane/envoy v1.35.0 // indirect
+	github.com/envoyproxy/go-control-plane/envoy v1.36.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
 	github.com/exaring/otelpgx v0.9.3 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -176,7 +176,7 @@ require (
 	golang.org/x/text v0.30.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/api v0.254.0 // indirect
+	google.golang.org/api v0.255.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
 	google.golang.org/genproto v0.0.0-20251103181224-f26f9409b101 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251103181224-f26f9409b101 // indirect

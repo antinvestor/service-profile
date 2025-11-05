@@ -40,15 +40,11 @@ type rosterBusiness struct {
 }
 
 func (rb *rosterBusiness) GetByID(ctx context.Context, rosterID string) (*models.Roster, error) {
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
-
 	return rb.rosterRepository.GetByID(ctx, rosterID)
 }
 
 func (rb *rosterBusiness) Search(ctx context.Context,
 	request *profilev1.SearchRosterRequest) (workerpool.JobResultPipe[[]*models.Roster], error) {
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
-
 	profileID := request.GetProfileId()
 	claims := security.ClaimsFromContext(ctx)
 	if claims != nil {
@@ -57,21 +53,18 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 		}
 	}
 
-	searchProperties := map[string]string{
-		"contacts.detail":    " % ? ",
-		"rosters.searchable": " @@ websearch_to_tsquery( 'english', ?) ",
-	}
-
-	for _, p := range request.GetProperties() {
-		searchProperties[p] = request.GetQuery()
+	var orSearchFilter = make(map[string]any)
+	if request.GetQuery() != "" {
+		orSearchFilter["SIMILARITY(contacts.detail,?) > 0"] = request.GetQuery()
+		orSearchFilter["rosters.searchable  @@ websearch_to_tsquery( 'english', ?) "] = request.GetQuery()
 	}
 
 	query := data.NewSearchQuery(
-		request.GetQuery(),
+
 		data.WithSearchLimit(int(request.GetCount())),
 		data.WithSearchOffset(int(request.GetPage())),
 		data.WithSearchFiltersAndByValue(map[string]any{"rosters.profile_id": profileID}),
-		data.WithSearchFiltersOrByQuery(searchProperties))
+		data.WithSearchFiltersOrByValue(orSearchFilter))
 
 	return rb.rosterRepository.Search(ctx, query)
 }

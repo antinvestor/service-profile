@@ -27,7 +27,7 @@ func (dlr *deviceLogRepository) GetByDeviceID(
 	ctx context.Context,
 	deviceID string,
 ) (workerpool.JobResultPipe[[]*models.DeviceLog], error) {
-	query := data.NewSearchQuery("", data.WithSearchFiltersAndByValue(map[string]any{
+	query := data.NewSearchQuery(data.WithSearchFiltersAndByValue(map[string]any{
 		"device_id": deviceID,
 	}))
 

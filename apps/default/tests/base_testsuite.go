@@ -11,6 +11,7 @@ import (
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
@@ -65,6 +66,7 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	cfg.RunServiceSecurely = false
 	cfg.ServerPort = ""
 	cfg.DatabaseMigrate = true
+	cfg.DatabaseTraceQueries = true
 
 	res := depOpts.ByIsDatabase(ctx)
 	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())
@@ -79,7 +81,7 @@ func (bs *ProfileBaseTestSuite) CreateService(
 
 	ctx, svc := frame.NewServiceWithContext(t.Context(), "profile tests",
 		frame.WithConfig(&cfg),
-		frame.WithDatastore(),
+		frame.WithDatastore(pool.WithTraceConfig(&cfg)),
 		frametests.WithNoopDriver())
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(

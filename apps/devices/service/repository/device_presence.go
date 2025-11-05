@@ -41,7 +41,7 @@ func (dlr *devicePresenceRepository) GetByDeviceID(
 	ctx context.Context,
 	deviceID string,
 ) (workerpool.JobResultPipe[[]*models.DevicePresence], error) {
-	query := data.NewSearchQuery("", data.WithSearchFiltersAndByValue(map[string]any{
+	query := data.NewSearchQuery(data.WithSearchFiltersAndByValue(map[string]any{
 		"device_id": deviceID,
 	}))
 

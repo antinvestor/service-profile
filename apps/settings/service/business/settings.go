@@ -100,8 +100,8 @@ func (nb *settingsBusiness) Set(ctx context.Context, req *settingsv1.SetRequest)
 
 	var sVal *models.SettingVal
 	sValList, err := nb.valRepo.GetByRef(ctx, sRef.GetID())
-	if err != nil {
-		if !data.ErrorIsNoRows(err) {
+	if err != nil || len(sValList) == 0 {
+		if err != nil && !data.ErrorIsNoRows(err) {
 			logger.WithError(err).Error("error querying for setting value")
 			return nil, err
 		}

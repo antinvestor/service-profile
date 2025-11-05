@@ -37,7 +37,7 @@ type DeviceAnalysisQueueHandler struct {
 func NewDeviceAnalysisQueueHandler(
 	cli client.Manager, deviceRepository repository.DeviceRepository,
 	deviceLogRepository repository.DeviceLogRepository, sessionRepository repository.DeviceSessionRepository,
-) queue.SubscribeWorker {
+) *DeviceAnalysisQueueHandler {
 	return &DeviceAnalysisQueueHandler{
 		cli:                 cli,
 		DeviceRepository:    deviceRepository,
@@ -45,6 +45,8 @@ func NewDeviceAnalysisQueueHandler(
 		SessionRepository:   sessionRepository,
 	}
 }
+
+var _ queue.SubscribeWorker = new(DeviceAnalysisQueueHandler)
 
 func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]string, payload []byte) error {
 	deviceLog, err := dq.getDeviceLog(ctx, payload)

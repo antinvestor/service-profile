@@ -15,7 +15,7 @@ import (
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
-	"github.com/antinvestor/service-profile/apps/devices/service/queue"
+	devQueue "github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
@@ -37,7 +37,7 @@ type DepsBuilder struct {
 	DeviceBusiness business.DeviceBusiness
 	KeyBusiness    business.KeysBusiness
 
-	AnalysisQueueHandler queue.DeviceAnalysisQueueHandler
+	AnalysisQueueHandler *devQueue.DeviceAnalysisQueueHandler
 }
 
 func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
@@ -67,11 +67,12 @@ func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
 		DeviceBusiness: deviceBusiness,
 		KeyBusiness:    keyBusiness,
 
-		AnalysisQueueHandler: queue.DeviceAnalysisQueueHandler{
-			DeviceRepository:    deviceRepo,
-			DeviceLogRepository: deviceLogRepo,
-			SessionRepository:   sessionRepo,
-		},
+		AnalysisQueueHandler: devQueue.NewDeviceAnalysisQueueHandler(
+			svc.HTTPClientManager(),
+			deviceRepo,
+			deviceLogRepo,
+			sessionRepo,
+		),
 	}
 }
 
@@ -126,7 +127,7 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	analysisQueue := frame.WithRegisterSubscriber(
 		cfg.QueueDeviceAnalysisName,
 		cfg.QueueDeviceAnalysis,
-		&depsBuilder.AnalysisQueueHandler,
+		depsBuilder.AnalysisQueueHandler,
 	)
 
 	svc.Init(ctx, analysisQueueTopic, analysisQueue)

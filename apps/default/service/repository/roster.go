@@ -16,11 +16,25 @@ type rosterRepository struct {
 	datastore.BaseRepository[*models.Roster]
 }
 
+type RosterWithSim struct {
+	*models.Roster
+	Sim float64
+}
+
 func NewRosterRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) RosterRepository {
+	baseRepo := datastore.NewBaseRepository[*models.Roster](
+		ctx, dbPool, workMan, func() *models.Roster { return &models.Roster{} },
+	)
+
+	fieldMap := baseRepo.FieldsAllowed()
+	fieldMap["rosters.profile_id"] = true
+	fieldMap["rosters.searchable"] = true
+	fieldMap["contacts.detail"] = true
+	fieldMap["sim"] = true
+	fieldMap["SIMILARITY(contacts.detail,?)"] = true
+
 	rosterRepo := rosterRepository{
-		BaseRepository: datastore.NewBaseRepository[*models.Roster](
-			ctx, dbPool, workMan, func() *models.Roster { return &models.Roster{} },
-		),
+		BaseRepository: baseRepo,
 	}
 	return &rosterRepo
 }
@@ -35,11 +49,30 @@ func (rr *rosterRepository) Search(
 		ctx context.Context,
 		sq *data.SearchQuery,
 	) ([]*models.Roster, error) {
-		db := rr.Pool().DB(ctx, true).
-			Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
+		sq.OrderBy = "sim DESC"
+
+		db := rr.Pool().DB(ctx, true).Table("rosters")
+
+		searchQuery, ok := sq.FiltersOrByValue["SIMILARITY(contacts.detail,?) > 0"]
+		if !ok {
+			db = db.Select(`rosters.*, SIMILARITY(contacts.detail,?) AS sim`, searchQuery)
+		} else {
+			db = db.Select(`rosters.*, 1 AS sim`)
+		}
+
+		db = db.Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
 			Preload("Contact")
 
-		return rr.SearchFunc(ctx, db, sq)
+		result, err := datastore.SearchFunc[*RosterWithSim](ctx, db, sq, rr.IsFieldAllowed)
+		if err != nil {
+			return nil, err
+		}
+
+		rosters := make([]*models.Roster, len(result))
+		for i, r := range result {
+			rosters[i] = r.Roster
+		}
+		return rosters, nil
 	})
 }
 

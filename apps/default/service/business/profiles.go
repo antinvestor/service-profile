@@ -149,12 +149,11 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 	}
 
 	query := data.NewSearchQuery(
-		request.GetQuery(),
 		data.WithSearchLimit(int(request.GetCount())),
 		data.WithSearchOffset(int(request.GetPage())),
 		data.WithSearchFiltersAndByValue(map[string]any{"profile_id": profileID}),
-		data.WithSearchFiltersOrByQuery(map[string]string{
-			"searchable": " @@ websearch_to_tsquery( 'english', ?) ",
+		data.WithSearchFiltersOrByValue(map[string]any{
+			"searchable @@ websearch_to_tsquery( 'english', ?) ": request.GetQuery(),
 		}))
 
 	return pb.profileRepo.Search(ctx, query)

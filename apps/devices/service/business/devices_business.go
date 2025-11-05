@@ -3,6 +3,7 @@ package business
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
@@ -223,26 +224,33 @@ func (b *deviceBusiness) buildSearchQuery(ctx context.Context, query *devicev1.S
 
 	startDate, err := time.Parse(time.RFC3339, query.GetStartDate())
 	if err != nil {
-		startDate = time.Now().Add(-24 * time.Hour)
+		startDate = time.Now().Add(-30 * 24 * time.Hour) // 30 days ago
 	}
 	endDate, err := time.Parse(time.RFC3339, query.GetEndDate())
 	if err != nil {
-		endDate = time.Now()
+		endDate = time.Now().Add(24 * time.Hour) // 1 day in the future to account for clock skew
 	}
 
-	searchProperties := map[string]string{}
+	searchProperties := map[string]any{}
 
+	// Add additional properties from the request
 	for _, p := range query.GetProperties() {
-		searchProperties[p] = " = ?"
+		searchProperties[fmt.Sprintf("%s = ? ", p)] = query.GetQuery()
 	}
 
-	return data.NewSearchQuery(query.GetQuery(), data.WithSearchLimit(int(query.GetCount())),
+	// Build filters map, only add profile_id if it's not empty
+	filters := map[string]any{}
+	if profileID != "" {
+		filters["profile_id"] = profileID
+	}
+
+	return data.NewSearchQuery(data.WithSearchLimit(int(query.GetCount())),
 		data.WithSearchOffset(int(query.GetPage())), data.WithSearchByTimePeriod(&data.TimePeriod{
 			Field:     "created_at",
 			StartDate: &startDate,
 			StopDate:  &endDate,
-		}), data.WithSearchFiltersAndByValue(map[string]any{"profile_id": profileID}),
-		data.WithSearchFiltersOrByQuery(searchProperties))
+		}), data.WithSearchFiltersAndByValue(filters),
+		data.WithSearchFiltersOrByValue(searchProperties))
 }
 
 // processSearchResults processes the search results and converts them to API objects.

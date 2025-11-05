@@ -69,10 +69,14 @@ func (ts *SettingsTestSuite) TestNewSettingsBusiness() {
 
 				if !tt.nilService {
 					svc, ctx = ts.CreateService(t, depOpt)
+					got, _, _ := ts.getSettingBusiness(ctx, svc)
+					require.NotNil(t, got)
+				} else {
+					// For nil service test, we expect a panic/error
+					require.Panics(t, func() {
+						ts.getSettingBusiness(ctx, svc)
+					})
 				}
-
-				got, _, _ := ts.getSettingBusiness(ctx, svc)
-				require.NotNil(t, got)
 			})
 		}
 	})
