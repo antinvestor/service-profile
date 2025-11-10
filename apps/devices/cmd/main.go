@@ -31,9 +31,12 @@ func main() {
 		return
 	}
 
+	if cfg.Name() == "" {
+		cfg.ServiceName = serviceName
+	}
+
 	ctx, svc := frame.NewServiceWithContext(
 		ctx,
-		serviceName,
 		frame.WithConfig(&cfg),
 		frame.WithRegisterServerOauth2Client(),
 	)

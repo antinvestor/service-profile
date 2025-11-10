@@ -62,7 +62,7 @@ func (bs *SettingsBaseTestSuite) CreateService(
 	cfg.DatabasePrimaryURL = []string{testDS.String()}
 	cfg.DatabaseReplicaURL = []string{testDS.String()}
 
-	ctx, svc := frame.NewServiceWithContext(t.Context(), "settings tests",
+	ctx, svc := frame.NewServiceWithContext(t.Context(), frame.WithName("settings tests"),
 		frame.WithConfig(&cfg),
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())

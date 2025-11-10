@@ -112,7 +112,7 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	cfg.DatabasePrimaryURL = []string{testDS.String()}
 	cfg.DatabaseReplicaURL = []string{testDS.String()}
 
-	ctx, svc := frame.NewServiceWithContext(ctx, "device tests",
+	ctx, svc := frame.NewServiceWithContext(ctx, frame.WithName("device tests"),
 		frame.WithConfig(&cfg),
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())

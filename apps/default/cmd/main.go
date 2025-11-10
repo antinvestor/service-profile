@@ -26,7 +26,6 @@ import (
 )
 
 func main() {
-	serviceName := "service_profile"
 	ctx := context.Background()
 
 	// Initialize configuration
@@ -36,10 +35,13 @@ func main() {
 		return
 	}
 
+	if cfg.Name() == "" {
+		cfg.ServiceName = "service_profile"
+	}
+
 	// Create service
 	ctx, svc := frame.NewServiceWithContext(
 		ctx,
-		serviceName,
 		frame.WithConfig(&cfg),
 		frame.WithRegisterServerOauth2Client(),
 	)
