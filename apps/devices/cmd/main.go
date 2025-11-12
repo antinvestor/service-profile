@@ -117,7 +117,7 @@ func main() {
 	}
 }
 
-// setupConnectServer initializes and configures the gRPC server.
+// setupConnectServer initializes and configures the connect server.
 func setupConnectServer(
 	ctx context.Context,
 	securityMan security.Manager,
