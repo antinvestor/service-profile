@@ -19,12 +19,11 @@ require (
 	github.com/antinvestor/apis/go/notification v1.47.13
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.65.2
+	github.com/pitabwire/frame v1.65.3
 	github.com/pitabwire/util v0.3.5
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
 	go.uber.org/mock v0.6.0
-	golang.org/x/net v0.47.0
 	google.golang.org/grpc v1.76.0
 	google.golang.org/protobuf v1.36.10
 	gorm.io/gorm v1.31.1
@@ -170,6 +169,7 @@ require (
 	gocloud.dev v0.43.0 // indirect
 	golang.org/x/crypto v0.44.0 // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
+	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.33.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
 	golang.org/x/sys v0.38.0 // indirect
