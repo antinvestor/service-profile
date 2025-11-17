@@ -9,6 +9,7 @@ import (
 	"connectrpc.com/otelconnect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
 	securityconnect "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
 
@@ -35,12 +36,13 @@ func main() {
 		ctx,
 		frame.WithConfig(&cfg),
 		frame.WithRegisterServerOauth2Client(),
+		frame.WithDatastore(),
 	)
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
 	// Handle database migration if requested
-	if handleDatabaseMigration(ctx, svc, &cfg, log) {
+	if handleDatabaseMigration(ctx, svc.DatastoreManager(), &cfg) {
 		return
 	}
 
@@ -49,7 +51,7 @@ func main() {
 
 	// Setup HTTP handlers
 	// Start with datastore option
-	serviceOptions := []frame.Option{frame.WithDatastore(), frame.WithHTTPHandler(connectHandler)}
+	serviceOptions := []frame.Option{frame.WithHTTPHandler(connectHandler)}
 
 	svc.Init(ctx, serviceOptions...)
 
@@ -66,18 +68,15 @@ func main() {
 // handleDatabaseMigration performs database migration if configured to do so.
 func handleDatabaseMigration(
 	ctx context.Context,
-	svc *frame.Service,
+	dbManager datastore.Manager,
 	cfg *aconfig.SettingsConfig,
-	log *util.LogEntry,
 ) bool {
-	serviceOptions := []frame.Option{frame.WithDatastore()}
 
 	if cfg.DoDatabaseMigrate() {
-		svc.Init(ctx, serviceOptions...)
 
-		err := repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
+		err := repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath())
 		if err != nil {
-			log.WithError(err).Fatal("main -- Could not migrate successfully")
+			util.Log(ctx).WithError(err).Fatal("main -- Could not migrate successfully")
 		}
 		return true
 	}

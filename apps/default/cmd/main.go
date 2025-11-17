@@ -44,16 +44,18 @@ func main() {
 		ctx,
 		frame.WithConfig(&cfg),
 		frame.WithRegisterServerOauth2Client(),
+		frame.WithDatastore(),
 	)
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
+	sm := svc.SecurityManager()
+	dbManager := svc.DatastoreManager()
+
 	// Handle database migration if requested
-	if handleDatabaseMigration(ctx, svc, cfg, log) {
+	if handleDatabaseMigration(ctx, dbManager, cfg) {
 		return
 	}
-
-	sm := svc.SecurityManager()
 
 	// Setup clients and services
 	notificationCli, nErr := setupNotificationClient(ctx, sm, cfg)
@@ -66,7 +68,7 @@ func main() {
 
 	// Setup HTTP handlers
 	// Start with datastore option
-	serviceOptions := []frame.Option{frame.WithDatastore(), frame.WithHTTPHandler(connectHandler)}
+	serviceOptions := []frame.Option{frame.WithHTTPHandler(connectHandler)}
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueRelationshipConnectName,
@@ -123,18 +125,15 @@ func main() {
 // handleDatabaseMigration performs database migration if configured to do so.
 func handleDatabaseMigration(
 	ctx context.Context,
-	svc *frame.Service,
+	dbManager datastore.Manager,
 	cfg aconfig.ProfileConfig,
-	log *util.LogEntry,
 ) bool {
-	serviceOptions := []frame.Option{frame.WithDatastore()}
 
 	if cfg.DoDatabaseMigrate() {
-		svc.Init(ctx, serviceOptions...)
 
-		err := repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
+		err := repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath())
 		if err != nil {
-			log.WithError(err).Fatal("main -- Could not migrate successfully")
+			util.Log(ctx).WithError(err).Fatal("main -- Could not migrate successfully")
 		}
 		return true
 	}

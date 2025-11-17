@@ -39,14 +39,12 @@ func main() {
 		ctx,
 		frame.WithConfig(&cfg),
 		frame.WithRegisterServerOauth2Client(),
+		frame.WithDatastore(),
 	)
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
-	serviceOptions := []frame.Option{frame.WithDatastore()}
-
 	if cfg.DoDatabaseMigrate() {
-		svc.Init(ctx, serviceOptions...)
 
 		err = repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
 		if err != nil {
@@ -90,7 +88,7 @@ func main() {
 
 	// Setup HTTP handlers
 	// Start with datastore option
-	serviceOptions = []frame.Option{frame.WithDatastore(), frame.WithHTTPHandler(connectHandler)}
+	serviceOptions := []frame.Option{frame.WithHTTPHandler(connectHandler)}
 
 	deviceAnalysisQueue := frame.WithRegisterSubscriber(
 		cfg.QueueDeviceAnalysisName,
