@@ -3,23 +3,23 @@ module github.com/antinvestor/service-profile
 go 1.25.2
 
 require (
-	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.10-20251104183629-02dfa9355307.1
-	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20251104183704-bebecd3f55c5.2
-	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.10-20251104183704-bebecd3f55c5.1
-	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20251104183814-0a16cadd9e5d.2
-	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.10-20251104183814-0a16cadd9e5d.1
-	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20251104183907-bd2327635adb.2
-	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.10-20251104183907-bd2327635adb.1
-	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20251104183931-1e21a92668e6.2
-	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.10-20251104183931-1e21a92668e6.1
+	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.10-20251115174401-cf993dd61681.1
+	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20251115181028-8235247fcb53.2
+	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.10-20251115181028-8235247fcb53.1
+	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20251115181141-8a8c898fd720.2
+	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.10-20251115181141-8a8c898fd720.1
+	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20251115181258-23365fece788.2
+	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.10-20251115181258-23365fece788.1
+	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20251115181335-ce7d40b11d1d.2
+	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.10-20251115181335-ce7d40b11d1d.1
 	connectrpc.com/connect v1.19.1
 	connectrpc.com/otelconnect v0.8.0
 	firebase.google.com/go/v4 v4.18.0
-	github.com/antinvestor/apis/go/common v1.47.12
-	github.com/antinvestor/apis/go/notification v1.47.13
+	github.com/antinvestor/apis/go/common v1.48.6
+	github.com/antinvestor/apis/go/notification v1.48.6
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.65.3
+	github.com/pitabwire/frame v1.65.6
 	github.com/pitabwire/util v0.3.5
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
@@ -42,7 +42,7 @@ require (
 	cloud.google.com/go/iam v1.5.3 // indirect
 	cloud.google.com/go/longrunning v0.7.0 // indirect
 	cloud.google.com/go/monitoring v1.24.3 // indirect
-	cloud.google.com/go/storage v1.57.1 // indirect
+	cloud.google.com/go/storage v1.57.2 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
@@ -57,7 +57,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/cncf/xds/go v0.0.0-20251031190108-5cf4b1949528 // indirect
+	github.com/cncf/xds/go v0.0.0-20251110193048-8bfbf64dc13e // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
@@ -178,7 +178,7 @@ require (
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.256.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
-	google.golang.org/genproto v0.0.0-20251103181224-f26f9409b101 // indirect
+	google.golang.org/genproto v0.0.0-20251111163417-95abcf5c77ba // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20251111163417-95abcf5c77ba // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251111163417-95abcf5c77ba // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
