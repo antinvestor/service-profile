@@ -15,11 +15,11 @@ require (
 	connectrpc.com/connect v1.19.1
 	connectrpc.com/otelconnect v0.8.0
 	firebase.google.com/go/v4 v4.18.0
-	github.com/antinvestor/apis/go/common v1.48.6
-	github.com/antinvestor/apis/go/notification v1.48.6
+	github.com/antinvestor/apis/go/common v1.48.7
+	github.com/antinvestor/apis/go/notification v1.48.8
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.65.6
+	github.com/pitabwire/frame v1.66.0
 	github.com/pitabwire/util v0.3.5
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
