@@ -45,7 +45,6 @@ func main() {
 	log := svc.Log(ctx)
 
 	if cfg.DoDatabaseMigrate() {
-
 		err = repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
 		if err != nil {
 			log.WithError(err).Fatal("main -- Could not migrate successfully because : %+v", err)

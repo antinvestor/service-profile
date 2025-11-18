@@ -128,9 +128,7 @@ func handleDatabaseMigration(
 	dbManager datastore.Manager,
 	cfg aconfig.ProfileConfig,
 ) bool {
-
 	if cfg.DoDatabaseMigrate() {
-
 		err := repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath())
 		if err != nil {
 			util.Log(ctx).WithError(err).Fatal("main -- Could not migrate successfully")
