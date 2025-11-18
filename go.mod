@@ -15,16 +15,16 @@ require (
 	connectrpc.com/connect v1.19.1
 	connectrpc.com/otelconnect v0.8.0
 	firebase.google.com/go/v4 v4.18.0
-	github.com/antinvestor/apis/go/common v1.48.7
-	github.com/antinvestor/apis/go/notification v1.48.8
+	github.com/antinvestor/apis/go/common v1.48.11
+	github.com/antinvestor/apis/go/notification v1.48.11
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.66.1
+	github.com/pitabwire/frame v1.66.2
 	github.com/pitabwire/util v0.3.5
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
 	go.uber.org/mock v0.6.0
-	google.golang.org/grpc v1.76.0
+	google.golang.org/grpc v1.77.0
 	google.golang.org/protobuf v1.36.10
 	gorm.io/gorm v1.31.1
 )
@@ -112,7 +112,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/panjf2000/ants/v2 v2.11.3 // indirect
-	github.com/pitabwire/natspubsub v0.7.4 // indirect
+	github.com/pitabwire/natspubsub v0.7.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
@@ -168,7 +168,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	gocloud.dev v0.43.0 // indirect
 	golang.org/x/crypto v0.44.0 // indirect
-	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
+	golang.org/x/exp v0.0.0-20251113190631-e25ba8c21ef6 // indirect
 	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/oauth2 v0.33.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
