@@ -27,11 +27,11 @@ func NewRosterRepository(ctx context.Context, dbPool pool.Pool, workMan workerpo
 	)
 
 	fieldMap := baseRepo.FieldsAllowed()
-	fieldMap["rosters.profile_id"] = true
-	fieldMap["rosters.searchable"] = true
-	fieldMap["contacts.detail"] = true
-	fieldMap["sim"] = true
-	fieldMap["SIMILARITY(contacts.detail,?)"] = true
+	fieldMap["rosters.profile_id"] = struct{}{}
+	fieldMap["rosters.searchable"] = struct{}{}
+	fieldMap["contacts.detail"] = struct{}{}
+	fieldMap["sim"] = struct{}{}
+	fieldMap["similarity(contacts.detail,?)"] = struct{}{}
 
 	rosterRepo := rosterRepository{
 		BaseRepository: baseRepo,
