@@ -570,10 +570,14 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 		verification, err := cb.VerifyContact(ctx, updated, "", "123456", 0)
 		require.NoError(t, err)
 
-		result, err := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
-			return cb.GetVerification(ctx, verification.GetID())
+		result, cErr := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
+			v, vErr := cb.GetVerification(ctx, verification.GetID())
+			if vErr != nil {
+				return nil, vErr
+			}
+			return v, nil
 		}, 5*time.Second, 100*time.Millisecond)
-		require.NoError(t, err)
+		require.NoError(t, cErr)
 		require.NotNil(t, result)
 		require.Equal(t, verification.GetID(), result.GetID())
 

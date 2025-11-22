@@ -8,13 +8,13 @@ import (
 	"time"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
+	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/data"
 	frevents "github.com/pitabwire/frame/events"
 	"github.com/pitabwire/util"
 	"github.com/ttacon/libphonenumber"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -27,26 +27,26 @@ var (
 )
 
 type ContactBusiness interface {
-	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
-	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
-	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
-	CreateContact(ctx context.Context, detail string, extra data.JSONMap) (*models.Contact, error)
+	GetByID(ctx context.Context, contactID string) (*models.Contact, *connect.Error)
+	GetByDetail(ctx context.Context, detail string) (*models.Contact, *connect.Error)
+	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, *connect.Error)
+	CreateContact(ctx context.Context, detail string, extra data.JSONMap) (*models.Contact, *connect.Error)
 	UpdateContact(
 		ctx context.Context,
 		contactID string,
 		profileID string,
 		extra data.JSONMap,
-	) (*models.Contact, error)
-	RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error)
+	) (*models.Contact, *connect.Error)
+	RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, *connect.Error)
 	VerifyContact(
 		ctx context.Context,
 		contact *models.Contact,
 		verificationID string,
 		code string,
 		duration time.Duration,
-	) (*models.Verification, error)
-	GetVerification(ctx context.Context, verificationID string) (*models.Verification, error)
-	GetVerificationAttempts(ctx context.Context, verificationID string) ([]*models.VerificationAttempt, error)
+	) (*models.Verification, *connect.Error)
+	GetVerification(ctx context.Context, verificationID string) (*models.Verification, *connect.Error)
+	GetVerificationAttempts(ctx context.Context, verificationID string) ([]*models.VerificationAttempt, *connect.Error)
 }
 
 func NewContactBusiness(_ context.Context, cfg *config.ProfileConfig,
@@ -77,35 +77,35 @@ func ContactTypeFromDetail(_ context.Context, detail string) (string, error) {
 		return profilev1.ContactType_MSISDN.String(), nil
 	}
 
-	return "", service.ErrContactDetailsNotValid
+	return "", connect.NewError(connect.CodeInvalidArgument, errors.New("contact details are invalid"))
 }
 
-func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*models.Contact, error) {
+func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*models.Contact, *connect.Error) {
 	contact, err := cb.contactRepository.GetByID(ctx, contactID)
 	if err != nil {
-		if data.ErrorIsNoRows(err) {
-			return nil, service.ErrContactDoesNotExist
-		}
+		return nil, data.ErrorConvertToAPI(err)
 	}
-	return contact, err
+	return contact, nil
 }
 
-func (cb *contactBusiness) GetByDetail(ctx context.Context, detail string) (*models.Contact, error) {
+func (cb *contactBusiness) GetByDetail(ctx context.Context, detail string) (*models.Contact, *connect.Error) {
 	contact, err := cb.contactRepository.GetByDetail(ctx, detail)
 	if err != nil {
-		if data.ErrorIsNoRows(err) {
-			return nil, service.ErrContactDoesNotExist
-		}
+		return nil, data.ErrorConvertToAPI(err)
 	}
-	return contact, err
+	return contact, nil
 }
 
-func (cb *contactBusiness) GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error) {
+func (cb *contactBusiness) GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, *connect.Error) {
 	if profileID == "" {
-		return nil, errors.New("profile ID is empty")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("profile ID is empty"))
 	}
 
-	return cb.contactRepository.GetByProfileID(ctx, profileID)
+	contacts, err := cb.contactRepository.GetByProfileID(ctx, profileID)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	return contacts, nil
 }
 
 func (cb *contactBusiness) UpdateContact(
@@ -113,10 +113,10 @@ func (cb *contactBusiness) UpdateContact(
 	contactID string,
 	profileID string,
 	extra data.JSONMap,
-) (*models.Contact, error) {
+) (*models.Contact, *connect.Error) {
 	contact, err := cb.contactRepository.GetByID(ctx, contactID)
 	if err != nil {
-		return nil, err
+		return nil, data.ErrorConvertToAPI(err)
 	}
 	if contact.ProfileID == "" {
 		contact.ProfileID = profileID
@@ -126,7 +126,7 @@ func (cb *contactBusiness) UpdateContact(
 
 	_, err = cb.contactRepository.Update(ctx, contact, "profile_id", "properties")
 	if err != nil {
-		return nil, err
+		return nil, data.ErrorConvertToAPI(err)
 	}
 	return contact, nil
 }
@@ -135,21 +135,25 @@ func (cb *contactBusiness) CreateContact(
 	ctx context.Context,
 	detail string,
 	extra data.JSONMap,
-) (*models.Contact, error) {
+) (*models.Contact, *connect.Error) {
 	detail = strings.ToLower(strings.TrimSpace(detail))
 
 	contactType, err := ContactTypeFromDetail(ctx, detail)
 	if err != nil {
-		return nil, err
+		var connectErr *connect.Error
+		if errors.As(err, &connectErr) {
+			return nil, connectErr
+		}
+		return nil, data.ErrorConvertToAPI(err)
 	}
 
-	contact, err := cb.GetByDetail(ctx, detail)
-	if err == nil {
+	contact, getDetailErr := cb.GetByDetail(ctx, detail)
+	if getDetailErr == nil {
 		return contact, nil
 	}
 
-	if !errors.Is(err, service.ErrContactDoesNotExist) {
-		return nil, err
+	if getDetailErr.Code() != connect.CodeNotFound {
+		return nil, getDetailErr
 	}
 
 	contact = &models.Contact{
@@ -159,20 +163,34 @@ func (cb *contactBusiness) CreateContact(
 
 	contact.Properties = contact.Properties.Update(extra)
 
-	err = cb.contactRepository.Create(ctx, contact)
-	if err != nil {
-		return nil, err
+	createErr := cb.contactRepository.Create(ctx, contact)
+	if createErr != nil {
+		return nil, data.ErrorConvertToAPI(createErr)
 	}
 
 	return contact, nil
 }
 
-func (cb *contactBusiness) RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error) {
-	return cb.contactRepository.DelinkFromProfile(ctx, contactID, profileID)
+func (cb *contactBusiness) RemoveContact(
+	ctx context.Context,
+	contactID, profileID string,
+) (*models.Contact, *connect.Error) {
+	contact, err := cb.contactRepository.DelinkFromProfile(ctx, contactID, profileID)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	return contact, nil
 }
 
-func (cb *contactBusiness) GetVerification(ctx context.Context, verificationID string) (*models.Verification, error) {
-	return cb.verificationRepository.GetByID(ctx, verificationID)
+func (cb *contactBusiness) GetVerification(
+	ctx context.Context,
+	verificationID string,
+) (*models.Verification, *connect.Error) {
+	verification, err := cb.verificationRepository.GetByID(ctx, verificationID)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	return verification, nil
 }
 
 func (cb *contactBusiness) VerifyContact(
@@ -181,11 +199,11 @@ func (cb *contactBusiness) VerifyContact(
 	verificationID string,
 	code string,
 	durationToExpiry time.Duration,
-) (*models.Verification, error) {
+) (*models.Verification, *connect.Error) {
 	logger := util.Log(ctx).WithField("contact", contact)
 
 	if contact == nil {
-		return nil, errors.New("no contact specified")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no contact specified"))
 	}
 
 	if durationToExpiry == 0 {
@@ -222,6 +240,10 @@ func (cb *contactBusiness) VerifyContact(
 func (cb *contactBusiness) GetVerificationAttempts(
 	ctx context.Context,
 	verificationID string,
-) ([]*models.VerificationAttempt, error) {
-	return cb.verificationRepository.GetAttempts(ctx, verificationID)
+) ([]*models.VerificationAttempt, *connect.Error) {
+	attempts, err := cb.verificationRepository.GetAttempts(ctx, verificationID)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	return attempts, nil
 }

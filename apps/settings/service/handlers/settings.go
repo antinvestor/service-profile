@@ -12,7 +12,6 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/settings/service/business"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
-	"github.com/antinvestor/service-profile/internal/errorutil"
 )
 
 type SettingsServer struct {
@@ -90,12 +89,12 @@ func (s *SettingsServer) Search(
 		}
 
 		if result.IsError() {
-			return errorutil.ErrToAPI(result.Error())
+			return result.Error()
 		}
 
-		err = stream.Send(&settingsv1.SearchResponse{Data: result.Item()})
-		if err != nil {
-			return errorutil.ErrToAPI(err)
+		sErr := stream.Send(&settingsv1.SearchResponse{Data: result.Item()})
+		if sErr != nil {
+			return sErr
 		}
 	}
 }

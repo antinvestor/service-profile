@@ -430,6 +430,10 @@ linters:
       - text: 'comment on exported \S+ \S+ should be of the form ".+"'
         source: '// ?(nolint|TODO)'
         linters: [ revive, staticcheck ]
+      - text: 'SA4023'
+        linters: [ staticcheck ]
+      - text: 'nilness: tautological condition'
+        linters: [ govet ]
       - path: '_test\.go'
         linters:
           - bodyclose

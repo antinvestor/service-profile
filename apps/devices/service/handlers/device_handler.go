@@ -2,14 +2,13 @@ package handlers
 
 import (
 	"context"
+	"errors"
 
 	"buf.build/gen/go/antinvestor/device/connectrpc/go/device/v1/devicev1connect"
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 )
@@ -45,7 +44,7 @@ func (ds *DevicesServer) GetById(
 
 	for _, idStr := range req.Msg.GetId() {
 		if idStr == "" {
-			return nil, status.Error(codes.InvalidArgument, "device ID cannot be empty")
+			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("device ID cannot be empty"))
 		}
 
 		device, err := ds.deviceBusiness.GetDeviceByID(ctx, idStr)
@@ -58,7 +57,7 @@ func (ds *DevicesServer) GetById(
 
 	// If no devices found and we had errors, return the last error
 	if len(devicesList) == 0 && lastError != nil {
-		return nil, status.Error(codes.NotFound, "device not found")
+		return nil, lastError
 	}
 
 	return connect.NewResponse(&devicev1.GetByIdResponse{
@@ -102,11 +101,11 @@ func (ds *DevicesServer) Search(
 			return res.Error()
 		}
 
-		err = stream.Send(&devicev1.SearchResponse{
+		sErr := stream.Send(&devicev1.SearchResponse{
 			Data: res.Item(),
 		})
-		if err != nil {
-			return err
+		if sErr != nil {
+			return sErr
 		}
 	}
 }
@@ -132,7 +131,7 @@ func (ds *DevicesServer) Create(
 	// Log device activity to trigger device analysis and creation
 	_, err := ds.deviceBusiness.LogDeviceActivity(ctx, deviceID, sessionID, properties)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to log device activity: %v", err)
+		return nil, err
 	}
 
 	// The device will be created asynchronously by the queue handler
@@ -154,7 +153,7 @@ func (ds *DevicesServer) Update(
 		ctx, msg.GetId(), msg.GetName(), msg.GetProperties().AsMap(),
 	)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to update device: %v", err)
+		return nil, err
 	}
 
 	return connect.NewResponse(&devicev1.UpdateResponse{
@@ -171,7 +170,7 @@ func (ds *DevicesServer) Link(
 		ctx, msg.GetId(), msg.GetProfileId(), msg.GetProperties().AsMap(),
 	)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "failed to link session: %v", err)
+		return nil, err
 	}
 
 	return connect.NewResponse(&devicev1.LinkResponse{
@@ -239,11 +238,11 @@ func (ds *DevicesServer) ListLogs(
 			return res.Error()
 		}
 
-		err = stream.Send(&devicev1.ListLogsResponse{
+		sErr := stream.Send(&devicev1.ListLogsResponse{
 			Data: res.Item(),
 		})
-		if err != nil {
-			return err
+		if sErr != nil {
+			return sErr
 		}
 	}
 }

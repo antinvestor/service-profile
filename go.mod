@@ -19,7 +19,7 @@ require (
 	github.com/antinvestor/apis/go/notification v1.48.16
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.67.10
+	github.com/pitabwire/frame v1.67.14
 	github.com/pitabwire/util v0.3.5
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
+	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
 
@@ -12,9 +13,14 @@ import (
 )
 
 type AddressBusiness interface {
-	GetByProfile(ctx context.Context, profileID string) ([]*models.ProfileAddress, error)
-	CreateAddress(ctx context.Context, request *profilev1.AddressObject) (*profilev1.AddressObject, error)
-	LinkAddressToProfile(ctx context.Context, profile string, name string, address *profilev1.AddressObject) error
+	GetByProfile(ctx context.Context, profileID string) ([]*models.ProfileAddress, *connect.Error)
+	CreateAddress(ctx context.Context, request *profilev1.AddressObject) (*profilev1.AddressObject, *connect.Error)
+	LinkAddressToProfile(
+		ctx context.Context,
+		profile string,
+		name string,
+		address *profilev1.AddressObject,
+	) *connect.Error
 
 	ToAPI(address *models.Address) *profilev1.AddressObject
 }
@@ -45,20 +51,27 @@ func (aB *addressBusiness) ToAPI(address *models.Address) *profilev1.AddressObje
 	return addressObj
 }
 
-func (aB *addressBusiness) GetByProfile(ctx context.Context, profileID string) ([]*models.ProfileAddress, error) {
-	return aB.addressRepo.GetByProfileID(ctx, profileID)
+func (aB *addressBusiness) GetByProfile(
+	ctx context.Context,
+	profileID string,
+) ([]*models.ProfileAddress, *connect.Error) {
+	addresses, err := aB.addressRepo.GetByProfileID(ctx, profileID)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	return addresses, nil
 }
 
 func (aB *addressBusiness) CreateAddress(
 	ctx context.Context,
 	request *profilev1.AddressObject,
-) (*profilev1.AddressObject, error) {
+) (*profilev1.AddressObject, *connect.Error) {
 	logger := util.Log(ctx).WithField("request", request)
 
 	country, err := aB.addressRepo.CountryGetByAny(ctx, request.GetCountry())
 	if err != nil {
 		logger.WithError(err).Warn("get country error")
-		return nil, err
+		return nil, data.ErrorConvertToAPI(err)
 	}
 
 	address, err := aB.addressRepo.GetByNameAdminUnitAndCountry(ctx, request.GetName(), request.GetArea(), country.ISO3)
@@ -66,7 +79,7 @@ func (aB *addressBusiness) CreateAddress(
 		logger.WithError(err).Warn("get address error")
 
 		if !data.ErrorIsNoRows(err) {
-			return nil, err
+			return nil, data.ErrorConvertToAPI(err)
 		}
 
 		a := models.Address{
@@ -78,7 +91,7 @@ func (aB *addressBusiness) CreateAddress(
 
 		saveErr := aB.addressRepo.Create(ctx, &a)
 		if saveErr != nil {
-			return nil, saveErr
+			return nil, data.ErrorConvertToAPI(saveErr)
 		}
 		address = &a
 	}
@@ -91,10 +104,10 @@ func (aB *addressBusiness) LinkAddressToProfile(
 	profileID string,
 	name string,
 	address *profilev1.AddressObject,
-) error {
+) *connect.Error {
 	profileAddresses, err := aB.addressRepo.GetByProfileID(ctx, profileID)
 	if err != nil {
-		return err
+		return data.ErrorConvertToAPI(err)
 	}
 
 	for _, pAddress := range profileAddresses {
@@ -108,5 +121,9 @@ func (aB *addressBusiness) LinkAddressToProfile(
 		AddressID: address.GetId(),
 		ProfileID: profileID,
 	}
-	return aB.addressRepo.SaveLink(ctx, &profileAddress)
+	err = aB.addressRepo.SaveLink(ctx, &profileAddress)
+	if err != nil {
+		return data.ErrorConvertToAPI(err)
+	}
+	return nil
 }

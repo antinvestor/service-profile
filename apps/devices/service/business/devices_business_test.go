@@ -153,8 +153,8 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 		sessionID = rawDat.(string)
 	}
 	if !tc.expectError && tc.id != "" && sessionID != "" {
-		err = suite.verifyDeviceActivityLogged(ctx, deviceBusiness, tc.id, sessionID)
-		assert.NoError(t, err)
+		cErr := suite.verifyDeviceActivityLogged(ctx, deviceBusiness, tc.id, sessionID)
+		assert.NoError(t, cErr)
 	}
 }
 
@@ -1186,8 +1186,8 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 		assert.Equal(t, sessionID, deviceLog.GetSessionId())
 
 		// Step 2: Verify device log was created
-		savedLog, err := deps.DeviceLogRepo.GetByID(ctx, deviceLog.GetId())
-		require.NoError(t, err)
+		savedLog, cErr := deps.DeviceLogRepo.GetByID(ctx, deviceLog.GetId())
+		require.NoError(t, cErr)
 		assert.Equal(t, deviceID, savedLog.DeviceID)
 		assert.Equal(t, sessionID, savedLog.DeviceSessionID)
 
@@ -1202,7 +1202,7 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 
 		// Step 4: Wait for queue to process and create device and session
 		// The queue handler will automatically process the device log and create both
-		sessionCreated, err := frametests.WaitForCheckedConditionWithResult(
+		sessionCreated, cErr := frametests.WaitForCheckedConditionWithResult(
 			ctx,
 			func() (*models.DeviceSession, error) {
 				return sessionRepo.GetByID(ctx, sessionID)
@@ -1213,15 +1213,15 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 			5*time.Second,
 			100*time.Millisecond,
 		)
-		require.NoError(t, err)
+		require.NoError(t, cErr)
 		require.NotNil(t, sessionCreated)
 		assert.Equal(t, sessionID, sessionCreated.GetID())
 		assert.Equal(t, deviceID, sessionCreated.DeviceID)
 		assert.Equal(t, logData.GetString("userAgent"), sessionCreated.UserAgent)
 		assert.Equal(t, logData.GetString("ip"), sessionCreated.IP)
 
-		deviceCreated, err := deviceRepo.GetByID(ctx, deviceID)
-		require.NoError(t, err)
+		deviceCreated, cErr := deviceRepo.GetByID(ctx, deviceID)
+		require.NoError(t, cErr)
 		require.NotNil(t, deviceCreated)
 		assert.Equal(t, deviceID, deviceCreated.GetID())
 		assert.NotEmpty(t, deviceCreated.Name)

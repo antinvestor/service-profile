@@ -2,14 +2,15 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"strings"
 
+	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
 
-	"github.com/antinvestor/service-profile/apps/default/service"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
@@ -66,7 +67,7 @@ func (ar *addressRepository) CountryGetByISO3(ctx context.Context, countryISO3 s
 
 func (ar *addressRepository) CountryGetByAny(ctx context.Context, c string) (*models.Country, error) {
 	if c == "" {
-		return nil, service.ErrCountryDoesNotExist
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("specified country does not exist"))
 	}
 
 	country := &models.Country{}

@@ -22,10 +22,6 @@ func NewDeviceKeyRepository(ctx context.Context, dbPool pool.Pool, workMan worke
 	}
 }
 
-func (r *deviceKeyRepository) Save(ctx context.Context, key *models.DeviceKey) error {
-	return r.Pool().DB(ctx, false).Save(key).Error
-}
-
 func (r *deviceKeyRepository) GetByDeviceID(ctx context.Context, deviceID string) ([]*models.DeviceKey, error) {
 	var keys []*models.DeviceKey
 	err := r.Pool().DB(ctx, true).Where("device_id = ?", deviceID).Find(&keys).Error

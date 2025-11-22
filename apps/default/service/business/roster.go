@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
+	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
@@ -17,10 +18,10 @@ type RosterBusiness interface {
 	Search(
 		ctx context.Context,
 		request *profilev1.SearchRosterRequest,
-	) (workerpool.JobResultPipe[[]*models.Roster], error)
-	GetByID(ctx context.Context, rosterID string) (*models.Roster, error)
-	CreateRoster(ctx context.Context, request *profilev1.AddRosterRequest) ([]*profilev1.RosterObject, error)
-	RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, error)
+	) (workerpool.JobResultPipe[[]*models.Roster], *connect.Error)
+	GetByID(ctx context.Context, rosterID string) (*models.Roster, *connect.Error)
+	CreateRoster(ctx context.Context, request *profilev1.AddRosterRequest) ([]*profilev1.RosterObject, *connect.Error)
+	RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, *connect.Error)
 }
 
 func NewRosterBusiness(
@@ -39,12 +40,16 @@ type rosterBusiness struct {
 	contactBusiness  ContactBusiness
 }
 
-func (rb *rosterBusiness) GetByID(ctx context.Context, rosterID string) (*models.Roster, error) {
-	return rb.rosterRepository.GetByID(ctx, rosterID)
+func (rb *rosterBusiness) GetByID(ctx context.Context, rosterID string) (*models.Roster, *connect.Error) {
+	roster, err := rb.rosterRepository.GetByID(ctx, rosterID)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	return roster, nil
 }
 
 func (rb *rosterBusiness) Search(ctx context.Context,
-	request *profilev1.SearchRosterRequest) (workerpool.JobResultPipe[[]*models.Roster], error) {
+	request *profilev1.SearchRosterRequest) (workerpool.JobResultPipe[[]*models.Roster], *connect.Error) {
 	profileID := request.GetProfileId()
 	claims := security.ClaimsFromContext(ctx)
 	if claims != nil {
@@ -66,22 +71,26 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 		data.WithSearchFiltersAndByValue(map[string]any{"rosters.profile_id": profileID}),
 		data.WithSearchFiltersOrByValue(orSearchFilter))
 
-	return rb.rosterRepository.Search(ctx, query)
+	result, err := rb.rosterRepository.Search(ctx, query)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	return result, nil
 }
 
 func (rb *rosterBusiness) CreateRoster(
 	ctx context.Context,
 	request *profilev1.AddRosterRequest,
-) ([]*profilev1.RosterObject, error) {
+) ([]*profilev1.RosterObject, *connect.Error) {
 	claims := security.ClaimsFromContext(ctx)
 
 	if claims == nil {
-		return nil, errors.New("no claims found in context")
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no claims found in context"))
 	}
 
-	profileID, err := claims.GetSubject()
-	if err != nil {
-		return nil, err
+	profileID, subjectErr := claims.GetSubject()
+	if subjectErr != nil {
+		return nil, data.ErrorConvertToAPI(subjectErr)
 	}
 
 	var rosterObjectList []*profilev1.RosterObject
@@ -92,19 +101,21 @@ func (rb *rosterBusiness) CreateRoster(
 
 		requestExtras := data.JSONMap{}
 
-		contact, err = rb.contactBusiness.CreateContact(
+		var createContactErr *connect.Error
+		contact, createContactErr = rb.contactBusiness.CreateContact(
 			ctx,
 			newRoster.GetContact(),
 			requestExtras.FromProtoStruct(newRoster.GetExtras()),
 		)
-		if err != nil {
-			return nil, err
+		if createContactErr != nil {
+			return nil, createContactErr
 		}
 
-		roster, err = rb.rosterRepository.GetByContactAndProfileID(ctx, profileID, contact.GetID())
-		if err != nil {
-			if !data.ErrorIsNoRows(err) {
-				return nil, err
+		var getRosterErr error
+		roster, getRosterErr = rb.rosterRepository.GetByContactAndProfileID(ctx, profileID, contact.GetID())
+		if getRosterErr != nil {
+			if !data.ErrorIsNoRows(getRosterErr) {
+				return nil, data.ErrorConvertToAPI(getRosterErr)
 			}
 
 			rosterExtras := data.JSONMap{}
@@ -116,9 +127,9 @@ func (rb *rosterBusiness) CreateRoster(
 				Properties: rosterExtras.FromProtoStruct(newRoster.GetExtras()),
 			}
 
-			err = rb.rosterRepository.Create(ctx, roster)
-			if err != nil {
-				return nil, err
+			var createRosterErr = rb.rosterRepository.Create(ctx, roster)
+			if createRosterErr != nil {
+				return nil, data.ErrorConvertToAPI(createRosterErr)
 			}
 		}
 
@@ -128,15 +139,15 @@ func (rb *rosterBusiness) CreateRoster(
 	return rosterObjectList, nil
 }
 
-func (rb *rosterBusiness) RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, error) {
+func (rb *rosterBusiness) RemoveRoster(ctx context.Context, rosterID string) (*profilev1.RosterObject, *connect.Error) {
 	roster, err := rb.rosterRepository.GetByID(ctx, rosterID)
 	if err != nil {
-		return nil, err
+		return nil, data.ErrorConvertToAPI(err)
 	}
 
 	err = rb.rosterRepository.Delete(ctx, roster.GetID())
 	if err != nil {
-		return nil, err
+		return nil, data.ErrorConvertToAPI(err)
 	}
 
 	return roster.ToAPI(), nil

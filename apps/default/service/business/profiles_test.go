@@ -466,10 +466,10 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 			return
 		}
 
-		result, err := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
+		result, cErr := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
 			return verificationRepo.GetByID(ctx, verificationID)
 		}, 5*time.Second, 100*time.Millisecond)
-		if err != nil {
+		if cErr != nil {
 			t.Errorf("verificationRepo.GetByID() error = %v", err)
 			return
 		}
@@ -477,9 +477,9 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 		require.Equal(t, verificationID, result.GetID())
 
 		// Check verification with correct code
-		attempts, verified, err := pb.CheckVerification(ctx, verificationID, "123456", "192.168.1.1")
-		if err != nil {
-			t.Errorf("CheckVerification() error = %v", err)
+		attempts, verified, vErr := pb.CheckVerification(ctx, verificationID, "123456", "192.168.1.1")
+		if vErr != nil {
+			t.Errorf("CheckVerification() error = %v", vErr)
 			return
 		}
 
@@ -574,11 +574,11 @@ func (pts *ProfileTestSuite) setupVerificationForTest(
 		return ""
 	}
 
-	result, err := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
+	result, cErr := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
 		return verificationRepo.GetByID(ctx, verificationID)
 	}, 5*time.Second, 100*time.Millisecond)
-	if err != nil {
-		t.Errorf("verificationRepo.GetByID() error = %v", err)
+	if cErr != nil {
+		t.Errorf("verificationRepo.GetByID() error = %v", cErr)
 		return ""
 	}
 	require.NotNil(t, result)

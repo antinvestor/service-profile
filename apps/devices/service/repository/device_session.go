@@ -27,18 +27,6 @@ func NewDeviceSessionRepository(
 	}
 }
 
-func (r *deviceSessionRepository) Save(ctx context.Context, session *models.DeviceSession) error {
-	return r.Pool().DB(ctx, false).Save(session).Error
-}
-
-func (r *deviceSessionRepository) GetByID(ctx context.Context, id string) (*models.DeviceSession, error) {
-	var session models.DeviceSession
-	if err := r.Pool().DB(ctx, true).First(&session, "id = ?", id).Error; err != nil {
-		return nil, err
-	}
-	return &session, nil
-}
-
 func (r *deviceSessionRepository) GetLastByDeviceID(
 	ctx context.Context,
 	deviceID string,
