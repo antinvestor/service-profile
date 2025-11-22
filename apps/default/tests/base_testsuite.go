@@ -15,6 +15,7 @@ import (
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -52,10 +53,7 @@ func (bs *ProfileBaseTestSuite) SetupSuite() {
 	bs.FrameBaseTestSuite.SetupSuite()
 }
 
-func (bs *ProfileBaseTestSuite) CreateService(
-	t *testing.T,
-	depOpts *definition.DependencyOption,
-) (*frame.Service, context.Context) {
+func (bs *ProfileBaseTestSuite) CreateService(t *testing.T, depOpts *definition.DependencyOption, ) (context.Context, *frame.Service) {
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 
 	ctx := t.Context()
@@ -117,7 +115,7 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)
 
-	return svc, ctx
+	return security.SkipTenancyChecksOnClaims(ctx), svc
 }
 
 func (bs *ProfileBaseTestSuite) GetNotificationCli(t *testing.T) notificationv1connect.NotificationServiceClient {

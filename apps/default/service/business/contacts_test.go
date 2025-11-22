@@ -164,7 +164,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
-				svc, ctx := cts.CreateService(t, dep)
+				ctx, svc := cts.CreateService(t, dep)
 
 				cb, _ := cts.getContactBusiness(ctx, svc)
 				got, err := cb.CreateContact(ctx, tt.args.detail, tt.args.extra)
@@ -213,7 +213,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 
 		cb, _ := cts.getContactBusiness(ctx, svc)
 		existingContacts, err := cts.createContacts(ctx, cb, "+256757546215", "+256757532244", "bwire@gmail.com")
@@ -304,7 +304,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByID() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 
 		cb, _ := cts.getContactBusiness(ctx, svc)
 		existingContacts, err := cts.createContacts(ctx, cb, "+256757592215", "+254757532244", "bwireid@gmail.com")
@@ -425,7 +425,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile() {
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		for _, tt := range testCases {
 			t.Run(tt.name, func(t *testing.T) {
-				svc, ctx := cts.CreateService(t, dep)
+				ctx, svc := cts.CreateService(t, dep)
 
 				cb, _ := cts.getContactBusiness(ctx, svc)
 				existingContacts, err := cts.createContacts(ctx, cb, tt.args.contactDetails...)
@@ -450,7 +450,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_UpdateContact() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Create a contact first
@@ -481,7 +481,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_RemoveContact() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Create a contact with profile ID
@@ -515,7 +515,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_VerifyContact() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Create a contact first
@@ -555,7 +555,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 
 		cb, _ := cts.getContactBusiness(ctx, svc)
 
@@ -593,7 +593,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerificationAttempts() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 
 		cb, verificationRepo := cts.getContactBusiness(ctx, svc)
 
@@ -627,7 +627,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		_, ctx := cts.CreateService(t, dep)
+		ctx, _ := cts.CreateService(t, dep)
 
 		// Create a contact
 		contact := &models.Contact{
@@ -654,7 +654,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByProfile_Extended() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 
 		cb, _ := cts.getContactBusiness(ctx, svc)
 		profileID := util.IDString()
@@ -690,7 +690,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_EdgeCases() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 		cb, _ := cts.getContactBusiness(ctx, svc)
 
 		// Test with empty detail

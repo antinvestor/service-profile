@@ -105,7 +105,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 	t := rts.T()
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := rts.CreateService(t, dep)
+		ctx, svc := rts.CreateService(t, dep)
 		rb := rts.getRosterBusiness(ctx, svc)
 
 		rosterMap, err := rts.createRoster(ctx, rb, "profile123", map[string]data.JSONMap{
@@ -133,7 +133,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster() {
 	t := rts.T()
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := rts.CreateService(t, dep)
+		ctx, svc := rts.CreateService(t, dep)
 		rb := rts.getRosterBusiness(ctx, svc)
 
 		rosterMap, err := rts.createRoster(ctx, rb, "profRemov123", map[string]data.JSONMap{
@@ -160,7 +160,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_RemoveRoster_NotFound() {
 	t := rts.T()
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := rts.CreateService(t, dep)
+		ctx, svc := rts.CreateService(t, dep)
 		rb := rts.getRosterBusiness(ctx, svc)
 
 		rosterID := "nonexistent"
@@ -177,7 +177,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 	t := rts.T()
 
 	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := rts.CreateService(t, dep)
+		ctx, svc := rts.CreateService(t, dep)
 		rb := rts.getRosterBusiness(ctx, svc)
 
 		profileID := "searchProfileC1"

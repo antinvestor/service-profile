@@ -52,7 +52,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Nam
 	t := cvqts.T()
 
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cvqts.CreateService(t, dep)
+		ctx, svc := cvqts.CreateService(t, dep)
 
 		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 		require.Equal(t, events.VerificationEventHandlerName, queue.Name())
@@ -63,7 +63,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Pay
 	t := cvqts.T()
 
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cvqts.CreateService(t, dep)
+		ctx, svc := cvqts.CreateService(t, dep)
 
 		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 		payloadType := queue.PayloadType()
@@ -78,7 +78,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Val
 	t := cvqts.T()
 
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cvqts.CreateService(t, dep)
+		ctx, svc := cvqts.CreateService(t, dep)
 
 		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 
@@ -106,7 +106,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 	t := cvqts.T()
 
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cvqts.CreateService(t, dep)
+		ctx, svc := cvqts.CreateService(t, dep)
 		queue, contactRepo := cvqts.getVerificationEvtQ(ctx, t, svc)
 
 		// Create test contact first
@@ -137,7 +137,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 	t := cvqts.T()
 
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cvqts.CreateService(t, dep)
+		ctx, svc := cvqts.CreateService(t, dep)
 
 		queue, _ := cvqts.getVerificationEvtQ(ctx, t, svc)
 
@@ -153,7 +153,7 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 	t := cvqts.T()
 
 	cvqts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := cvqts.CreateService(t, dep)
+		ctx, svc := cvqts.CreateService(t, dep)
 
 		// Create verification with non-existent contact
 		verification := &models.Verification{

@@ -77,7 +77,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
 		for _, tt := range testcases {
 			t.Run(tt.name, func(t *testing.T) {
-				svc, ctx := pts.CreateService(t, dep)
+				ctx, svc := pts.CreateService(t, dep)
 				pb, _ := pts.getProfileBusiness(ctx, svc)
 				got, err := pb.CreateProfile(ctx, tt.request)
 				if (err != nil) != tt.wantErr {
@@ -101,7 +101,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 
 		var profileAvailable []string
 		pbc, _ := pts.getProfileBusiness(ctx, svc)
@@ -177,7 +177,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
@@ -227,7 +227,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
@@ -281,7 +281,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
@@ -349,7 +349,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetContactByID() {
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
@@ -394,7 +394,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_VerifyContact() {
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
@@ -435,7 +435,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 		pb, verificationRepo := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
@@ -497,7 +497,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_WrongCode() 
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 		pb, verificationRepo := pts.getProfileBusiness(ctx, svc)
 
 		// Setup: Create profile and verification
@@ -591,7 +591,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 	t := pts.T()
 
 	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		svc, ctx := pts.CreateService(t, dep)
+		ctx, svc := pts.CreateService(t, dep)
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		t.Run("empty contact", func(t *testing.T) {

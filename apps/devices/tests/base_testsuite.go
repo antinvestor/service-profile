@@ -10,6 +10,7 @@ import (
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -99,6 +100,7 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	cfg.LogLevel = "debug"
 	cfg.RunServiceSecurely = false
 	cfg.DatabaseMigrate = true
+	cfg.DatabaseTraceQueries = true
 	cfg.ServerPort = ""
 
 	res := depOpts.ByIsDatabase(ctx)
@@ -138,7 +140,7 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)
 
-	return ctx, svc, depsBuilder
+	return security.SkipTenancyChecksOnClaims(ctx), svc, depsBuilder
 }
 
 func (bs *DeviceBaseTestSuite) TearDownSuite() {

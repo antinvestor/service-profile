@@ -10,6 +10,7 @@ import (
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -37,10 +38,7 @@ func (bs *SettingsBaseTestSuite) SetupSuite() {
 	bs.FrameBaseTestSuite.SetupSuite()
 }
 
-func (bs *SettingsBaseTestSuite) CreateService(
-	t *testing.T,
-	depOpts *definition.DependencyOption,
-) (*frame.Service, context.Context) {
+func (bs *SettingsBaseTestSuite) CreateService(t *testing.T, depOpts *definition.DependencyOption, ) (context.Context, *frame.Service) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 	cfg, err := config.FromEnv[aconfig.SettingsConfig]()
@@ -81,7 +79,7 @@ func (bs *SettingsBaseTestSuite) CreateService(
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)
 
-	return svc, ctx
+	return security.SkipTenancyChecksOnClaims(ctx), svc
 }
 
 func (bs *SettingsBaseTestSuite) TearDownSuite() {

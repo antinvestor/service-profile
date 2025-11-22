@@ -68,7 +68,7 @@ func (ts *SettingsTestSuite) TestNewSettingsBusiness() {
 				var ctx context.Context
 
 				if !tt.nilService {
-					svc, ctx = ts.CreateService(t, depOpt)
+					ctx, svc = ts.CreateService(t, depOpt)
 					got, _, _ := ts.getSettingBusiness(ctx, svc)
 					require.NotNil(t, got)
 				} else {
@@ -85,7 +85,7 @@ func (ts *SettingsTestSuite) TestNewSettingsBusiness() {
 // Test_settingsBusiness_Set tests the Set method of the settings business.
 func (ts *SettingsTestSuite) Test_settingsBusiness_Set() {
 	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependencyOption) {
-		svc, ctx := ts.CreateService(t, depOpt)
+		ctx, svc := ts.CreateService(t, depOpt)
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 
@@ -309,7 +309,7 @@ func (ts *SettingsTestSuite) Test_settingsBusiness_Get() {
 	}
 
 	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependencyOption) {
-		svc, ctx := ts.CreateService(t, depOpt)
+		ctx, svc := ts.CreateService(t, depOpt)
 
 		_, rRepo, vRepo := ts.getSettingBusiness(ctx, svc)
 
@@ -453,7 +453,7 @@ func (ts *SettingsTestSuite) Test_settingsBusiness_List() {
 	}
 
 	ts.WithTestDependancies(ts.T(), func(t *testing.T, depOpt *definition.DependencyOption) {
-		svc, ctx := ts.CreateService(t, depOpt)
+		ctx, svc := ts.CreateService(t, depOpt)
 
 		_, rRepo, vRepo := ts.getSettingBusiness(ctx, svc)
 

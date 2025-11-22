@@ -54,7 +54,7 @@ func (ats *AuditorTestSuite) TestSettingAuditor_Execute() {
 	}
 
 	ats.WithTestDependancies(t, func(t *testing.T, depOpt *definition.DependencyOption) {
-		svc, ctx := ats.CreateService(t, depOpt)
+		ctx, svc := ats.CreateService(t, depOpt)
 
 		workMan := svc.WorkManager()
 		dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)

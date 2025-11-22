@@ -108,13 +108,13 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	sessionRepo repository.DeviceSessionRepository,
 	deviceBusiness business.DeviceBusiness,
 	tc struct {
-		name        string
-		id          string
-		deviceName  string
-		data        data.JSONMap
-		expectError bool
-		expectNil   bool
-	},
+	name        string
+	id          string
+	deviceName  string
+	data        data.JSONMap
+	expectError bool
+	expectNil   bool
+},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
@@ -221,27 +221,54 @@ func (suite *DeviceBusinessTestSuite) TestSaveDevice() {
 func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 	t := suite.T()
 	testCases := []struct {
-		name        string
-		setupDevice bool
-		deviceID    string
-		expectError bool
+		name               string
+		setupDevice        func(ctx context.Context, deps *tests.DepsBuilder, devId string) error
+		deviceID           string
+		errorAssertionFunc require.ErrorAssertionFunc
 	}{
 		{
-			name:        "existing device",
-			setupDevice: true,
-			expectError: false,
+			name:     "existing device",
+			deviceID: "existing-device-id",
+			setupDevice: func(ctx context.Context, deps *tests.DepsBuilder, devId string) error {
+				// Create a device and session first
+				device := &models.Device{
+					Name: "Test Device",
+					OS:   "Linux",
+				}
+				device.GenID(ctx)
+				device.ID = devId
+
+				err := deps.DeviceRepo.Create(ctx, device)
+				if err != nil {
+					return err
+				}
+				actualDeviceID := device.GetID()
+				// Create a session for the device (required by GetDeviceByID)
+				session := &models.DeviceSession{
+					DeviceID:  actualDeviceID,
+					UserAgent: "Test Agent",
+					IP:        "127.0.0.1",
+				}
+
+				err = deps.SessionRepo.Create(ctx, session)
+				if err != nil {
+					return err
+				}
+				return nil
+			},
+			errorAssertionFunc: require.NoError,
 		},
 		{
-			name:        "non-existent device",
-			setupDevice: false,
-			deviceID:    "non-existent-id",
-			expectError: true,
+			name:               "non-existent device",
+			setupDevice:        nil,
+			deviceID:           "non-existent-id",
+			errorAssertionFunc: require.Error,
 		},
 		{
-			name:        "empty device ID",
-			setupDevice: false,
-			deviceID:    "",
-			expectError: true,
+			name:               "empty device ID",
+			setupDevice:        nil,
+			deviceID:           "",
+			errorAssertionFunc: require.Error,
 		},
 	}
 
@@ -250,41 +277,21 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-				var deviceID string
-				if tc.setupDevice {
-					// Create a device and session first
-					device := &models.Device{
-						Name: "Test Device",
-						OS:   "Linux",
-					}
 
-					err := deps.DeviceRepo.Create(ctx, device)
+				if tc.setupDevice != nil {
+					err := tc.setupDevice(ctx, deps, tc.deviceID)
 					require.NoError(t, err)
-					deviceID = device.GetID()
-
-					// Create a session for the device (required by GetDeviceByID)
-					session := &models.DeviceSession{
-						DeviceID:  deviceID,
-						UserAgent: "Test Agent",
-						IP:        "127.0.0.1",
-					}
-
-					err = deps.SessionRepo.Create(ctx, session)
-					require.NoError(t, err)
-				} else {
-					deviceID = tc.deviceID
 				}
 
-				device, err := deps.DeviceBusiness.GetDeviceByID(ctx, deviceID)
+				device, err := deps.DeviceBusiness.GetDeviceByID(ctx, tc.deviceID)
 
-				if tc.expectError {
-					require.Error(t, err)
-					assert.Nil(t, device)
+				tc.errorAssertionFunc(t, err)
+				if err != nil {
+					require.Nil(t, device)
 				} else {
-					require.NoError(t, err)
-					assert.NotNil(t, device)
-					assert.Equal(t, deviceID, device.GetId())
-					assert.Equal(t, "Test Device", device.GetName())
+					require.NotNil(t, device)
+					require.Equal(t, tc.deviceID, device.GetId())
+					require.Equal(t, "Test Device", device.GetName())
 				}
 			})
 		}
@@ -560,12 +567,12 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	sessionRepo repository.DeviceSessionRepository,
 	deviceBusiness business.DeviceBusiness,
 	tc struct {
-		name        string
-		setupDevice bool
-		profileID   string
-		searchQuery string
-		expectError bool
-	},
+	name        string
+	setupDevice bool
+	profileID   string
+	searchQuery string
+	expectError bool
+},
 ) {
 	// Don't use claims context for now - just test text search
 	testCtx := security.SkipTenancyChecksOnClaims(ctx)
