@@ -108,13 +108,13 @@ func (suite *DeviceBusinessTestSuite) runSaveDeviceTestCase(
 	sessionRepo repository.DeviceSessionRepository,
 	deviceBusiness business.DeviceBusiness,
 	tc struct {
-	name        string
-	id          string
-	deviceName  string
-	data        data.JSONMap
-	expectError bool
-	expectNil   bool
-},
+		name        string
+		id          string
+		deviceName  string
+		data        data.JSONMap
+		expectError bool
+		expectNil   bool
+	},
 ) {
 	// Setup existing device if needed
 	if tc.id != "" && tc.name == "save device with existing ID" {
@@ -277,7 +277,6 @@ func (suite *DeviceBusinessTestSuite) TestGetDeviceByID() {
 
 		for _, tc := range testCases {
 			t.Run(tc.name, func(t *testing.T) {
-
 				if tc.setupDevice != nil {
 					err := tc.setupDevice(ctx, deps, tc.deviceID)
 					require.NoError(t, err)
@@ -567,12 +566,12 @@ func (suite *DeviceBusinessTestSuite) runSearchDevicesTestCase(
 	sessionRepo repository.DeviceSessionRepository,
 	deviceBusiness business.DeviceBusiness,
 	tc struct {
-	name        string
-	setupDevice bool
-	profileID   string
-	searchQuery string
-	expectError bool
-},
+		name        string
+		setupDevice bool
+		profileID   string
+		searchQuery string
+		expectError bool
+	},
 ) {
 	// Don't use claims context for now - just test text search
 	testCtx := security.SkipTenancyChecksOnClaims(ctx)

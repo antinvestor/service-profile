@@ -582,7 +582,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetVerification() {
 		require.Equal(t, verification.GetID(), result.GetID())
 
 		// Test with non-existent verification
-		result, err = cb.GetVerification(ctx, util.IDString())
+		_, err = cb.GetVerification(ctx, util.IDString())
 		require.Error(t, err) // Should return error for non-existent verification
 	})
 }

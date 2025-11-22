@@ -11,7 +11,6 @@ import (
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
-	"github.com/antinvestor/service-profile/internal/errorutil"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"google.golang.org/grpc/metadata"
@@ -20,6 +19,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/internal/errorutil"
 )
 
 // Constants for pagination and batch sizes.

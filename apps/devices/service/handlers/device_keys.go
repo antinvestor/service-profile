@@ -5,6 +5,8 @@ import (
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
+
+	"github.com/antinvestor/service-profile/internal/errorutil"
 )
 
 func (ds *DevicesServer) AddKey(
@@ -20,7 +22,7 @@ func (ds *DevicesServer) AddKey(
 		msg.GetExtras().AsMap(),
 	)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 	return connect.NewResponse(&devicev1.AddKeyResponse{
 		Data: deviceKey,
@@ -34,11 +36,11 @@ func (ds *DevicesServer) RemoveKey(
 	var keyIDList []string
 	response, err := ds.keyBusiness.RemoveKeys(ctx, req.Msg.GetId()...)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 	for res := range response {
 		if res.IsError() {
-			return nil, res.Error()
+			return nil, errorutil.CleanErr(res.Error())
 		}
 
 		for _, key := range res.Item() {
@@ -57,13 +59,13 @@ func (ds *DevicesServer) SearchKey(
 	msg := req.Msg
 	response, err := ds.keyBusiness.GetKeys(ctx, msg.GetDeviceId(), msg.GetKeyTypes()...)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	var keyObjList []*devicev1.KeyObject
 	for res := range response {
 		if res.IsError() {
-			return nil, res.Error()
+			return nil, errorutil.CleanErr(res.Error())
 		}
 
 		keyObjList = append(keyObjList, res.Item()...)

@@ -5,6 +5,8 @@ import (
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
+
+	"github.com/antinvestor/service-profile/internal/errorutil"
 )
 
 func (ds *DevicesServer) UpdatePresence(
@@ -13,7 +15,7 @@ func (ds *DevicesServer) UpdatePresence(
 ) (*connect.Response[devicev1.UpdatePresenceResponse], error) {
 	presence, err := ds.presenceBusiness.UpdatePresence(ctx, req.Msg)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.UpdatePresenceResponse{

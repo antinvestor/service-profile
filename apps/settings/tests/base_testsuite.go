@@ -38,7 +38,10 @@ func (bs *SettingsBaseTestSuite) SetupSuite() {
 	bs.FrameBaseTestSuite.SetupSuite()
 }
 
-func (bs *SettingsBaseTestSuite) CreateService(t *testing.T, depOpts *definition.DependencyOption, ) (context.Context, *frame.Service) {
+func (bs *SettingsBaseTestSuite) CreateService(
+	t *testing.T,
+	depOpts *definition.DependencyOption,
+) (context.Context, *frame.Service) {
 	ctx := t.Context()
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 	cfg, err := config.FromEnv[aconfig.SettingsConfig]()

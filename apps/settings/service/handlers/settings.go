@@ -12,6 +12,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/settings/service/business"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
+	"github.com/antinvestor/service-profile/internal/errorutil"
 )
 
 type SettingsServer struct {
@@ -38,7 +39,7 @@ func (s *SettingsServer) Get(
 ) (*connect.Response[settingsv1.GetResponse], error) {
 	resp, err := s.settingBusiness.Get(ctx, req.Msg)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 	return connect.NewResponse(resp), nil
 }
@@ -50,7 +51,7 @@ func (s *SettingsServer) Set(
 ) (*connect.Response[settingsv1.SetResponse], error) {
 	resp, err := s.settingBusiness.Set(ctx, req.Msg)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 	return connect.NewResponse(resp), nil
 }
@@ -64,7 +65,7 @@ func (s *SettingsServer) List(
 	response, err := s.settingBusiness.List(ctx, req.Msg)
 
 	if err != nil {
-		return err
+		return errorutil.CleanErr(err)
 	}
 	return stream.Send(&settingsv1.ListResponse{Data: response})
 }
@@ -78,7 +79,7 @@ func (s *SettingsServer) Search(
 	resp, err := s.settingBusiness.Search(ctx, req.Msg)
 
 	if err != nil {
-		return err
+		return errorutil.CleanErr(err)
 	}
 
 	for {
@@ -89,12 +90,12 @@ func (s *SettingsServer) Search(
 		}
 
 		if result.IsError() {
-			return result.Error()
+			return errorutil.CleanErr(result.Error())
 		}
 
 		sErr := stream.Send(&settingsv1.SearchResponse{Data: result.Item()})
 		if sErr != nil {
-			return sErr
+			return errorutil.CleanErr(sErr)
 		}
 	}
 }

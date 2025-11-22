@@ -8,7 +8,6 @@ import (
 )
 
 func CleanErr(err error) *connect.Error {
-
 	if err == nil {
 		return nil
 	}

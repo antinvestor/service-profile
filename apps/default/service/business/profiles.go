@@ -130,7 +130,6 @@ func (pb *profileBusiness) GetByContact(
 			return nil, err
 		}
 	} else {
-
 		contact, err = pb.contactBusiness.GetByID(ctx, contactData)
 		if err != nil {
 			return nil, err
@@ -248,7 +247,6 @@ func (pb *profileBusiness) CreateProfile(
 	var contact *models.Contact
 	_, contactTypeErr := ContactTypeFromDetail(ctx, contactDetail)
 	if contactTypeErr == nil {
-
 		contact, err = pb.contactBusiness.GetByDetail(ctx, contactDetail)
 		if !frame.ErrorIsNotFound(err) {
 			return nil, err

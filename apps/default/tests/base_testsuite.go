@@ -53,7 +53,10 @@ func (bs *ProfileBaseTestSuite) SetupSuite() {
 	bs.FrameBaseTestSuite.SetupSuite()
 }
 
-func (bs *ProfileBaseTestSuite) CreateService(t *testing.T, depOpts *definition.DependencyOption, ) (context.Context, *frame.Service) {
+func (bs *ProfileBaseTestSuite) CreateService(
+	t *testing.T,
+	depOpts *definition.DependencyOption,
+) (context.Context, *frame.Service) {
 	t.Setenv("OTEL_TRACES_EXPORTER", "none")
 
 	ctx := t.Context()

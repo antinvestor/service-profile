@@ -11,6 +11,7 @@ import (
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/internal/errorutil"
 )
 
 type DevicesServer struct {
@@ -57,7 +58,7 @@ func (ds *DevicesServer) GetById(
 
 	// If no devices found and we had errors, return the last error
 	if len(devicesList) == 0 && lastError != nil {
-		return nil, lastError
+		return nil, errorutil.CleanErr(lastError)
 	}
 
 	return connect.NewResponse(&devicev1.GetByIdResponse{
@@ -72,7 +73,7 @@ func (ds *DevicesServer) GetBySessionId(
 	req *connect.Request[devicev1.GetBySessionIdRequest]) (*connect.Response[devicev1.GetBySessionIdResponse], error) {
 	device, err := ds.deviceBusiness.GetDeviceBySessionID(ctx, req.Msg.GetId())
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.GetBySessionIdResponse{
@@ -88,7 +89,7 @@ func (ds *DevicesServer) Search(
 	// Always process the search, even for empty queries
 	response, err := ds.deviceBusiness.SearchDevices(ctx, req.Msg)
 	if err != nil {
-		return err
+		return errorutil.CleanErr(err)
 	}
 
 	for {
@@ -98,14 +99,14 @@ func (ds *DevicesServer) Search(
 		}
 
 		if res.IsError() {
-			return res.Error()
+			return errorutil.CleanErr(res.Error())
 		}
 
 		sErr := stream.Send(&devicev1.SearchResponse{
 			Data: res.Item(),
 		})
 		if sErr != nil {
-			return sErr
+			return errorutil.CleanErr(sErr)
 		}
 	}
 }
@@ -131,7 +132,7 @@ func (ds *DevicesServer) Create(
 	// Log device activity to trigger device analysis and creation
 	_, err := ds.deviceBusiness.LogDeviceActivity(ctx, deviceID, sessionID, properties)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	// The device will be created asynchronously by the queue handler
@@ -153,7 +154,7 @@ func (ds *DevicesServer) Update(
 		ctx, msg.GetId(), msg.GetName(), msg.GetProperties().AsMap(),
 	)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.UpdateResponse{
@@ -170,7 +171,7 @@ func (ds *DevicesServer) Link(
 		ctx, msg.GetId(), msg.GetProfileId(), msg.GetProperties().AsMap(),
 	)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.LinkResponse{
@@ -186,12 +187,12 @@ func (ds *DevicesServer) Remove(
 
 	dev, err := ds.deviceBusiness.GetDeviceByID(ctx, msg.GetId())
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	err = ds.deviceBusiness.RemoveDevice(ctx, msg.GetId())
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.RemoveResponse{
@@ -210,7 +211,7 @@ func (ds *DevicesServer) Log(
 	payload["ip"] = GetClientIP(ctx)
 	deviceLog, err := ds.deviceBusiness.LogDeviceActivity(ctx, msg.GetDeviceId(), msg.GetSessionId(), payload)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.LogResponse{
@@ -225,7 +226,7 @@ func (ds *DevicesServer) ListLogs(
 ) error {
 	response, err := ds.deviceBusiness.GetDeviceLogs(ctx, req.Msg.GetDeviceId())
 	if err != nil {
-		return err
+		return errorutil.CleanErr(err)
 	}
 
 	for {
@@ -235,14 +236,14 @@ func (ds *DevicesServer) ListLogs(
 		}
 
 		if res.IsError() {
-			return res.Error()
+			return errorutil.CleanErr(res.Error())
 		}
 
 		sErr := stream.Send(&devicev1.ListLogsResponse{
 			Data: res.Item(),
 		})
 		if sErr != nil {
-			return sErr
+			return errorutil.CleanErr(sErr)
 		}
 	}
 }

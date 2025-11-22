@@ -466,10 +466,10 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 			return
 		}
 
-		result, cErr := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
+		result, err := tests.WaitForConditionWithResult(ctx, func() (*models.Verification, error) {
 			return verificationRepo.GetByID(ctx, verificationID)
 		}, 5*time.Second, 100*time.Millisecond)
-		if cErr != nil {
+		if err != nil {
 			t.Errorf("verificationRepo.GetByID() error = %v", err)
 			return
 		}
@@ -477,9 +477,9 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 		require.Equal(t, verificationID, result.GetID())
 
 		// Check verification with correct code
-		attempts, verified, vErr := pb.CheckVerification(ctx, verificationID, "123456", "192.168.1.1")
-		if vErr != nil {
-			t.Errorf("CheckVerification() error = %v", vErr)
+		attempts, verified, err := pb.CheckVerification(ctx, verificationID, "123456", "192.168.1.1")
+		if err != nil {
+			t.Errorf("CheckVerification() error = %v", err)
 			return
 		}
 

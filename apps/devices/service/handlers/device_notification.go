@@ -5,6 +5,8 @@ import (
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
+
+	"github.com/antinvestor/service-profile/internal/errorutil"
 )
 
 func (ds *DevicesServer) RegisterKey(
@@ -13,7 +15,7 @@ func (ds *DevicesServer) RegisterKey(
 ) (*connect.Response[devicev1.RegisterKeyResponse], error) {
 	response, err := ds.notifyBusiness.RegisterKey(ctx, req.Msg)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.RegisterKeyResponse{
@@ -27,7 +29,7 @@ func (ds *DevicesServer) DeRegisterKey(
 ) (*connect.Response[devicev1.DeRegisterKeyResponse], error) {
 	err := ds.notifyBusiness.DeRegisterKey(ctx, req.Msg)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.DeRegisterKeyResponse{
@@ -42,7 +44,7 @@ func (ds *DevicesServer) Notify(
 ) (*connect.Response[devicev1.NotifyResponse], error) {
 	response, err := ds.notifyBusiness.Notify(ctx, req.Msg)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.NotifyResponse{
