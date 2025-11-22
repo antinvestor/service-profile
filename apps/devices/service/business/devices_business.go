@@ -29,30 +29,30 @@ const (
 // It abstracts the underlying data storage and provides methods for interacting
 // with device data in a consistent and transactional manner.
 type DeviceBusiness interface {
-	GetDeviceByID(ctx context.Context, id string) (*devicev1.DeviceObject, *connect.Error)
-	GetDeviceBySessionID(ctx context.Context, id string) (*devicev1.DeviceObject, *connect.Error)
+	GetDeviceByID(ctx context.Context, id string) (*devicev1.DeviceObject, error)
+	GetDeviceBySessionID(ctx context.Context, id string) (*devicev1.DeviceObject, error)
 	SearchDevices(
 		ctx context.Context,
 		query *devicev1.SearchRequest,
-	) (workerpool.JobResultPipe[[]*devicev1.DeviceObject], *connect.Error)
-	SaveDevice(ctx context.Context, id string, name string, data data.JSONMap) (*devicev1.DeviceObject, *connect.Error)
+	) (workerpool.JobResultPipe[[]*devicev1.DeviceObject], error)
+	SaveDevice(ctx context.Context, id string, name string, data data.JSONMap) (*devicev1.DeviceObject, error)
 	LinkDeviceToProfile(
 		ctx context.Context,
 		sessionID string,
 		profileID string,
 		data data.JSONMap,
-	) (*devicev1.DeviceObject, *connect.Error)
-	RemoveDevice(ctx context.Context, id string) *connect.Error
+	) (*devicev1.DeviceObject, error)
+	RemoveDevice(ctx context.Context, id string) error
 
 	LogDeviceActivity(
 		ctx context.Context,
 		deviceID, sessionID string,
 		logData data.JSONMap,
-	) (*devicev1.DeviceLog, *connect.Error)
+	) (*devicev1.DeviceLog, error)
 	GetDeviceLogs(
 		ctx context.Context,
 		deviceID string,
-	) (workerpool.JobResultPipe[[]*devicev1.DeviceLog], *connect.Error)
+	) (workerpool.JobResultPipe[[]*devicev1.DeviceLog], error)
 }
 
 type deviceBusiness struct {
@@ -84,7 +84,7 @@ func (b *deviceBusiness) LogDeviceActivity(
 	ctx context.Context,
 	deviceID, sessionID string,
 	logData data.JSONMap,
-) (*devicev1.DeviceLog, *connect.Error) {
+) (*devicev1.DeviceLog, error) {
 	log := &models.DeviceLog{
 		DeviceID:        deviceID,
 		DeviceSessionID: sessionID,
@@ -93,7 +93,7 @@ func (b *deviceBusiness) LogDeviceActivity(
 	log.GenID(ctx)
 
 	if err := b.deviceLogRepo.Create(ctx, log); err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	// Publish to queue for further analysis
@@ -108,7 +108,7 @@ func (b *deviceBusiness) LogDeviceActivity(
 func (b *deviceBusiness) GetDeviceLogs(
 	ctx context.Context,
 	deviceID string,
-) (workerpool.JobResultPipe[[]*devicev1.DeviceLog], *connect.Error) {
+) (workerpool.JobResultPipe[[]*devicev1.DeviceLog], error) {
 	resultPipe := workerpool.NewJob[[]*devicev1.DeviceLog](
 		func(ctx context.Context, result workerpool.JobResultPipe[[]*devicev1.DeviceLog]) error {
 			logsResult, err := b.deviceLogRepo.GetByDeviceID(ctx, deviceID)
@@ -141,7 +141,7 @@ func (b *deviceBusiness) GetDeviceLogs(
 
 	err := workerpool.SubmitJob(ctx, b.workMan, resultPipe)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	return resultPipe, nil
@@ -152,7 +152,7 @@ func (b *deviceBusiness) SaveDevice(
 	id string,
 	name string,
 	extra data.JSONMap,
-) (*devicev1.DeviceObject, *connect.Error) {
+) (*devicev1.DeviceObject, error) {
 	sessionID := extra.GetString("session_id")
 
 	_, logErr := b.LogDeviceActivity(ctx, id, sessionID, extra)
@@ -176,15 +176,15 @@ func (b *deviceBusiness) SaveDevice(
 	return b.GetDeviceByID(ctx, id)
 }
 
-func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev1.DeviceObject, *connect.Error) {
+func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev1.DeviceObject, error) {
 	dev, err := b.deviceRepo.GetByID(ctx, id)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	sess, err := b.sessionRepo.GetLastByDeviceID(ctx, id)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	return dev.ToAPI(sess), nil
@@ -193,7 +193,7 @@ func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev
 func (b *deviceBusiness) SearchDevices(
 	ctx context.Context,
 	query *devicev1.SearchRequest,
-) (workerpool.JobResultPipe[[]*devicev1.DeviceObject], *connect.Error) {
+) (workerpool.JobResultPipe[[]*devicev1.DeviceObject], error) {
 	resultPipe := workerpool.NewJob[[]*devicev1.DeviceObject](
 		func(ctx context.Context, result workerpool.JobResultPipe[[]*devicev1.DeviceObject]) error {
 			return b.processSearchRequest(ctx, query, result)
@@ -202,7 +202,7 @@ func (b *deviceBusiness) SearchDevices(
 
 	err := workerpool.SubmitJob(ctx, b.workMan, resultPipe)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	return resultPipe, nil
@@ -303,15 +303,15 @@ func (b *deviceBusiness) convertDeviceToAPI(ctx context.Context, device *models.
 	return device.ToAPI(sess)
 }
 
-func (b *deviceBusiness) GetDeviceBySessionID(ctx context.Context, id string) (*devicev1.DeviceObject, *connect.Error) {
+func (b *deviceBusiness) GetDeviceBySessionID(ctx context.Context, id string) (*devicev1.DeviceObject, error) {
 	sess, err := b.sessionRepo.GetByID(ctx, id)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	dev, err := b.deviceRepo.GetByID(ctx, sess.DeviceID)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	return dev.ToAPI(sess), nil
@@ -322,15 +322,15 @@ func (b *deviceBusiness) LinkDeviceToProfile(
 	sessionID string,
 	profileID string,
 	_ data.JSONMap,
-) (*devicev1.DeviceObject, *connect.Error) {
+) (*devicev1.DeviceObject, error) {
 	session, err := b.sessionRepo.GetByID(ctx, sessionID)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	device, err := b.deviceRepo.GetByID(ctx, session.DeviceID)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	if device.ProfileID == "" {
@@ -338,14 +338,14 @@ func (b *deviceBusiness) LinkDeviceToProfile(
 
 		_, err = b.deviceRepo.Update(ctx, device, "profile_id")
 		if err != nil {
-			return nil, data.ErrorConvertToAPI(err)
+			return nil, err
 		}
 	}
 
 	return device.ToAPI(session), nil
 }
 
-func (b *deviceBusiness) RemoveDevice(ctx context.Context, id string) *connect.Error {
+func (b *deviceBusiness) RemoveDevice(ctx context.Context, id string) error {
 	_, err := b.deviceRepo.RemoveByID(ctx, id)
-	return data.ErrorConvertToAPI(err)
+	return err
 }

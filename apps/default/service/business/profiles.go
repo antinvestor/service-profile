@@ -8,6 +8,7 @@ import (
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
+	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
 	frevents "github.com/pitabwire/frame/events"
 	"github.com/pitabwire/frame/security"
@@ -20,46 +21,46 @@ import (
 )
 
 type ProfileBusiness interface {
-	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, *connect.Error)
-	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, *connect.Error)
+	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, error)
+	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, error)
 
 	SearchProfile(
 		ctx context.Context,
 		request *profilev1.SearchRequest,
-	) (workerpool.JobResultPipe[[]*models.Profile], *connect.Error)
+	) (workerpool.JobResultPipe[[]*models.Profile], error)
 
-	CreateProfile(ctx context.Context, request *profilev1.CreateRequest) (*profilev1.ProfileObject, *connect.Error)
+	CreateProfile(ctx context.Context, request *profilev1.CreateRequest) (*profilev1.ProfileObject, error)
 
-	UpdateProfile(ctx context.Context, request *profilev1.UpdateRequest) (*profilev1.ProfileObject, *connect.Error)
+	UpdateProfile(ctx context.Context, request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error)
 
-	MergeProfile(ctx context.Context, request *profilev1.MergeRequest) (*profilev1.ProfileObject, *connect.Error)
+	MergeProfile(ctx context.Context, request *profilev1.MergeRequest) (*profilev1.ProfileObject, error)
 
-	AddAddress(ctx context.Context, address *profilev1.AddAddressRequest) (*profilev1.ProfileObject, *connect.Error)
+	AddAddress(ctx context.Context, address *profilev1.AddAddressRequest) (*profilev1.ProfileObject, error)
 
 	AddContact(
 		ctx context.Context,
 		contact *profilev1.AddContactRequest,
-	) (*profilev1.ProfileObject, string, *connect.Error)
+	) (*profilev1.ProfileObject, string, error)
 
 	CreateContact(
 		ctx context.Context,
 		contact *profilev1.CreateContactRequest,
-	) (*profilev1.ContactObject, *connect.Error)
+	) (*profilev1.ContactObject, error)
 
 	RemoveContact(
 		ctx context.Context,
 		contact *profilev1.RemoveContactRequest,
-	) (*profilev1.ProfileObject, *connect.Error)
+	) (*profilev1.ProfileObject, error)
 
-	GetContactByID(ctx context.Context, contactID string) (*profilev1.ContactObject, *connect.Error)
+	GetContactByID(ctx context.Context, contactID string) (*profilev1.ContactObject, error)
 	VerifyContact(
 		ctx context.Context,
 		contactID string,
 		verificationID, code string,
 		expiryDuration time.Duration,
-	) (string, *connect.Error)
-	CheckVerification(ctx context.Context, verificationID string, code, ipAddress string) (int, bool, *connect.Error)
-	ToAPI(ctx context.Context, profile *models.Profile) (*profilev1.ProfileObject, *connect.Error)
+	) (string, error)
+	CheckVerification(ctx context.Context, verificationID string, code, ipAddress string) (int, bool, error)
+	ToAPI(ctx context.Context, profile *models.Profile) (*profilev1.ProfileObject, error)
 }
 
 func NewProfileBusiness(_ context.Context, eventsMan frevents.Manager,
@@ -83,7 +84,7 @@ type profileBusiness struct {
 }
 
 func (pb *profileBusiness) ToAPI(ctx context.Context,
-	p *models.Profile) (*profilev1.ProfileObject, *connect.Error) {
+	p *models.Profile) (*profilev1.ProfileObject, error) {
 	profileObject := profilev1.ProfileObject{}
 	profileObject.Id = p.ID
 
@@ -116,23 +117,23 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 
 func (pb *profileBusiness) GetByContact(
 	ctx context.Context,
-	contactData string) (*profilev1.ProfileObject, *connect.Error) {
+	contactData string) (*profilev1.ProfileObject, error) {
 	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
+	var err error
 	var contact *models.Contact
 
 	_, contactTypeErr := ContactTypeFromDetail(ctx, contactData)
 	if contactTypeErr == nil {
-		var getDetailErr *connect.Error
-		contact, getDetailErr = pb.contactBusiness.GetByDetail(ctx, contactData)
-		if getDetailErr != nil {
-			return nil, getDetailErr
+		contact, err = pb.contactBusiness.GetByDetail(ctx, contactData)
+		if err != nil {
+			return nil, err
 		}
 	} else {
-		var getByIDErr *connect.Error
-		contact, getByIDErr = pb.contactBusiness.GetByID(ctx, contactData)
-		if getByIDErr != nil {
-			return nil, getByIDErr
+
+		contact, err = pb.contactBusiness.GetByID(ctx, contactData)
+		if err != nil {
+			return nil, err
 		}
 	}
 	return pb.GetByID(ctx, contact.ProfileID)
@@ -140,19 +141,19 @@ func (pb *profileBusiness) GetByContact(
 
 func (pb *profileBusiness) GetByID(
 	ctx context.Context,
-	profileID string) (*profilev1.ProfileObject, *connect.Error) {
+	profileID string) (*profilev1.ProfileObject, error) {
 	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	return pb.ToAPI(ctx, profile)
 }
 
 func (pb *profileBusiness) SearchProfile(ctx context.Context,
-	request *profilev1.SearchRequest) (workerpool.JobResultPipe[[]*models.Profile], *connect.Error) {
+	request *profilev1.SearchRequest) (workerpool.JobResultPipe[[]*models.Profile], error) {
 	profileID := ""
 	claims := security.ClaimsFromContext(ctx)
 	if claims != nil {
@@ -169,23 +170,23 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 
 	result, err := pb.profileRepo.Search(ctx, query)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 	return result, nil
 }
 
 func (pb *profileBusiness) MergeProfile(ctx context.Context,
-	request *profilev1.MergeRequest) (*profilev1.ProfileObject, *connect.Error) {
+	request *profilev1.MergeRequest) (*profilev1.ProfileObject, error) {
 	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	target, err := pb.profileRepo.GetByID(ctx, request.GetId())
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	merging, err := pb.profileRepo.GetByID(ctx, request.GetMergeid())
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	for key, value := range merging.Properties {
@@ -197,12 +198,12 @@ func (pb *profileBusiness) MergeProfile(ctx context.Context,
 
 	_, err = pb.profileRepo.Update(ctx, target, "properties")
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	err = pb.profileRepo.Delete(ctx, merging.GetID())
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	return pb.ToAPI(ctx, target)
@@ -210,10 +211,10 @@ func (pb *profileBusiness) MergeProfile(ctx context.Context,
 
 func (pb *profileBusiness) UpdateProfile(
 	ctx context.Context,
-	request *profilev1.UpdateRequest) (*profilev1.ProfileObject, *connect.Error) {
+	request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error) {
 	profile, err := pb.profileRepo.GetByID(ctx, request.GetId())
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	requestProperties := data.JSONMap{}
@@ -222,7 +223,7 @@ func (pb *profileBusiness) UpdateProfile(
 
 	_, err = pb.profileRepo.Update(ctx, profile, "properties")
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	return pb.ToAPI(ctx, profile)
@@ -230,7 +231,7 @@ func (pb *profileBusiness) UpdateProfile(
 
 func (pb *profileBusiness) CreateProfile(
 	ctx context.Context,
-	request *profilev1.CreateRequest) (*profilev1.ProfileObject, *connect.Error) {
+	request *profilev1.CreateRequest) (*profilev1.ProfileObject, error) {
 	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	contactDetail := strings.TrimSpace(request.GetContact())
@@ -243,19 +244,19 @@ func (pb *profileBusiness) CreateProfile(
 
 	p.Properties = request.GetProperties().AsMap()
 
+	var err error
 	var contact *models.Contact
 	_, contactTypeErr := ContactTypeFromDetail(ctx, contactDetail)
 	if contactTypeErr == nil {
-		var contactErr *connect.Error
-		contact, contactErr = pb.contactBusiness.GetByDetail(ctx, contactDetail)
-		if contactErr != nil && contactErr.Code() != connect.CodeNotFound {
-			return nil, contactErr
+
+		contact, err = pb.contactBusiness.GetByDetail(ctx, contactDetail)
+		if !frame.ErrorIsNotFound(err) {
+			return nil, err
 		}
 	} else {
-		var contactErr *connect.Error
-		contact, contactErr = pb.contactBusiness.GetByID(ctx, contactDetail)
-		if contactErr != nil {
-			return nil, contactErr
+		contact, err = pb.contactBusiness.GetByID(ctx, contactDetail)
+		if err != nil {
+			return nil, err
 		}
 	}
 
@@ -278,17 +279,15 @@ func (pb *profileBusiness) CreateProfile(
 	}
 
 	if contact == nil {
-		var contactErr *connect.Error
-		contact, contactErr = pb.contactBusiness.CreateContact(ctx, contactDetail, data.JSONMap{})
-		if contactErr != nil {
-			return nil, contactErr
+		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, data.JSONMap{})
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	var updateErr *connect.Error
-	contact, updateErr = pb.contactBusiness.UpdateContact(ctx, contact.GetID(), p.GetID(), nil)
-	if updateErr != nil {
-		return nil, updateErr
+	contact, err = pb.contactBusiness.UpdateContact(ctx, contact.GetID(), p.GetID(), nil)
+	if err != nil {
+		return nil, err
 	}
 
 	return pb.GetByID(ctx, contact.ProfileID)
@@ -328,7 +327,7 @@ func (pb *profileBusiness) CreateProfile(
 
 func (pb *profileBusiness) AddAddress(
 	ctx context.Context,
-	request *profilev1.AddAddressRequest) (*profilev1.ProfileObject, *connect.Error) {
+	request *profilev1.AddAddressRequest) (*profilev1.ProfileObject, error) {
 	address, err := pb.addressBusiness.CreateAddress(ctx, request.GetAddress())
 	if err != nil {
 		return nil, err
@@ -345,7 +344,7 @@ func (pb *profileBusiness) AddAddress(
 
 func (pb *profileBusiness) AddContact(
 	ctx context.Context,
-	request *profilev1.AddContactRequest) (*profilev1.ProfileObject, string, *connect.Error) {
+	request *profilev1.AddContactRequest) (*profilev1.ProfileObject, string, error) {
 	claims := security.ClaimsFromContext(ctx)
 	if claims == nil {
 		return nil, "", connect.NewError(connect.CodeInvalidArgument, errors.New("contact profile is invalid"))
@@ -389,7 +388,7 @@ func (pb *profileBusiness) AddContact(
 
 func (pb *profileBusiness) CreateContact(
 	ctx context.Context,
-	request *profilev1.CreateContactRequest) (*profilev1.ContactObject, *connect.Error) {
+	request *profilev1.CreateContactRequest) (*profilev1.ContactObject, error) {
 	requestProperties := data.JSONMap{}
 	contact, err := pb.contactBusiness.CreateContact(
 		ctx,
@@ -405,14 +404,14 @@ func (pb *profileBusiness) CreateContact(
 
 func (pb *profileBusiness) RemoveContact(
 	ctx context.Context,
-	request *profilev1.RemoveContactRequest) (*profilev1.ProfileObject, *connect.Error) {
+	request *profilev1.RemoveContactRequest) (*profilev1.ProfileObject, error) {
 	return pb.GetByID(ctx, request.GetId())
 }
 
 func (pb *profileBusiness) GetContactByID(
 	ctx context.Context,
 	contactID string,
-) (*profilev1.ContactObject, *connect.Error) {
+) (*profilev1.ContactObject, error) {
 	contact, err := pb.contactBusiness.GetByID(ctx, contactID)
 	if err != nil {
 		return nil, err
@@ -425,7 +424,7 @@ func (pb *profileBusiness) VerifyContact(
 	ctx context.Context,
 	contactID, verificationID, code string,
 	expiryDuration time.Duration,
-) (string, *connect.Error) {
+) (string, error) {
 	contact, err := pb.contactBusiness.GetByID(ctx, contactID)
 	if err != nil {
 		return "", err
@@ -444,7 +443,7 @@ func (pb *profileBusiness) CheckVerification(
 	verificationID string,
 	code string,
 	ipAddress string,
-) (int, bool, *connect.Error) {
+) (int, bool, error) {
 	logger := util.Log(ctx).WithField("verificationID", verificationID)
 
 	verification, verifyErr := pb.contactBusiness.GetVerification(ctx, verificationID)

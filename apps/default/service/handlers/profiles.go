@@ -11,6 +11,7 @@ import (
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
+	"github.com/antinvestor/service-profile/internal/errorutil"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"google.golang.org/grpc/metadata"
@@ -81,7 +82,7 @@ func (ps *ProfileServer) GetById(ctx context.Context,
 	*connect.Response[profilev1.GetByIdResponse], error) {
 	profileObj, err := ps.profileBusiness.GetByID(ctx, request.Msg.GetId())
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.GetByIdResponse{Data: profileObj}), nil
@@ -93,7 +94,7 @@ func (ps *ProfileServer) GetByContact(ctx context.Context,
 	profileObj, err := ps.profileBusiness.GetByContact(ctx, request.Msg.GetContact())
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.GetByContactResponse{Data: profileObj}), nil
@@ -108,7 +109,7 @@ func (ps *ProfileServer) Search(ctx context.Context,
 
 	jobResult, err := ps.profileBusiness.SearchProfile(ctx, request.Msg)
 	if err != nil {
-		return err
+		return errorutil.CleanErr(err)
 	}
 
 	for {
@@ -119,17 +120,17 @@ func (ps *ProfileServer) Search(ctx context.Context,
 		}
 
 		if result.IsError() {
-			return result.Error()
+			return errorutil.CleanErr(result.Error())
 		}
 
 		for _, profile := range result.Item() {
 			profileObject, err1 := ps.profileBusiness.ToAPI(ctx, profile)
 			if err1 != nil {
-				return err1
+				return errorutil.CleanErr(err1)
 			}
 			sErr := stream.Send(&profilev1.SearchResponse{Data: []*profilev1.ProfileObject{profileObject}})
 			if sErr != nil {
-				return sErr
+				return errorutil.CleanErr(sErr)
 			}
 		}
 	}
@@ -141,7 +142,7 @@ func (ps *ProfileServer) Merge(
 ) (*connect.Response[profilev1.MergeResponse], error) {
 	profileObj, err := ps.profileBusiness.MergeProfile(ctx, request.Msg)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.MergeResponse{Data: profileObj}), nil
@@ -154,7 +155,7 @@ func (ps *ProfileServer) Create(
 	profileObj, err := ps.profileBusiness.CreateProfile(ctx, request.Msg)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.CreateResponse{Data: profileObj}), nil
@@ -167,7 +168,7 @@ func (ps *ProfileServer) Update(
 	profileObj, err := ps.profileBusiness.UpdateProfile(ctx, request.Msg)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.UpdateResponse{Data: profileObj}), nil
@@ -178,7 +179,7 @@ func (ps *ProfileServer) AddAddress(ctx context.Context,
 	request *connect.Request[profilev1.AddAddressRequest]) (*connect.Response[profilev1.AddAddressResponse], error) {
 	profileObj, err := ps.profileBusiness.AddAddress(ctx, request.Msg)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.AddAddressResponse{Data: profileObj}), nil
@@ -191,7 +192,7 @@ func (ps *ProfileServer) AddContact(
 	profileObj, verificationID, err := ps.profileBusiness.AddContact(ctx, request.Msg)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.AddContactResponse{Data: profileObj, VerificationId: verificationID}), nil
@@ -204,7 +205,7 @@ func (ps *ProfileServer) CreateContact(
 	contactObj, err := ps.profileBusiness.CreateContact(ctx, request.Msg)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.CreateContactResponse{Data: contactObj}), nil
@@ -227,7 +228,7 @@ func (ps *ProfileServer) CreateContactVerification(
 		expiryDuration,
 	)
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&profilev1.CreateContactVerificationResponse{
@@ -277,7 +278,7 @@ func (ps *ProfileServer) CheckVerification(
 	)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	// #nosec G115: verificationAttempts is bounded by business logic constraints
@@ -298,7 +299,7 @@ func (ps *ProfileServer) RemoveContact(
 	profileObj, err := ps.profileBusiness.RemoveContact(ctx, request.Msg)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 	return connect.NewResponse(&profilev1.RemoveContactResponse{Data: profileObj}), nil
 }
@@ -313,7 +314,7 @@ func (ps *ProfileServer) SearchRoster(
 
 	jobResult, err := ps.rosterBusiness.Search(ctx, request.Msg)
 	if err != nil {
-		return err
+		return errorutil.CleanErr(err)
 	}
 
 	for {
@@ -324,7 +325,7 @@ func (ps *ProfileServer) SearchRoster(
 		}
 
 		if result.IsError() {
-			return result.Error()
+			return errorutil.CleanErr(result.Error())
 		}
 
 		// Preallocate slice to optimize memory allocation.
@@ -335,7 +336,7 @@ func (ps *ProfileServer) SearchRoster(
 
 		sErr := stream.Send(&profilev1.SearchRosterResponse{Data: rosterList})
 		if sErr != nil {
-			return sErr
+			return errorutil.CleanErr(sErr)
 		}
 	}
 }
@@ -346,7 +347,7 @@ func (ps *ProfileServer) AddRoster(
 	roster, err := ps.rosterBusiness.CreateRoster(ctx, request.Msg)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 	return connect.NewResponse(
 		&profilev1.AddRosterResponse{
@@ -361,7 +362,7 @@ func (ps *ProfileServer) RemoveRoster(
 	roster, err := ps.rosterBusiness.RemoveRoster(ctx, request.Msg.GetId())
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 	return connect.NewResponse(
 		&profilev1.RemoveRosterResponse{
@@ -376,7 +377,7 @@ func (ps *ProfileServer) AddRelationship(
 	relationshipObj, err := ps.relationshipBusiness.CreateRelationship(ctx, request.Msg)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(
@@ -390,7 +391,7 @@ func (ps *ProfileServer) DeleteRelationship(
 	relationshipObj, err := ps.relationshipBusiness.DeleteRelationship(ctx, request.Msg)
 
 	if err != nil {
-		return nil, err
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(
@@ -422,7 +423,7 @@ func (ps *ProfileServer) ListRelationships(
 
 		relationships, err := ps.relationshipBusiness.ListRelationships(ctx, request.Msg)
 		if err != nil {
-			return err
+			return errorutil.CleanErr(err)
 		}
 
 		var responseList []*profilev1.RelationshipObject
@@ -433,7 +434,7 @@ func (ps *ProfileServer) ListRelationships(
 
 		sErr := stream.Send(&profilev1.ListRelationshipResponse{Data: responseList})
 		if sErr != nil {
-			return sErr
+			return errorutil.CleanErr(sErr)
 		}
 
 		totalSent += len(relationships)

@@ -26,21 +26,21 @@ type RelationshipBusiness interface {
 	ListRelationships(
 		ctx context.Context,
 		request *profilev1.ListRelationshipRequest,
-	) ([]*models.Relationship, *connect.Error)
+	) ([]*models.Relationship, error)
 	CreateRelationship(
 		ctx context.Context,
 		request *profilev1.AddRelationshipRequest,
-	) (*profilev1.RelationshipObject, *connect.Error)
+	) (*profilev1.RelationshipObject, error)
 	DeleteRelationship(
 		ctx context.Context,
 		request *profilev1.DeleteRelationshipRequest,
-	) (*profilev1.RelationshipObject, *connect.Error)
+	) (*profilev1.RelationshipObject, error)
 
 	ToAPI(
 		ctx context.Context,
 		relationship *models.Relationship,
 		invertRelationship bool,
-	) (*profilev1.RelationshipObject, *connect.Error)
+	) (*profilev1.RelationshipObject, error)
 }
 
 func NewRelationshipBusiness(
@@ -62,7 +62,7 @@ type relationshipBusiness struct {
 func (rb *relationshipBusiness) ListRelationships(
 	ctx context.Context,
 	request *profilev1.ListRelationshipRequest,
-) ([]*models.Relationship, *connect.Error) {
+) ([]*models.Relationship, error) {
 	if request.GetPeerName() == ProfilePeerName {
 		profileObj, err := rb.profileBusiness.GetByID(ctx, request.GetPeerId())
 		if err != nil {
@@ -84,7 +84,7 @@ func (rb *relationshipBusiness) ListRelationships(
 		int(request.GetCount()),
 	)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 	return relationships, nil
 }
@@ -92,7 +92,7 @@ func (rb *relationshipBusiness) ListRelationships(
 func (rb *relationshipBusiness) CreateRelationship(
 	ctx context.Context,
 	request *profilev1.AddRelationshipRequest,
-) (*profilev1.RelationshipObject, *connect.Error) {
+) (*profilev1.RelationshipObject, error) {
 	logger := util.Log(ctx).WithField("request", request)
 
 	relationships, err := rb.relationshipRepo.List(
@@ -108,7 +108,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 		logger.WithError(err).Warn("get existing relationship error")
 
 		if !data.ErrorIsNoRows(err) {
-			return nil, data.ErrorConvertToAPI(err)
+			return nil, err
 		}
 	}
 
@@ -120,7 +120,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 
 	relationshipType, err := rb.relationshipRepo.RelationshipType(ctx, request.GetType())
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	requestProperties := data.JSONMap{}
@@ -141,7 +141,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 
 	err = rb.relationshipRepo.Create(ctx, &relationship)
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	logger.Debug("successfully add relationship relationship")
@@ -152,13 +152,13 @@ func (rb *relationshipBusiness) CreateRelationship(
 func (rb *relationshipBusiness) DeleteRelationship(
 	ctx context.Context,
 	request *profilev1.DeleteRelationshipRequest,
-) (*profilev1.RelationshipObject, *connect.Error) {
+) (*profilev1.RelationshipObject, error) {
 	relationship, err := rb.relationshipRepo.GetByID(ctx, request.GetId())
 	if err != nil {
 		if data.ErrorIsNoRows(err) {
 			return nil, connect.NewError(connect.CodeNotFound, errors.New("relationship not found"))
 		}
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	relationshipObject, apiErr := rb.ToAPI(ctx, relationship, false)
@@ -183,7 +183,7 @@ func (rb *relationshipBusiness) ToAPI(
 	ctx context.Context,
 	relationship *models.Relationship,
 	invertRelationship bool,
-) (*profilev1.RelationshipObject, *connect.Error) {
+) (*profilev1.RelationshipObject, error) {
 	if relationship == nil {
 		return nil, ErrNilRelationship
 	}

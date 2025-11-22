@@ -16,13 +16,13 @@ import (
 )
 
 type SettingsBusiness interface {
-	Get(context.Context, *settingsv1.GetRequest) (*settingsv1.GetResponse, *connect.Error)
-	List(context.Context, *settingsv1.ListRequest) ([]*settingsv1.SettingObject, *connect.Error)
-	Set(context.Context, *settingsv1.SetRequest) (*settingsv1.SetResponse, *connect.Error)
+	Get(context.Context, *settingsv1.GetRequest) (*settingsv1.GetResponse, error)
+	List(context.Context, *settingsv1.ListRequest) ([]*settingsv1.SettingObject, error)
+	Set(context.Context, *settingsv1.SetRequest) (*settingsv1.SetResponse, error)
 	Search(
 		ctx context.Context,
 		msg *commonv1.SearchRequest,
-	) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], *connect.Error)
+	) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error)
 }
 
 type settingsBusiness struct {
@@ -43,7 +43,7 @@ func NewSettingsBusiness(
 func (nb *settingsBusiness) Get(
 	ctx context.Context,
 	req *settingsv1.GetRequest,
-) (*settingsv1.GetResponse, *connect.Error) {
+) (*settingsv1.GetResponse, error) {
 	logger := util.Log(ctx).WithField("request", req)
 	logger.Debug("handling get request")
 
@@ -51,12 +51,12 @@ func (nb *settingsBusiness) Get(
 	sRef, err := nb.refRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
 		ref.GetName(), ref.GetObject(), ref.GetObjectId(), ref.GetLang())
 	if err != nil && !data.ErrorIsNoRows(err) {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 	if sRef != nil {
 		sValList, valErr := nb.valRepo.GetByRef(ctx, sRef.GetID())
 		if valErr != nil {
-			return nil, data.ErrorConvertToAPI(err)
+			return nil, err
 		}
 		return &settingsv1.GetResponse{
 			Data: sValList[0].ToAPI(sRef),
@@ -75,7 +75,7 @@ func (nb *settingsBusiness) Get(
 func (nb *settingsBusiness) Set(
 	ctx context.Context,
 	req *settingsv1.SetRequest,
-) (*settingsv1.SetResponse, *connect.Error) {
+) (*settingsv1.SetResponse, error) {
 	logger := util.Log(ctx).WithField("request", req)
 	logger.Debug("handling set/update setting")
 
@@ -86,7 +86,7 @@ func (nb *settingsBusiness) Set(
 	if err != nil {
 		if !data.ErrorIsNoRows(err) {
 			logger.WithError(err).Error("error querying for setting ref")
-			return nil, data.ErrorConvertToAPI(err)
+			return nil, err
 		}
 
 		sRef = &models.SettingRef{
@@ -98,7 +98,7 @@ func (nb *settingsBusiness) Set(
 		}
 		err = nb.refRepo.Create(ctx, sRef)
 		if err != nil {
-			return nil, data.ErrorConvertToAPI(err)
+			return nil, err
 		}
 	}
 
@@ -106,7 +106,7 @@ func (nb *settingsBusiness) Set(
 	sValList, err := nb.valRepo.GetByRef(ctx, sRef.GetID())
 	if err != nil || len(sValList) == 0 {
 		if err != nil && !data.ErrorIsNoRows(err) {
-			return nil, data.ErrorConvertToAPI(err)
+			return nil, err
 		}
 
 		sVal = &models.SettingVal{
@@ -124,7 +124,7 @@ func (nb *settingsBusiness) Set(
 		_, err = nb.valRepo.Update(ctx, sVal, "detail")
 	}
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 	return &settingsv1.SetResponse{
 		Data: sVal.ToAPI(sRef),
@@ -134,7 +134,7 @@ func (nb *settingsBusiness) Set(
 func (nb *settingsBusiness) List(
 	ctx context.Context,
 	req *settingsv1.ListRequest,
-) ([]*settingsv1.SettingObject, *connect.Error) {
+) ([]*settingsv1.SettingObject, error) {
 	logger := util.Log(ctx).WithField("request", req)
 
 	logger.Info("handling setting list request")
@@ -143,7 +143,7 @@ func (nb *settingsBusiness) List(
 	settingsList, err := nb.refRepo.SearchRef(ctx, setting.GetModule(),
 		setting.GetName(), setting.GetObject(), setting.GetObjectId(), setting.GetLang())
 	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
+		return nil, err
 	}
 
 	var results []*settingsv1.SettingObject
@@ -174,6 +174,6 @@ func (nb *settingsBusiness) List(
 func (nb *settingsBusiness) Search(
 	_ context.Context,
 	_ *commonv1.SearchRequest,
-) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], *connect.Error) {
+) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
