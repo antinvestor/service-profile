@@ -111,7 +111,16 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		return err
 	}
 
-	logger.WithField("contact", contact.Detail).WithField("resp", resp.Msg()).Info("successfully initiated verification for contact")
+	for resp.Receive() {
 
+		err = resp.Err()
+		if err != nil {
+			return err
+		}
+
+		logger.WithField("contact", contact.Detail).
+			WithField("resp", resp.Msg()).
+			Info("successfully submitted verification for contact")
+	}
 	return nil
 }
