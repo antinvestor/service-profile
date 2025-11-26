@@ -115,6 +115,9 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 
 		err = resp.Err()
 		if err != nil {
+			logger.WithField("contact", contact.Detail).
+				WithError(err).
+				Info("failed submitting verification for contact")
 			return err
 		}
 
