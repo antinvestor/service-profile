@@ -105,11 +105,13 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		Data: []*notificationv1.Notification{nMessages},
 	})
 
-	_, err = vq.notificationCli.Send(ctx, req)
+	resp, err := vq.notificationCli.Send(ctx, req)
 	if err != nil {
 		logger.WithError(err).Error("Failed to send out verification")
 		return err
 	}
+
+	logger.WithField("contact", contact.Detail).WithField("resp", resp.Msg()).Info("successfully initiated verification for contact")
 
 	return nil
 }
