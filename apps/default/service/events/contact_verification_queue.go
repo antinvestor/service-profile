@@ -111,8 +111,12 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		return err
 	}
 
-	for resp.Receive() {
+	if resp == nil {
+		logger.Warn("resp will only be nil if we are testing, this shouldn't happen normally")
+		return nil
+	}
 
+	for resp.Receive() {
 		err = resp.Err()
 		if err != nil {
 			logger.WithField("contact", contact.Detail).

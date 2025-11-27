@@ -44,6 +44,7 @@ type ProfileBaseTestSuite struct {
 
 func initResources(_ context.Context) []definition.TestResource {
 	pg := testpostgres.NewWithOpts("service_profile", definition.WithUserName("ant"))
+
 	resources := []definition.TestResource{pg}
 	return resources
 }
