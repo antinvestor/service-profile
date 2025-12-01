@@ -19,7 +19,7 @@ require (
 	github.com/antinvestor/apis/go/notification v1.48.16
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.67.15
+	github.com/pitabwire/frame v1.67.16
 	github.com/pitabwire/util v0.3.6
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
@@ -122,7 +122,7 @@ require (
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/rs/xid v1.6.0 // indirect
-	github.com/shirou/gopsutil/v4 v4.25.10 // indirect
+	github.com/shirou/gopsutil/v4 v4.25.11 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/stoewer/go-strcase v1.3.1 // indirect
