@@ -6,12 +6,11 @@ import (
 
 	"buf.build/gen/go/antinvestor/device/connectrpc/go/device/v1/devicev1connect"
 	"connectrpc.com/connect"
-	"connectrpc.com/otelconnect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
-	securityconnect "github.com/pitabwire/frame/security/interceptors/connect"
+	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
@@ -117,18 +116,15 @@ func setupConnectServer(
 	securityMan security.Manager,
 	implementation *handlers.DevicesServer,
 ) http.Handler {
-	otelInterceptor, err := otelconnect.NewInterceptor()
+	authenticator := securityMan.GetAuthenticator(ctx)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator)
 	if err != nil {
-		util.Log(ctx).WithError(err).Fatal("could not configure open telemetry")
+		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	validateInterceptor := securityconnect.NewValidationInterceptor()
-
-	authenticator := securityMan.GetAuthenticator(ctx)
-	authInterceptor := securityconnect.NewAuthInterceptor(authenticator)
-
 	_, serverHandler := devicev1connect.NewDeviceServiceHandler(
-		implementation, connect.WithInterceptors(authInterceptor, otelInterceptor, validateInterceptor))
+		implementation, connect.WithInterceptors(defaultInterceptorList...))
 
 	return serverHandler
 }

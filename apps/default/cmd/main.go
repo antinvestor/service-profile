@@ -7,14 +7,13 @@ import (
 	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	"connectrpc.com/connect"
-	"connectrpc.com/otelconnect"
 	apis "github.com/antinvestor/apis/go/common"
 	"github.com/antinvestor/apis/go/notification"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
-	securityconnect "github.com/pitabwire/frame/security/interceptors/connect"
+	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	securityhttp "github.com/pitabwire/frame/security/interceptors/http"
 	"github.com/pitabwire/frame/security/openid"
 	"github.com/pitabwire/util"
@@ -153,20 +152,17 @@ func setupConnectServer(ctx context.Context, svc *frame.Service,
 	notificationCli notificationv1connect.NotificationServiceClient) http.Handler {
 	securityMan := svc.SecurityManager()
 
-	otelInterceptor, err := otelconnect.NewInterceptor()
-	if err != nil {
-		util.Log(ctx).WithError(err).Fatal("could not configure open telemetry")
-	}
-
-	validateInterceptor := securityconnect.NewValidationInterceptor()
-
 	authenticator := securityMan.GetAuthenticator(ctx)
-	authInterceptor := securityconnect.NewAuthInterceptor(authenticator)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator)
+	if err != nil {
+		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
+	}
 
 	implementation := handlers.NewProfileServer(ctx, svc, notificationCli)
 
 	_, serverHandler := profilev1connect.NewProfileServiceHandler(
-		implementation, connect.WithInterceptors(authInterceptor, otelInterceptor, validateInterceptor))
+		implementation, connect.WithInterceptors(defaultInterceptorList...))
 
 	publicRestHandler := securityhttp.AuthenticationMiddleware(implementation.NewSecureRouterV1(), authenticator)
 

@@ -6,11 +6,10 @@ import (
 
 	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/settings/v1/settingsv1connect"
 	"connectrpc.com/connect"
-	"connectrpc.com/otelconnect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
-	securityconnect "github.com/pitabwire/frame/security/interceptors/connect"
+	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
@@ -82,20 +81,17 @@ func handleDatabaseMigration(
 func setupConnectServer(ctx context.Context, svc *frame.Service) http.Handler {
 	securityMan := svc.SecurityManager()
 
-	otelInterceptor, err := otelconnect.NewInterceptor()
-	if err != nil {
-		util.Log(ctx).WithError(err).Fatal("could not configure open telemetry")
-	}
-
-	validateInterceptor := securityconnect.NewValidationInterceptor()
-
 	authenticator := securityMan.GetAuthenticator(ctx)
-	authInterceptor := securityconnect.NewAuthInterceptor(authenticator)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator)
+	if err != nil {
+		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
+	}
 
 	implementation := handlers.NewSettingsServer(ctx, svc)
 
 	_, serverHandler := settingsv1connect.NewSettingsServiceHandler(
-		implementation, connect.WithInterceptors(authInterceptor, otelInterceptor, validateInterceptor))
+		implementation, connect.WithInterceptors(defaultInterceptorList...))
 
 	return serverHandler
 }
