@@ -94,11 +94,12 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 	}
 
 	nMessages := &notificationv1.Notification{
-		Recipient: recipient,
-		Payload:   variablePayload,
-		Language:  contact.Language,
-		Template:  vq.cfg.MessageTemplateContactVerification,
-		OutBound:  true,
+		Recipient:   recipient,
+		Payload:     variablePayload,
+		Language:    contact.Language,
+		Template:    vq.cfg.MessageTemplateContactVerification,
+		OutBound:    true,
+		AutoRelease: true,
 	}
 
 	req := connect.NewRequest(&notificationv1.SendRequest{
