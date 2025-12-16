@@ -3,22 +3,22 @@ module github.com/antinvestor/service-profile
 go 1.25.2
 
 require (
-	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20251119161617-faec0015998a.1
-	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20251205175716-147537a63a68.2
-	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20251205175716-147537a63a68.1
-	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20251205175834-28725063ee3f.2
-	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20251205175834-28725063ee3f.1
-	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20251205175955-9870a37939f7.2
-	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20251205175955-9870a37939f7.1
-	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20251205180030-b2fb7ba7f112.2
-	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20251205180030-b2fb7ba7f112.1
+	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20251216061047-d524d0f6d60c.1
+	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20251216061210-6c1f3494376a.2
+	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20251216061210-6c1f3494376a.1
+	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20251216063814-4531d03f5444.2
+	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20251216063814-4531d03f5444.1
+	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20251216063931-513b05dc5e70.2
+	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20251216063931-513b05dc5e70.1
+	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20251216064007-3a6c2a4d8764.2
+	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20251216064007-3a6c2a4d8764.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.18.0
-	github.com/antinvestor/apis/go/common v1.49.0
-	github.com/antinvestor/apis/go/notification v1.49.0
+	github.com/antinvestor/apis/go/common v1.49.5
+	github.com/antinvestor/apis/go/notification v1.49.4
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.69.0
+	github.com/pitabwire/frame v1.69.1
 	github.com/pitabwire/util v0.3.6
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
@@ -33,7 +33,7 @@ require (
 	buf.build/go/protovalidate v1.1.0 // indirect
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/auth v0.17.0 // indirect
+	cloud.google.com/go/auth v0.18.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	cloud.google.com/go/firestore v1.20.0 // indirect
