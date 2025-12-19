@@ -3,23 +3,18 @@ package handlers
 import (
 	"context"
 	"math"
-	"net"
-	"strings"
 	"time"
 
 	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/datastore"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/peer"
-
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/internal/errorutil"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
 )
 
 // Constants for pagination and batch sizes.
@@ -237,44 +232,16 @@ func (ps *ProfileServer) CreateContactVerification(
 	}), nil
 }
 
-func getClientIP(ctx context.Context) string {
-	// First, try to get the IP from the X-Forwarded-For header.
-	if md, ok := metadata.FromIncomingContext(ctx); ok {
-		if xff := md.Get("x-forwarded-for"); len(xff) > 0 {
-			// X-Forwarded-For can be a comma-separated list of IPs.
-			// The first one is the original client.
-			ips := strings.Split(xff[0], ",")
-			if len(ips) > 0 {
-				return strings.TrimSpace(ips[0])
-			}
-		}
-		if xrip := md.Get("x-real-ip"); len(xrip) > 0 {
-			return xrip[0]
-		}
-	}
-
-	// If not available, fall back to the peer's address.
-	p, ok := peer.FromContext(ctx)
-	if ok {
-		tcpAddr, tcok := p.Addr.(*net.TCPAddr)
-		if tcok {
-			return tcpAddr.IP.String()
-		}
-		return p.Addr.String()
-	}
-
-	return "unknown"
-}
-
 func (ps *ProfileServer) CheckVerification(
 	ctx context.Context,
 	request *connect.Request[profilev1.CheckVerificationRequest],
 ) (*connect.Response[profilev1.CheckVerificationResponse], error) {
+
 	verificationAttempts, verified, err := ps.profileBusiness.CheckVerification(
 		ctx,
 		request.Msg.GetId(),
 		request.Msg.GetCode(),
-		getClientIP(ctx),
+		request.Peer().Addr,
 	)
 
 	if err != nil {
