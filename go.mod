@@ -14,12 +14,12 @@ require (
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20251216064007-3a6c2a4d8764.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.18.0
-	github.com/antinvestor/apis/go/common v1.49.5
-	github.com/antinvestor/apis/go/notification v1.49.4
+	github.com/antinvestor/apis/go/common v1.49.7
+	github.com/antinvestor/apis/go/notification v1.49.8
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.69.7
-	github.com/pitabwire/util v0.3.6
+	github.com/pitabwire/frame v1.69.8
+	github.com/pitabwire/util v0.3.7
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
 	google.golang.org/grpc v1.77.0
