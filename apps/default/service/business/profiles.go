@@ -118,8 +118,6 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 func (pb *profileBusiness) GetByContact(
 	ctx context.Context,
 	contactData string) (*profilev1.ProfileObject, error) {
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
-
 	var err error
 	var contact *models.Contact
 
@@ -135,14 +133,25 @@ func (pb *profileBusiness) GetByContact(
 			return nil, err
 		}
 	}
+
+	if contact.ProfileID == "" {
+		profileObject := profilev1.ProfileObject{}
+
+		profileObject.Type = models.ProfileTypeIDToEnum(models.ProfileTypePersonID)
+		props := data.JSONMap{}
+		profileObject.Properties = props.ToProtoStruct()
+		profileObject.Contacts = []*profilev1.ContactObject{contact.ToAPI(true)}
+		profileObject.Addresses = []*profilev1.AddressObject{}
+
+		return &profileObject, nil
+	}
+
 	return pb.GetByID(ctx, contact.ProfileID)
 }
 
 func (pb *profileBusiness) GetByID(
 	ctx context.Context,
 	profileID string) (*profilev1.ProfileObject, error) {
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
-
 	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
 		return nil, err
@@ -176,8 +185,6 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 
 func (pb *profileBusiness) MergeProfile(ctx context.Context,
 	request *profilev1.MergeRequest) (*profilev1.ProfileObject, error) {
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
-
 	target, err := pb.profileRepo.GetByID(ctx, request.GetId())
 	if err != nil {
 		return nil, err
@@ -231,8 +238,6 @@ func (pb *profileBusiness) UpdateProfile(
 func (pb *profileBusiness) CreateProfile(
 	ctx context.Context,
 	request *profilev1.CreateRequest) (*profilev1.ProfileObject, error) {
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
-
 	contactDetail := strings.TrimSpace(request.GetContact())
 
 	if contactDetail == "" {

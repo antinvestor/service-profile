@@ -9,12 +9,13 @@ import (
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/datastore"
+
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/internal/errorutil"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/datastore"
 )
 
 // Constants for pagination and batch sizes.
@@ -236,7 +237,6 @@ func (ps *ProfileServer) CheckVerification(
 	ctx context.Context,
 	request *connect.Request[profilev1.CheckVerificationRequest],
 ) (*connect.Response[profilev1.CheckVerificationResponse], error) {
-
 	verificationAttempts, verified, err := ps.profileBusiness.CheckVerification(
 		ctx,
 		request.Msg.GetId(),

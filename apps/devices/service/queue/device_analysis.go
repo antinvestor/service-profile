@@ -11,7 +11,6 @@ import (
 	"github.com/pitabwire/frame/client"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/queue"
-	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/encoding/protojson"
 
@@ -57,8 +56,6 @@ func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]s
 		}
 		return err
 	}
-
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	session, err := dq.getOrCreateSession(ctx, deviceLog)
 	if err != nil {

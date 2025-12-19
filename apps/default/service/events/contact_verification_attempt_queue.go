@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -55,8 +54,6 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 	}
 
 	logger := util.Log(ctx).WithField("attempt", attempt.GetID()).WithField("type", vaq.Name())
-
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	err := vaq.VerificationRepo.SaveAttempt(ctx, attempt)
 	if err != nil {
