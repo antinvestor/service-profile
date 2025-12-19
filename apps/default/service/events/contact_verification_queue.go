@@ -9,7 +9,6 @@ import (
 	notificationv1 "buf.build/gen/go/antinvestor/notification/protocolbuffers/go/notification/v1"
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -66,8 +65,6 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 	}
 
 	logger := util.Log(ctx).WithField("payload", verification.GetID()).WithField("type", vq.Name())
-
-	ctx = security.SkipTenancyChecksOnClaims(ctx)
 
 	contact, err := vq.contactRepo.GetByID(ctx, verification.ContactID)
 	if err != nil {
