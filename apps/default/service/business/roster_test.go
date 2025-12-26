@@ -51,9 +51,9 @@ func (rts *RosterTestSuite) createRoster(
 	profileID string,
 	contacts map[string]data.JSONMap,
 ) (map[string]*profilev1.RosterObject, error) {
-	var requestData []*profilev1.AddContactRequest
+	var requestData []*profilev1.RawContact
 	for detail, extra := range contacts {
-		requestData = append(requestData, &profilev1.AddContactRequest{
+		requestData = append(requestData, &profilev1.RawContact{
 			Contact: detail,
 			Extras:  extra.ToProtoStruct(),
 		})
