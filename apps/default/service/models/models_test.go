@@ -1,13 +1,15 @@
-package models
+package models_test
 
 import (
 	"testing"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 func TestProfileTypeIDToEnum(t *testing.T) {
@@ -16,16 +18,16 @@ func TestProfileTypeIDToEnum(t *testing.T) {
 		typeID   uint
 		expected profilev1.ProfileType
 	}{
-		{"Person type", ProfileTypePersonID, profilev1.ProfileType_PERSON},
-		{"Bot type", ProfileTypeBotID, profilev1.ProfileType_BOT},
-		{"Institution type", ProfileTypeInstitutionID, profilev1.ProfileType_INSTITUTION},
+		{"Person type", models.ProfileTypePersonID, profilev1.ProfileType_PERSON},
+		{"Bot type", models.ProfileTypeBotID, profilev1.ProfileType_BOT},
+		{"Institution type", models.ProfileTypeInstitutionID, profilev1.ProfileType_INSTITUTION},
 		{"Unknown type defaults to Person", 999, profilev1.ProfileType_PERSON},
 		{"Zero type defaults to Person", 0, profilev1.ProfileType_PERSON},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := ProfileTypeIDToEnum(tt.typeID)
+			result := models.ProfileTypeIDToEnum(tt.typeID)
 			require.Equal(t, tt.expected, result)
 		})
 	}
@@ -37,16 +39,16 @@ func TestRelationshipTypeIDToEnum(t *testing.T) {
 		typeID   uint
 		expected profilev1.RelationshipType
 	}{
-		{"Member type", RelationshipTypeMemberID, profilev1.RelationshipType_MEMBER},
-		{"Affiliated type", RelationshipTypeAffiliatedID, profilev1.RelationshipType_AFFILIATED},
-		{"Blacklisted type", RelationshipTypeBlackListedID, profilev1.RelationshipType_BLACK_LISTED},
+		{"Member type", models.RelationshipTypeMemberID, profilev1.RelationshipType_MEMBER},
+		{"Affiliated type", models.RelationshipTypeAffiliatedID, profilev1.RelationshipType_AFFILIATED},
+		{"Blacklisted type", models.RelationshipTypeBlackListedID, profilev1.RelationshipType_BLACK_LISTED},
 		{"Unknown type defaults to Member", 999, profilev1.RelationshipType_MEMBER},
 		{"Zero type defaults to Member", 0, profilev1.RelationshipType_MEMBER},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := RelationshipTypeIDToEnum(tt.typeID)
+			result := models.RelationshipTypeIDToEnum(tt.typeID)
 			require.Equal(t, tt.expected, result)
 		})
 	}
@@ -64,7 +66,7 @@ func TestContact_DecryptDetail(t *testing.T) {
 
 	tests := []struct {
 		name          string
-		contact       *Contact
+		contact       *models.Contact
 		decryptKeyID  string
 		decryptKey    []byte
 		expectedValue string
@@ -72,7 +74,7 @@ func TestContact_DecryptDetail(t *testing.T) {
 	}{
 		{
 			name: "Successful decryption",
-			contact: &Contact{
+			contact: &models.Contact{
 				EncryptedDetail: encryptedDetail,
 				EncryptionKeyID: keyID,
 			},
@@ -83,7 +85,7 @@ func TestContact_DecryptDetail(t *testing.T) {
 		},
 		{
 			name: "Wrong key ID",
-			contact: &Contact{
+			contact: &models.Contact{
 				EncryptedDetail: encryptedDetail,
 				EncryptionKeyID: keyID,
 			},
@@ -94,7 +96,7 @@ func TestContact_DecryptDetail(t *testing.T) {
 		},
 		{
 			name: "Wrong decryption key",
-			contact: &Contact{
+			contact: &models.Contact{
 				EncryptedDetail: encryptedDetail,
 				EncryptionKeyID: keyID,
 			},
@@ -107,12 +109,12 @@ func TestContact_DecryptDetail(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := tt.contact.DecryptDetail(tt.decryptKeyID, tt.decryptKey)
+			result, decryptErr := tt.contact.DecryptDetail(tt.decryptKeyID, tt.decryptKey)
 			if tt.wantErr {
-				require.Error(t, err)
+				require.Error(t, decryptErr)
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, decryptErr)
 			require.Equal(t, tt.expectedValue, result)
 		})
 	}
@@ -135,17 +137,17 @@ func TestContact_ToAPI(t *testing.T) {
 	}
 
 	tests := []struct {
-		name              string
-		contact           *Contact
-		partial           bool
-		expectedDetail    string
-		expectedType      profilev1.ContactType
-		expectedVerified  bool
-		wantErr           bool
+		name             string
+		contact          *models.Contact
+		partial          bool
+		expectedDetail   string
+		expectedType     profilev1.ContactType
+		expectedVerified bool
+		wantErr          bool
 	}{
 		{
 			name: "Full contact with verification",
-			contact: &Contact{
+			contact: &models.Contact{
 				BaseModel:          data.BaseModel{ID: "contact-1"},
 				EncryptedDetail:    encryptedDetail,
 				EncryptionKeyID:    keyID,
@@ -161,7 +163,7 @@ func TestContact_ToAPI(t *testing.T) {
 		},
 		{
 			name: "Partial contact hides verification",
-			contact: &Contact{
+			contact: &models.Contact{
 				BaseModel:          data.BaseModel{ID: "contact-2"},
 				EncryptedDetail:    encryptedDetail,
 				EncryptionKeyID:    keyID,
@@ -177,7 +179,7 @@ func TestContact_ToAPI(t *testing.T) {
 		},
 		{
 			name: "Unknown contact type defaults to EMAIL",
-			contact: &Contact{
+			contact: &models.Contact{
 				BaseModel:          data.BaseModel{ID: "contact-3"},
 				EncryptedDetail:    encryptedDetail,
 				EncryptionKeyID:    keyID,
@@ -194,12 +196,12 @@ func TestContact_ToAPI(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := tt.contact.ToAPI(dek, tt.partial)
+			result, toAPIErr := tt.contact.ToAPI(dek, tt.partial)
 			if tt.wantErr {
-				require.Error(t, err)
+				require.Error(t, toAPIErr)
 				return
 			}
-			require.NoError(t, err)
+			require.NoError(t, toAPIErr)
 			require.NotNil(t, result)
 			require.Equal(t, tt.expectedDetail, result.GetDetail())
 			require.Equal(t, tt.expectedType, result.GetType())
@@ -225,7 +227,7 @@ func TestRoster_ToAPI(t *testing.T) {
 		LookUpKey: []byte("lookup-key"),
 	}
 
-	contact := &Contact{
+	contact := &models.Contact{
 		BaseModel:          data.BaseModel{ID: "contact-1"},
 		EncryptedDetail:    encryptedDetail,
 		EncryptionKeyID:    keyID,
@@ -233,7 +235,7 @@ func TestRoster_ToAPI(t *testing.T) {
 		CommunicationLevel: "ALL",
 	}
 
-	roster := &Roster{
+	roster := &models.Roster{
 		BaseModel:  data.BaseModel{ID: "roster-1"},
 		ProfileID:  "profile-123",
 		ContactID:  contact.ID,
@@ -252,14 +254,14 @@ func TestRoster_ToAPI(t *testing.T) {
 }
 
 func TestRelationship_ToAPI(t *testing.T) {
-	relationshipType := &RelationshipType{
+	relationshipType := &models.RelationshipType{
 		BaseModel:   data.BaseModel{ID: "type-1"},
-		UID:         RelationshipTypeMemberID,
+		UID:         models.RelationshipTypeMemberID,
 		Name:        "member",
 		Description: "Member relationship",
 	}
 
-	relationship := &Relationship{
+	relationship := &models.Relationship{
 		BaseModel:          data.BaseModel{ID: "relationship-1"},
 		ParentObject:       "Profile",
 		ParentObjectID:     "parent-profile-id",
@@ -273,7 +275,7 @@ func TestRelationship_ToAPI(t *testing.T) {
 	result := relationship.ToAPI()
 	require.NotNil(t, result)
 	require.Equal(t, "relationship-1", result.GetId())
-	require.Equal(t, profilev1.RelationshipType(RelationshipTypeMemberID), result.GetType())
+	require.Equal(t, profilev1.RelationshipType(models.RelationshipTypeMemberID), result.GetType())
 	require.NotNil(t, result.GetChildEntry())
 	require.Equal(t, "Profile", result.GetChildEntry().GetObjectName())
 	require.Equal(t, "child-profile-id", result.GetChildEntry().GetObjectId())
@@ -285,14 +287,22 @@ func TestRelationship_ToAPI(t *testing.T) {
 
 func TestProfileTypeIDMap(t *testing.T) {
 	// Verify the map contains expected entries
-	require.Equal(t, ProfileTypePersonID, ProfileTypeIDMap[profilev1.ProfileType_PERSON])
-	require.Equal(t, ProfileTypeBotID, ProfileTypeIDMap[profilev1.ProfileType_BOT])
-	require.Equal(t, ProfileTypeInstitutionID, ProfileTypeIDMap[profilev1.ProfileType_INSTITUTION])
+	require.Equal(t, models.ProfileTypePersonID, models.ProfileTypeIDMap[profilev1.ProfileType_PERSON])
+	require.Equal(t, models.ProfileTypeBotID, models.ProfileTypeIDMap[profilev1.ProfileType_BOT])
+	require.Equal(t, models.ProfileTypeInstitutionID, models.ProfileTypeIDMap[profilev1.ProfileType_INSTITUTION])
 }
 
 func TestRelationshipTypeIDMap(t *testing.T) {
 	// Verify the map contains expected entries
-	require.Equal(t, RelationshipTypeMemberID, RelationshipTypeIDMap[profilev1.RelationshipType_MEMBER])
-	require.Equal(t, RelationshipTypeAffiliatedID, RelationshipTypeIDMap[profilev1.RelationshipType_AFFILIATED])
-	require.Equal(t, RelationshipTypeBlackListedID, RelationshipTypeIDMap[profilev1.RelationshipType_BLACK_LISTED])
+	require.Equal(t, models.RelationshipTypeMemberID, models.RelationshipTypeIDMap[profilev1.RelationshipType_MEMBER])
+	require.Equal(
+		t,
+		models.RelationshipTypeAffiliatedID,
+		models.RelationshipTypeIDMap[profilev1.RelationshipType_AFFILIATED],
+	)
+	require.Equal(
+		t,
+		models.RelationshipTypeBlackListedID,
+		models.RelationshipTypeIDMap[profilev1.RelationshipType_BLACK_LISTED],
+	)
 }

@@ -1,21 +1,23 @@
-package events
+package events_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/stretchr/testify/require"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
 
 func TestContactKeyRotationQueue_Name(t *testing.T) {
-	queue := NewContactKeyRotationQueue(&config.ProfileConfig{}, &config.DEK{}, nil)
-	require.Equal(t, ContactKeyRotationEventHandlerName, queue.Name())
+	queue := events.NewContactKeyRotationQueue(&config.ProfileConfig{}, &config.DEK{}, nil)
+	require.Equal(t, events.ContactKeyRotationEventHandlerName, queue.Name())
 }
 
 func TestContactKeyRotationQueue_PayloadType(t *testing.T) {
-	queue := NewContactKeyRotationQueue(&config.ProfileConfig{}, &config.DEK{}, nil)
+	queue := events.NewContactKeyRotationQueue(&config.ProfileConfig{}, &config.DEK{}, nil)
 	payload := queue.PayloadType()
 	require.NotNil(t, payload)
 	_, ok := payload.(*models.Contact)
@@ -23,7 +25,7 @@ func TestContactKeyRotationQueue_PayloadType(t *testing.T) {
 }
 
 func TestContactKeyRotationQueue_Validate(t *testing.T) {
-	queue := NewContactKeyRotationQueue(&config.ProfileConfig{}, &config.DEK{}, nil)
+	queue := events.NewContactKeyRotationQueue(&config.ProfileConfig{}, &config.DEK{}, nil)
 	ctx := context.Background()
 
 	tests := []struct {
@@ -66,7 +68,7 @@ func TestContactKeyRotationQueue_Validate(t *testing.T) {
 }
 
 func TestContactKeyRotationQueue_Execute_InvalidPayload(t *testing.T) {
-	queue := NewContactKeyRotationQueue(&config.ProfileConfig{}, &config.DEK{}, nil)
+	queue := events.NewContactKeyRotationQueue(&config.ProfileConfig{}, &config.DEK{}, nil)
 	ctx := context.Background()
 
 	// Test with invalid payload type

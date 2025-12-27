@@ -71,7 +71,6 @@ type contactBusiness struct {
 }
 
 func ContactTypeFromDetail(ctx context.Context, detail string) (string, error) {
-
 	normalizedDetail := Normalize(ctx, detail)
 
 	if EmailPattern.MatchString(normalizedDetail) {
@@ -99,7 +98,6 @@ func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*mode
 }
 
 func (cb *contactBusiness) GetByDetail(ctx context.Context, detailList ...string) ([]*models.Contact, error) {
-
 	var lookUpTokenList [][]byte
 
 	for _, detail := range detailList {
@@ -115,8 +113,11 @@ func (cb *contactBusiness) GetByDetail(ctx context.Context, detailList ...string
 	return contact, nil
 }
 
-// GetByDetailMap returns a map of detail to contact for efficient bulk lookups
-func (cb *contactBusiness) GetByDetailMap(ctx context.Context, detailList ...string) (map[string]*models.Contact, error) {
+// GetByDetailMap returns a map of detail to contact for efficient bulk lookups.
+func (cb *contactBusiness) GetByDetailMap(
+	ctx context.Context,
+	detailList ...string,
+) (map[string]*models.Contact, error) {
 	contacts, err := cb.GetByDetail(ctx, detailList...)
 	if err != nil {
 		return nil, err
@@ -126,8 +127,8 @@ func (cb *contactBusiness) GetByDetailMap(ctx context.Context, detailList ...str
 	contactMap := make(map[string]*models.Contact)
 	for _, contact := range contacts {
 		// Decrypt the detail to use as map key
-		detail, err := contact.DecryptDetail(cb.dek.KeyID, cb.dek.Key)
-		if err != nil {
+		detail, decryptErr := contact.DecryptDetail(cb.dek.KeyID, cb.dek.Key)
+		if decryptErr != nil {
 			// Skip contacts that can't be decrypted
 			continue
 		}

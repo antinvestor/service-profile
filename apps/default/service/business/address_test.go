@@ -26,12 +26,12 @@ func TestAddressSuite(t *testing.T) {
 	suite.Run(t, new(AddressTestSuite))
 }
 
-// Helper function to create consistent test DEK
+// Helper function to create consistent test DEK.
 func createAddressTestDEK(cfg *config.ProfileConfig) *config.DEK {
 	// Decode base64 keys
 	key, _ := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
 	lookupKey, _ := base64.StdEncoding.DecodeString(cfg.DEKLookupTokenHMACSHA256Key)
-	
+
 	return &config.DEK{
 		KeyID:     cfg.DEKActiveKeyID,
 		Key:       key,
@@ -54,13 +54,28 @@ func (ats *AddressTestSuite) getProfileBusiness(
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	contactBusiness := business.NewContactBusiness(ctx, cfg, createAddressTestDEK(cfg), evtsMan, contactRepo, verificationRepo)
+	contactBusiness := business.NewContactBusiness(
+		ctx,
+		cfg,
+		createAddressTestDEK(cfg),
+		evtsMan,
+		contactRepo,
+		verificationRepo,
+	)
 
 	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
-	return business.NewProfileBusiness(ctx, cfg, createAddressTestDEK(cfg), evtsMan, contactBusiness, addressBusiness, profileRepo), addressRepo
+	return business.NewProfileBusiness(
+		ctx,
+		cfg,
+		createAddressTestDEK(cfg),
+		evtsMan,
+		contactBusiness,
+		addressBusiness,
+		profileRepo,
+	), addressRepo
 }
 
 func (ats *AddressTestSuite) TestNewAddressBusiness() {

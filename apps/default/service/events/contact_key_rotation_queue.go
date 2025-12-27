@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 
+	"github.com/pitabwire/util"
+
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/pitabwire/util"
 )
 
 const ContactKeyRotationEventHandlerName = "contact.key.rotation.queue"

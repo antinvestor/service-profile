@@ -103,7 +103,7 @@ func (rts *RepositoryTestSuite) TestContactRepository_GetByProfileID() {
 		profileID := util.IDString()
 
 		// Create multiple contacts for the same profile
-		for i := 0; i < 3; i++ {
+		for range 3 {
 			contact := &models.Contact{
 				LookUpToken:     []byte("lookup-token-" + util.IDString()),
 				EncryptedDetail: []byte("encrypted-detail"),

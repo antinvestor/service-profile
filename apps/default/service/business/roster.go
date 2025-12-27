@@ -67,7 +67,10 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 
 	var orSearchFilter = make(map[string]any)
 	if request.GetQuery() != "" {
-		orSearchFilter["contacts.look_up_token = ?"] = util.ComputeLookupToken(rb.dek.LookUpKey, Normalize(ctx, request.GetQuery()))
+		orSearchFilter["contacts.look_up_token = ?"] = util.ComputeLookupToken(
+			rb.dek.LookUpKey,
+			Normalize(ctx, request.GetQuery()),
+		)
 		orSearchFilter["rosters.searchable  @@ websearch_to_tsquery( 'english', ?) "] = request.GetQuery()
 	}
 
@@ -130,7 +133,7 @@ func (rb *rosterBusiness) CreateRoster(
 	return rosterObjectList, nil
 }
 
-// processRosterBatch processes a batch of roster items efficiently
+// processRosterBatch processes a batch of roster items efficiently.
 func (rb *rosterBusiness) processRosterBatch(
 	ctx context.Context,
 	profileID string,
@@ -151,10 +154,10 @@ func (rb *rosterBusiness) processRosterBatch(
 	// Step 3: Create only contacts that don't exist
 	contacts := make([]*models.Contact, 0, len(batch))
 	contactDetails := make([]string, 0, len(batch))
-	
+
 	for _, newRoster := range batch {
 		detail := newRoster.GetContact()
-		
+
 		// Check if contact already exists
 		if existingContact, exists := existingContactMap[detail]; exists {
 			// Use existing contact
@@ -163,13 +166,13 @@ func (rb *rosterBusiness) processRosterBatch(
 		} else {
 			// Create new contact
 			requestExtras := data.JSONMap{}
-			contact, err := rb.contactBusiness.CreateContact(
+			contact, createErr := rb.contactBusiness.CreateContact(
 				ctx,
 				newRoster.GetContact(),
 				requestExtras.FromProtoStruct(newRoster.GetExtras()),
 			)
-			if err != nil {
-				return nil, err
+			if createErr != nil {
+				return nil, createErr
 			}
 			contacts = append(contacts, contact)
 			contactDetails = append(contactDetails, contact.GetID())
@@ -192,7 +195,7 @@ func (rb *rosterBusiness) processRosterBatch(
 	rosterObjectList := make([]*profilev1.RosterObject, 0, len(batch))
 	for i, contact := range contacts {
 		newRoster := batch[i]
-		
+
 		roster, exists := existingRosterMap[contact.GetID()]
 		if !exists {
 			// Create new roster

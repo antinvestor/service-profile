@@ -59,7 +59,15 @@ func NewProfileServer(
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
-	profileBusiness := business.NewProfileBusiness(ctx, cfg, dek, evtsMan, contactBusiness, addressBusiness, profileRepo)
+	profileBusiness := business.NewProfileBusiness(
+		ctx,
+		cfg,
+		dek,
+		evtsMan,
+		contactBusiness,
+		addressBusiness,
+		profileRepo,
+	)
 
 	rosterRepo := repository.NewRosterRepository(ctx, dbPool, workMan)
 	rosterBusiness := business.NewRosterBusiness(ctx, cfg, dek, contactBusiness, rosterRepo)
@@ -204,7 +212,6 @@ func (ps *ProfileServer) CreateContact(
 	ctx context.Context,
 	request *connect.Request[profilev1.CreateContactRequest],
 ) (*connect.Response[profilev1.CreateContactResponse], error) {
-
 	createReq := request.Msg
 
 	contactList, err := ps.contactBusiness.GetByDetail(ctx, createReq.GetContact())
@@ -216,7 +223,6 @@ func (ps *ProfileServer) CreateContact(
 	}
 
 	if len(contactList) > 0 {
-
 		contact, decryptErr := contactList[0].ToAPI(ps.DEK, true)
 		if decryptErr != nil {
 			return nil, errorutil.CleanErr(decryptErr)
@@ -333,7 +339,6 @@ func (ps *ProfileServer) SearchRoster(
 		// Preallocate slice to optimize memory allocation.
 		rosterList := make([]*profilev1.RosterObject, 0, len(result.Item()))
 		for _, roster := range result.Item() {
-
 			rosterObj, rosterErr := roster.ToAPI(ps.DEK)
 			if rosterErr != nil {
 				return errorutil.CleanErr(rosterErr)

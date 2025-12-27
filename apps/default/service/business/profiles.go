@@ -3,7 +3,6 @@ package business
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -21,6 +20,9 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
+
+// ErrContactNotFound is returned when a contact lookup finds no matching contact.
+var ErrContactNotFound = errors.New("contact not found")
 
 type ProfileBusiness interface {
 	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, error)
@@ -100,9 +102,9 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 		return nil, err
 	}
 	for _, c := range contactList {
-		contactObj, err := c.ToAPI(pb.dek, true)
-		if err != nil {
-			return nil, err
+		contactObj, toAPIErr := c.ToAPI(pb.dek, true)
+		if toAPIErr != nil {
+			return nil, toAPIErr
 		}
 		contactObjects = append(contactObjects, contactObj)
 	}
@@ -136,7 +138,7 @@ func (pb *profileBusiness) GetByContact(
 		}
 
 		if len(contactList) == 0 {
-			return nil, fmt.Errorf("contact not found")
+			return nil, errors.New("contact not found")
 		}
 		contact = contactList[0]
 	} else {
@@ -152,9 +154,9 @@ func (pb *profileBusiness) GetByContact(
 		profileObject.Type = models.ProfileTypeIDToEnum(models.ProfileTypePersonID)
 		props := data.JSONMap{}
 		profileObject.Properties = props.ToProtoStruct()
-		contactObj, err := contact.ToAPI(pb.dek, true)
-		if err != nil {
-			return nil, err
+		contactObj, toAPIErr := contact.ToAPI(pb.dek, true)
+		if toAPIErr != nil {
+			return nil, toAPIErr
 		}
 		profileObject.Contacts = []*profilev1.ContactObject{contactObj}
 		profileObject.Addresses = []*profilev1.AddressObject{}
@@ -251,6 +253,31 @@ func (pb *profileBusiness) UpdateProfile(
 	return pb.ToAPI(ctx, profile)
 }
 
+// lookupContactByDetail attempts to find a contact by detail or ID.
+// Returns the contact if found, nil if not found, or an error if lookup fails.
+func (pb *profileBusiness) lookupContactByDetail(
+	ctx context.Context,
+	contactDetail string,
+) (*models.Contact, error) {
+	_, contactTypeErr := ContactTypeFromDetail(ctx, contactDetail)
+	if contactTypeErr != nil {
+		// Not a valid contact format, try lookup by ID
+		return pb.contactBusiness.GetByID(ctx, contactDetail)
+	}
+
+	// Valid contact format, lookup by detail
+	contactList, detailErr := pb.contactBusiness.GetByDetail(ctx, contactDetail)
+	if detailErr != nil && !frame.ErrorIsNotFound(detailErr) {
+		return nil, detailErr
+	}
+
+	if len(contactList) != 0 {
+		return contactList[0], nil
+	}
+
+	return nil, ErrContactNotFound
+}
+
 func (pb *profileBusiness) CreateProfile(
 	ctx context.Context,
 	request *profilev1.CreateRequest) (*profilev1.ProfileObject, error) {
@@ -264,27 +291,9 @@ func (pb *profileBusiness) CreateProfile(
 
 	p.Properties = request.GetProperties().AsMap()
 
-	var err error
-	var contact *models.Contact
-	_, contactTypeErr := ContactTypeFromDetail(ctx, contactDetail)
-	if contactTypeErr == nil {
-
-		contactList, detailErr := pb.contactBusiness.GetByDetail(ctx, contactDetail)
-		if detailErr != nil {
-			if !frame.ErrorIsNotFound(detailErr) {
-				return nil, detailErr
-			}
-		}
-
-		if len(contactList) != 0 {
-			contact = contactList[0]
-		}
-
-	} else {
-		contact, err = pb.contactBusiness.GetByID(ctx, contactDetail)
-		if err != nil {
-			return nil, err
-		}
+	contact, lookupErr := pb.lookupContactByDetail(ctx, contactDetail)
+	if lookupErr != nil && !errors.Is(lookupErr, ErrContactNotFound) {
+		return nil, lookupErr
 	}
 
 	if contact != nil && contact.ProfileID != "" {
@@ -305,6 +314,7 @@ func (pb *profileBusiness) CreateProfile(
 		return nil, data.ErrorConvertToAPI(createErr)
 	}
 
+	var err error
 	if contact == nil {
 		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, data.JSONMap{})
 		if err != nil {
@@ -399,7 +409,11 @@ func (pb *profileBusiness) AddContact(
 
 	extrasMap := data.JSONMap{}
 
-	resp, contactErr := pb.contactBusiness.CreateContact(ctx, request.GetContact(), extrasMap.FromProtoStruct(request.GetExtras()))
+	resp, contactErr := pb.contactBusiness.CreateContact(
+		ctx,
+		request.GetContact(),
+		extrasMap.FromProtoStruct(request.GetExtras()),
+	)
 
 	if contactErr != nil {
 		return nil, "", contactErr

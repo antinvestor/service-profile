@@ -1,14 +1,15 @@
 package models
 
 import (
-	"fmt"
+	"errors"
 	"math"
 	"time"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
+
+	"github.com/antinvestor/service-profile/apps/default/config"
 )
 
 // Profile type and relationship type constants.
@@ -86,9 +87,8 @@ type Contact struct {
 }
 
 func (c *Contact) DecryptDetail(decryptionKeyID string, decryptionKeyData []byte) (string, error) {
-
 	if c.EncryptionKeyID != decryptionKeyID {
-		return "", fmt.Errorf("decryption key does not match contact key id")
+		return "", errors.New("decryption key does not match contact key id")
 	}
 
 	detailBytes, err := util.DecryptValue(decryptionKeyData, c.EncryptedDetail)
@@ -99,7 +99,6 @@ func (c *Contact) DecryptDetail(decryptionKeyID string, decryptionKeyData []byte
 }
 
 func (c *Contact) ToAPI(dek *config.DEK, partial bool) (*profilev1.ContactObject, error) {
-
 	contactDetail, err := c.DecryptDetail(dek.KeyID, dek.Key)
 	if err != nil {
 		return nil, err
@@ -142,7 +141,6 @@ type Roster struct {
 }
 
 func (r *Roster) ToAPI(dek *config.DEK) (*profilev1.RosterObject, error) {
-
 	contactObj, err := r.Contact.ToAPI(dek, true)
 	if err != nil {
 		return nil, err

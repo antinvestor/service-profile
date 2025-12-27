@@ -31,12 +31,12 @@ func TestContactSuite(t *testing.T) {
 	suite.Run(t, new(ContactTestSuite))
 }
 
-// Helper function to create consistent test DEK
+// Helper function to create consistent test DEK.
 func createContactTestDEK(cfg *config.ProfileConfig) *config.DEK {
 	// Decode base64 keys
 	key, _ := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
 	lookupKey, _ := base64.StdEncoding.DecodeString(cfg.DEKLookupTokenHMACSHA256Key)
-	
+
 	return &config.DEK{
 		KeyID:     cfg.DEKActiveKeyID,
 		Key:       key,
@@ -59,7 +59,14 @@ func (cts *ContactTestSuite) getContactBusiness(
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	return business.NewContactBusiness(ctx, cfg, createContactTestDEK(cfg), evtsMan, contactRepo, verificationRepo), verificationRepo
+	return business.NewContactBusiness(
+		ctx,
+		cfg,
+		createContactTestDEK(cfg),
+		evtsMan,
+		contactRepo,
+		verificationRepo,
+	), verificationRepo
 }
 
 func (cts *ContactTestSuite) TestGeneratePin() {
@@ -130,7 +137,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			want: &models.Contact{ // Expected result
 				EncryptedDetail: []byte("encrypted_detail"),
 				EncryptionKeyID: "test_key_id",
-				Properties: data.JSONMap{"type": "msisdn"},
+				Properties:      data.JSONMap{"type": "msisdn"},
 			},
 			wantErr: require.NoError, // No error expected
 		},
@@ -143,7 +150,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			want: &models.Contact{ // Expected result
 				EncryptedDetail: []byte("encrypted_email"),
 				EncryptionKeyID: "test_key_id",
-				Properties: data.JSONMap{"type": "email"},
+				Properties:      data.JSONMap{"type": "email"},
 			},
 			wantErr: require.NoError, // No error expected
 		},
@@ -174,7 +181,7 @@ func (cts *ContactTestSuite) Test_contactBusiness_CreateContact() {
 			want: &models.Contact{
 				EncryptedDetail: []byte("encrypted_detail2"),
 				EncryptionKeyID: "test_key_id",
-				Properties: data.JSONMap{},
+				Properties:      data.JSONMap{},
 			},
 			wantErr: require.NoError, // No error expected if type can be inferred or defaults
 		},
@@ -272,18 +279,18 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 				args: args{
 					detail: "invalid-detail",
 				},
-				want:        nil,
-				wantErr:     require.NoError,
-				wantEmpty:   true,
+				want:      nil,
+				wantErr:   require.NoError,
+				wantEmpty: true,
 			},
 			{
 				name: "Get contact by empty detail",
 				args: args{
 					detail: "",
 				},
-				want:        nil,
-				wantErr:     require.NoError,
-				wantEmpty:   true,
+				want:      nil,
+				wantErr:   require.NoError,
+				wantEmpty: true,
 			},
 		}
 
@@ -305,7 +312,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 				// and has the expected properties instead of comparing encrypted details
 				require.NotNil(t, gotContact, "Contact should not be nil")
 				require.Equalf(t, tt.want.GetID(), gotContact.GetID(), "GetByDetail(ctx, %v) ID check", tt.args.detail)
-				require.Equalf(t, tt.want.Version, gotContact.Version, "GetByDetail(ctx, %v) Version check", tt.args.detail)
+				require.Equalf(
+					t,
+					tt.want.Version,
+					gotContact.Version,
+					"GetByDetail(ctx, %v) Version check",
+					tt.args.detail,
+				)
 				require.Equalf(
 					t,
 					tt.want.ContactType,
@@ -313,7 +326,13 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 					"GetByDetail(ctx, %v) ContactType check",
 					tt.args.detail,
 				)
-				require.Equalf(t, tt.want.Language, gotContact.Language, "GetByDetail(ctx, %v) Language check", tt.args.detail)
+				require.Equalf(
+					t,
+					tt.want.Language,
+					gotContact.Language,
+					"GetByDetail(ctx, %v) Language check",
+					tt.args.detail,
+				)
 				require.Equalf(
 					t,
 					tt.want.ProfileID,

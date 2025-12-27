@@ -31,7 +31,7 @@ func TestRosterSuite(t *testing.T) {
 	suite.Run(t, new(RosterTestSuite))
 }
 
-// Helper function to create consistent test DEK
+// Helper function to create consistent test DEK.
 func createRosterTestDEK(cfg *config.ProfileConfig) *config.DEK {
 	// Decode base64 keys
 	key, err := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
@@ -42,7 +42,7 @@ func createRosterTestDEK(cfg *config.ProfileConfig) *config.DEK {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to decode DEKLookupTokenHMACSHA256Key: %v", err))
 	}
-	
+
 	return &config.DEK{
 		KeyID:     cfg.DEKActiveKeyID,
 		Key:       key,
@@ -52,7 +52,7 @@ func createRosterTestDEK(cfg *config.ProfileConfig) *config.DEK {
 	}
 }
 
-// Helper function to create consistent test DEK for contacts
+// Helper function to create consistent test DEK for contacts.
 func createRosterContactTestDEK(cfg *config.ProfileConfig) *config.DEK {
 	// Decode base64 keys
 	key, err := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
@@ -63,7 +63,7 @@ func createRosterContactTestDEK(cfg *config.ProfileConfig) *config.DEK {
 	if err != nil {
 		panic(fmt.Sprintf("Failed to decode DEKLookupTokenHMACSHA256Key: %v", err))
 	}
-	
+
 	return &config.DEK{
 		KeyID:     cfg.DEKActiveKeyID,
 		Key:       key,
@@ -83,7 +83,14 @@ func (rts *RosterTestSuite) getRosterBusiness(ctx context.Context, svc *frame.Se
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	contactBusiness := business.NewContactBusiness(ctx, cfg, createRosterContactTestDEK(cfg), evtsMan, contactRepo, verificationRepo)
+	contactBusiness := business.NewContactBusiness(
+		ctx,
+		cfg,
+		createRosterContactTestDEK(cfg),
+		evtsMan,
+		contactRepo,
+		verificationRepo,
+	)
 
 	rosterRepo := repository.NewRosterRepository(ctx, dbPool, workMan)
 	return business.NewRosterBusiness(ctx, cfg, createRosterContactTestDEK(cfg), contactBusiness, rosterRepo)
@@ -102,7 +109,14 @@ func (rts *RosterTestSuite) getContactBusiness(
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	return business.NewContactBusiness(ctx, cfg, createRosterContactTestDEK(cfg), evtsMan, contactRepo, verificationRepo), verificationRepo
+	return business.NewContactBusiness(
+		ctx,
+		cfg,
+		createRosterContactTestDEK(cfg),
+		evtsMan,
+		contactRepo,
+		verificationRepo,
+	), verificationRepo
 }
 
 func (rts *RosterTestSuite) createRoster(

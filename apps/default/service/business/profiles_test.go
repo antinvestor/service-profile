@@ -31,12 +31,12 @@ func TestProfileSuite(t *testing.T) {
 	suite.Run(t, new(ProfileTestSuite))
 }
 
-// Helper function to create consistent test DEK
+// Helper function to create consistent test DEK.
 func createProfileTestDEK(cfg *config.ProfileConfig) *config.DEK {
 	// Decode base64 keys
 	key, _ := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
 	lookupKey, _ := base64.StdEncoding.DecodeString(cfg.DEKLookupTokenHMACSHA256Key)
-	
+
 	return &config.DEK{
 		KeyID:     cfg.DEKActiveKeyID,
 		Key:       key,
@@ -59,13 +59,28 @@ func (pts *ProfileTestSuite) getProfileBusiness(
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	contactBusiness := business.NewContactBusiness(ctx, cfg, createProfileTestDEK(cfg), evtsMan, contactRepo, verificationRepo)
+	contactBusiness := business.NewContactBusiness(
+		ctx,
+		cfg,
+		createProfileTestDEK(cfg),
+		evtsMan,
+		contactRepo,
+		verificationRepo,
+	)
 
 	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
-	return business.NewProfileBusiness(ctx, cfg, createProfileTestDEK(cfg), evtsMan, contactBusiness, addressBusiness, profileRepo), verificationRepo
+	return business.NewProfileBusiness(
+		ctx,
+		cfg,
+		createProfileTestDEK(cfg),
+		evtsMan,
+		contactBusiness,
+		addressBusiness,
+		profileRepo,
+	), verificationRepo
 }
 
 func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
