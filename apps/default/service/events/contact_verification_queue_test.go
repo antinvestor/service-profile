@@ -111,7 +111,6 @@ func (cvqts *ContactVerificationQueueTestSuite) TestContactVerificationQueue_Exe
 
 		// Create test contact first
 		contact := &models.Contact{
-			Detail:      "test@example.com",
 			ContactType: "EMAIL",
 		}
 		contact.GenID(ctx)

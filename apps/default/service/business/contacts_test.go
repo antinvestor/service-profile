@@ -245,10 +245,11 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 			detail string
 		}
 		testCases := []struct {
-			name    string
-			args    args
-			want    *models.Contact
-			wantErr require.ErrorAssertionFunc
+			name      string
+			args      args
+			want      *models.Contact
+			wantErr   require.ErrorAssertionFunc
+			wantEmpty bool
 		}{
 			{
 				name: "Get contact by valid MSISDN",
@@ -271,16 +272,18 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 				args: args{
 					detail: "invalid-detail",
 				},
-				want:    nil,
-				wantErr: require.Error,
+				want:        nil,
+				wantErr:     require.NoError,
+				wantEmpty:   true,
 			},
 			{
 				name: "Get contact by empty detail",
 				args: args{
 					detail: "",
 				},
-				want:    nil,
-				wantErr: require.Error,
+				want:        nil,
+				wantErr:     require.NoError,
+				wantEmpty:   true,
 			},
 		}
 
@@ -290,6 +293,10 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 				got, err = cb.GetByDetail(ctx, tt.args.detail)
 				tt.wantErr(t, err, fmt.Sprintf("GetByDetail(ctx, %v)", tt.args.detail))
 				if err != nil {
+					return
+				}
+				if tt.wantEmpty {
+					require.Empty(t, got, "Expected no contacts for invalid/empty detail")
 					return
 				}
 				require.Len(t, got, 1, "Expected exactly one contact")
@@ -652,12 +659,21 @@ func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 	t := cts.T()
 
 	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		ctx, _ := cts.CreateService(t, dep)
+		ctx, svc := cts.CreateService(t, dep)
 
-		// Create a contact
+		// Create a DEK with properly sized keys
+		cfg := svc.Config().(*config.ProfileConfig)
+		dek := createContactTestDEK(cfg)
+
+		// Encrypt the detail properly
+		detailStr := "test@example.com"
+		encryptedDetail, err := util.EncryptValue(dek.Key, []byte(detailStr))
+		require.NoError(t, err)
+
+		// Create a contact with properly encrypted data
 		contact := &models.Contact{
-			EncryptedDetail: []byte("encrypted_test_email"),
-			EncryptionKeyID: "test_key_id",
+			EncryptedDetail:    encryptedDetail,
+			EncryptionKeyID:    dek.KeyID,
 			ContactType:        profilev1.ContactType_name[int32(profilev1.ContactType_EMAIL)],
 			CommunicationLevel: "primary",
 			ProfileID:          util.IDString(),
@@ -665,16 +681,10 @@ func (cts *ContactTestSuite) Test_contactBusiness_ToAPI() {
 		contact.GenID(ctx)
 
 		// Test ToAPI conversion
-		dek := &config.DEK{
-			KeyID:     "test_key_id",
-			Key:       []byte("1234567890123456"), // 16 bytes for AES-128
-			LookUpKey: []byte("test_lookup_key"),
-		}
 		apiContact, err := contact.ToAPI(dek, false)
 		require.NoError(t, err)
 		require.NotNil(t, apiContact)
-		// Since we can't predict the decrypted value, just verify it's not empty
-		require.NotEmpty(t, apiContact.GetDetail())
+		require.Equal(t, detailStr, apiContact.GetDetail())
 		require.Equal(t, contact.GetID(), apiContact.GetId())
 
 		// Test with partial flag

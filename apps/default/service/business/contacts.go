@@ -105,7 +105,7 @@ func (cb *contactBusiness) GetByDetail(ctx context.Context, detailList ...string
 	for _, detail := range detailList {
 		normalizedDetail := Normalize(ctx, detail)
 
-		token := util.ComputeLookupToken([]byte(cb.cfg.DEKLookupTokenHMACSHA256Key), normalizedDetail)
+		token := util.ComputeLookupToken(cb.dek.LookUpKey, normalizedDetail)
 		lookUpTokenList = append(lookUpTokenList, token)
 	}
 	contact, err := cb.contactRepository.GetByLookupToken(ctx, lookUpTokenList...)

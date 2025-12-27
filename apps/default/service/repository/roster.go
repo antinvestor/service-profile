@@ -16,18 +16,13 @@ type rosterRepository struct {
 	datastore.BaseRepository[*models.Roster]
 }
 
-type RosterWithSim struct {
-	*models.Roster
-	Sim float64
-}
-
 func NewRosterRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) RosterRepository {
 	baseRepo := datastore.NewBaseRepository[*models.Roster](
 		ctx, dbPool, workMan, func() *models.Roster { return &models.Roster{} },
 	)
 
 	baseRepo.ExtendFieldsAllowed("rosters.profile_id", "rosters.searchable",
-		"contacts.detail", "sim", "SIMILARITY(contacts.detail,?)")
+		"contacts.look_up_token")
 
 	rosterRepo := rosterRepository{
 		BaseRepository: baseRepo,
@@ -45,16 +40,10 @@ func (rr *rosterRepository) Search(
 		ctx context.Context,
 		sq *data.SearchQuery,
 	) ([]*models.Roster, error) {
-		sq.OrderBy = "sim DESC"
+		sq.OrderBy = "rosters.created_at DESC"
 
 		db := rr.Pool().DB(ctx, true).Table("rosters")
-
-		searchQuery, ok := sq.FiltersOrByValue["SIMILARITY(contacts.detail,?) > 0"]
-		if ok {
-			db = db.Select(`rosters.*, SIMILARITY(contacts.detail,?) AS sim`, searchQuery)
-		} else {
-			db = db.Select(`rosters.*, 1 AS sim`)
-		}
+		db = db.Select(`rosters.*`)
 
 		db = db.Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
 			Preload("Contact")
@@ -62,17 +51,12 @@ func (rr *rosterRepository) Search(
 		// Query optimization: ensure proper index usage through query structure
 		// The JOIN and WHERE clauses are structured to utilize existing indexes
 
-		result, err := datastore.SearchFunc[*RosterWithSim](ctx, db, sq, rr.IsFieldAllowed)
+		result, err := datastore.SearchFunc[*models.Roster](ctx, db, sq, rr.IsFieldAllowed)
 		if err != nil {
 			return nil, err
 		}
 
-		// Pre-allocate slice with known capacity for better memory efficiency
-		rosters := make([]*models.Roster, 0, len(result))
-		for _, r := range result {
-			rosters = append(rosters, r.Roster)
-		}
-		return rosters, nil
+		return result, nil
 	})
 }
 

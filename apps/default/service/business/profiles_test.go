@@ -645,3 +645,104 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 		})
 	})
 }
+
+func (pts *ProfileTestSuite) Test_profileBusiness_SearchProfile() {
+	t := pts.T()
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		// Create a profile first
+		properties := data.JSONMap{
+			"name": "Search Test User",
+		}
+
+		createReq := &profilev1.CreateRequest{
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "+256757546299",
+			Properties: properties.ToProtoStruct(),
+		}
+
+		_, err := pb.CreateProfile(ctx, createReq)
+		require.NoError(t, err)
+
+		// Search for profiles
+		searchReq := &profilev1.SearchRequest{
+			Query: "Search Test",
+			Count: 10,
+		}
+
+		result, err := pb.SearchProfile(ctx, searchReq)
+		require.NoError(t, err)
+		require.NotNil(t, result)
+	})
+}
+
+func (pts *ProfileTestSuite) Test_profileBusiness_AddContact() {
+	t := pts.T()
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		// Test without claims - should fail
+		addContactReq := &profilev1.AddContactRequest{
+			Id:      "test-profile-id",
+			Contact: "+256757546288",
+		}
+
+		_, _, err := pb.AddContact(ctx, addContactReq)
+		require.Error(t, err, "AddContact should fail without claims")
+	})
+}
+
+func (pts *ProfileTestSuite) Test_profileBusiness_RemoveContact() {
+	t := pts.T()
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		// Test with non-existent profile ID
+		removeReq := &profilev1.RemoveContactRequest{
+			Id: "non-existent-profile",
+		}
+
+		_, err := pb.RemoveContact(ctx, removeReq)
+		require.Error(t, err, "RemoveContact should fail for non-existent profile")
+	})
+}
+
+func (pts *ProfileTestSuite) Test_profileBusiness_AddAddress() {
+	t := pts.T()
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		// Create a profile first
+		properties := data.JSONMap{
+			"name": "Address Test User",
+		}
+
+		createReq := &profilev1.CreateRequest{
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "+256757546277",
+			Properties: properties.ToProtoStruct(),
+		}
+
+		profile, err := pb.CreateProfile(ctx, createReq)
+		require.NoError(t, err)
+		require.NotNil(t, profile)
+
+		// Test adding address with missing country (empty address object)
+		addAddressReq := &profilev1.AddAddressRequest{
+			Id:      profile.GetId(),
+			Address: &profilev1.AddressObject{},
+		}
+
+		_, err = pb.AddAddress(ctx, addAddressReq)
+		require.Error(t, err, "AddAddress should fail with empty address")
+	})
+}
