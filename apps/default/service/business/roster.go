@@ -9,7 +9,9 @@ import (
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
+	"github.com/pitabwire/util"
 
+	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
@@ -26,16 +28,21 @@ type RosterBusiness interface {
 
 func NewRosterBusiness(
 	_ context.Context,
+	cfg *config.ProfileConfig, dek *config.DEK,
 	contactBusiness ContactBusiness,
 	rosterRepo repository.RosterRepository,
 ) RosterBusiness {
 	return &rosterBusiness{
+		cfg:              cfg,
+		dek:              dek,
 		rosterRepository: rosterRepo,
 		contactBusiness:  contactBusiness,
 	}
 }
 
 type rosterBusiness struct {
+	cfg              *config.ProfileConfig
+	dek              *config.DEK
 	rosterRepository repository.RosterRepository
 	contactBusiness  ContactBusiness
 }
@@ -60,7 +67,7 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 
 	var orSearchFilter = make(map[string]any)
 	if request.GetQuery() != "" {
-		orSearchFilter["SIMILARITY(contacts.detail,?) > 0"] = request.GetQuery()
+		orSearchFilter["contacts.look_up_token = ?"] = util.ComputeLookupToken(rb.dek.LookUpKey, Normalize(ctx, request.GetQuery()))
 		orSearchFilter["rosters.searchable  @@ websearch_to_tsquery( 'english', ?) "] = request.GetQuery()
 	}
 
@@ -93,32 +100,103 @@ func (rb *rosterBusiness) CreateRoster(
 		return nil, data.ErrorConvertToAPI(err)
 	}
 
-	var rosterObjectList []*profilev1.RosterObject
 	newRosterList := request.GetData()
-	for _, newRoster := range newRosterList {
-		var contact *models.Contact
-		var roster *models.Roster
+	if len(newRosterList) == 0 {
+		return []*profilev1.RosterObject{}, nil
+	}
 
-		requestExtras := data.JSONMap{}
+	// Pre-allocate result slice for better memory efficiency
+	rosterObjectList := make([]*profilev1.RosterObject, 0, len(newRosterList))
 
-		contact, err = rb.contactBusiness.CreateContact(
-			ctx,
-			newRoster.GetContact(),
-			requestExtras.FromProtoStruct(newRoster.GetExtras()),
-		)
-		if err != nil {
-			return nil, err
+	// Batch size for processing - optimized for database performance
+	const batchSize = 50
+
+	// Process rosters in batches to optimize database operations
+	for i := 0; i < len(newRosterList); i += batchSize {
+		end := i + batchSize
+		if end > len(newRosterList) {
+			end = len(newRosterList)
 		}
 
-		var getRosterErr error
-		roster, getRosterErr = rb.rosterRepository.GetByContactAndProfileID(ctx, profileID, contact.GetID())
-		if getRosterErr != nil {
-			if !data.ErrorIsNoRows(getRosterErr) {
-				return nil, data.ErrorConvertToAPI(getRosterErr)
+		batch := newRosterList[i:end]
+		batchResults, batchErr := rb.processRosterBatch(ctx, profileID, batch)
+		if batchErr != nil {
+			return nil, batchErr
+		}
+
+		rosterObjectList = append(rosterObjectList, batchResults...)
+	}
+
+	return rosterObjectList, nil
+}
+
+// processRosterBatch processes a batch of roster items efficiently
+func (rb *rosterBusiness) processRosterBatch(
+	ctx context.Context,
+	profileID string,
+	batch []*profilev1.RawContact,
+) ([]*profilev1.RosterObject, error) {
+	// Step 1: Extract all contact details from the batch
+	detailList := make([]string, 0, len(batch))
+	for _, newRoster := range batch {
+		detailList = append(detailList, newRoster.GetContact())
+	}
+
+	// Step 2: Bulk check existing contacts using GetByDetailMap
+	existingContactMap, err := rb.contactBusiness.GetByDetailMap(ctx, detailList...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Step 3: Create only contacts that don't exist
+	contacts := make([]*models.Contact, 0, len(batch))
+	contactDetails := make([]string, 0, len(batch))
+	
+	for _, newRoster := range batch {
+		detail := newRoster.GetContact()
+		
+		// Check if contact already exists
+		if existingContact, exists := existingContactMap[detail]; exists {
+			// Use existing contact
+			contacts = append(contacts, existingContact)
+			contactDetails = append(contactDetails, existingContact.GetID())
+		} else {
+			// Create new contact
+			requestExtras := data.JSONMap{}
+			contact, err := rb.contactBusiness.CreateContact(
+				ctx,
+				newRoster.GetContact(),
+				requestExtras.FromProtoStruct(newRoster.GetExtras()),
+			)
+			if err != nil {
+				return nil, err
 			}
+			contacts = append(contacts, contact)
+			contactDetails = append(contactDetails, contact.GetID())
+		}
+	}
 
+	// Step 4: Batch lookup existing rosters for all contact IDs
+	existingRosters, err := rb.rosterRepository.GetByContactIDsAndProfileID(ctx, contactDetails, profileID)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+
+	// Create map for quick lookup of existing rosters
+	existingRosterMap := make(map[string]*models.Roster)
+	for _, roster := range existingRosters {
+		existingRosterMap[roster.ContactID] = roster
+	}
+
+	// Step 5: Process each contact and create roster if needed
+	rosterObjectList := make([]*profilev1.RosterObject, 0, len(batch))
+	for i, contact := range contacts {
+		newRoster := batch[i]
+		
+		roster, exists := existingRosterMap[contact.GetID()]
+		if !exists {
+			// Create new roster
 			rosterExtras := data.JSONMap{}
-
 			roster = &models.Roster{
 				ProfileID:  profileID,
 				ContactID:  contact.GetID(),
@@ -132,7 +210,11 @@ func (rb *rosterBusiness) CreateRoster(
 			}
 		}
 
-		rosterObjectList = append(rosterObjectList, roster.ToAPI())
+		rosterObj, apiErr := roster.ToAPI(rb.dek)
+		if apiErr != nil {
+			return nil, apiErr
+		}
+		rosterObjectList = append(rosterObjectList, rosterObj)
 	}
 
 	return rosterObjectList, nil
@@ -149,5 +231,9 @@ func (rb *rosterBusiness) RemoveRoster(ctx context.Context, rosterID string) (*p
 		return nil, err
 	}
 
-	return roster.ToAPI(), nil
+	rosterObj, err := roster.ToAPI(rb.dek)
+	if err != nil {
+		return nil, err
+	}
+	return rosterObj, nil
 }

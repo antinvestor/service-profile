@@ -2,7 +2,8 @@
 
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
-CREATE INDEX idx_contacts_detail_trgm ON contacts USING GIN (detail gin_trgm_ops);
+-- Note: We don't create index on encrypted_detail as it's encrypted data
+-- The searchable column will handle text search functionality
 
 -- Recreate with 'simple' configuration and handle empty jsonb_to_tsv properly
 ALTER TABLE contacts

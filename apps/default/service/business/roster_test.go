@@ -2,6 +2,8 @@ package business_test
 
 import (
 	"context"
+	"encoding/base64"
+	"fmt"
 	"testing"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
@@ -29,6 +31,48 @@ func TestRosterSuite(t *testing.T) {
 	suite.Run(t, new(RosterTestSuite))
 }
 
+// Helper function to create consistent test DEK
+func createRosterTestDEK(cfg *config.ProfileConfig) *config.DEK {
+	// Decode base64 keys
+	key, err := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to decode DEKActiveAES256GCMKey: %v", err))
+	}
+	lookupKey, err := base64.StdEncoding.DecodeString(cfg.DEKLookupTokenHMACSHA256Key)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to decode DEKLookupTokenHMACSHA256Key: %v", err))
+	}
+	
+	return &config.DEK{
+		KeyID:     cfg.DEKActiveKeyID,
+		Key:       key,
+		OldKeyID:  "old-key-id",
+		OldKey:    []byte("1234567890123456"), // 16 bytes for old key
+		LookUpKey: lookupKey,
+	}
+}
+
+// Helper function to create consistent test DEK for contacts
+func createRosterContactTestDEK(cfg *config.ProfileConfig) *config.DEK {
+	// Decode base64 keys
+	key, err := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to decode DEKActiveAES256GCMKey: %v", err))
+	}
+	lookupKey, err := base64.StdEncoding.DecodeString(cfg.DEKLookupTokenHMACSHA256Key)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to decode DEKLookupTokenHMACSHA256Key: %v", err))
+	}
+	
+	return &config.DEK{
+		KeyID:     cfg.DEKActiveKeyID,
+		Key:       key,
+		OldKeyID:  "old-key-id",
+		OldKey:    []byte("1234567890123456"), // 16 bytes for old key
+		LookUpKey: lookupKey,
+	}
+}
+
 func (rts *RosterTestSuite) getRosterBusiness(ctx context.Context, svc *frame.Service) business.RosterBusiness {
 	evtsMan := svc.EventsManager()
 	workMan := svc.WorkManager()
@@ -39,10 +83,26 @@ func (rts *RosterTestSuite) getRosterBusiness(ctx context.Context, svc *frame.Se
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	contactBusiness := business.NewContactBusiness(ctx, cfg, evtsMan, contactRepo, verificationRepo)
+	contactBusiness := business.NewContactBusiness(ctx, cfg, createRosterContactTestDEK(cfg), evtsMan, contactRepo, verificationRepo)
 
 	rosterRepo := repository.NewRosterRepository(ctx, dbPool, workMan)
-	return business.NewRosterBusiness(ctx, contactBusiness, rosterRepo)
+	return business.NewRosterBusiness(ctx, cfg, createRosterContactTestDEK(cfg), contactBusiness, rosterRepo)
+}
+
+func (rts *RosterTestSuite) getContactBusiness(
+	ctx context.Context,
+	svc *frame.Service,
+) (business.ContactBusiness, repository.VerificationRepository) {
+	evtsMan := svc.EventsManager()
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	cfg := svc.Config().(*config.ProfileConfig)
+
+	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
+	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
+
+	return business.NewContactBusiness(ctx, cfg, createRosterContactTestDEK(cfg), evtsMan, contactRepo, verificationRepo), verificationRepo
 }
 
 func (rts *RosterTestSuite) createRoster(
@@ -83,21 +143,26 @@ func (rts *RosterTestSuite) createRoster(
 func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 	t := rts.T()
 
-	rts.WithTestDependancies(t, func(t *testing.T, _ *definition.DependencyOption) {
-		contact := &models.Contact{
-			Detail:             "+256757546244",
-			ProfileID:          "ownersId123",
-			ContactType:        profilev1.ContactType_MSISDN.String(),
-			CommunicationLevel: profilev1.CommunicationLevel_ALL.String(),
-		}
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := rts.CreateService(t, dep)
+
+		// Create a real contact using the business layer
+		cb, _ := rts.getContactBusiness(ctx, svc)
+		contact, err := cb.CreateContact(ctx, "+256757546244", data.JSONMap{"type": "msisdn"})
+		require.NoError(t, err)
+		require.NotNil(t, contact)
+
 		roster := &models.Roster{
 			Contact:    contact,
 			ProfileID:  "profile123",
 			Properties: data.JSONMap{"key1": "value1"},
 		}
 
-		result := roster.ToAPI()
-		require.Equal(t, "ownersId123", result.GetProfileId(), "Profile ID should match")
+		// Use the same DEK that was used to create the contact
+		dek := createRosterTestDEK(svc.Config().(*config.ProfileConfig))
+		result, err := roster.ToAPI(dek)
+		require.NoError(t, err)
+		require.Equal(t, "profile123", result.GetProfileId(), "Profile ID should match")
 	})
 }
 

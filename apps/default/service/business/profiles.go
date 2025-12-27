@@ -16,6 +16,7 @@ import (
 	"github.com/pitabwire/frame/workerpool"
 	"github.com/pitabwire/util"
 
+	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -60,10 +61,13 @@ type ProfileBusiness interface {
 	ToAPI(ctx context.Context, profile *models.Profile) (*profilev1.ProfileObject, error)
 }
 
-func NewProfileBusiness(_ context.Context, eventsMan frevents.Manager,
+func NewProfileBusiness(_ context.Context, cfg *config.ProfileConfig, dek *config.DEK,
+	eventsMan frevents.Manager,
 	contactBusiness ContactBusiness, addressBusiness AddressBusiness,
 	profileRepo repository.ProfileRepository) ProfileBusiness {
 	return &profileBusiness{
+		cfg:             cfg,
+		dek:             dek,
 		contactBusiness: contactBusiness,
 		addressBusiness: addressBusiness,
 		profileRepo:     profileRepo,
@@ -72,6 +76,8 @@ func NewProfileBusiness(_ context.Context, eventsMan frevents.Manager,
 }
 
 type profileBusiness struct {
+	cfg             *config.ProfileConfig
+	dek             *config.DEK
 	contactBusiness ContactBusiness
 	addressBusiness AddressBusiness
 
@@ -94,7 +100,11 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 		return nil, err
 	}
 	for _, c := range contactList {
-		contactObjects = append(contactObjects, c.ToAPI(true))
+		contactObj, err := c.ToAPI(pb.dek, true)
+		if err != nil {
+			return nil, err
+		}
+		contactObjects = append(contactObjects, contactObj)
 	}
 	profileObject.Contacts = contactObjects
 
@@ -142,7 +152,11 @@ func (pb *profileBusiness) GetByContact(
 		profileObject.Type = models.ProfileTypeIDToEnum(models.ProfileTypePersonID)
 		props := data.JSONMap{}
 		profileObject.Properties = props.ToProtoStruct()
-		profileObject.Contacts = []*profilev1.ContactObject{contact.ToAPI(true)}
+		contactObj, err := contact.ToAPI(pb.dek, true)
+		if err != nil {
+			return nil, err
+		}
+		profileObject.Contacts = []*profilev1.ContactObject{contactObj}
 		profileObject.Addresses = []*profilev1.AddressObject{}
 
 		return &profileObject, nil
@@ -414,7 +428,11 @@ func (pb *profileBusiness) GetContactByID(
 		return nil, err
 	}
 
-	return contact.ToAPI(true), nil
+	contactObj, err := contact.ToAPI(pb.dek, true)
+	if err != nil {
+		return nil, err
+	}
+	return contactObj, nil
 }
 
 func (pb *profileBusiness) VerifyContact(

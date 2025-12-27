@@ -41,6 +41,7 @@ type ProfileServer struct {
 func NewProfileServer(
 	ctx context.Context,
 	svc *frame.Service,
+	dek *config.DEK,
 	notificationCli notificationv1connect.NotificationServiceClient,
 ) *ProfileServer {
 	evtsMan := svc.EventsManager()
@@ -52,27 +53,23 @@ func NewProfileServer(
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	contactBusiness := business.NewContactBusiness(ctx, cfg, evtsMan, contactRepo, verificationRepo)
+	contactBusiness := business.NewContactBusiness(ctx, cfg, dek, evtsMan, contactRepo, verificationRepo)
 
 	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
-	profileBusiness := business.NewProfileBusiness(ctx, evtsMan, contactBusiness, addressBusiness, profileRepo)
+	profileBusiness := business.NewProfileBusiness(ctx, cfg, dek, evtsMan, contactBusiness, addressBusiness, profileRepo)
 
 	rosterRepo := repository.NewRosterRepository(ctx, dbPool, workMan)
-	rosterBusiness := business.NewRosterBusiness(ctx, contactBusiness, rosterRepo)
+	rosterBusiness := business.NewRosterBusiness(ctx, cfg, dek, contactBusiness, rosterRepo)
 
 	relationshipRepo := repository.NewRelationshipRepository(ctx, dbPool, workMan)
 	relationshipBusiness := business.NewRelationshipBusiness(ctx, profileBusiness, relationshipRepo)
 
 	return &ProfileServer{
-		Service: svc,
-		DEK: &config.DEK{
-			KeyID:     cfg.DEKActiveKeyID,
-			Key:       []byte(cfg.DEKActiveAES256GCMKey),
-			LookUpKey: []byte(cfg.DEKLookupTokenHMACSHA256Key),
-		},
+		Service:              svc,
+		DEK:                  dek,
 		NotificationCli:      notificationCli,
 		profileBusiness:      profileBusiness,
 		contactBusiness:      contactBusiness,

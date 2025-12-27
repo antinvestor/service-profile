@@ -36,6 +36,7 @@ type VerificationRepository interface {
 type RosterRepository interface {
 	datastore.BaseRepository[*models.Roster]
 	GetByContactAndProfileID(ctx context.Context, profileID, contactID string) (*models.Roster, error)
+	GetByContactIDsAndProfileID(ctx context.Context, contactIDs []string, profileID string) ([]*models.Roster, error)
 	Search(ctx context.Context, query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.Roster], error)
 }
 

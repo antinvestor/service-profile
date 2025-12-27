@@ -29,6 +29,7 @@ var (
 type ContactBusiness interface {
 	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
 	GetByDetail(ctx context.Context, detailList ...string) ([]*models.Contact, error)
+	GetByDetailMap(ctx context.Context, detailList ...string) (map[string]*models.Contact, error)
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
 	CreateContact(ctx context.Context, detail string, extra data.JSONMap) (*models.Contact, error)
 	UpdateContact(
@@ -114,6 +115,28 @@ func (cb *contactBusiness) GetByDetail(ctx context.Context, detailList ...string
 	return contact, nil
 }
 
+// GetByDetailMap returns a map of detail to contact for efficient bulk lookups
+func (cb *contactBusiness) GetByDetailMap(ctx context.Context, detailList ...string) (map[string]*models.Contact, error) {
+	contacts, err := cb.GetByDetail(ctx, detailList...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create map for efficient O(1) lookups
+	contactMap := make(map[string]*models.Contact)
+	for _, contact := range contacts {
+		// Decrypt the detail to use as map key
+		detail, err := contact.DecryptDetail(cb.dek.KeyID, cb.dek.Key)
+		if err != nil {
+			// Skip contacts that can't be decrypted
+			continue
+		}
+		contactMap[detail] = contact
+	}
+
+	return contactMap, nil
+}
+
 func (cb *contactBusiness) GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error) {
 	if profileID == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("profile ID is empty"))
@@ -161,9 +184,9 @@ func (cb *contactBusiness) CreateContact(
 		return nil, err
 	}
 
-	lookupToken := util.ComputeLookupToken([]byte(cb.cfg.DEKLookupTokenHMACSHA256Key), normalizedDetail)
+	lookupToken := util.ComputeLookupToken(cb.dek.LookUpKey, normalizedDetail)
 
-	encryptedDetail, err := util.EncryptValue([]byte(cb.cfg.DEKActiveAES256GCMKey), []byte(normalizedDetail))
+	encryptedDetail, err := util.EncryptValue(cb.dek.Key, []byte(normalizedDetail))
 	if err != nil {
 		return nil, err
 	}

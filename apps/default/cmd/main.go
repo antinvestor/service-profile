@@ -62,8 +62,15 @@ func main() {
 		log.WithError(nErr).Fatal("main -- Could not setup notification svc")
 	}
 
+	dek := &aconfig.DEK{
+		KeyID:     cfg.DEKActiveKeyID,
+		Key:       []byte(cfg.DEKActiveAES256GCMKey),
+		OldKey:    []byte(cfg.DEKOldAES256GCMKey),
+		LookUpKey: []byte(cfg.DEKLookupTokenHMACSHA256Key),
+	}
+
 	// Setup Connect server
-	connectHandler := setupConnectServer(ctx, svc, notificationCli)
+	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli)
 
 	// Setup HTTP handlers
 	// Start with datastore option
@@ -84,6 +91,8 @@ func main() {
 	evtsMan := svc.EventsManager()
 	qMan := svc.QueueManager()
 
+	contactRepository := repository.NewContactRepository(ctx, dbPool, workMan)
+
 	// Register queue handlers
 	serviceOptions = append(serviceOptions,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
@@ -97,13 +106,16 @@ func main() {
 			),
 			events.NewContactVerificationQueue(
 				&cfg,
-				repository.NewContactRepository(ctx, dbPool, workMan),
+				contactRepository,
 				repository.NewVerificationRepository(ctx, dbPool, workMan),
 				notificationCli,
 			),
 			events.NewContactVerificationAttemptedQueue(
-				repository.NewContactRepository(ctx, dbPool, workMan),
+				contactRepository,
 				repository.NewVerificationRepository(ctx, dbPool, workMan),
+			),
+			events.NewContactKeyRotationQueue(
+				&cfg, dek, contactRepository,
 			),
 		))
 
@@ -148,7 +160,7 @@ func setupNotificationClient(
 }
 
 // setupConnectServer initializes and configures the gRPC server.
-func setupConnectServer(ctx context.Context, svc *frame.Service,
+func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DEK,
 	notificationCli notificationv1connect.NotificationServiceClient) http.Handler {
 	securityMan := svc.SecurityManager()
 
@@ -159,7 +171,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service,
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	implementation := handlers.NewProfileServer(ctx, svc, notificationCli)
+	implementation := handlers.NewProfileServer(ctx, svc, dek, notificationCli)
 
 	_, serverHandler := profilev1connect.NewProfileServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))

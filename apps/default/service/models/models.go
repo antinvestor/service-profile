@@ -150,7 +150,7 @@ func (r *Roster) ToAPI(dek *config.DEK) (*profilev1.RosterObject, error) {
 
 	return &profilev1.RosterObject{
 		Id:        r.ID,
-		ProfileId: r.Contact.ProfileID,
+		ProfileId: r.ProfileID,
 		Contact:   contactObj,
 		Extra:     r.Properties.ToProtoStruct(),
 	}, nil

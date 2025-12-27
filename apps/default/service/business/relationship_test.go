@@ -2,6 +2,7 @@ package business_test
 
 import (
 	"context"
+	"encoding/base64"
 	"testing"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
@@ -25,6 +26,21 @@ func TestRelationshipSuite(t *testing.T) {
 	suite.Run(t, new(RelationshipTestSuite))
 }
 
+// Helper function to create consistent test DEK
+func createRelationshipTestDEK(cfg *config.ProfileConfig) *config.DEK {
+	// Decode base64 keys
+	key, _ := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
+	lookupKey, _ := base64.StdEncoding.DecodeString(cfg.DEKLookupTokenHMACSHA256Key)
+	
+	return &config.DEK{
+		KeyID:     cfg.DEKActiveKeyID,
+		Key:       key,
+		OldKeyID:  "old-key-id",
+		OldKey:    []byte("1234567890123456"), // 16 bytes for old key
+		LookUpKey: lookupKey,
+	}
+}
+
 func (rts *RelationshipTestSuite) getRelationshipBusiness(
 	ctx context.Context,
 	svc *frame.Service,
@@ -38,13 +54,13 @@ func (rts *RelationshipTestSuite) getRelationshipBusiness(
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	contactBusiness := business.NewContactBusiness(ctx, cfg, evtsMan, contactRepo, verificationRepo)
+	contactBusiness := business.NewContactBusiness(ctx, cfg, createRelationshipTestDEK(cfg), evtsMan, contactRepo, verificationRepo)
 
 	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
-	profileBusiness := business.NewProfileBusiness(ctx, evtsMan, contactBusiness, addressBusiness, profileRepo)
+	profileBusiness := business.NewProfileBusiness(ctx, cfg, createRelationshipTestDEK(cfg), evtsMan, contactBusiness, addressBusiness, profileRepo)
 
 	relationshipRepo := repository.NewRelationshipRepository(ctx, dbPool, workMan)
 	return business.NewRelationshipBusiness(ctx, profileBusiness, relationshipRepo), profileBusiness

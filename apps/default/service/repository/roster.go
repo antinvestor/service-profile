@@ -50,7 +50,7 @@ func (rr *rosterRepository) Search(
 		db := rr.Pool().DB(ctx, true).Table("rosters")
 
 		searchQuery, ok := sq.FiltersOrByValue["SIMILARITY(contacts.detail,?) > 0"]
-		if !ok {
+		if ok {
 			db = db.Select(`rosters.*, SIMILARITY(contacts.detail,?) AS sim`, searchQuery)
 		} else {
 			db = db.Select(`rosters.*, 1 AS sim`)
@@ -59,14 +59,18 @@ func (rr *rosterRepository) Search(
 		db = db.Joins("LEFT JOIN contacts ON rosters.contact_id = contacts.id").
 			Preload("Contact")
 
+		// Query optimization: ensure proper index usage through query structure
+		// The JOIN and WHERE clauses are structured to utilize existing indexes
+
 		result, err := datastore.SearchFunc[*RosterWithSim](ctx, db, sq, rr.IsFieldAllowed)
 		if err != nil {
 			return nil, err
 		}
 
-		rosters := make([]*models.Roster, len(result))
-		for i, r := range result {
-			rosters[i] = r.Roster
+		// Pre-allocate slice with known capacity for better memory efficiency
+		rosters := make([]*models.Roster, 0, len(result))
+		for _, r := range result {
+			rosters = append(rosters, r.Roster)
 		}
 		return rosters, nil
 	})
@@ -90,6 +94,20 @@ func (rr *rosterRepository) GetByContactID(ctx context.Context, contactID string
 	err := rr.Pool().DB(ctx, true).
 		Preload(clause.Associations).
 		Where("contact_id = ?", contactID).
+		Find(&rosterList).
+		Error
+	return rosterList, err
+}
+
+func (rr *rosterRepository) GetByContactIDsAndProfileID(
+	ctx context.Context,
+	contactIDs []string,
+	profileID string,
+) ([]*models.Roster, error) {
+	rosterList := make([]*models.Roster, 0, len(contactIDs))
+	err := rr.Pool().DB(ctx, true).
+		Preload(clause.Associations).
+		Where("profile_id = ? AND contact_id IN ?", profileID, contactIDs).
 		Find(&rosterList).
 		Error
 	return rosterList, err

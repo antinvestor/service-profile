@@ -51,7 +51,7 @@ func (cr *contactRepository) GetByProfileID(ctx context.Context, profileID strin
 func (cr *contactRepository) GetByLookupToken(ctx context.Context, lookupTokenList ...[]byte) ([]*models.Contact, error) {
 	var contactList []*models.Contact
 
-	if err := cr.Pool().DB(ctx, true).First(contactList, " look_up_token IN ?", lookupTokenList).Error; err != nil {
+	if err := cr.Pool().DB(ctx, true).Where(" look_up_token IN ?", lookupTokenList).Find(&contactList).Error; err != nil {
 		return nil, err
 	}
 
