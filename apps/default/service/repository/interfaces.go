@@ -22,7 +22,7 @@ type ProfileRepository interface {
 type ContactRepository interface {
 	datastore.BaseRepository[*models.Contact]
 	GetByProfileID(ctx context.Context, profileID string) ([]*models.Contact, error)
-	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
+	GetByLookupToken(ctx context.Context, lookUpToken ...[]byte) ([]*models.Contact, error)
 	DelinkFromProfile(ctx context.Context, id, profileID string) (*models.Contact, error)
 }
 

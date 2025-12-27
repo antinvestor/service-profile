@@ -12,6 +12,11 @@ type ProfileConfig struct {
 
 	SystemAccessID string `envDefault:"c8cf0ldstmdlinc3eva0" env:"STATIC_SYSTEM_ACCESS_ID"`
 
+	DEKLookupTokenHMACSHA256Key string `envDefault:"" env:"DEK_LOOKUP_TOKEN"`
+	DEKActiveKeyID              string `envDefault:"" env:"DEK_ACTIVE_KEY_ID"`
+	DEKActiveAES256GCMKey       string `envDefault:"" env:"DEK_ACTIVE_ENCRYPTION_TOKEN"`
+	DEKOldAES256GCMKey          string `envDefault:"" env:"DEK_OLD_ENCRYPTION_TOKEN"`
+
 	QueueRelationshipConnectName string `envDefault:"relationships.connect"               env:"QUEUE_RELATIONSHIP_CONNECT_NAME"`
 	QueueRelationshipConnectURI  string `envDefault:"mem://default.relationships.connect" env:"QUEUE_RELATIONSHIP_CONNECT_URI"`
 

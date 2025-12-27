@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/datastore"
@@ -49,15 +48,14 @@ func (cr *contactRepository) GetByProfileID(ctx context.Context, profileID strin
 	return contactList, err
 }
 
-func (cr *contactRepository) GetByDetail(ctx context.Context, detail string) (*models.Contact, error) {
-	contact := &models.Contact{}
+func (cr *contactRepository) GetByLookupToken(ctx context.Context, lookupTokenList ...[]byte) ([]*models.Contact, error) {
+	var contactList []*models.Contact
 
-	detail = strings.ToLower(strings.TrimSpace(detail))
-	if err := cr.Pool().DB(ctx, true).First(contact, " detail = ?", detail).Error; err != nil {
+	if err := cr.Pool().DB(ctx, true).First(contactList, " look_up_token IN ?", lookupTokenList).Error; err != nil {
 		return nil, err
 	}
 
-	return contact, nil
+	return contactList, nil
 }
 
 func (cr *contactRepository) DelinkFromProfile(ctx context.Context, id, profileID string) (*models.Contact, error) {

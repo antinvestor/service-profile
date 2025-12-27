@@ -10,6 +10,7 @@ import (
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
@@ -26,8 +27,10 @@ const (
 
 type ProfileServer struct {
 	Service              *frame.Service
+	DEK                  *config.DEK
 	NotificationCli      notificationv1connect.NotificationServiceClient
 	profileBusiness      business.ProfileBusiness
+	contactBusiness      business.ContactBusiness
 	rosterBusiness       business.RosterBusiness
 	relationshipBusiness business.RelationshipBusiness
 
@@ -64,9 +67,15 @@ func NewProfileServer(
 	relationshipBusiness := business.NewRelationshipBusiness(ctx, profileBusiness, relationshipRepo)
 
 	return &ProfileServer{
-		Service:              svc,
+		Service: svc,
+		DEK: &config.DEK{
+			KeyID:     cfg.DEKActiveKeyID,
+			Key:       []byte(cfg.DEKActiveAES256GCMKey),
+			LookUpKey: []byte(cfg.DEKLookupTokenHMACSHA256Key),
+		},
 		NotificationCli:      notificationCli,
 		profileBusiness:      profileBusiness,
+		contactBusiness:      contactBusiness,
 		rosterBusiness:       rosterBusiness,
 		relationshipBusiness: relationshipBusiness,
 	}
@@ -198,8 +207,37 @@ func (ps *ProfileServer) CreateContact(
 	ctx context.Context,
 	request *connect.Request[profilev1.CreateContactRequest],
 ) (*connect.Response[profilev1.CreateContactResponse], error) {
-	contactObj, err := ps.profileBusiness.CreateContact(ctx, request.Msg)
 
+	createReq := request.Msg
+
+	contactList, err := ps.contactBusiness.GetByDetail(ctx, createReq.GetContact())
+
+	if err != nil {
+		if !frame.ErrorIsNotFound(err) {
+			return nil, errorutil.CleanErr(err)
+		}
+	}
+
+	if len(contactList) > 0 {
+
+		contact, decryptErr := contactList[0].ToAPI(ps.DEK, true)
+		if decryptErr != nil {
+			return nil, errorutil.CleanErr(decryptErr)
+		}
+		return connect.NewResponse(&profilev1.CreateContactResponse{Data: contact}), nil
+	}
+
+	requestProperties := data.JSONMap{}
+	contact, err := ps.contactBusiness.CreateContact(
+		ctx,
+		createReq.GetContact(),
+		requestProperties.FromProtoStruct(createReq.GetExtras()),
+	)
+	if err != nil {
+		return nil, errorutil.CleanErr(err)
+	}
+
+	contactObj, err := contact.ToAPI(ps.DEK, true)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
@@ -298,7 +336,13 @@ func (ps *ProfileServer) SearchRoster(
 		// Preallocate slice to optimize memory allocation.
 		rosterList := make([]*profilev1.RosterObject, 0, len(result.Item()))
 		for _, roster := range result.Item() {
-			rosterList = append(rosterList, roster.ToAPI())
+
+			rosterObj, rosterErr := roster.ToAPI(ps.DEK)
+			if rosterErr != nil {
+				return errorutil.CleanErr(rosterErr)
+			}
+
+			rosterList = append(rosterList, rosterObj)
 		}
 
 		sErr := stream.Send(&profilev1.SearchRosterResponse{Data: rosterList})

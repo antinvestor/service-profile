@@ -1,11 +1,14 @@
 package models
 
 import (
+	"fmt"
 	"math"
 	"time"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
+	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/util"
 )
 
 // Profile type and relationship type constants.
@@ -65,7 +68,10 @@ type Profile struct {
 
 type Contact struct {
 	data.BaseModel
-	Detail string `gorm:"type:varchar(50);uniqueIndex"`
+
+	LookUpToken     []byte `gorm:"type:bytea;uniqueIndex"`
+	EncryptedDetail []byte `gorm:"type:bytea"`
+	EncryptionKeyID string `gorm:"type:varchar(255)"`
 
 	ContactType        string `gorm:"type:varchar(50)"`
 	CommunicationLevel string `gorm:"type:varchar(50)"`
@@ -79,10 +85,29 @@ type Contact struct {
 	VerificationID string `gorm:"type:varchar(50)"`
 }
 
-func (c *Contact) ToAPI(partial bool) *profilev1.ContactObject {
+func (c *Contact) DecryptDetail(decryptionKeyID string, decryptionKeyData []byte) (string, error) {
+
+	if c.EncryptionKeyID != decryptionKeyID {
+		return "", fmt.Errorf("decryption key does not match contact key id")
+	}
+
+	detailBytes, err := util.DecryptValue(decryptionKeyData, c.EncryptedDetail)
+	if err != nil {
+		return "", err
+	}
+	return string(detailBytes), nil
+}
+
+func (c *Contact) ToAPI(dek *config.DEK, partial bool) (*profilev1.ContactObject, error) {
+
+	contactDetail, err := c.DecryptDetail(dek.KeyID, dek.Key)
+	if err != nil {
+		return nil, err
+	}
+
 	contactObject := profilev1.ContactObject{
 		Id:     c.ID,
-		Detail: c.Detail,
+		Detail: contactDetail,
 	}
 
 	contactTypeID, ok := profilev1.ContactType_value[c.ContactType]
@@ -102,7 +127,7 @@ func (c *Contact) ToAPI(partial bool) *profilev1.ContactObject {
 		contactObject.Verified = c.VerificationID != ""
 	}
 
-	return &contactObject
+	return &contactObject, nil
 }
 
 type Roster struct {
@@ -116,13 +141,19 @@ type Roster struct {
 	Properties data.JSONMap
 }
 
-func (r *Roster) ToAPI() *profilev1.RosterObject {
+func (r *Roster) ToAPI(dek *config.DEK) (*profilev1.RosterObject, error) {
+
+	contactObj, err := r.Contact.ToAPI(dek, true)
+	if err != nil {
+		return nil, err
+	}
+
 	return &profilev1.RosterObject{
 		Id:        r.ID,
 		ProfileId: r.Contact.ProfileID,
-		Contact:   r.Contact.ToAPI(true),
+		Contact:   contactObj,
 		Extra:     r.Properties.ToProtoStruct(),
-	}
+	}, nil
 }
 
 type Verification struct {

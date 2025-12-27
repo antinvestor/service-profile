@@ -9,7 +9,6 @@ import (
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
-	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
 	frevents "github.com/pitabwire/frame/events"
 	"github.com/pitabwire/util"
@@ -29,7 +28,7 @@ var (
 
 type ContactBusiness interface {
 	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
-	GetByDetail(ctx context.Context, detail string) (*models.Contact, error)
+	GetByDetail(ctx context.Context, detailList ...string) ([]*models.Contact, error)
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
 	CreateContact(ctx context.Context, detail string, extra data.JSONMap) (*models.Contact, error)
 	UpdateContact(
@@ -50,11 +49,12 @@ type ContactBusiness interface {
 	GetVerificationAttempts(ctx context.Context, verificationID string) ([]*models.VerificationAttempt, error)
 }
 
-func NewContactBusiness(_ context.Context, cfg *config.ProfileConfig,
+func NewContactBusiness(_ context.Context, cfg *config.ProfileConfig, dek *config.DEK,
 	evtMan frevents.Manager, contactRepository repository.ContactRepository,
 	verificationRepository repository.VerificationRepository) ContactBusiness {
 	return &contactBusiness{
 		cfg:                    cfg,
+		dek:                    dek,
 		eventsMan:              evtMan,
 		contactRepository:      contactRepository,
 		verificationRepository: verificationRepository,
@@ -63,22 +63,30 @@ func NewContactBusiness(_ context.Context, cfg *config.ProfileConfig,
 
 type contactBusiness struct {
 	cfg                    *config.ProfileConfig
+	dek                    *config.DEK
 	eventsMan              frevents.Manager
 	contactRepository      repository.ContactRepository
 	verificationRepository repository.VerificationRepository
 }
 
-func ContactTypeFromDetail(_ context.Context, detail string) (string, error) {
-	if EmailPattern.MatchString(detail) {
+func ContactTypeFromDetail(ctx context.Context, detail string) (string, error) {
+
+	normalizedDetail := Normalize(ctx, detail)
+
+	if EmailPattern.MatchString(normalizedDetail) {
 		return profilev1.ContactType_EMAIL.String(), nil
 	}
 
-	possibleNumber, err := libphonenumber.Parse(detail, "")
+	possibleNumber, err := libphonenumber.Parse(normalizedDetail, "")
 	if err == nil && libphonenumber.IsValidNumber(possibleNumber) {
 		return profilev1.ContactType_MSISDN.String(), nil
 	}
 
 	return "", connect.NewError(connect.CodeInvalidArgument, errors.New("contact details are invalid"))
+}
+
+func Normalize(_ context.Context, detail string) string {
+	return strings.ToLower(strings.TrimSpace(detail))
 }
 
 func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*models.Contact, error) {
@@ -89,8 +97,17 @@ func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*mode
 	return contact, nil
 }
 
-func (cb *contactBusiness) GetByDetail(ctx context.Context, detail string) (*models.Contact, error) {
-	contact, err := cb.contactRepository.GetByDetail(ctx, detail)
+func (cb *contactBusiness) GetByDetail(ctx context.Context, detailList ...string) ([]*models.Contact, error) {
+
+	var lookUpTokenList [][]byte
+
+	for _, detail := range detailList {
+		normalizedDetail := Normalize(ctx, detail)
+
+		token := util.ComputeLookupToken([]byte(cb.cfg.DEKLookupTokenHMACSHA256Key), normalizedDetail)
+		lookUpTokenList = append(lookUpTokenList, token)
+	}
+	contact, err := cb.contactRepository.GetByLookupToken(ctx, lookUpTokenList...)
 	if err != nil {
 		return nil, err
 	}
@@ -137,25 +154,25 @@ func (cb *contactBusiness) CreateContact(
 	detail string,
 	extra data.JSONMap,
 ) (*models.Contact, error) {
-	detail = strings.ToLower(strings.TrimSpace(detail))
+	normalizedDetail := Normalize(ctx, detail)
 
-	contactType, err := ContactTypeFromDetail(ctx, detail)
+	contactType, err := ContactTypeFromDetail(ctx, normalizedDetail)
 	if err != nil {
 		return nil, err
 	}
 
-	contact, getDetailErr := cb.GetByDetail(ctx, detail)
-	if getDetailErr == nil {
-		return contact, nil
+	lookupToken := util.ComputeLookupToken([]byte(cb.cfg.DEKLookupTokenHMACSHA256Key), normalizedDetail)
+
+	encryptedDetail, err := util.EncryptValue([]byte(cb.cfg.DEKActiveAES256GCMKey), []byte(normalizedDetail))
+	if err != nil {
+		return nil, err
 	}
 
-	if !frame.ErrorIsNotFound(getDetailErr) {
-		return nil, getDetailErr
-	}
-
-	contact = &models.Contact{
-		Detail:      detail,
-		ContactType: contactType,
+	contact := &models.Contact{
+		EncryptedDetail: encryptedDetail,
+		EncryptionKeyID: cb.cfg.DEKActiveKeyID,
+		LookUpToken:     lookupToken,
+		ContactType:     contactType,
 	}
 
 	contact.Properties = contact.Properties.Update(extra)

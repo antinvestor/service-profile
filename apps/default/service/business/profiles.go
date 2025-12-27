@@ -3,6 +3,7 @@ package business
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -42,17 +43,13 @@ type ProfileBusiness interface {
 		contact *profilev1.AddContactRequest,
 	) (*profilev1.ProfileObject, string, error)
 
-	CreateContact(
-		ctx context.Context,
-		contact *profilev1.CreateContactRequest,
-	) (*profilev1.ContactObject, error)
-
 	RemoveContact(
 		ctx context.Context,
 		contact *profilev1.RemoveContactRequest,
 	) (*profilev1.ProfileObject, error)
 
 	GetContactByID(ctx context.Context, contactID string) (*profilev1.ContactObject, error)
+
 	VerifyContact(
 		ctx context.Context,
 		contactID string,
@@ -123,10 +120,15 @@ func (pb *profileBusiness) GetByContact(
 
 	_, contactTypeErr := ContactTypeFromDetail(ctx, contactData)
 	if contactTypeErr == nil {
-		contact, err = pb.contactBusiness.GetByDetail(ctx, contactData)
-		if err != nil {
-			return nil, err
+		contactList, detailErr := pb.contactBusiness.GetByDetail(ctx, contactData)
+		if detailErr != nil {
+			return nil, detailErr
 		}
+
+		if len(contactList) == 0 {
+			return nil, fmt.Errorf("contact not found")
+		}
+		contact = contactList[0]
 	} else {
 		contact, err = pb.contactBusiness.GetByID(ctx, contactData)
 		if err != nil {
@@ -252,10 +254,18 @@ func (pb *profileBusiness) CreateProfile(
 	var contact *models.Contact
 	_, contactTypeErr := ContactTypeFromDetail(ctx, contactDetail)
 	if contactTypeErr == nil {
-		contact, err = pb.contactBusiness.GetByDetail(ctx, contactDetail)
-		if !frame.ErrorIsNotFound(err) {
-			return nil, err
+
+		contactList, detailErr := pb.contactBusiness.GetByDetail(ctx, contactDetail)
+		if detailErr != nil {
+			if !frame.ErrorIsNotFound(detailErr) {
+				return nil, detailErr
+			}
 		}
+
+		if len(contactList) != 0 {
+			contact = contactList[0]
+		}
+
 	} else {
 		contact, err = pb.contactBusiness.GetByID(ctx, contactDetail)
 		if err != nil {
@@ -367,42 +377,26 @@ func (pb *profileBusiness) AddContact(
 	}
 
 	for _, contact := range profile.GetContacts() {
-		if contact.GetDetail() == request.GetContact() {
+		normalizedContact := request.GetContact()
+		if contact.GetDetail() == normalizedContact {
 			return profile, "", nil
 		}
 	}
 
-	resp, contactErr := pb.CreateContact(ctx, &profilev1.CreateContactRequest{
-		Contact: request.GetContact(),
-		Extras:  request.GetExtras(),
-	})
+	extrasMap := data.JSONMap{}
+
+	resp, contactErr := pb.contactBusiness.CreateContact(ctx, request.GetContact(), extrasMap.FromProtoStruct(request.GetExtras()))
 
 	if contactErr != nil {
 		return nil, "", contactErr
 	}
 
-	verificationID, verifyErr := pb.VerifyContact(ctx, resp.GetId(), "", "", 0)
+	verificationID, verifyErr := pb.VerifyContact(ctx, resp.GetID(), "", "", 0)
 	if verifyErr != nil {
 		return nil, "", verifyErr
 	}
 
 	return profile, verificationID, nil
-}
-
-func (pb *profileBusiness) CreateContact(
-	ctx context.Context,
-	request *profilev1.CreateContactRequest) (*profilev1.ContactObject, error) {
-	requestProperties := data.JSONMap{}
-	contact, err := pb.contactBusiness.CreateContact(
-		ctx,
-		request.GetContact(),
-		requestProperties.FromProtoStruct(request.GetExtras()),
-	)
-	if err != nil {
-		return nil, err
-	}
-
-	return contact.ToAPI(true), nil
 }
 
 func (pb *profileBusiness) RemoveContact(
