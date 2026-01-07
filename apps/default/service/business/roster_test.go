@@ -261,7 +261,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_ProcessRosterBatch_LargeBatch() {
 
 		// Test with larger batch (20 items to test batching without hitting phone validation issues)
 		batch := make([]*profilev1.RawContact, 20)
-		for i := 0; i < 20; i++ {
+		for i := range 20 {
 			batch[i] = &profilev1.RawContact{
 				Contact: fmt.Sprintf("test%d-large@example.com", i),
 				Extras:  (&data.JSONMap{"type": "email"}).ToProtoStruct(),

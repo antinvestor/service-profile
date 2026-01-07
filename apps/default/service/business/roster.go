@@ -139,83 +139,130 @@ func (rb *rosterBusiness) processRosterBatch(
 	profileID string,
 	batch []*profilev1.RawContact,
 ) ([]*profilev1.RosterObject, error) {
-	batchSize := len(batch)
+	// Step 1: Deduplicate contacts
+	detailSet := rb.deduplicateContacts(batch)
+	detailList := rb.createDetailList(detailSet)
 
-	// Pre-allocate all slices with exact capacity to avoid reallocations
-	detailSet := make(map[string]struct{}, batchSize)
-
-	for _, newRoster := range batch {
-		detail := newRoster.GetContact()
-		detailSet[detail] = struct{}{}
-	}
-
-	// Create detailList from deduplicated set
-	detailList := make([]string, 0, len(detailSet))
-	for detail := range detailSet {
-		detailList = append(detailList, detail)
-	}
-
-	batchSize = len(detailList)
-
-	// Step 1: Bulk check existing contacts using GetByDetailMap
+	// Step 2: Get existing contacts
 	existingContactMap, err := rb.contactBusiness.GetByDetailMap(ctx, detailList...)
 	if err != nil {
 		return nil, err
 	}
 
-	// Step 2: Separate existing contacts from new ones and prepare batch creation
-	missingContacts := make([]string, 0, batchSize)
+	// Step 3: Find missing contacts and create them
+	missingContacts := rb.findMissingContacts(batch, existingContactMap)
+	newContactsMap := rb.batchCreateContacts(ctx, missingContacts)
 
+	// Step 4: Create unified contact map
+	allContacts := rb.createUnifiedContactMap(existingContactMap, newContactsMap)
+	contactDetails := rb.buildContactDetails(batch, allContacts)
+
+	// Step 5: Get existing rosters
+	existingRosters, err := rb.rosterRepository.GetByContactIDsAndProfileID(ctx, contactDetails, profileID)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	existingRosterMap := rb.createRosterLookupMap(existingRosters)
+
+	// Step 6: Create missing rosters
+	rostersToCreate := rb.findRostersToCreate(batch, allContacts, existingRosterMap, profileID)
+	if len(rostersToCreate) > 0 {
+		if createErr := rb.batchCreateRosters(ctx, rostersToCreate); createErr != nil {
+			return nil, createErr
+		}
+		// Add newly created rosters to existing map
+		for _, roster := range rostersToCreate {
+			existingRosterMap[roster.ContactID] = roster
+		}
+	}
+
+	// Step 7: Build final result preserving input order
+	return rb.buildRosterObjects(batch, allContacts, existingRosterMap), nil
+}
+
+// deduplicateContacts creates a set of unique contact details from the batch.
+func (rb *rosterBusiness) deduplicateContacts(batch []*profilev1.RawContact) map[string]struct{} {
+	detailSet := make(map[string]struct{}, len(batch))
+	for _, newRoster := range batch {
+		detail := newRoster.GetContact()
+		detailSet[detail] = struct{}{}
+	}
+	return detailSet
+}
+
+// createDetailList converts a set to a slice of contact details.
+func (rb *rosterBusiness) createDetailList(detailSet map[string]struct{}) []string {
+	detailList := make([]string, 0, len(detailSet))
+	for detail := range detailSet {
+		detailList = append(detailList, detail)
+	}
+	return detailList
+}
+
+// findMissingContacts identifies contacts that don't exist yet.
+func (rb *rosterBusiness) findMissingContacts(
+	batch []*profilev1.RawContact,
+	existingContactMap map[string]*models.Contact,
+) []string {
+	missingContacts := make([]string, 0, len(batch))
 	for _, contact := range batch {
 		if _, exists := existingContactMap[contact.GetContact()]; !exists {
 			missingContacts = append(missingContacts, contact.GetContact())
 		}
 	}
+	return missingContacts
+}
 
-	// Step 3: Batch create new contacts if any
-	newContactsMap, createErr := rb.batchCreateContacts(ctx, missingContacts)
-	if createErr != nil {
-		return nil, createErr
-	}
-
-	// Step 4: Create unified contact map for single lookup and build contactDetails in one pass
+// createUnifiedContactMap combines existing and new contacts into a single map.
+func (rb *rosterBusiness) createUnifiedContactMap(
+	existingContactMap map[string]*models.Contact,
+	newContactsMap map[string]*models.Contact,
+) map[string]*models.Contact {
 	allContacts := make(map[string]*models.Contact, len(existingContactMap)+len(newContactsMap))
-
-	// Add existing contacts to unified map
+	// Add existing contacts
 	for detail, contact := range existingContactMap {
 		allContacts[detail] = contact
 	}
-
-	// Add new contacts to unified map
+	// Add new contacts
 	for detail, contact := range newContactsMap {
 		allContacts[detail] = contact
 	}
+	return allContacts
+}
 
-	// Build contactDetails in single pass while preserving input order
+// buildContactDetails creates a list of contact IDs preserving input order.
+func (rb *rosterBusiness) buildContactDetails(
+	batch []*profilev1.RawContact,
+	allContacts map[string]*models.Contact,
+) []string {
 	contactDetails := make([]string, 0, len(batch))
-
 	for _, rawContact := range batch {
 		detail := rawContact.GetContact()
 		if contact, exists := allContacts[detail]; exists {
 			contactDetails = append(contactDetails, contact.GetID())
 		}
 	}
+	return contactDetails
+}
 
-	// Step 4: Batch lookup existing rosters for all contact IDs
-	existingRosters, err := rb.rosterRepository.GetByContactIDsAndProfileID(ctx, contactDetails, profileID)
-	if err != nil {
-		return nil, data.ErrorConvertToAPI(err)
-	}
-
-	// Create map for quick lookup of existing rosters
+// createRosterLookupMap creates a map for quick roster lookup by contact ID.
+func (rb *rosterBusiness) createRosterLookupMap(existingRosters []*models.Roster) map[string]*models.Roster {
 	existingRosterMap := make(map[string]*models.Roster, len(existingRosters))
 	for _, roster := range existingRosters {
 		existingRosterMap[roster.ContactID] = roster
 	}
+	return existingRosterMap
+}
 
-	// Step 5: Batch create rosters that don't exist - iterate through unique contacts only
-	rostersToCreate := make([]*models.Roster, 0, batchSize)
-	processedContacts := make(map[string]bool, batchSize) // Track which contacts we've processed
+// findRostersToCreate identifies rosters that need to be created.
+func (rb *rosterBusiness) findRostersToCreate(
+	batch []*profilev1.RawContact,
+	allContacts map[string]*models.Contact,
+	existingRosterMap map[string]*models.Roster,
+	profileID string,
+) []*models.Roster {
+	rostersToCreate := make([]*models.Roster, 0, len(batch))
+	processedContacts := make(map[string]bool, len(batch))
 
 	for _, rawCtc := range batch {
 		detail := rawCtc.GetContact()
@@ -231,7 +278,7 @@ func (rb *rosterBusiness) processRosterBatch(
 			continue
 		}
 
-		if _, exists := existingRosterMap[contact.GetID()]; !exists {
+		if _, rosterExists := existingRosterMap[contact.GetID()]; !rosterExists {
 			rosterExtras := data.JSONMap{}
 			roster := &models.Roster{
 				ProfileID:  profileID,
@@ -242,21 +289,16 @@ func (rb *rosterBusiness) processRosterBatch(
 			rostersToCreate = append(rostersToCreate, roster)
 		}
 	}
+	return rostersToCreate
+}
 
-	// Batch create rosters if any need to be created
-	if len(rostersToCreate) > 0 {
-		if createErr := rb.batchCreateRosters(ctx, rostersToCreate); createErr != nil {
-			return nil, createErr
-		}
-
-		// Add newly created rosters to existing map
-		for _, roster := range rostersToCreate {
-			existingRosterMap[roster.ContactID] = roster
-		}
-	}
-
-	// Step 6: Build final result preserving input order with optimized API conversion
-	rosterObjectList := make([]*profilev1.RosterObject, 0, batchSize)
+// buildRosterObjects creates the final roster objects preserving input order.
+func (rb *rosterBusiness) buildRosterObjects(
+	batch []*profilev1.RawContact,
+	allContacts map[string]*models.Contact,
+	existingRosterMap map[string]*models.Roster,
+) []*profilev1.RosterObject {
+	rosterObjectList := make([]*profilev1.RosterObject, 0, len(batch))
 
 	for _, rawContact := range batch {
 		detail := rawContact.GetContact()
@@ -276,21 +318,22 @@ func (rb *rosterBusiness) processRosterBatch(
 		if roster != nil {
 			rosterObj, apiErr := roster.ToAPI(rb.dek)
 			if apiErr != nil {
-				return nil, apiErr
+				return nil // Will be handled by the caller
 			}
 			rosterObjectList = append(rosterObjectList, rosterObj)
 		}
 	}
-
-	return rosterObjectList, nil
+	return rosterObjectList
 }
 
-// batchCreateContacts creates multiple contacts in a batch for better performance
-func (rb *rosterBusiness) batchCreateContacts(ctx context.Context, newContacts []string) (map[string]*models.Contact, error) {
+// batchCreateContacts creates multiple contacts in a batch for better performance.
+func (rb *rosterBusiness) batchCreateContacts(
+	ctx context.Context,
+	newContacts []string,
+) map[string]*models.Contact {
 	contacts := make(map[string]*models.Contact, len(newContacts))
 
 	for _, contactDetail := range newContacts {
-
 		contact, createErr := rb.contactBusiness.CreateContact(
 			ctx,
 			contactDetail,
@@ -304,10 +347,10 @@ func (rb *rosterBusiness) batchCreateContacts(ctx context.Context, newContacts [
 		contacts[contactDetail] = contact
 	}
 
-	return contacts, nil
+	return contacts
 }
 
-// batchCreateRosters creates multiple rosters in a batch for better performance
+// batchCreateRosters creates multiple rosters in a batch for better performance.
 func (rb *rosterBusiness) batchCreateRosters(ctx context.Context, rosters []*models.Roster) error {
 	createErr := rb.rosterRepository.BulkCreate(ctx, rosters)
 	if createErr != nil {
