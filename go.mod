@@ -6,16 +6,16 @@ require (
 	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20260102104630-5c57561a771f.1
 	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20251223175454-e698295a3dc7.2
 	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20251223175454-e698295a3dc7.1
-	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20251223175610-ae615b4be923.2
-	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20251223175610-ae615b4be923.1
+	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20260102123330-d6847f42a19a.2
+	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260102123330-d6847f42a19a.1
 	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20251226160839-4d56a3006d66.2
 	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260102123445-62e44f8dd82b.1
 	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20251223175808-2186ea016406.2
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20251223175808-2186ea016406.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.18.0
-	github.com/antinvestor/apis/go/common v1.51.0
-	github.com/antinvestor/apis/go/notification v1.51.3
+	github.com/antinvestor/apis/go/common v1.51.10
+	github.com/antinvestor/apis/go/notification v1.52.4
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
 	github.com/pitabwire/frame v1.69.13
@@ -107,7 +107,7 @@ require (
 	github.com/nats-io/nats.go v1.48.0 // indirect
 	github.com/nats-io/nkeys v0.4.12 // indirect
 	github.com/nats-io/nuid v1.0.1 // indirect
-	github.com/nicksnyder/go-i18n/v2 v2.6.0 // indirect
+	github.com/nicksnyder/go-i18n/v2 v2.6.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/panjf2000/ants/v2 v2.11.4 // indirect
@@ -122,7 +122,7 @@ require (
 	github.com/prometheus/otlptranslator v1.0.0 // indirect
 	github.com/prometheus/procfs v0.19.2 // indirect
 	github.com/rs/xid v1.6.0 // indirect
-	github.com/shirou/gopsutil/v4 v4.25.11 // indirect
+	github.com/shirou/gopsutil/v4 v4.25.12 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/stoewer/go-strcase v1.3.1 // indirect
