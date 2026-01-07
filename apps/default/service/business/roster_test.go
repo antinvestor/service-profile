@@ -180,6 +180,105 @@ func (rts *RosterTestSuite) TestRosterBusiness_ToApi() {
 	})
 }
 
+func (rts *RosterTestSuite) TestRosterBusiness_ProcessRosterBatch_EmptyBatch() {
+	t := rts.T()
+
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := rts.CreateService(t, dep)
+		rb := rts.getRosterBusiness(ctx, svc)
+
+		// Set up security claims in context
+		claims := security.ClaimsFromMap(map[string]string{
+			"sub":          "profile123",
+			"tenant_id":    "tenantx",
+			"partition_id": "party",
+		})
+		ctx = claims.ClaimsToContext(ctx)
+
+		// Test with empty batch
+		request := &profilev1.AddRosterRequest{
+			Data: []*profilev1.RawContact{},
+		}
+		result, err := rb.CreateRoster(ctx, request)
+		require.NoError(t, err)
+		require.Empty(t, result, "Empty batch should return empty result")
+	})
+}
+
+func (rts *RosterTestSuite) TestRosterBusiness_ProcessRosterBatch_AllNewContacts() {
+	t := rts.T()
+
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := rts.CreateService(t, dep)
+		rb := rts.getRosterBusiness(ctx, svc)
+
+		// Set up security claims in context
+		claims := security.ClaimsFromMap(map[string]string{
+			"sub":          "profile123",
+			"tenant_id":    "tenantx",
+			"partition_id": "party",
+		})
+		ctx = claims.ClaimsToContext(ctx)
+
+		// Test with all new contacts - use valid phone number format from existing tests
+		batch := []*profilev1.RawContact{
+			{Contact: "+256757546241", Extras: (&data.JSONMap{"type": "msisdn"}).ToProtoStruct()},
+			{Contact: "+256757546242", Extras: (&data.JSONMap{"type": "msisdn"}).ToProtoStruct()},
+			{Contact: "test1-allnew@example.com", Extras: (&data.JSONMap{"type": "email"}).ToProtoStruct()},
+		}
+
+		request := &profilev1.AddRosterRequest{Data: batch}
+		result, err := rb.CreateRoster(ctx, request)
+		require.NoError(t, err)
+		require.Len(t, result, 3, "Should create 3 rosters")
+
+		// Verify order preservation
+		require.Equal(t, "+256757546241", result[0].GetContact().GetDetail())
+		require.Equal(t, "+256757546242", result[1].GetContact().GetDetail())
+		require.Equal(t, "test1-allnew@example.com", result[2].GetContact().GetDetail())
+
+		// Verify all have correct profile ID
+		for _, roster := range result {
+			require.Equal(t, "profile123", roster.GetProfileId())
+		}
+	})
+}
+
+func (rts *RosterTestSuite) TestRosterBusiness_ProcessRosterBatch_LargeBatch() {
+	t := rts.T()
+
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := rts.CreateService(t, dep)
+		rb := rts.getRosterBusiness(ctx, svc)
+
+		// Set up security claims in context
+		claims := security.ClaimsFromMap(map[string]string{
+			"sub":          "profile123",
+			"tenant_id":    "tenantx",
+			"partition_id": "party",
+		})
+		ctx = claims.ClaimsToContext(ctx)
+
+		// Test with larger batch (20 items to test batching without hitting phone validation issues)
+		batch := make([]*profilev1.RawContact, 20)
+		for i := 0; i < 20; i++ {
+			batch[i] = &profilev1.RawContact{
+				Contact: fmt.Sprintf("test%d-large@example.com", i),
+				Extras:  (&data.JSONMap{"type": "email"}).ToProtoStruct(),
+			}
+		}
+
+		request := &profilev1.AddRosterRequest{Data: batch}
+		result, err := rb.CreateRoster(ctx, request)
+		require.NoError(t, err)
+		require.Len(t, result, 20, "Should handle large batches correctly")
+
+		// Verify order preservation for large batch
+		require.Equal(t, "test0-large@example.com", result[0].GetContact().GetDetail())
+		require.Equal(t, "test19-large@example.com", result[19].GetContact().GetDetail())
+	})
+}
+
 func (rts *RosterTestSuite) TestRosterBusiness_GetByID() {
 	t := rts.T()
 

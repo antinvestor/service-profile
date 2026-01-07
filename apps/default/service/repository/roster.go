@@ -106,3 +106,13 @@ func (rr *rosterRepository) GetByProfileID(ctx context.Context, profileID string
 		Error
 	return rosterList, err
 }
+
+func (rr *rosterRepository) GetByID(ctx context.Context, rosterID string) (*models.Roster, error) {
+	roster := &models.Roster{}
+	err := rr.Pool().DB(ctx, true).
+		Preload(clause.Associations).
+		Where("id = ?", rosterID).
+		First(roster).
+		Error
+	return roster, err
+}
