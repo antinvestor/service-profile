@@ -8,9 +8,9 @@ require (
 	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20251223175454-e698295a3dc7.1
 	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20260102123330-d6847f42a19a.2
 	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260102123330-d6847f42a19a.1
-	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20251226160839-4d56a3006d66.2
+	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260102123445-62e44f8dd82b.2
 	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260102123445-62e44f8dd82b.1
-	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20251223175808-2186ea016406.2
+	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20260102123521-54fcf9143036.2
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20251223175808-2186ea016406.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.18.0
