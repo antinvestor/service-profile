@@ -32,7 +32,12 @@ func (r *deviceSessionRepository) GetLastByDeviceID(
 	deviceID string,
 ) (*models.DeviceSession, error) {
 	var session models.DeviceSession
-	if err := r.Pool().DB(ctx, true).Where("device_id = ?", deviceID).Order("created_at DESC").First(&session).Error; err != nil {
+	if err := r.Pool().
+		DB(ctx, true).
+		Where("device_id = ?", deviceID).
+		Order("created_at DESC").
+		First(&session).
+		Error; err != nil {
 		return nil, err
 	}
 	return &session, nil

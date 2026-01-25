@@ -51,7 +51,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceRepository() {
 		{
 			name:        "save device with long name",
 			profileID:   "profile-789",
-			deviceName:  util.RandomString(200),
+			deviceName:  util.RandomAlphaNumericString(200),
 			os:          "macOS",
 			expectError: false,
 		},
@@ -276,7 +276,7 @@ func (suite *DeviceRepositoryTestSuite) TestDeviceKeyRepository() {
 		{
 			name:        "save large key",
 			deviceID:    "device-789",
-			key:         []byte(util.RandomString(1000)),
+			key:         []byte(util.RandomAlphaNumericString(1000)),
 			expectError: false,
 		},
 	}

@@ -54,7 +54,11 @@ func (cr *contactRepository) GetByLookupToken(
 ) ([]*models.Contact, error) {
 	var contactList []*models.Contact
 
-	if err := cr.Pool().DB(ctx, true).Where(" look_up_token IN ?", lookupTokenList).Find(&contactList).Error; err != nil {
+	if err := cr.Pool().
+		DB(ctx, true).
+		Where(" look_up_token IN ?", lookupTokenList).
+		Find(&contactList).
+		Error; err != nil {
 		return nil, err
 	}
 

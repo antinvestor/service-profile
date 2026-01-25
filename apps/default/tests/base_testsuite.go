@@ -164,7 +164,11 @@ func (bs *ProfileBaseTestSuite) WithTestDependancies(
 	testFn func(t *testing.T, dep *definition.DependencyOption),
 ) {
 	options := []*definition.DependencyOption{
-		definition.NewDependancyOption("default", util.RandomString(DefaultRandomStringLength), bs.Resources()),
+		definition.NewDependancyOption(
+			"default",
+			util.RandomAlphaNumericString(DefaultRandomStringLength),
+			bs.Resources(),
+		),
 	}
 
 	frametests.WithTestDependencies(t, options, testFn)

@@ -251,7 +251,7 @@ func (cb *contactBusiness) VerifyContact(
 	expiryTime := time.Now().Add(durationToExpiry)
 
 	if code == "" {
-		code = util.RandomString(cb.cfg.LengthOfVerificationCode)
+		code = util.RandomNumericString(cb.cfg.LengthOfVerificationCode)
 	}
 
 	verification := &models.Verification{

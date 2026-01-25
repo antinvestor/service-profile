@@ -108,7 +108,7 @@ func (cts *ContactTestSuite) TestGeneratePin() {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			newPin := util.RandomString(tt.args.n)
+			newPin := util.RandomAlphaNumericString(tt.args.n)
 			require.Lenf(t, newPin, tt.want, "GeneratePin(%v)", tt.args.n)
 		})
 	}

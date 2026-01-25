@@ -31,7 +31,12 @@ func (dlr *devicePresenceRepository) GetLatestByDeviceID(
 	ctx context.Context, deviceID string,
 ) (*models.DevicePresence, error) {
 	var presence models.DevicePresence
-	if err := dlr.Pool().DB(ctx, true).Where("device_id = ?", deviceID).Order("created_at DESC").First(&presence).Error; err != nil {
+	if err := dlr.Pool().
+		DB(ctx, true).
+		Where("device_id = ?", deviceID).
+		Order("created_at DESC").
+		First(&presence).
+		Error; err != nil {
 		return nil, err
 	}
 	return &presence, nil
