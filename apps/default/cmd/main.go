@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"net/http"
 
 	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
@@ -62,11 +63,9 @@ func main() {
 		log.WithError(nErr).Fatal("main -- Could not setup notification svc")
 	}
 
-	dek := &aconfig.DEK{
-		KeyID:     cfg.DEKActiveKeyID,
-		Key:       []byte(cfg.DEKActiveAES256GCMKey),
-		OldKey:    []byte(cfg.DEKOldAES256GCMKey),
-		LookUpKey: []byte(cfg.DEKLookupTokenHMACSHA256Key),
+	dek, dekErr := decodeDEK(cfg)
+	if dekErr != nil {
+		log.WithError(dekErr).Fatal("main -- Could not decode DEK encryption keys")
 	}
 
 	// Setup Connect server
@@ -157,6 +156,34 @@ func setupNotificationClient(
 		apis.WithTokenPassword(clHolder.JwtClientSecret()),
 		apis.WithScopes(openid.ConstSystemScopeInternal),
 		apis.WithAudiences("service_notifications"))
+}
+
+// decodeDEK decodes the Base64-encoded encryption keys from config into raw bytes.
+func decodeDEK(cfg aconfig.ProfileConfig) (*aconfig.DEK, error) {
+	key, err := base64.StdEncoding.DecodeString(cfg.DEKActiveAES256GCMKey)
+	if err != nil {
+		return nil, err
+	}
+
+	lookupKey, err := base64.StdEncoding.DecodeString(cfg.DEKLookupTokenHMACSHA256Key)
+	if err != nil {
+		return nil, err
+	}
+
+	var oldKey []byte
+	if cfg.DEKOldAES256GCMKey != "" {
+		oldKey, err = base64.StdEncoding.DecodeString(cfg.DEKOldAES256GCMKey)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return &aconfig.DEK{
+		KeyID:     cfg.DEKActiveKeyID,
+		Key:       key,
+		OldKey:    oldKey,
+		LookUpKey: lookupKey,
+	}, nil
 }
 
 // setupConnectServer initializes and configures the gRPC server.
