@@ -2,7 +2,6 @@ package queue
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -41,17 +40,19 @@ type GeoIP struct {
 
 func QueryIPGeo(ctx context.Context, cli client.Manager, ip string) (*GeoIP, error) {
 	url := fmt.Sprintf("https://ipapi.co/%s/json/", ip)
-	sts, resp, err := cli.Invoke(ctx, http.MethodGet, url, nil, nil)
+	resp, err := cli.Invoke(ctx, http.MethodGet, url, nil, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	if sts != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d : %s", sts, string(resp))
+	if resp.StatusCode != http.StatusOK {
+		result, _ := resp.ToContent(ctx)
+
+		return nil, fmt.Errorf("unexpected status code: %d : %s", resp.StatusCode, string(result))
 	}
 
 	var data GeoIP
-	err = json.Unmarshal(resp, &data)
+	err = resp.Decode(ctx, &data)
 	if err != nil {
 		return nil, err
 	}
