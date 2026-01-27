@@ -18,7 +18,7 @@ require (
 	github.com/antinvestor/apis/go/notification v1.52.4
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.70.0
+	github.com/pitabwire/frame v1.70.1
 	github.com/pitabwire/util v0.4.0
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
@@ -124,6 +124,7 @@ require (
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/shirou/gopsutil/v4 v4.25.12 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
+	github.com/sony/gobreaker/v2 v2.4.0 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/stoewer/go-strcase v1.3.1 // indirect
 	github.com/testcontainers/testcontainers-go v0.40.0 // indirect
