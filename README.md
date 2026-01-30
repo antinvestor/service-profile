@@ -25,5 +25,27 @@ The profile service repository contains code necessary to run the service that i
     This is an automated process done via bitbucket pipelines.
     Once the code is ready for deployment, merging to develop deploys to the staging environment.
     Merging to master deploys to production so all changes must be thoroughly validated before merging.
+
+## Development Setup
+
+### Git Hooks
+
+This repository includes a pre-commit hook that automatically runs `make format` before each commit to ensure consistent code formatting.
+
+**Enable the hook:**
+```bash
+git config core.hooksPath .githooks
+```
+
+**What it does:**
+- Detects staged `.go` files
+- Runs `make format` to apply gofmt/goimports
+- If formatting changes any files, the commit is blocked
+- You must review and stage the formatted files before committing again
+
+**To disable temporarily:**
+```bash
+git commit --no-verify
+```
     
 
