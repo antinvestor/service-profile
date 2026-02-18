@@ -16,6 +16,7 @@ require (
 	firebase.google.com/go/v4 v4.19.0
 	github.com/antinvestor/apis/go/common v1.53.5
 	github.com/antinvestor/apis/go/notification v1.53.6
+	github.com/antinvestor/apis/go/profile v1.53.6
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
 	github.com/pitabwire/frame v1.72.1

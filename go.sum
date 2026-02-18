@@ -80,6 +80,8 @@ github.com/antinvestor/apis/go/common v1.53.5 h1:9EkBXV3yylGZYq5oat4iOhTKUwnC8HB
 github.com/antinvestor/apis/go/common v1.53.5/go.mod h1:Sy3WcCUxQxRUx6oBfE2cA9CA2BQFFth58RBkNbAv98Y=
 github.com/antinvestor/apis/go/notification v1.53.6 h1:fdpqEtCcR004YDwmVdlNmSNTqyOIf70YKuwwWqeAZUY=
 github.com/antinvestor/apis/go/notification v1.53.6/go.mod h1:dR9To3Rb9kKeKNJLnW/fpDCoSXLLJFewmhFEX98LzwM=
+github.com/antinvestor/apis/go/profile v1.53.6 h1:8Sn0CDkWk2TiPsnsLLdyD9kPoAuW89pqjo2CuJohzpk=
+github.com/antinvestor/apis/go/profile v1.53.6/go.mod h1:J6hlUzdY1+3JgDiD6IJwHltcmkiq/rg1uc5O6SJ8Lp0=
 github.com/antithesishq/antithesis-sdk-go v0.5.0 h1:cudCFF83pDDANcXFzkQPUHHedfnnIbUO3JMr9fqwFJs=
 github.com/antithesishq/antithesis-sdk-go v0.5.0/go.mod h1:IUpT2DPAKh6i/YhSbt6Gl3v2yvUZjmKncl7U91fup7E=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
