@@ -10,6 +10,7 @@ import (
 	"connectrpc.com/connect"
 	apis "github.com/antinvestor/apis/go/common"
 	"github.com/antinvestor/apis/go/notification"
+	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -208,6 +209,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	mux := http.NewServeMux()
 	mux.Handle("/", serverHandler)
 	mux.Handle("/public/", http.StripPrefix("/public", publicRestHandler))
+	mux.Handle("/openapi.yaml", apis.NewOpenAPIHandler(profilev1.ApiSpecFile, nil))
 
 	return mux
 }
