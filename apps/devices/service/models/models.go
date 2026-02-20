@@ -11,9 +11,9 @@ import (
 // Device represents a core device identity.
 type Device struct {
 	data.BaseModel
-	ProfileID string `gorm:"index;size:40"`
-	Name      string `gorm:"size:255"`
-	OS        string `gorm:"size:255"`
+	ProfileID string `gorm:"index;size:40" json:"profile_id"`
+	Name      string `gorm:"size:255"      json:"name"`
+	OS        string `gorm:"size:255"      json:"os"`
 }
 
 func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
@@ -47,37 +47,39 @@ func (d *Device) ToAPI(session *DeviceSession) *devicev1.DeviceObject {
 // DeviceSession represents a single session of a device.
 type DeviceSession struct {
 	data.BaseModel
-	DeviceID  string `gorm:"index"`
-	UserAgent string `gorm:"size:512"`
-	IP        string `gorm:"size:45"`
-	Locale    []byte `gorm:"type:bytea"`
-	Location  data.JSONMap
-	LastSeen  time.Time
+	DeviceID  string       `gorm:"index"      json:"device_id"`
+	UserAgent string       `gorm:"size:512"   json:"user_agent"`
+	IP        string       `gorm:"size:45"    json:"ip"`
+	Locale    []byte       `gorm:"type:bytea" json:"locale"`
+	Location  data.JSONMap `                  json:"location"`
+	LastSeen  time.Time    `                  json:"last_seen"`
 }
 
 // DeviceKey holds encryption keys for a device.
 type DeviceKey struct {
 	data.BaseModel
-	DeviceID  string `gorm:"index"`
-	KeyType   devicev1.KeyType
-	Key       []byte `gorm:"type:bytea"`
-	ExpiresAt *time.Time
-	Extra     data.JSONMap
+	DeviceID  string           `gorm:"index"      json:"device_id"`
+	KeyType   devicev1.KeyType `                  json:"key_type"`
+	Key       []byte           `gorm:"type:bytea" json:"key"`
+	ExpiresAt *time.Time       `                  json:"expires_at,omitempty"`
+	Extra     data.JSONMap     `                  json:"extra"`
 }
 
 func (k *DeviceKey) ToAPI() *devicev1.KeyObject {
 	expiryTime := ""
-	if k.ExpiresAt != nil && k.ExpiresAt.IsZero() {
+	isActive := true
+	if k.ExpiresAt != nil && !k.ExpiresAt.IsZero() {
 		expiryTime = k.ExpiresAt.UTC().Format(time.RFC3339)
+		isActive = k.ExpiresAt.After(time.Now())
 	}
 	return &devicev1.KeyObject{
 		Id:        k.GetID(),
 		DeviceId:  k.DeviceID,
-		KeyType:   0,
+		KeyType:   k.KeyType,
 		Key:       k.Key,
 		CreatedAt: k.CreatedAt.UTC().Format(time.RFC3339),
 		ExpiresAt: expiryTime,
-		IsActive:  false,
+		IsActive:  isActive,
 		Extra:     k.Extra.ToProtoStruct(),
 	}
 }

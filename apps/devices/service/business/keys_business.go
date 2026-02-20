@@ -2,6 +2,7 @@ package business
 
 import (
 	"context"
+	"encoding/json"
 	"slices"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
@@ -10,6 +11,7 @@ import (
 	"github.com/pitabwire/frame/workerpool"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
@@ -38,18 +40,21 @@ type keysBusiness struct {
 
 	deviceRepo    repository.DeviceRepository
 	deviceKeyRepo repository.DeviceKeyRepository
+
+	cache *caching.DeviceCacheService
 }
 
-// NewKeysBusiness creates a new instance of DeviceBusiness.
+// NewKeysBusiness creates a new instance of KeysBusiness.
 func NewKeysBusiness(_ context.Context, cfg *config.DevicesConfig,
 	qMan queue.Manager, workMan workerpool.Manager, deviceRepo repository.DeviceRepository,
-	deviceKeyRepo repository.DeviceKeyRepository) KeysBusiness {
+	deviceKeyRepo repository.DeviceKeyRepository, cacheSvc *caching.DeviceCacheService) KeysBusiness {
 	return &keysBusiness{
 		cfg:           cfg,
 		qMan:          qMan,
 		workMan:       workMan,
 		deviceRepo:    deviceRepo,
 		deviceKeyRepo: deviceKeyRepo,
+		cache:         cacheSvc,
 	}
 }
 
@@ -60,7 +65,7 @@ func (b *keysBusiness) AddKey(
 	key []byte,
 	extra data.JSONMap,
 ) (*devicev1.KeyObject, error) {
-	// Validate that the device exists before adding a key
+	// Validate that the device exists before adding a key.
 	_, err := b.deviceRepo.GetByID(ctx, deviceID)
 	if err != nil {
 		return nil, err
@@ -78,7 +83,18 @@ func (b *keysBusiness) AddKey(
 		return nil, err
 	}
 
+	// Invalidate keys cache after adding a key.
+	if b.cache != nil {
+		b.cache.InvalidateDeviceKeys(ctx, deviceID)
+	}
+
 	return deviceKey.ToAPI(), nil
+}
+
+// cachedKeyEntry is a serializable container for device keys stored in cache.
+type cachedKeyEntry struct {
+	DeviceID string              `json:"device_id"`
+	Keys     []*models.DeviceKey `json:"keys"`
 }
 
 func (b *keysBusiness) GetKeys(
@@ -91,16 +107,16 @@ func (b *keysBusiness) GetKeys(
 	go func() {
 		defer close(out)
 
-		keys, err := b.deviceKeyRepo.GetByDeviceID(ctx, deviceID)
+		keys, err := b.getDeviceKeysWithCache(ctx, deviceID)
 		if err != nil {
 			out <- workerpool.ErrorResult[[]*devicev1.KeyObject](err)
 			return
 		}
 
-		apiKeys := make([]*devicev1.KeyObject, len(keys))
-		for i, key := range keys {
+		apiKeys := make([]*devicev1.KeyObject, 0, len(keys))
+		for _, key := range keys {
 			if len(keyType) == 0 || slices.Contains(keyType, key.KeyType) {
-				apiKeys[i] = key.ToAPI()
+				apiKeys = append(apiKeys, key.ToAPI())
 			}
 		}
 
@@ -108,6 +124,35 @@ func (b *keysBusiness) GetKeys(
 	}()
 
 	return out, nil
+}
+
+// getDeviceKeysWithCache retrieves device keys using cache-aside pattern.
+func (b *keysBusiness) getDeviceKeysWithCache(ctx context.Context, deviceID string) ([]*models.DeviceKey, error) {
+	// Try cache first.
+	if b.cache != nil {
+		if cached, found := b.cache.GetDeviceKeys(ctx, deviceID); found {
+			var entry cachedKeyEntry
+			if err := json.Unmarshal(cached, &entry); err == nil {
+				return entry.Keys, nil
+			}
+		}
+	}
+
+	keys, err := b.deviceKeyRepo.GetByDeviceID(ctx, deviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate cache.
+	if b.cache != nil {
+		entry := cachedKeyEntry{DeviceID: deviceID, Keys: keys}
+		encoded, encErr := json.Marshal(entry)
+		if encErr == nil {
+			b.cache.SetDeviceKeys(ctx, deviceID, encoded)
+		}
+	}
+
+	return keys, nil
 }
 
 func (b *keysBusiness) RemoveKeys(
@@ -129,6 +174,11 @@ func (b *keysBusiness) RemoveKeys(
 			}
 			if removedKey != nil {
 				removedKeys = append(removedKeys, removedKey.ToAPI())
+
+				// Invalidate keys cache for the affected device.
+				if b.cache != nil {
+					b.cache.InvalidateDeviceKeys(ctx, removedKey.DeviceID)
+				}
 			}
 		}
 

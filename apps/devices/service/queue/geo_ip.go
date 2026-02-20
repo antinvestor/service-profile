@@ -2,10 +2,14 @@ package queue
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/pitabwire/frame/client"
+	"github.com/pitabwire/util"
+
+	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 )
 
 type GeoIP struct {
@@ -38,24 +42,63 @@ type GeoIP struct {
 	Org                string  `json:"org"`
 }
 
-func QueryIPGeo(ctx context.Context, cli client.Manager, ip string) (*GeoIP, error) {
+// QueryIPGeo resolves an IP address to geographic location data.
+// It checks the cache first and falls back to the external ipapi.co API.
+// Failed lookups are negative-cached to avoid hammering the API for bad IPs.
+func QueryIPGeo(
+	ctx context.Context,
+	cli client.Manager,
+	ip string,
+	cacheSvc *caching.DeviceCacheService,
+) (*GeoIP, error) {
+	// Try cache first.
+	if cacheSvc != nil {
+		cached, found, isNegative := cacheSvc.GetGeoIP(ctx, ip)
+		if isNegative {
+			return nil, fmt.Errorf("geoip lookup previously failed for ip %s", ip)
+		}
+		if found {
+			var geoData GeoIP
+			if err := json.Unmarshal(cached, &geoData); err == nil {
+				return &geoData, nil
+			}
+		}
+	}
+
 	url := fmt.Sprintf("https://ipapi.co/%s/json/", ip)
 	resp, err := cli.Invoke(ctx, http.MethodGet, url, nil, nil)
 	if err != nil {
+		// Negative-cache on network errors to avoid retrying rapidly.
+		if cacheSvc != nil {
+			cacheSvc.SetGeoIPNegative(ctx, ip)
+		}
 		return nil, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
 		result, _ := resp.ToContent(ctx)
-
+		// Negative-cache non-OK responses (rate limits, bad IPs, etc.).
+		if cacheSvc != nil {
+			cacheSvc.SetGeoIPNegative(ctx, ip)
+		}
 		return nil, fmt.Errorf("unexpected status code: %d : %s", resp.StatusCode, string(result))
 	}
 
-	var data GeoIP
-	err = resp.Decode(ctx, &data)
+	var geoData GeoIP
+	err = resp.Decode(ctx, &geoData)
 	if err != nil {
 		return nil, err
 	}
 
-	return &data, nil
+	// Cache the successful result.
+	if cacheSvc != nil {
+		encoded, encErr := json.Marshal(&geoData)
+		if encErr == nil {
+			cacheSvc.SetGeoIP(ctx, ip, encoded)
+		} else {
+			util.Log(ctx).WithError(encErr).Debug("failed to marshal geoip for cache")
+		}
+	}
+
+	return &geoData, nil
 }

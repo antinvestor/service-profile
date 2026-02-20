@@ -20,5 +20,6 @@ func Migrate(ctx context.Context, dbManager datastore.Manager, migrationPath str
 		&models.DeviceSession{},
 		&models.DeviceKey{},
 		&models.DeviceLog{},
+		&models.DevicePresence{},
 	)
 }

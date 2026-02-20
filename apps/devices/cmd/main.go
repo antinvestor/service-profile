@@ -15,6 +15,7 @@ import (
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
@@ -39,6 +40,11 @@ func main() {
 		frame.WithConfig(&cfg),
 		frame.WithRegisterServerOauth2Client(),
 		frame.WithDatastore(),
+		frame.WithCacheManager(),
+		frame.WithInMemoryCache(aconfig.CacheNameDevices),
+		frame.WithInMemoryCache(aconfig.CacheNamePresence),
+		frame.WithInMemoryCache(aconfig.CacheNameGeoIP),
+		frame.WithInMemoryCache(aconfig.CacheNameRate),
 	)
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
@@ -52,61 +58,61 @@ func main() {
 		return
 	}
 
+	serviceOptions := initServiceComponents(ctx, svc, &cfg)
+	svc.Init(ctx, serviceOptions...)
+
+	// Start service.
+	err = svc.Run(ctx, "")
+	if err != nil {
+		log.WithError(err).Fatal("could not run Server ")
+	}
+}
+
+// initServiceComponents initializes repositories, business layer, handlers, and queue subscriptions.
+func initServiceComponents(
+	ctx context.Context,
+	svc *frame.Service,
+	cfg *aconfig.DevicesConfig,
+) []frame.Option {
 	securityMan := svc.SecurityManager()
 	queueMan := svc.QueueManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
+	// Initialize cache service.
+	cacheSvc := caching.NewDeviceCacheService(svc.CacheManager())
+
+	// Initialize repositories.
 	deviceLogRepo := repository.NewDeviceLogRepository(ctx, dbPool, workMan)
 	deviceSessionRepo := repository.NewDeviceSessionRepository(ctx, dbPool, workMan)
 	deviceRepo := repository.NewDeviceRepository(ctx, dbPool, workMan)
 	deviceKeyRepo := repository.NewDeviceKeyRepository(ctx, dbPool, workMan)
 	devicePresenceRepo := repository.NewDevicePresenceRepository(ctx, dbPool, workMan)
 
+	// Initialize business layer with cache.
 	deviceBusiness := business.NewDeviceBusiness(
-		ctx,
-		&cfg,
-		queueMan,
-		workMan,
-		deviceRepo,
-		deviceLogRepo,
-		deviceSessionRepo,
+		ctx, cfg, queueMan, workMan, deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
 	)
-	keyBusiness := business.NewKeysBusiness(ctx, &cfg, queueMan, workMan, deviceRepo, deviceKeyRepo)
-	presenceBusiness := business.NewPresenceBusiness(ctx, &cfg, queueMan, workMan, deviceRepo, devicePresenceRepo)
-	notifyBusiness, err := business.NewNotifyBusiness(ctx, &cfg, queueMan, workMan, keyBusiness, deviceRepo)
+	keyBusiness := business.NewKeysBusiness(ctx, cfg, queueMan, workMan, deviceRepo, deviceKeyRepo, cacheSvc)
+	presenceBusiness := business.NewPresenceBusiness(
+		ctx, cfg, queueMan, workMan, deviceRepo, devicePresenceRepo, cacheSvc,
+	)
+	notifyBusiness, err := business.NewNotifyBusiness(ctx, cfg, queueMan, workMan, keyBusiness, deviceRepo)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("could not configure device server")
 	}
 
 	implementation := handlers.NewDeviceServer(ctx, deviceBusiness, presenceBusiness, keyBusiness, notifyBusiness)
-
-	// Setup Connect server
 	connectHandler := setupConnectServer(ctx, securityMan, implementation)
 
-	// Setup HTTP handlers
-	// Start with datastore option
-	serviceOptions := []frame.Option{frame.WithHTTPHandler(connectHandler)}
-
-	deviceAnalysisQueue := frame.WithRegisterSubscriber(
-		cfg.QueueDeviceAnalysisName,
-		cfg.QueueDeviceAnalysis,
-		queue.NewDeviceAnalysisQueueHandler(svc.HTTPClientManager(), deviceRepo, deviceLogRepo, deviceSessionRepo),
-	)
-	deviceAnalysisQueuePublisher := frame.WithRegisterPublisher(
-		cfg.QueueDeviceAnalysisName,
-		cfg.QueueDeviceAnalysis,
+	analysisHandler := queue.NewDeviceAnalysisQueueHandler(
+		svc.HTTPClientManager(), deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
 	)
 
-	serviceOptions = append(serviceOptions,
-		deviceAnalysisQueue, deviceAnalysisQueuePublisher,
-	)
-	svc.Init(ctx, serviceOptions...)
-
-	// start service
-	err = svc.Run(ctx, "")
-	if err != nil {
-		log.WithError(err).Fatal("could not run Server ")
+	return []frame.Option{
+		frame.WithHTTPHandler(connectHandler),
+		frame.WithRegisterSubscriber(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis, analysisHandler),
+		frame.WithRegisterPublisher(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis),
 	}
 }
 

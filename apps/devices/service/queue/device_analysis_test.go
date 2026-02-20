@@ -298,8 +298,8 @@ func (suite *QueueTestSuite) TestQueryIPGeo() {
 	suite.WithTestDependencies(suite.T(), func(t *testing.T, dep *definition.DependencyOption) {
 		ctx, svc, _ := suite.CreateService(t, dep)
 
-		// Test QueryIPGeo function
-		geoIP, err := queue.QueryIPGeo(ctx, svc.HTTPClientManager(), "8.8.8.8")
+		// Test QueryIPGeo function (nil cache in test — exercises the non-cached path).
+		geoIP, err := queue.QueryIPGeo(ctx, svc.HTTPClientManager(), "8.8.8.8", nil)
 
 		// Note: This test may fail due to external API rate limiting
 		// The important thing is that the function executes without panic

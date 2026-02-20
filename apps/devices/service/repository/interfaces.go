@@ -19,6 +19,7 @@ type DeviceRepository interface {
 type DeviceSessionRepository interface {
 	datastore.BaseRepository[*models.DeviceSession]
 	GetLastByDeviceID(ctx context.Context, deviceID string) (*models.DeviceSession, error)
+	GetLatestByDeviceIDs(ctx context.Context, deviceIDs []string) (map[string]*models.DeviceSession, error)
 }
 
 // DeviceLogRepository defines the operations for managing device logs.

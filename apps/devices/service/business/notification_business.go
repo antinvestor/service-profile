@@ -227,5 +227,8 @@ func (n notifyBusiness) notifierFor(keyType devicev1.KeyType) (notifier.Notifier
 	if !ok {
 		return nil, fmt.Errorf("no Notifier configured for key type %s", keyType.String())
 	}
+	if notifyHandler == nil {
+		return nil, fmt.Errorf("notifier for key type %s is not initialized", keyType.String())
+	}
 	return notifyHandler, nil
 }

@@ -16,6 +16,7 @@ import (
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	devQueue "github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
@@ -48,14 +49,29 @@ func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
 
 	cfg, _ := svc.Config().(*aconfig.DevicesConfig)
 
+	// Initialize cache service (may be nil in test environments without cache).
+	var cacheSvc *caching.DeviceCacheService
+	if cacheMan := svc.CacheManager(); cacheMan != nil {
+		cacheSvc = caching.NewDeviceCacheService(cacheMan)
+	}
+
 	deviceRepo := repository.NewDeviceRepository(ctx, dbPool, workMan)
 	deviceLogRepo := repository.NewDeviceLogRepository(ctx, dbPool, workMan)
 	sessionRepo := repository.NewDeviceSessionRepository(ctx, dbPool, workMan)
 	keyRepo := repository.NewDeviceKeyRepository(ctx, dbPool, workMan)
 	presenceRepo := repository.NewDevicePresenceRepository(ctx, dbPool, workMan)
 
-	deviceBusiness := business.NewDeviceBusiness(ctx, cfg, qMan, workMan, deviceRepo, deviceLogRepo, sessionRepo)
-	keyBusiness := business.NewKeysBusiness(ctx, cfg, qMan, workMan, deviceRepo, keyRepo)
+	deviceBusiness := business.NewDeviceBusiness(
+		ctx,
+		cfg,
+		qMan,
+		workMan,
+		deviceRepo,
+		deviceLogRepo,
+		sessionRepo,
+		cacheSvc,
+	)
+	keyBusiness := business.NewKeysBusiness(ctx, cfg, qMan, workMan, deviceRepo, keyRepo, cacheSvc)
 
 	return &DepsBuilder{
 		DeviceRepo:    deviceRepo,
@@ -73,6 +89,7 @@ func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
 			deviceRepo,
 			deviceLogRepo,
 			sessionRepo,
+			cacheSvc,
 		),
 	}
 }
@@ -117,6 +134,11 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	ctx, svc := frame.NewServiceWithContext(ctx, frame.WithName("device tests"),
 		frame.WithConfig(&cfg),
 		frame.WithDatastore(),
+		frame.WithCacheManager(),
+		frame.WithInMemoryCache(aconfig.CacheNameDevices),
+		frame.WithInMemoryCache(aconfig.CacheNamePresence),
+		frame.WithInMemoryCache(aconfig.CacheNameGeoIP),
+		frame.WithInMemoryCache(aconfig.CacheNameRate),
 		frametests.WithNoopDriver())
 
 	depsBuilder := BuildRepos(ctx, svc)

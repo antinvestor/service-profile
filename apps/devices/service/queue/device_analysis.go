@@ -14,6 +14,7 @@ import (
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/encoding/protojson"
 
+	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
@@ -30,18 +31,21 @@ type DeviceAnalysisQueueHandler struct {
 	DeviceLogRepository repository.DeviceLogRepository
 	SessionRepository   repository.DeviceSessionRepository
 
-	cli client.Manager
+	cli   client.Manager
+	cache *caching.DeviceCacheService
 }
 
 func NewDeviceAnalysisQueueHandler(
 	cli client.Manager, deviceRepository repository.DeviceRepository,
 	deviceLogRepository repository.DeviceLogRepository, sessionRepository repository.DeviceSessionRepository,
+	cacheSvc *caching.DeviceCacheService,
 ) *DeviceAnalysisQueueHandler {
 	return &DeviceAnalysisQueueHandler{
 		cli:                 cli,
 		DeviceRepository:    deviceRepository,
 		DeviceLogRepository: deviceLogRepository,
 		SessionRepository:   sessionRepository,
+		cache:               cacheSvc,
 	}
 }
 
@@ -50,7 +54,7 @@ var _ queue.SubscribeWorker = new(DeviceAnalysisQueueHandler)
 func (dq *DeviceAnalysisQueueHandler) Handle(ctx context.Context, _ map[string]string, payload []byte) error {
 	deviceLog, err := dq.getDeviceLog(ctx, payload)
 	if err != nil {
-		// Ignore expected errors (missing ID, not found)
+		// Ignore expected errors (missing ID, not found).
 		if errors.Is(err, ErrDeviceLogIDMissing) || errors.Is(err, ErrDeviceLogNotFound) {
 			return nil
 		}
@@ -113,20 +117,43 @@ func (dq *DeviceAnalysisQueueHandler) getOrCreateSession(
 		return nil, err
 	}
 
-	// Session ID provided but doesn't exist - create it
+	// Session ID provided but doesn't exist — create it.
 	return dq.createSessionFromLog(ctx, deviceLog)
 }
 
+// updateSessionLastSeen coalesces LastSeen DB writes through the cache buffer.
+// If a recent update was already buffered, it skips the DB write to reduce write amplification.
 func (dq *DeviceAnalysisQueueHandler) updateSessionLastSeen(
 	ctx context.Context,
 	session *models.DeviceSession,
 	deviceLog *models.DeviceLog,
 ) (*models.DeviceSession, error) {
-	session.LastSeen = deviceLog.CreatedAt
+	newLastSeen := deviceLog.CreatedAt
+
+	// Use cache buffer to coalesce writes: only write to DB if no recent buffer exists.
+	if dq.cache != nil {
+		buffered, found := dq.cache.GetBufferedLastSeen(ctx, session.GetID())
+		if found && !buffered.IsZero() && newLastSeen.Sub(buffered) < caching.TTLLastSeenBuffer {
+			// Already buffered a recent update; skip DB write.
+			session.LastSeen = newLastSeen
+			return session, nil
+		}
+		// Buffer this update.
+		dq.cache.BufferLastSeen(ctx, session.GetID(), newLastSeen)
+	}
+
+	session.LastSeen = newLastSeen
 	_, err := dq.SessionRepository.Update(ctx, session, "last_seen")
 	if err != nil {
 		return nil, err
 	}
+
+	// Invalidate the latest-session cache for the device so next read fetches fresh data.
+	if dq.cache != nil && session.DeviceID != "" {
+		dq.cache.InvalidateLatestSession(ctx, session.DeviceID)
+		dq.cache.InvalidateDevice(ctx, session.DeviceID)
+	}
+
 	return session, nil
 }
 
@@ -164,7 +191,7 @@ func (dq *DeviceAnalysisQueueHandler) getOrCreateDevice(
 		return nil, err
 	}
 
-	// Device ID provided but doesn't exist - create it
+	// Device ID provided but doesn't exist — create it.
 	return dq.createDeviceFromSession(ctx, session)
 }
 
@@ -194,7 +221,7 @@ func (dq *DeviceAnalysisQueueHandler) CreateDeviceFromSess(
 		OS:   ua.OSInfo().FullName,
 	}
 
-	// Use the device ID from the session if it was provided in the log
+	// Use the device ID from the session if it was provided in the log.
 	dev.GenID(ctx)
 	if session.DeviceID != "" {
 		dev.ID = session.DeviceID
@@ -205,7 +232,7 @@ func (dq *DeviceAnalysisQueueHandler) CreateDeviceFromSess(
 		return nil, err
 	}
 
-	// Update session to link it to the device if not already linked
+	// Update session to link it to the device if not already linked.
 	if session.DeviceID == "" {
 		session.DeviceID = dev.ID
 		_, err = dq.SessionRepository.Update(ctx, session, "device_id")
@@ -228,7 +255,7 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 		LastSeen: deviceLog.CreatedAt,
 	}
 
-	// Use the session ID from the log if provided, otherwise generate one
+	// Use the session ID from the log if provided, otherwise generate one.
 	sess.GenID(ctx)
 	if deviceLog.DeviceSessionID != "" {
 		sess.ID = deviceLog.DeviceSessionID
@@ -243,7 +270,7 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 	if ok {
 		sess.IP, _ = anyData.(string)
 
-		geoIP, _ := QueryIPGeo(ctx, dq.cli, sess.IP)
+		geoIP, _ := QueryIPGeo(ctx, dq.cli, sess.IP, dq.cache)
 
 		locale, err0 := dq.ExtractLocaleData(ctx, logData, geoIP)
 		if err0 != nil {
