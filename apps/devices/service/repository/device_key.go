@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
@@ -24,7 +25,10 @@ func NewDeviceKeyRepository(ctx context.Context, dbPool pool.Pool, workMan worke
 
 func (r *deviceKeyRepository) GetByDeviceID(ctx context.Context, deviceID string) ([]*models.DeviceKey, error) {
 	var keys []*models.DeviceKey
-	err := r.Pool().DB(ctx, true).Where("device_id = ?", deviceID).Find(&keys).Error
+	err := r.Pool().DB(ctx, true).
+		Where("device_id = ?", deviceID).
+		Where("expires_at IS NULL OR expires_at > ?", time.Now()).
+		Find(&keys).Error
 	return keys, err
 }
 

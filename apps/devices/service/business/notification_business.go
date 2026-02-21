@@ -122,7 +122,8 @@ func (n notifyBusiness) DeRegisterKey(ctx context.Context, req *devicev1.DeRegis
 
 		notifyHandler, notifyErr := n.notifierFor(key.GetKeyType())
 		if notifyErr != nil {
-			return notifyErr
+			// Skip deregistration for key types without a configured notifier.
+			continue
 		}
 
 		if notifyErr = notifyHandler.DeRegister(ctx, key); notifyErr != nil {
@@ -208,7 +209,8 @@ func (n notifyBusiness) Notify(ctx context.Context, req *devicev1.NotifyRequest)
 	for keyType, keys := range keyGroups {
 		notifyHandler, notifyErr := n.notifierFor(keyType)
 		if notifyErr != nil {
-			return nil, notifyErr
+			// Skip key types without a configured notifier.
+			continue
 		}
 
 		response, notifyErr := notifyHandler.Notify(ctx, req, keys...)

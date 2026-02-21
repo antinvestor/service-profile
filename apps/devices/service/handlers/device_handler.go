@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"errors"
+	"slices"
 
 	"buf.build/gen/go/antinvestor/device/connectrpc/go/device/v1/devicev1connect"
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
@@ -34,31 +35,20 @@ func NewDeviceServer(_ context.Context, deviceBusiness business.DeviceBusiness,
 	}
 }
 
-// GetById retrieves a device by ID
+// GetById retrieves one or more devices by ID using a batch-optimized path.
 // nolint: revive,staticcheck,nolintlint // This is an api implementation
 func (ds *DevicesServer) GetById(
 	ctx context.Context,
 	req *connect.Request[devicev1.GetByIdRequest],
 ) (*connect.Response[devicev1.GetByIdResponse], error) {
-	var devicesList []*devicev1.DeviceObject
-	var lastError error
-
-	for _, idStr := range req.Msg.GetId() {
-		if idStr == "" {
-			return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("device ID cannot be empty"))
-		}
-
-		device, err := ds.deviceBusiness.GetDeviceByID(ctx, idStr)
-		if err != nil {
-			lastError = err
-			continue
-		}
-		devicesList = append(devicesList, device)
+	ids := req.Msg.GetId()
+	if slices.Contains(ids, "") {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("device ID cannot be empty"))
 	}
 
-	// If no devices found and we had errors, return the last error
-	if len(devicesList) == 0 && lastError != nil {
-		return nil, errorutil.CleanErr(lastError)
+	devicesList, err := ds.deviceBusiness.GetDevicesByIDs(ctx, ids)
+	if err != nil {
+		return nil, errorutil.CleanErr(err)
 	}
 
 	return connect.NewResponse(&devicev1.GetByIdResponse{
@@ -127,6 +117,13 @@ func (ds *DevicesServer) Create(
 		properties["device_name"] = msg.GetName()
 	}
 
+	properties["ip"] = GetClientIP(ctx)
+
+	// Extract Cloudflare geo headers so the queue handler can skip external GeoIP lookups.
+	if cfGeo := ExtractCloudflareGeo(ctx, req.Header()); len(cfGeo) > 0 {
+		properties["cf_geo"] = cfGeo
+	}
+
 	sessionID := properties.GetString("session_id")
 
 	// Log device activity to trigger device analysis and creation
@@ -185,12 +182,7 @@ func (ds *DevicesServer) Remove(
 ) (*connect.Response[devicev1.RemoveResponse], error) {
 	msg := req.Msg
 
-	dev, err := ds.deviceBusiness.GetDeviceByID(ctx, msg.GetId())
-	if err != nil {
-		return nil, errorutil.CleanErr(err)
-	}
-
-	err = ds.deviceBusiness.RemoveDevice(ctx, msg.GetId())
+	dev, err := ds.deviceBusiness.RemoveDevice(ctx, msg.GetId())
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
@@ -209,6 +201,12 @@ func (ds *DevicesServer) Log(
 	payload := msg.GetExtras().AsMap()
 
 	payload["ip"] = GetClientIP(ctx)
+
+	// Extract Cloudflare geo headers so the queue handler can skip external GeoIP lookups.
+	if cfGeo := ExtractCloudflareGeo(ctx, req.Header()); len(cfGeo) > 0 {
+		payload["cf_geo"] = cfGeo
+	}
+
 	deviceLog, err := ds.deviceBusiness.LogDeviceActivity(ctx, msg.GetDeviceId(), msg.GetSessionId(), payload)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)

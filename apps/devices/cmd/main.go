@@ -11,6 +11,7 @@ import (
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
+	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
@@ -77,6 +78,7 @@ func initServiceComponents(
 	securityMan := svc.SecurityManager()
 	queueMan := svc.QueueManager()
 	workMan := svc.WorkManager()
+	httpClientMan := svc.HTTPClientManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
 	// Initialize cache service.
@@ -102,11 +104,18 @@ func initServiceComponents(
 		util.Log(ctx).WithError(err).Fatal("could not configure device server")
 	}
 
+	// TURN provider is optional — nil turnBusiness is handled gracefully by the handler.
+	var turnBiz business.TURNBusiness
+	turnBiz, err = business.NewTURNBusiness(cfg, httpClientMan)
+	if err != nil {
+		util.Log(ctx).WithError(err).Warn("TURN credentials provider not configured, endpoint will return 503")
+	}
+
 	implementation := handlers.NewDeviceServer(ctx, deviceBusiness, presenceBusiness, keyBusiness, notifyBusiness)
-	connectHandler := setupConnectServer(ctx, securityMan, implementation)
+	connectHandler := setupConnectServer(ctx, securityMan, implementation, turnBiz, cacheSvc, cfg)
 
 	analysisHandler := queue.NewDeviceAnalysisQueueHandler(
-		svc.HTTPClientManager(), deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
+		httpClientMan, deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
 	)
 
 	return []frame.Option{
@@ -121,6 +130,9 @@ func setupConnectServer(
 	ctx context.Context,
 	securityMan security.Manager,
 	implementation *handlers.DevicesServer,
+	turnBusiness business.TURNBusiness,
+	cacheSvc *caching.DeviceCacheService,
+	cfg *aconfig.DevicesConfig,
 ) http.Handler {
 	authenticator := securityMan.GetAuthenticator(ctx)
 
@@ -132,5 +144,15 @@ func setupConnectServer(
 	_, serverHandler := devicev1connect.NewDeviceServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))
 
-	return serverHandler
+	turnHandler := handlers.NewTURNHandler(turnBusiness)
+	turnRouter := http.NewServeMux()
+	turnRouter.HandleFunc("POST /v1/turn/credentials",
+		handlers.RateLimitTURN(turnHandler.GetTurnCredentials, cacheSvc, cfg.RateLimitTURNPerMinute))
+	secureTurnRouter := securityhttp.AuthenticationMiddleware(turnRouter, authenticator)
+
+	mux := http.NewServeMux()
+	mux.Handle("/", serverHandler)
+	mux.Handle("/v1/turn/", secureTurnRouter)
+
+	return mux
 }

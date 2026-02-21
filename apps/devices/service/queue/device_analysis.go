@@ -270,7 +270,15 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 	if ok {
 		sess.IP, _ = anyData.(string)
 
-		geoIP, _ := QueryIPGeo(ctx, dq.cli, sess.IP, dq.cache)
+		// Prefer Cloudflare edge geo data (zero latency, no external API call).
+		// Fall back to the external GeoIP API only when CF headers are absent.
+		var geoIP *GeoIP
+		cfGeo := extractCFGeoFromLogData(logData)
+		if cfGeo != nil {
+			geoIP = cfGeo
+		} else if sess.IP != "" {
+			geoIP, _ = QueryIPGeo(ctx, dq.cli, sess.IP, dq.cache)
+		}
 
 		locale, err0 := dq.ExtractLocaleData(ctx, logData, geoIP)
 		if err0 != nil {
@@ -293,6 +301,51 @@ func (dq *DeviceAnalysisQueueHandler) CreateSessionFromLog(
 	}
 
 	return sess, nil
+}
+
+// extractCFGeoFromLogData converts Cloudflare geo headers stored in the device log
+// (under the "cf_geo" key) into a GeoIP struct. Returns nil if no CF geo data is present
+// or if it lacks at minimum the country field.
+func extractCFGeoFromLogData(logData data.JSONMap) *GeoIP {
+	raw, found := logData["cf_geo"]
+	if !found {
+		return nil
+	}
+
+	cfMap, isMap := raw.(map[string]any)
+	if !isMap {
+		return nil
+	}
+
+	country := cfMapString(cfMap, "cf_country")
+	if country == "" {
+		return nil
+	}
+
+	geo := &GeoIP{
+		Country:       country,
+		CountryCode:   country, // CF-IPCountry is the ISO 3166-1 alpha-2 code.
+		City:          cfMapString(cfMap, "cf_city"),
+		Region:        cfMapString(cfMap, "cf_region"),
+		RegionCode:    cfMapString(cfMap, "cf_region_code"),
+		ContinentCode: cfMapString(cfMap, "cf_continent"),
+		Postal:        cfMapString(cfMap, "cf_postal_code"),
+		Timezone:      cfMapString(cfMap, "cf_timezone"),
+		Latitude:      cfMapFloat(cfMap, "cf_latitude"),
+		Longitude:     cfMapFloat(cfMap, "cf_longitude"),
+	}
+
+	return geo
+}
+
+func cfMapString(m map[string]any, key string) string {
+	v, _ := m[key].(string)
+	return v
+}
+
+func cfMapFloat(m map[string]any, key string) float64 {
+	v, _ := m[key].(float64)
+	return v
 }
 
 func (dq *DeviceAnalysisQueueHandler) ExtractLocaleData(

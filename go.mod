@@ -4,8 +4,8 @@ go 1.25.2
 
 require (
 	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20260102104630-5c57561a771f.1
-	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20251223175454-e698295a3dc7.2
-	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20251223175454-e698295a3dc7.1
+	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20260219054159-74d196dbc048.2
+	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260219054159-74d196dbc048.1
 	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20260102123330-d6847f42a19a.2
 	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260102123330-d6847f42a19a.1
 	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260102123445-62e44f8dd82b.2
@@ -26,6 +26,7 @@ require (
 	go.opentelemetry.io/otel v1.40.0
 	go.opentelemetry.io/otel/metric v1.40.0
 	go.opentelemetry.io/otel/trace v1.40.0
+	golang.org/x/sync v0.19.0
 	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.1
@@ -172,7 +173,6 @@ require (
 	golang.org/x/exp v0.0.0-20260112195511-716be5621a96 // indirect
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/oauth2 v0.35.0 // indirect
-	golang.org/x/sync v0.19.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/time v0.14.0 // indirect

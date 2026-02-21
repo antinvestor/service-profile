@@ -543,12 +543,13 @@ func (suite *DeviceBusinessTestSuite) TestRemoveDevice() {
 					deviceID = tc.deviceID
 				}
 
-				err := deps.DeviceBusiness.RemoveDevice(ctx, deviceID)
+				dev, err := deps.DeviceBusiness.RemoveDevice(ctx, deviceID)
 
 				if tc.expectError {
 					require.Error(t, err)
 				} else {
 					require.NoError(t, err)
+					require.NotNil(t, dev)
 
 					// Verify device is removed
 					_, err = deps.DeviceBusiness.GetDeviceByID(ctx, deviceID)

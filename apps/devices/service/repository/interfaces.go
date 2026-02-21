@@ -33,6 +33,7 @@ type DevicePresenceRepository interface {
 	datastore.BaseRepository[*models.DevicePresence]
 	GetByDeviceID(ctx context.Context, deviceID string) (workerpool.JobResultPipe[[]*models.DevicePresence], error)
 	GetLatestByDeviceID(ctx context.Context, deviceID string) (*models.DevicePresence, error)
+	Upsert(ctx context.Context, presence *models.DevicePresence) error
 }
 
 // DeviceKeyRepository defines the operations for managing matrix keys.

@@ -52,3 +52,19 @@ func (dlr *devicePresenceRepository) GetByDeviceID(
 
 	return dlr.Search(ctx, query)
 }
+
+// Upsert creates or updates the presence record for a device.
+// Uses device_id as the conflict key to ensure one row per device.
+func (dlr *devicePresenceRepository) Upsert(ctx context.Context, presence *models.DevicePresence) error {
+	db := dlr.Pool().DB(ctx, false)
+	return db.
+		Where("device_id = ?", presence.DeviceID).
+		Assign(map[string]any{
+			"profile_id":     presence.ProfileID,
+			"status":         presence.Status,
+			"status_message": presence.StatusMessage,
+			"expiry_time":    presence.ExpiryTime,
+			"data":           presence.Data,
+		}).
+		FirstOrCreate(presence).Error
+}

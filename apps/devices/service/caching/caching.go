@@ -27,6 +27,12 @@ const (
 
 	// rateWindowSeconds is the sliding window size for rate limiting (1 minute).
 	rateWindowSeconds = 60
+
+	// rateCounterBytes is the byte size of a big-endian int64 counter.
+	rateCounterBytes = 8
+
+	// rateTTLMultiplier ensures rate-limit keys outlive the window boundary.
+	rateTTLMultiplier = 2
 )
 
 // Key prefix constants for cache key namespacing.
@@ -312,21 +318,35 @@ func (c *DeviceCacheService) SetGeoIPNegative(ctx context.Context, ip string) {
 
 // CheckRateLimit checks whether the given key has exceeded the limit within the current window.
 // Returns (allowed bool, currentCount int64).
+//
+// Uses a fixed-window approach keyed by (prefix, id, window_epoch).
+// To ensure counter keys don't accumulate without TTL, we initialize the key
+// via Set (with TTL) before the first Increment. The Increment implementation
+// preserves the expiration set by Set, so subsequent increments keep the TTL.
+//
+// There is a narrow race where two goroutines both see Exists=false and both
+// call Set, but the worst case is resetting a counter that just started —
+// allowing at most one extra request through, which is acceptable for rate limiting.
 func (c *DeviceCacheService) CheckRateLimit(ctx context.Context, prefix, deviceID string, limit int64) (bool, int64) {
 	if c == nil {
 		return true, 0
 	}
 
 	windowKey := fmt.Sprintf("%s%s:%d", prefix, deviceID, time.Now().Unix()/rateWindowSeconds)
+
+	// Ensure the key exists with a TTL before incrementing.
+	// Increment preserves the expiration, so the TTL set here persists.
+	exists, _ := c.rate.Exists(ctx, windowKey)
+	if !exists {
+		// Initialize with zero-value counter and TTL of 2x window to survive boundary.
+		initBytes := make([]byte, rateCounterBytes)
+		_ = c.rate.Set(ctx, windowKey, initBytes, rateTTLMultiplier*TTLRateWindow)
+	}
+
 	count, err := c.rate.Increment(ctx, windowKey, 1)
 	if err != nil {
 		util.Log(ctx).WithError(err).Debug("cache rate limit increment failed")
 		return true, 0 // allow on error
-	}
-
-	// Set TTL on first increment to ensure cleanup.
-	if count == 1 {
-		_ = c.rate.Set(ctx, windowKey, []byte("1"), TTLRateWindow)
 	}
 
 	return count <= limit, count

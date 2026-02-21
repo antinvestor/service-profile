@@ -128,8 +128,8 @@ func (p *presenceBusiness) UpdatePresence(
 		Data:          extras,
 	}
 
-	// Write to DB for history.
-	if err = p.presenceRepo.Create(ctx, presence); err != nil {
+	// Upsert to DB — one row per device, updated on each presence change.
+	if err = p.presenceRepo.Upsert(ctx, presence); err != nil {
 		return nil, err
 	}
 

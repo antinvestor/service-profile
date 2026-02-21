@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/pitabwire/frame/client"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 )
+
+const geoIPRequestTimeout = 5 * time.Second
 
 type GeoIP struct {
 	IP                 string  `json:"ip"`
@@ -65,8 +68,13 @@ func QueryIPGeo(
 		}
 	}
 
+	// Use a bounded timeout for external GeoIP lookups to prevent slow responses
+	// from blocking the queue handler.
+	geoCtx, cancel := context.WithTimeout(ctx, geoIPRequestTimeout)
+	defer cancel()
+
 	url := fmt.Sprintf("https://ipapi.co/%s/json/", ip)
-	resp, err := cli.Invoke(ctx, http.MethodGet, url, nil, nil)
+	resp, err := cli.Invoke(geoCtx, http.MethodGet, url, nil, nil)
 	if err != nil {
 		// Negative-cache on network errors to avoid retrying rapidly.
 		if cacheSvc != nil {
@@ -76,7 +84,7 @@ func QueryIPGeo(
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		result, _ := resp.ToContent(ctx)
+		result, _ := resp.ToContent(geoCtx)
 		// Negative-cache non-OK responses (rate limits, bad IPs, etc.).
 		if cacheSvc != nil {
 			cacheSvc.SetGeoIPNegative(ctx, ip)
@@ -85,7 +93,7 @@ func QueryIPGeo(
 	}
 
 	var geoData GeoIP
-	err = resp.Decode(ctx, &geoData)
+	err = resp.Decode(geoCtx, &geoData)
 	if err != nil {
 		return nil, err
 	}

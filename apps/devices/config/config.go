@@ -24,4 +24,30 @@ type DevicesConfig struct {
 	RateLimitLogPerMinute int64 `envDefault:"120" env:"RATE_LIMIT_LOG_PER_MINUTE"`
 	// RateLimitPresencePerMinute is the max presence updates per device per minute.
 	RateLimitPresencePerMinute int64 `envDefault:"30" env:"RATE_LIMIT_PRESENCE_PER_MINUTE"`
+	// RateLimitTURNPerMinute is the max TURN credential requests per caller per minute.
+	RateLimitTURNPerMinute int64 `envDefault:"10" env:"RATE_LIMIT_TURN_PER_MINUTE"`
+
+	// TURNProvider selects the TURN credential provider: "cloudflare" or "static".
+	// "cloudflare" uses Cloudflare's TURN API to generate credentials.
+	// "static" generates time-limited credentials locally using a shared secret (for coturn/pion).
+	TURNProvider string `envDefault:"static" env:"TURN_PROVIDER"`
+	// TURNTTL is the time-to-live in seconds for generated TURN credentials. Defaults to 3600 (1 hour).
+	// Valid range: 60–86400 seconds.
+	TURNTTL int `envDefault:"3600" env:"TURN_TTL"`
+	// TURNHMACAlgorithm selects the HMAC algorithm for the static provider: "sha1" (default) or "sha256".
+	// Use "sha1" for standard coturn static-auth-secret compatibility.
+	// Use "sha256" for modern TURN servers that support HMAC-SHA256.
+	TURNHMACAlgorithm string `envDefault:"sha1" env:"TURN_HMAC_ALGORITHM"`
+
+	// CloudflareTURNTokenID is the TURN Token ID from Cloudflare's Real-Time Communications settings.
+	CloudflareTURNTokenID string `env:"CLOUDFLARE_TURN_TOKEN_ID"`
+	// CloudflareTURNAPIToken is the API token used to authenticate with Cloudflare's TURN credential generation endpoint.
+	CloudflareTURNAPIToken string `env:"CLOUDFLARE_TURN_API_TOKEN"`
+
+	// TURNServerURLs is a comma-separated list of TURN/STUN server URLs for the static provider.
+	// Each URL must start with "turn:", "turns:", or "stun:".
+	// Example: "turn:turn.example.com:3478,turns:turn.example.com:5349,stun:stun.example.com:3478"
+	TURNServerURLs string `env:"TURN_SERVER_URLS"`
+	// TURNSharedSecret is the shared secret used to generate time-limited credentials (coturn/pion static-auth-secret).
+	TURNSharedSecret string `env:"TURN_SHARED_SECRET"`
 }

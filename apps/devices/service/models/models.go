@@ -87,9 +87,9 @@ func (k *DeviceKey) ToAPI() *devicev1.KeyObject {
 // DeviceLog records activities for a device.
 type DeviceLog struct {
 	data.BaseModel
-	DeviceID        string `gorm:"index"`
-	DeviceSessionID string `gorm:"index"`
-	Data            data.JSONMap
+	DeviceID        string       `gorm:"index"`
+	DeviceSessionID string       `gorm:"index"`
+	Data            data.JSONMap `gorm:"type:jsonb"`
 }
 
 func (dl *DeviceLog) ToAPI() *devicev1.DeviceLog {
@@ -104,7 +104,7 @@ func (dl *DeviceLog) ToAPI() *devicev1.DeviceLog {
 // DevicePresence records availablity of a device.
 type DevicePresence struct {
 	data.BaseModel
-	DeviceID      string                  `gorm:"index"`
+	DeviceID      string                  `gorm:"uniqueIndex"`
 	ProfileID     string                  `gorm:"index"`
 	Status        devicev1.PresenceStatus `gorm:"type:int"`
 	StatusMessage string
