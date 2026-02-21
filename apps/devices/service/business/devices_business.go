@@ -222,54 +222,19 @@ type cachedDeviceResult struct {
 	Session *models.DeviceSession `json:"session,omitempty"`
 }
 
-//nolint:gocognit // Complexity from singleflight double-check pattern is intentional.
 func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev1.DeviceObject, error) {
 	ctx, span := caching.StartSpan(ctx, "GetDeviceByID",
 		attribute.String("device_id", id))
 	defer caching.EndSpan(ctx, span, nil)
 
 	// Try cache first.
-	if b.cache != nil {
-		if cached, found := b.cache.GetDevice(ctx, id); found {
-			var result cachedDeviceResult
-			if unmarshalErr := json.Unmarshal(cached, &result); unmarshalErr == nil {
-				caching.RecordCacheHit(ctx, "device")
-				return result.Device.ToAPI(result.Session), nil
-			}
-		}
-		caching.RecordCacheMiss(ctx, "device")
+	if obj, hit := b.tryDeviceCache(ctx, id); hit {
+		return obj, nil
 	}
 
 	// Use singleflight to collapse concurrent misses for the same device.
 	val, err, _ := b.sfDevice.Do(id, func() (any, error) {
-		// Double-check cache in case another goroutine populated it.
-		if b.cache != nil {
-			if cached, found := b.cache.GetDevice(ctx, id); found {
-				var result cachedDeviceResult
-				if unmarshalErr := json.Unmarshal(cached, &result); unmarshalErr == nil {
-					return result.Device.ToAPI(result.Session), nil
-				}
-			}
-		}
-
-		dev, devErr := b.deviceRepo.GetByID(ctx, id)
-		if devErr != nil {
-			return nil, devErr
-		}
-
-		sess, sessErr := b.sessionRepo.GetLastByDeviceID(ctx, id)
-		if sessErr != nil {
-			// Session may not exist yet for newly created devices.
-			if !data.ErrorIsNoRows(sessErr) {
-				return nil, sessErr
-			}
-			sess = nil
-		}
-
-		// Populate cache.
-		b.cacheDeviceResult(ctx, id, dev, sess)
-
-		return dev.ToAPI(sess), nil
+		return b.fetchDeviceAndCache(ctx, id)
 	})
 	if err != nil {
 		return nil, err
@@ -282,9 +247,49 @@ func (b *deviceBusiness) GetDeviceByID(ctx context.Context, id string) (*devicev
 	return devObj, nil
 }
 
+// tryDeviceCache attempts to read a device from cache.
+// Returns the API object and true on hit, nil and false on miss.
+func (b *deviceBusiness) tryDeviceCache(ctx context.Context, id string) (*devicev1.DeviceObject, bool) {
+	if b.cache == nil {
+		return nil, false
+	}
+	cached, found := b.cache.GetDevice(ctx, id)
+	if !found {
+		caching.RecordCacheMiss(ctx, "device")
+		return nil, false
+	}
+	var result cachedDeviceResult
+	if err := json.Unmarshal(cached, &result); err != nil {
+		caching.RecordCacheMiss(ctx, "device")
+		return nil, false
+	}
+	caching.RecordCacheHit(ctx, "device")
+	return result.Device.ToAPI(result.Session), true
+}
+
+// fetchDeviceAndCache loads a device from the DB (with its latest session),
+// populates the cache, and returns the API object. Used inside singleflight.
+func (b *deviceBusiness) fetchDeviceAndCache(ctx context.Context, id string) (*devicev1.DeviceObject, error) {
+	// Double-check cache in case another goroutine populated it.
+	if obj, hit := b.tryDeviceCache(ctx, id); hit {
+		return obj, nil
+	}
+
+	dev, err := b.deviceRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	sess, sessErr := b.sessionRepo.GetLastByDeviceID(ctx, id)
+	if sessErr != nil && !data.ErrorIsNoRows(sessErr) {
+		return nil, sessErr
+	}
+
+	b.cacheDeviceResult(ctx, id, dev, sess)
+	return dev.ToAPI(sess), nil
+}
+
 // GetDevicesByIDs retrieves multiple devices by ID in batch, avoiding N+1 queries.
-//
-//nolint:gocognit // Batch cache-aside with session merging has inherent branching.
 func (b *deviceBusiness) GetDevicesByIDs(ctx context.Context, ids []string) ([]*devicev1.DeviceObject, error) {
 	if len(ids) == 0 {
 		return nil, nil
@@ -299,59 +304,8 @@ func (b *deviceBusiness) GetDevicesByIDs(ctx context.Context, ids []string) ([]*
 		return []*devicev1.DeviceObject{dev}, nil
 	}
 
-	// Batch fetch: separate cached hits from misses.
-	var missIDs []string
-	results := make(map[string]*devicev1.DeviceObject, len(ids))
-
-	if b.cache != nil {
-		for _, id := range ids {
-			if cached, found := b.cache.GetDevice(ctx, id); found {
-				var result cachedDeviceResult
-				if err := json.Unmarshal(cached, &result); err == nil {
-					results[id] = result.Device.ToAPI(result.Session)
-					caching.RecordCacheHit(ctx, "device")
-					continue
-				}
-			}
-			caching.RecordCacheMiss(ctx, "device")
-			missIDs = append(missIDs, id)
-		}
-	} else {
-		missIDs = ids
-	}
-
-	// Fetch all cache misses from DB.
-	if len(missIDs) > 0 { //nolint:nestif // Batch fetch logic with session merging.
-		for _, id := range missIDs {
-			dev, err := b.deviceRepo.GetByID(ctx, id)
-			if err != nil {
-				continue // skip individual failures
-			}
-			results[id] = dev.ToAPI(nil) // session filled below
-		}
-
-		// Batch load sessions for all miss IDs.
-		sessionMap, sessErr := b.sessionRepo.GetLatestByDeviceIDs(ctx, missIDs)
-		if sessErr != nil {
-			sessionMap = map[string]*models.DeviceSession{}
-		}
-
-		// Merge sessions and populate cache.
-		for _, id := range missIDs {
-			if _, exists := results[id]; !exists {
-				continue
-			}
-			sess := sessionMap[id]
-			if sess != nil {
-				// Re-fetch the model to cache properly — we need the model, not just the API object.
-				dev, devErr := b.deviceRepo.GetByID(ctx, id)
-				if devErr == nil {
-					results[id] = dev.ToAPI(sess)
-					b.cacheDeviceResult(ctx, id, dev, sess)
-				}
-			}
-		}
-	}
+	results, missIDs := b.collectCachedDevices(ctx, ids)
+	b.fetchAndMergeDeviceMisses(ctx, missIDs, results)
 
 	// Preserve input order.
 	ordered := make([]*devicev1.DeviceObject, 0, len(ids))
@@ -360,8 +314,66 @@ func (b *deviceBusiness) GetDevicesByIDs(ctx context.Context, ids []string) ([]*
 			ordered = append(ordered, obj)
 		}
 	}
-
 	return ordered, nil
+}
+
+// collectCachedDevices partitions IDs into cache hits (populated in results) and misses.
+func (b *deviceBusiness) collectCachedDevices(
+	ctx context.Context,
+	ids []string,
+) (map[string]*devicev1.DeviceObject, []string) {
+	results := make(map[string]*devicev1.DeviceObject, len(ids))
+	if b.cache == nil {
+		return results, ids
+	}
+
+	var missIDs []string
+	for _, id := range ids {
+		if obj, hit := b.tryDeviceCache(ctx, id); hit {
+			results[id] = obj
+		} else {
+			missIDs = append(missIDs, id)
+		}
+	}
+	return results, missIDs
+}
+
+// fetchAndMergeDeviceMisses fetches devices and sessions from DB for cache misses,
+// merges sessions, populates cache, and updates results in-place.
+func (b *deviceBusiness) fetchAndMergeDeviceMisses(
+	ctx context.Context,
+	missIDs []string,
+	results map[string]*devicev1.DeviceObject,
+) {
+	if len(missIDs) == 0 {
+		return
+	}
+
+	// Fetch devices from DB.
+	devices := make(map[string]*models.Device, len(missIDs))
+	for _, id := range missIDs {
+		dev, err := b.deviceRepo.GetByID(ctx, id)
+		if err != nil {
+			continue
+		}
+		devices[id] = dev
+		results[id] = dev.ToAPI(nil)
+	}
+
+	// Batch load sessions.
+	sessionMap, sessErr := b.sessionRepo.GetLatestByDeviceIDs(ctx, missIDs)
+	if sessErr != nil {
+		return
+	}
+
+	// Merge sessions and populate cache.
+	for id, dev := range devices {
+		sess := sessionMap[id]
+		if sess != nil {
+			results[id] = dev.ToAPI(sess)
+		}
+		b.cacheDeviceResult(ctx, id, dev, sess)
+	}
 }
 
 func (b *deviceBusiness) SearchDevices(

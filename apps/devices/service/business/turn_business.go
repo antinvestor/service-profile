@@ -3,12 +3,10 @@ package business
 import (
 	"context"
 	"crypto/hmac"
-	"crypto/sha1" //nolint:gosec // SHA-1 required by TURN REST API spec (RFC draft-uberti-behave-turn-rest-00).
 	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"hash"
 	"net/http"
 	"strconv"
 	"strings"
@@ -89,20 +87,9 @@ func NewTURNBusiness(cfg *config.DevicesConfig, clientMgr client.Manager) (TURNB
 		if err != nil {
 			return nil, err
 		}
-		hmacAlg := strings.ToLower(strings.TrimSpace(cfg.TURNHMACAlgorithm))
-		var newHash func() hash.Hash
-		switch hmacAlg {
-		case "sha1", "":
-			newHash = sha1.New
-		case "sha256":
-			newHash = sha256.New
-		default:
-			return nil, fmt.Errorf("unsupported TURN_HMAC_ALGORITHM: %q (supported: sha1, sha256)", hmacAlg)
-		}
 		provider = &staticTURNProvider{
 			sharedSecret: sharedSecret,
 			serverURLs:   urls,
-			newHash:      newHash,
 		}
 	default:
 		return nil, fmt.Errorf("unknown TURN provider: %q (supported: cloudflare, static)", cfg.TURNProvider)
@@ -115,13 +102,12 @@ func (t *turnBusiness) GetTurnCredentials(ctx context.Context) (*TURNCredentials
 	return t.provider.GenerateCredentials(ctx, t.cfg.TURNTTL)
 }
 
-// staticTURNProvider generates time-limited credentials using HMAC over a shared secret.
+// staticTURNProvider generates time-limited credentials using HMAC-SHA256 over a shared secret.
 // This is the standard mechanism used by coturn (via static-auth-secret) and pion/turn.
 // See: https://datatracker.ietf.org/doc/html/draft-uberti-behave-turn-rest-00
 type staticTURNProvider struct {
 	sharedSecret string
 	serverURLs   []string
-	newHash      func() hash.Hash
 }
 
 func (s *staticTURNProvider) GenerateCredentials(_ context.Context, ttl int) (*TURNCredentialsResponse, error) {
@@ -129,7 +115,7 @@ func (s *staticTURNProvider) GenerateCredentials(_ context.Context, ttl int) (*T
 	expiry := time.Now().Unix() + int64(ttl)
 	username := strconv.FormatInt(expiry, 10)
 
-	mac := hmac.New(s.newHash, []byte(s.sharedSecret))
+	mac := hmac.New(sha256.New, []byte(s.sharedSecret))
 	mac.Write([]byte(username))
 	credential := base64.StdEncoding.EncodeToString(mac.Sum(nil))
 

@@ -51,10 +51,12 @@ func getIPFromMetadata(ctx context.Context) string {
 
 	// X-Forwarded-For — take the leftmost (original client) IP.
 	if xff := md.Get("x-forwarded-for"); len(xff) > 0 {
-		if parts := strings.SplitN(xff[0], ",", 2); len(parts) > 0 { //nolint:mnd // Split into at most 2 parts.
-			if ip := strings.TrimSpace(parts[0]); ip != "" {
-				return ip
-			}
+		ip := xff[0]
+		if idx := strings.IndexByte(ip, ','); idx >= 0 {
+			ip = ip[:idx]
+		}
+		if ip = strings.TrimSpace(ip); ip != "" {
+			return ip
 		}
 	}
 

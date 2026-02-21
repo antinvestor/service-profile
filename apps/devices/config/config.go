@@ -34,11 +34,6 @@ type DevicesConfig struct {
 	// TURNTTL is the time-to-live in seconds for generated TURN credentials. Defaults to 3600 (1 hour).
 	// Valid range: 60–86400 seconds.
 	TURNTTL int `envDefault:"3600" env:"TURN_TTL"`
-	// TURNHMACAlgorithm selects the HMAC algorithm for the static provider: "sha1" (default) or "sha256".
-	// Use "sha1" for standard coturn static-auth-secret compatibility.
-	// Use "sha256" for modern TURN servers that support HMAC-SHA256.
-	TURNHMACAlgorithm string `envDefault:"sha1" env:"TURN_HMAC_ALGORITHM"`
-
 	// CloudflareTURNTokenID is the TURN Token ID from Cloudflare's Real-Time Communications settings.
 	CloudflareTURNTokenID string `env:"CLOUDFLARE_TURN_TOKEN_ID"`
 	// CloudflareTURNAPIToken is the API token used to authenticate with Cloudflare's TURN credential generation endpoint.

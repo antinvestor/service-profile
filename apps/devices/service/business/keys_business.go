@@ -132,46 +132,14 @@ func (b *keysBusiness) GetKeys(
 
 // getDeviceKeysWithCache retrieves device keys using cache-aside pattern with singleflight
 // to collapse concurrent requests for the same device's keys.
-//
-//nolint:gocognit // Complexity from singleflight double-check pattern is intentional.
 func (b *keysBusiness) getDeviceKeysWithCache(ctx context.Context, deviceID string) ([]*models.DeviceKey, error) {
-	// Try cache first.
-	if b.cache != nil {
-		if cached, found := b.cache.GetDeviceKeys(ctx, deviceID); found {
-			var entry cachedKeyEntry
-			if err := json.Unmarshal(cached, &entry); err == nil {
-				return entry.Keys, nil
-			}
-		}
+	if keys, hit := b.tryKeysCache(ctx, deviceID); hit {
+		return keys, nil
 	}
 
 	// Use singleflight to collapse concurrent DB fetches for the same device.
 	val, err, _ := b.sfKeys.Do("keys:"+deviceID, func() (any, error) {
-		// Double-check cache after acquiring singleflight.
-		if b.cache != nil {
-			if cached, found := b.cache.GetDeviceKeys(ctx, deviceID); found {
-				var entry cachedKeyEntry
-				if err := json.Unmarshal(cached, &entry); err == nil {
-					return entry.Keys, nil
-				}
-			}
-		}
-
-		keys, err := b.deviceKeyRepo.GetByDeviceID(ctx, deviceID)
-		if err != nil {
-			return nil, err
-		}
-
-		// Populate cache.
-		if b.cache != nil {
-			entry := cachedKeyEntry{DeviceID: deviceID, Keys: keys}
-			encoded, encErr := json.Marshal(entry)
-			if encErr == nil {
-				b.cache.SetDeviceKeys(ctx, deviceID, encoded)
-			}
-		}
-
-		return keys, nil
+		return b.fetchKeysAndCache(ctx, deviceID)
 	})
 	if err != nil {
 		return nil, err
@@ -181,6 +149,45 @@ func (b *keysBusiness) getDeviceKeysWithCache(ctx context.Context, deviceID stri
 	if !ok {
 		return nil, errors.New("unexpected type in singleflight result")
 	}
+	return keys, nil
+}
+
+// tryKeysCache attempts to read device keys from cache.
+func (b *keysBusiness) tryKeysCache(ctx context.Context, deviceID string) ([]*models.DeviceKey, bool) {
+	if b.cache == nil {
+		return nil, false
+	}
+	cached, found := b.cache.GetDeviceKeys(ctx, deviceID)
+	if !found {
+		return nil, false
+	}
+	var entry cachedKeyEntry
+	if err := json.Unmarshal(cached, &entry); err != nil {
+		return nil, false
+	}
+	return entry.Keys, true
+}
+
+// fetchKeysAndCache loads device keys from DB, populates cache, and returns them.
+func (b *keysBusiness) fetchKeysAndCache(ctx context.Context, deviceID string) ([]*models.DeviceKey, error) {
+	// Double-check cache after acquiring singleflight.
+	if keys, hit := b.tryKeysCache(ctx, deviceID); hit {
+		return keys, nil
+	}
+
+	keys, err := b.deviceKeyRepo.GetByDeviceID(ctx, deviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	if b.cache != nil {
+		entry := cachedKeyEntry{DeviceID: deviceID, Keys: keys}
+		encoded, encErr := json.Marshal(entry)
+		if encErr == nil {
+			b.cache.SetDeviceKeys(ctx, deviceID, encoded)
+		}
+	}
+
 	return keys, nil
 }
 
