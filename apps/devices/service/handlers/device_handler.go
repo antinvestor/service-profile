@@ -4,16 +4,21 @@ import (
 	"context"
 	"errors"
 	"slices"
+	"time"
 
 	"buf.build/gen/go/antinvestor/device/connectrpc/go/device/v1/devicev1connect"
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	"github.com/antinvestor/service-profile/internal/errorutil"
 )
+
+const prefixRateTURN = "rate:turn:"
 
 type DevicesServer struct {
 	devicev1connect.UnimplementedDeviceServiceHandler
@@ -22,16 +27,27 @@ type DevicesServer struct {
 	presenceBusiness business.PresenceBusiness
 	keyBusiness      business.KeysBusiness
 	notifyBusiness   business.NotifyBusiness
+	turnBusiness     business.TURNBusiness
+
+	cacheSvc               *caching.DeviceCacheService
+	turnTTL                int32
+	rateLimitTURNPerMinute int64
 }
 
 func NewDeviceServer(_ context.Context, deviceBusiness business.DeviceBusiness,
 	presenceBusiness business.PresenceBusiness, keyBusiness business.KeysBusiness,
-	notifyBusiness business.NotifyBusiness) *DevicesServer {
+	notifyBusiness business.NotifyBusiness, turnBusiness business.TURNBusiness,
+	cacheSvc *caching.DeviceCacheService, turnTTL int32, rateLimitTURNPerMinute int64,
+) *DevicesServer {
 	return &DevicesServer{
-		deviceBusiness:   deviceBusiness,
-		presenceBusiness: presenceBusiness,
-		keyBusiness:      keyBusiness,
-		notifyBusiness:   notifyBusiness,
+		deviceBusiness:         deviceBusiness,
+		presenceBusiness:       presenceBusiness,
+		keyBusiness:            keyBusiness,
+		notifyBusiness:         notifyBusiness,
+		turnBusiness:           turnBusiness,
+		cacheSvc:               cacheSvc,
+		turnTTL:                turnTTL,
+		rateLimitTURNPerMinute: rateLimitTURNPerMinute,
 	}
 }
 
@@ -244,4 +260,56 @@ func (ds *DevicesServer) ListLogs(
 			return errorutil.CleanErr(sErr)
 		}
 	}
+}
+
+func (ds *DevicesServer) GetTurnCredentials(
+	ctx context.Context,
+	_ *connect.Request[devicev1.GetTurnCredentialsRequest],
+) (*connect.Response[devicev1.GetTurnCredentialsResponse], error) {
+	if ds.turnBusiness == nil {
+		return nil, connect.NewError(connect.CodeUnavailable, errors.New("TURN credentials provider is not configured"))
+	}
+
+	// Per-caller rate limiting.
+	if ds.cacheSvc != nil && ds.rateLimitTURNPerMinute > 0 {
+		callerID := "anonymous"
+		claims := security.ClaimsFromContext(ctx)
+		if claims != nil {
+			if sub, err := claims.GetSubject(); err == nil && sub != "" {
+				callerID = sub
+			}
+		}
+
+		allowed, _ := ds.cacheSvc.CheckRateLimit(ctx, prefixRateTURN, callerID, ds.rateLimitTURNPerMinute)
+		if !allowed {
+			return nil, connect.NewError(
+				connect.CodeResourceExhausted,
+				errors.New("TURN credential rate limit exceeded"),
+			)
+		}
+	}
+
+	credentials, err := ds.turnBusiness.GetTurnCredentials(ctx)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate TURN credentials"))
+	}
+
+	expiresAt := time.Now().Unix() + int64(ds.turnTTL)
+
+	var servers []*devicev1.TurnServer
+	for _, ice := range credentials.ICEServers {
+		for _, url := range ice.URLs {
+			servers = append(servers, &devicev1.TurnServer{
+				Url:        url,
+				Username:   ice.Username,
+				Credential: ice.Credential,
+				ExpiresAt:  expiresAt,
+			})
+		}
+	}
+
+	return connect.NewResponse(&devicev1.GetTurnCredentialsResponse{
+		Servers:    servers,
+		TtlSeconds: ds.turnTTL,
+	}), nil
 }

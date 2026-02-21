@@ -11,7 +11,6 @@ import (
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
-	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
@@ -111,8 +110,9 @@ func initServiceComponents(
 		util.Log(ctx).WithError(err).Warn("TURN credentials provider not configured, endpoint will return 503")
 	}
 
-	implementation := handlers.NewDeviceServer(ctx, deviceBusiness, presenceBusiness, keyBusiness, notifyBusiness)
-	connectHandler := setupConnectServer(ctx, securityMan, implementation, turnBiz, cacheSvc, cfg)
+	implementation := handlers.NewDeviceServer(ctx, deviceBusiness, presenceBusiness, keyBusiness, notifyBusiness,
+		turnBiz, cacheSvc, cfg.TURNTTL, cfg.RateLimitTURNPerMinute)
+	connectHandler := setupConnectServer(ctx, securityMan, implementation)
 
 	analysisHandler := queue.NewDeviceAnalysisQueueHandler(
 		httpClientMan, deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
@@ -130,9 +130,6 @@ func setupConnectServer(
 	ctx context.Context,
 	securityMan security.Manager,
 	implementation *handlers.DevicesServer,
-	turnBusiness business.TURNBusiness,
-	cacheSvc *caching.DeviceCacheService,
-	cfg *aconfig.DevicesConfig,
 ) http.Handler {
 	authenticator := securityMan.GetAuthenticator(ctx)
 
@@ -144,15 +141,5 @@ func setupConnectServer(
 	_, serverHandler := devicev1connect.NewDeviceServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))
 
-	turnHandler := handlers.NewTURNHandler(turnBusiness)
-	turnRouter := http.NewServeMux()
-	turnRouter.HandleFunc("POST /v1/turn/credentials",
-		handlers.RateLimitTURN(turnHandler.GetTurnCredentials, cacheSvc, cfg.RateLimitTURNPerMinute))
-	secureTurnRouter := securityhttp.AuthenticationMiddleware(turnRouter, authenticator)
-
-	mux := http.NewServeMux()
-	mux.Handle("/", serverHandler)
-	mux.Handle("/v1/turn/", secureTurnRouter)
-
-	return mux
+	return serverHandler
 }

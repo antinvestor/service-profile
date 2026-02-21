@@ -50,7 +50,7 @@ type TURNBusiness interface {
 
 // TURNProvider is a pluggable credential generator.
 type TURNProvider interface {
-	GenerateCredentials(ctx context.Context, ttl int) (*TURNCredentialsResponse, error)
+	GenerateCredentials(ctx context.Context, ttl int32) (*TURNCredentialsResponse, error)
 }
 
 type turnBusiness struct {
@@ -110,7 +110,7 @@ type staticTURNProvider struct {
 	serverURLs   []string
 }
 
-func (s *staticTURNProvider) GenerateCredentials(_ context.Context, ttl int) (*TURNCredentialsResponse, error) {
+func (s *staticTURNProvider) GenerateCredentials(_ context.Context, ttl int32) (*TURNCredentialsResponse, error) {
 	// Username is "expiry_timestamp" — coturn and pion both parse the unix timestamp from the username.
 	expiry := time.Now().Unix() + int64(ttl)
 	username := strconv.FormatInt(expiry, 10)
@@ -136,14 +136,14 @@ type cloudflareTURNProvider struct {
 	endpointURL string
 	authHeader  string // pre-computed "Bearer <token>"
 	client      client.Manager
-	ttl         int
+	ttl         int32
 
 	mu          sync.Mutex
 	cached      *TURNCredentialsResponse
 	cachedUntil time.Time
 }
 
-func newCloudflareTURNProvider(tokenID, apiToken string, cli client.Manager, ttl int) *cloudflareTURNProvider {
+func newCloudflareTURNProvider(tokenID, apiToken string, cli client.Manager, ttl int32) *cloudflareTURNProvider {
 	return &cloudflareTURNProvider{
 		endpointURL: fmt.Sprintf(
 			"https://rtc.live.cloudflare.com/v1/turn/keys/%s/credentials/generate-ice-servers",
@@ -155,7 +155,7 @@ func newCloudflareTURNProvider(tokenID, apiToken string, cli client.Manager, ttl
 	}
 }
 
-func (c *cloudflareTURNProvider) GenerateCredentials(ctx context.Context, ttl int) (*TURNCredentialsResponse, error) {
+func (c *cloudflareTURNProvider) GenerateCredentials(ctx context.Context, ttl int32) (*TURNCredentialsResponse, error) {
 	// Return cached credentials if still valid.
 	c.mu.Lock()
 	if c.cached != nil && time.Now().Before(c.cachedUntil) {
@@ -169,7 +169,7 @@ func (c *cloudflareTURNProvider) GenerateCredentials(ctx context.Context, ttl in
 	headers := http.Header{}
 	headers.Set("Authorization", c.authHeader)
 
-	payload := map[string]int{"ttl": ttl}
+	payload := map[string]int32{"ttl": ttl}
 
 	resp, err := c.client.Invoke(ctx, http.MethodPost, c.endpointURL, payload, headers)
 	if err != nil {

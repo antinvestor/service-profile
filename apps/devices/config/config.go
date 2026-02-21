@@ -33,7 +33,7 @@ type DevicesConfig struct {
 	TURNProvider string `envDefault:"static" env:"TURN_PROVIDER"`
 	// TURNTTL is the time-to-live in seconds for generated TURN credentials. Defaults to 3600 (1 hour).
 	// Valid range: 60–86400 seconds.
-	TURNTTL int `envDefault:"3600" env:"TURN_TTL"`
+	TURNTTL int32 `envDefault:"3600" env:"TURN_TTL"`
 	// CloudflareTURNTokenID is the TURN Token ID from Cloudflare's Real-Time Communications settings.
 	CloudflareTURNTokenID string `env:"CLOUDFLARE_TURN_TOKEN_ID"`
 	// CloudflareTURNAPIToken is the API token used to authenticate with Cloudflare's TURN credential generation endpoint.
