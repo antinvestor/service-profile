@@ -3,13 +3,13 @@ module github.com/antinvestor/service-profile
 go 1.25.2
 
 require (
-	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20260102104630-5c57561a771f.1
+	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20260219054105-fe125014d75c.1
 	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20260221033317-1a8e101ef7c6.2
 	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260221033317-1a8e101ef7c6.1
 	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20260102123330-d6847f42a19a.2
 	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260102123330-d6847f42a19a.1
 	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260102123445-62e44f8dd82b.2
-	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260102123445-62e44f8dd82b.1
+	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260219062039-499f582dea7e.1
 	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20260102123521-54fcf9143036.2
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260102123521-54fcf9143036.1
 	connectrpc.com/connect v1.19.1
