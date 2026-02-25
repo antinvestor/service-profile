@@ -16,7 +16,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy project files
-COPY ./apps/default ./apps/default
+COPY ./apps/geolocation ./apps/geolocation
 COPY ./internal ./internal
 
 # Build static binary for target platform
@@ -27,12 +27,11 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
          -X github.com/pitabwire/frame/version.Version=${VERSION} \
          -X github.com/pitabwire/frame/version.Commit=${REVISION} \
          -X github.com/pitabwire/frame/version.Date=${BUILDTIME}" \
-     -o /app/binary ./apps/default/cmd/main.go
+     -o /app/binary ./apps/geolocation/cmd/main.go
 
 # ---------- Final ----------
 FROM cgr.dev/chainguard/static:latest
-# Add Maintainer Info
-LABEL maintainer="Bwire Peter <bwire517@gmail.com>"
+LABEL maintainer="Antinvestor <support@antinvestor.com>"
 
 USER 65532:65532
 
@@ -43,7 +42,7 @@ ARG REPOSITORY
 ARG VERSION
 ARG REVISION
 ARG BUILDTIME
-LABEL org.opencontainers.image.title="Notification Service"
+LABEL org.opencontainers.image.title="Geolocation Service"
 LABEL org.opencontainers.image.version=$VERSION
 LABEL org.opencontainers.image.revision=$REVISION
 LABEL org.opencontainers.image.created=$BUILDTIME
@@ -51,8 +50,18 @@ LABEL org.opencontainers.image.source=$REPOSITORY
 
 WORKDIR /
 # Copy from builder stage
-COPY --from=builder /app/binary /default
-COPY --from=builder /app/apps/default/migrations /migrations
+COPY --from=builder /app/binary /geolocation
+COPY --from=builder /app/apps/geolocation/migrations /migrations
+
+# Run as non-root user
+USER 65532:65532
+
+# Document ports
+EXPOSE 80
+EXPOSE 50051
+
+# Set working directory
+WORKDIR /
 
 # Run the binary
-ENTRYPOINT ["/default"]
+ENTRYPOINT ["/geolocation"]
