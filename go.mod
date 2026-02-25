@@ -1,6 +1,6 @@
 module github.com/antinvestor/service-profile
 
-go 1.25.2
+go 1.26
 
 require (
 	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20260219054105-fe125014d75c.1
@@ -19,8 +19,8 @@ require (
 	github.com/antinvestor/apis/go/profile v1.53.13
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.73.0
-	github.com/pitabwire/util v0.5.0
+	github.com/pitabwire/frame v1.74.0
+	github.com/pitabwire/util v0.6.0
 	github.com/stretchr/testify v1.11.1
 	github.com/ttacon/libphonenumber v1.2.1
 	go.opentelemetry.io/otel v1.40.0
