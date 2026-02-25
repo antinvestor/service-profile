@@ -12,6 +12,7 @@ import (
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/security"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -709,6 +710,51 @@ func (pts *ProfileTestSuite) Test_profileBusiness_AddContact() {
 
 		_, _, err := pb.AddContact(ctx, addContactReq)
 		require.Error(t, err, "AddContact should fail without claims")
+
+		// Create a profile first
+		properties := data.JSONMap{"name": "AddContact Claims Test"}
+		createReq := &profilev1.CreateRequest{
+			Type:       profilev1.ProfileType_PERSON,
+			Contact:    "addcontact@testing.com",
+			Properties: properties.ToProtoStruct(),
+		}
+		profile, err := pb.CreateProfile(ctx, createReq)
+		require.NoError(t, err)
+
+		// Test with claims - subject mismatch should fail
+		claims := security.ClaimsFromMap(map[string]string{
+			"sub": "wrong-id",
+		})
+		ctxWithClaims := claims.ClaimsToContext(ctx)
+
+		_, _, err = pb.AddContact(ctxWithClaims, &profilev1.AddContactRequest{
+			Id:      profile.GetId(),
+			Contact: "+256757546289",
+		})
+		require.Error(t, err, "AddContact should fail with mismatched subject")
+
+		// Test with claims - matching subject should succeed
+		claims = security.ClaimsFromMap(map[string]string{
+			"sub": profile.GetId(),
+		})
+		ctxWithClaims = claims.ClaimsToContext(ctx)
+
+		updatedProfile, verificationID, err := pb.AddContact(ctxWithClaims, &profilev1.AddContactRequest{
+			Id:      profile.GetId(),
+			Contact: "+256757546289",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, updatedProfile)
+		require.NotEmpty(t, verificationID)
+
+		// Test adding same contact again - should return existing profile
+		updatedProfile2, verificationID2, err := pb.AddContact(ctxWithClaims, &profilev1.AddContactRequest{
+			Id:      profile.GetId(),
+			Contact: "addcontact@testing.com",
+		})
+		require.NoError(t, err)
+		require.NotNil(t, updatedProfile2)
+		require.Empty(t, verificationID2, "should not create verification for existing contact")
 	})
 }
 
@@ -759,5 +805,20 @@ func (pts *ProfileTestSuite) Test_profileBusiness_AddAddress() {
 
 		_, err = pb.AddAddress(ctx, addAddressReq)
 		require.Error(t, err, "AddAddress should fail with empty address")
+
+		// Test adding a valid address
+		validAddressReq := &profilev1.AddAddressRequest{
+			Id: profile.GetId(),
+			Address: &profilev1.AddressObject{
+				Name:    "Home Address",
+				Area:    "Kampala",
+				Country: "KEN",
+			},
+		}
+
+		updatedProfile, err := pb.AddAddress(ctx, validAddressReq)
+		require.NoError(t, err)
+		require.NotNil(t, updatedProfile)
+		require.NotEmpty(t, updatedProfile.GetAddresses())
 	})
 }
