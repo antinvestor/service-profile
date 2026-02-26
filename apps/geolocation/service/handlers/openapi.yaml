@@ -1,0 +1,508 @@
+openapi: "3.1.0"
+info:
+  title: Geolocation Service API
+  version: "1.0.0"
+  description: |
+    High-volume geolocation platform supporting location history ingestion,
+    area/parcel geometry management, geofencing (enter/exit/dwell detection),
+    proximity queries, and historical analytics.
+
+servers:
+  - url: /
+
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      tags: [Health]
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /v1/locations/ingest:
+    post:
+      summary: Ingest a batch of location points
+      operationId: ingestLocations
+      tags: [Ingestion]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IngestLocationsRequest"
+      responses:
+        "200":
+          description: Batch ingestion result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IngestLocationsResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/areas:
+    post:
+      summary: Create a new area
+      operationId: createArea
+      tags: [Areas]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAreaRequest"
+      responses:
+        "201":
+          description: Area created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAreaResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+    get:
+      summary: Search areas by query or owner
+      operationId: searchAreas
+      tags: [Areas]
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+        - name: owner_id
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: List of matching areas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Area"
+
+  /v1/areas/{id}:
+    get:
+      summary: Get area by ID
+      operationId: getArea
+      tags: [Areas]
+      parameters:
+        - $ref: "#/components/parameters/AreaID"
+      responses:
+        "200":
+          description: Area details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Area"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Update area
+      operationId: updateArea
+      tags: [Areas]
+      parameters:
+        - $ref: "#/components/parameters/AreaID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAreaRequest"
+      responses:
+        "200":
+          description: Area updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UpdateAreaResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      summary: Soft-delete area
+      operationId: deleteArea
+      tags: [Areas]
+      parameters:
+        - $ref: "#/components/parameters/AreaID"
+      responses:
+        "204":
+          description: Area deleted
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/track/{subjectId}:
+    get:
+      summary: Get location history for a subject
+      operationId: getTrack
+      tags: [Track]
+      parameters:
+        - $ref: "#/components/parameters/SubjectID"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Location history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LocationPoint"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/events/subject/{subjectId}:
+    get:
+      summary: Get geo events for a subject
+      operationId: getSubjectEvents
+      tags: [Events]
+      parameters:
+        - $ref: "#/components/parameters/SubjectID"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Geo events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GeoEvent"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/events/area/{areaId}/subjects:
+    get:
+      summary: Get subjects currently inside an area
+      operationId: getAreaSubjects
+      tags: [Events]
+      parameters:
+        - name: areaId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Subjects inside area
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AreaSubject"
+
+  /v1/proximity/subjects/{subjectId}:
+    get:
+      summary: Find subjects near the given subject
+      operationId: getNearbySubjects
+      tags: [Proximity]
+      parameters:
+        - $ref: "#/components/parameters/SubjectID"
+        - name: radius_meters
+          in: query
+          schema:
+            type: number
+            default: 1000
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Nearby subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NearbySubject"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /v1/proximity/areas:
+    get:
+      summary: Find areas near coordinates
+      operationId: getNearbyAreas
+      tags: [Proximity]
+      parameters:
+        - name: latitude
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: longitude
+          in: query
+          required: true
+          schema:
+            type: number
+        - name: radius_meters
+          in: query
+          schema:
+            type: number
+            default: 1000
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: Nearby areas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/NearbyArea"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    AreaID:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    SubjectID:
+      name: subjectId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Forbidden:
+      description: Permission denied
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    LocationPoint:
+      type: object
+      properties:
+        id:
+          type: string
+        subject_id:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        latitude:
+          type: number
+        longitude:
+          type: number
+        altitude:
+          type: number
+        accuracy:
+          type: number
+        speed:
+          type: number
+        bearing:
+          type: number
+        source:
+          type: integer
+        extras:
+          type: object
+
+    IngestLocationsRequest:
+      type: object
+      required: [subject_id, points]
+      properties:
+        subject_id:
+          type: string
+        points:
+          type: array
+          items:
+            $ref: "#/components/schemas/LocationPoint"
+
+    IngestLocationsResponse:
+      type: object
+      properties:
+        accepted:
+          type: integer
+        rejected:
+          type: integer
+
+    Area:
+      type: object
+      properties:
+        id:
+          type: string
+        owner_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        area_type:
+          type: integer
+        geometry_json:
+          type: string
+        area_m2:
+          type: number
+        perimeter_m:
+          type: number
+        state:
+          type: integer
+        extras:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+
+    CreateAreaRequest:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Area"
+
+    CreateAreaResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Area"
+
+    UpdateAreaRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        area_type:
+          type: integer
+        geometry:
+          type: string
+        extras:
+          type: object
+
+    UpdateAreaResponse:
+      type: object
+      properties:
+        data:
+          $ref: "#/components/schemas/Area"
+
+    GeoEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        subject_id:
+          type: string
+        area_id:
+          type: string
+        event_type:
+          type: integer
+          description: "0=ENTER, 1=EXIT, 2=DWELL"
+        timestamp:
+          type: string
+          format: date-time
+        confidence:
+          type: number
+        point_id:
+          type: string
+
+    AreaSubject:
+      type: object
+      properties:
+        subject_id:
+          type: string
+        enter_timestamp:
+          type: string
+          format: date-time
+
+    NearbySubject:
+      type: object
+      properties:
+        subject_id:
+          type: string
+        distance_meters:
+          type: number
+        last_seen:
+          type: string
+          format: date-time
+
+    NearbyArea:
+      type: object
+      properties:
+        area_id:
+          type: string
+        name:
+          type: string
+        area_type:
+          type: integer
+        distance_meters:
+          type: number
+
+security:
+  - bearerAuth: []

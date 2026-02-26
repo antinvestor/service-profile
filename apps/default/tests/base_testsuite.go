@@ -2,6 +2,8 @@ package tests
 
 import (
 	"context"
+	"fmt"
+	"net/url"
 	"testing"
 
 	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
@@ -20,9 +22,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/authz"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/apps/default/tests/testketo"
 )
 
 const PostgresqlDBImage = "postgres:latest"
@@ -33,6 +37,10 @@ const (
 
 type ProfileBaseTestSuite struct {
 	frametests.FrameBaseTestSuite
+
+	AuthzMiddleware authz.Middleware
+	ketoReadURI     string
+	ketoWriteURI    string
 
 	ContactRepo      repository.ContactRepository
 	VerificationRepo repository.VerificationRepository
@@ -45,13 +53,39 @@ type ProfileBaseTestSuite struct {
 func initResources(_ context.Context) []definition.TestResource {
 	pg := testpostgres.NewWithOpts("service_profile", definition.WithUserName("ant"))
 
-	resources := []definition.TestResource{pg}
-	return resources
+	keto := testketo.NewWithOpts(
+		definition.WithDependancies(pg),
+		definition.WithEnableLogging(true),
+	)
+
+	return []definition.TestResource{pg, keto}
 }
 
 func (bs *ProfileBaseTestSuite) SetupSuite() {
 	bs.InitResourceFunc = initResources
 	bs.FrameBaseTestSuite.SetupSuite()
+
+	ctx := bs.T().Context()
+
+	// Find Keto dependency and extract read/write URIs
+	var ketoDep definition.DependancyConn
+	for _, res := range bs.Resources() {
+		if res.Name() == testketo.ImageName {
+			ketoDep = res
+			break
+		}
+	}
+	bs.Require().NotNil(ketoDep, "keto dependency should be available")
+
+	// Write API: default port (4467/tcp, first in port list)
+	writeURL, err := url.Parse(string(ketoDep.GetDS(ctx)))
+	bs.Require().NoError(err)
+	bs.ketoWriteURI = writeURL.Host
+
+	// Read API: port 4466/tcp (second in port list)
+	readPort, err := ketoDep.PortMapping(ctx, "4466/tcp")
+	bs.Require().NoError(err)
+	bs.ketoReadURI = fmt.Sprintf("%s:%s", writeURL.Hostname(), readPort)
 }
 
 func (bs *ProfileBaseTestSuite) CreateService(
@@ -81,10 +115,18 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	cfg.DatabasePrimaryURL = []string{testDS.String()}
 	cfg.DatabaseReplicaURL = []string{testDS.String()}
 
+	// Configure real Keto authoriser URIs
+	cfg.AuthorizationServiceReadURI = bs.ketoReadURI
+	cfg.AuthorizationServiceWriteURI = bs.ketoWriteURI
+
 	ctx, svc := frame.NewServiceWithContext(t.Context(), frame.WithName("profile tests"),
 		frame.WithConfig(&cfg),
 		frame.WithDatastore(pool.WithTraceConfig(&cfg)),
 		frametests.WithNoopDriver())
+
+	// Wire real Keto authoriser via SecurityManager
+	sm := svc.SecurityManager()
+	bs.AuthzMiddleware = authz.NewMiddleware(sm.GetAuthorizer(ctx))
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueRelationshipConnectName,
@@ -119,7 +161,7 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)
 
-	return security.SkipTenancyChecksOnClaims(ctx), svc
+	return ctx, svc
 }
 
 func (bs *ProfileBaseTestSuite) GetNotificationCli(t *testing.T) notificationv1connect.NotificationServiceClient {
@@ -152,6 +194,34 @@ func (bs *ProfileBaseTestSuite) CreateTestProfiles(
 	}
 
 	return profileSlice, nil
+}
+
+// WithAuthClaims adds authentication claims to a context for testing.
+func (bs *ProfileBaseTestSuite) WithAuthClaims(ctx context.Context, tenantID, profileID string) context.Context {
+	claims := &security.AuthenticationClaims{
+		TenantID:  tenantID,
+		AccessID:  util.IDString(),
+		ContactID: profileID,
+		SessionID: util.IDString(),
+		DeviceID:  "test-device",
+	}
+	claims.Subject = profileID
+	return claims.ClaimsToContext(ctx)
+}
+
+// SeedTenantRole writes a relation tuple granting the given role to a profile on a tenant.
+func (bs *ProfileBaseTestSuite) SeedTenantRole(
+	ctx context.Context,
+	svc *frame.Service,
+	tenantID, profileID, role string,
+) {
+	auth := svc.SecurityManager().GetAuthorizer(ctx)
+	err := auth.WriteTuple(ctx, security.RelationTuple{
+		Object:   security.ObjectRef{Namespace: authz.NamespaceTenant, ID: tenantID},
+		Relation: role,
+		Subject:  security.SubjectRef{Namespace: authz.NamespaceProfile, ID: profileID},
+	})
+	bs.Require().NoError(err, "failed to seed tenant role")
 }
 
 func (bs *ProfileBaseTestSuite) TearDownSuite() {

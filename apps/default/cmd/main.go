@@ -21,6 +21,7 @@ import (
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/authz"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/handlers"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -69,8 +70,11 @@ func main() {
 		log.WithError(dekErr).Fatal("main -- Could not decode DEK encryption keys")
 	}
 
+	// Setup authz middleware
+	authzMiddleware := authz.NewMiddleware(sm.GetAuthorizer(ctx))
+
 	// Setup Connect server
-	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli)
+	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli, authzMiddleware)
 
 	// Setup HTTP handlers
 	// Start with datastore option
@@ -189,7 +193,7 @@ func decodeDEK(cfg aconfig.ProfileConfig) (*aconfig.DEK, error) {
 
 // setupConnectServer initializes and configures the gRPC server.
 func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DEK,
-	notificationCli notificationv1connect.NotificationServiceClient) http.Handler {
+	notificationCli notificationv1connect.NotificationServiceClient, authzMiddleware authz.Middleware) http.Handler {
 	securityMan := svc.SecurityManager()
 
 	authenticator := securityMan.GetAuthenticator(ctx)
@@ -199,7 +203,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	implementation := handlers.NewProfileServer(ctx, svc, dek, notificationCli)
+	implementation := handlers.NewProfileServer(ctx, svc, dek, notificationCli, authzMiddleware)
 
 	_, serverHandler := profilev1connect.NewProfileServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))

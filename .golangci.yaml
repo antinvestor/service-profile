@@ -434,6 +434,9 @@ linters:
         linters: [ staticcheck ]
       - text: 'nilness: tautological condition'
         linters: [ govet ]
+      - path: 'geolocation_handler\.go'
+        linters:
+          - dupl
       - path: '_test\.go'
         linters:
           - bodyclose

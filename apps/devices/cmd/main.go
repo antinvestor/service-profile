@@ -14,6 +14,7 @@ import (
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/authz"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
@@ -110,8 +111,10 @@ func initServiceComponents(
 		util.Log(ctx).WithError(err).Warn("TURN credentials provider not configured, endpoint will return 503")
 	}
 
-	implementation := handlers.NewDeviceServer(ctx, deviceBusiness, presenceBusiness, keyBusiness, notifyBusiness,
-		turnBiz, cacheSvc, cfg.TURNTTL, cfg.RateLimitTURNPerMinute)
+	authzMiddleware := authz.NewMiddleware(securityMan.GetAuthorizer(ctx))
+
+	implementation := handlers.NewDeviceServer(ctx, authzMiddleware, deviceBusiness, presenceBusiness, keyBusiness,
+		notifyBusiness, turnBiz, cacheSvc, cfg.TURNTTL, cfg.RateLimitTURNPerMinute)
 	connectHandler := setupConnectServer(ctx, securityMan, implementation)
 
 	analysisHandler := queue.NewDeviceAnalysisQueueHandler(

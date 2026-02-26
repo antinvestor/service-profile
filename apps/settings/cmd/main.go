@@ -13,6 +13,7 @@ import (
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
+	"github.com/antinvestor/service-profile/apps/settings/service/authz"
 	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 )
@@ -88,7 +89,8 @@ func setupConnectServer(ctx context.Context, svc *frame.Service) http.Handler {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	implementation := handlers.NewSettingsServer(ctx, svc)
+	authzMiddleware := authz.NewMiddleware(securityMan.GetAuthorizer(ctx))
+	implementation := handlers.NewSettingsServer(ctx, svc, authzMiddleware)
 
 	_, serverHandler := settingsv1connect.NewSettingsServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))

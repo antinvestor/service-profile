@@ -13,6 +13,10 @@ func (ds *DevicesServer) AddKey(
 	ctx context.Context,
 	req *connect.Request[devicev1.AddKeyRequest],
 ) (*connect.Response[devicev1.AddKeyResponse], error) {
+	if err := ds.authz.CanManageDevices(ctx); err != nil {
+		return nil, toConnectError(err)
+	}
+
 	msg := req.Msg
 	deviceKey, err := ds.keyBusiness.AddKey(
 		ctx,
@@ -33,6 +37,10 @@ func (ds *DevicesServer) RemoveKey(
 	ctx context.Context,
 	req *connect.Request[devicev1.RemoveKeyRequest],
 ) (*connect.Response[devicev1.RemoveKeyResponse], error) {
+	if err := ds.authz.CanManageDevices(ctx); err != nil {
+		return nil, toConnectError(err)
+	}
+
 	var keyIDList []string
 	response, err := ds.keyBusiness.RemoveKeys(ctx, req.Msg.GetId()...)
 	if err != nil {
@@ -56,6 +64,10 @@ func (ds *DevicesServer) SearchKey(
 	ctx context.Context,
 	req *connect.Request[devicev1.SearchKeyRequest],
 ) (*connect.Response[devicev1.SearchKeyResponse], error) {
+	if err := ds.authz.CanViewDevices(ctx); err != nil {
+		return nil, toConnectError(err)
+	}
+
 	msg := req.Msg
 	response, err := ds.keyBusiness.GetKeys(ctx, msg.GetDeviceId(), msg.GetKeyTypes()...)
 	if err != nil {
