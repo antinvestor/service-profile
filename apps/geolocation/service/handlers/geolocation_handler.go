@@ -152,7 +152,7 @@ func (s *GeolocationServer) IngestLocations(w http.ResponseWriter, r *http.Reque
 
 	// Authorization: the authenticated subject must match the ingestion subject,
 	// or the caller must have the ingest_location permission.
-	if authErr := s.authz.CanIngestLocationSelf(ctx, req.SubjectID); authErr != nil {
+	if authErr := s.authz.CanLocationIngestSelf(ctx, req.SubjectID); authErr != nil {
 		s.metrics.EndSpan(ctx, span, authErr)
 		writeAuthzError(w, authErr)
 		return
@@ -179,7 +179,7 @@ func (s *GeolocationServer) CreateArea(
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanManageGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationManage(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -209,7 +209,7 @@ func (s *GeolocationServer) GetArea(w http.ResponseWriter, r *http.Request) {
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanViewGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationView(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -240,7 +240,7 @@ func (s *GeolocationServer) UpdateArea(
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanManageGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationManage(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -277,7 +277,7 @@ func (s *GeolocationServer) DeleteArea(w http.ResponseWriter, r *http.Request) {
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanManageGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationManage(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -305,7 +305,7 @@ func (s *GeolocationServer) SearchAreas(w http.ResponseWriter, r *http.Request) 
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanViewGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationView(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -371,7 +371,7 @@ func (s *GeolocationServer) handleSubjectList(
 		return
 	}
 
-	if authErr := s.authz.CanViewGeolocationSelf(ctx, subjectID); authErr != nil {
+	if authErr := s.authz.CanGeolocationViewSelf(ctx, subjectID); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -397,7 +397,7 @@ func (s *GeolocationServer) GetAreaSubjects(w http.ResponseWriter, r *http.Reque
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanViewGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationView(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -434,7 +434,7 @@ func (s *GeolocationServer) GetNearbySubjects(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	if authErr := s.authz.CanViewGeolocationSelf(ctx, subjectID); authErr != nil {
+	if authErr := s.authz.CanGeolocationViewSelf(ctx, subjectID); authErr != nil {
 		s.metrics.EndSpan(ctx, span, authErr)
 		writeAuthzError(w, authErr)
 		return
@@ -467,7 +467,7 @@ func (s *GeolocationServer) GetNearbyAreas(w http.ResponseWriter, r *http.Reques
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanViewGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationView(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -619,7 +619,7 @@ func (s *GeolocationServer) CreateRoute(
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanManageGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationManage(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -649,7 +649,7 @@ func (s *GeolocationServer) GetRoute(w http.ResponseWriter, r *http.Request) {
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanViewGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationView(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -680,7 +680,7 @@ func (s *GeolocationServer) UpdateRoute(
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanManageGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationManage(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -717,7 +717,7 @@ func (s *GeolocationServer) DeleteRoute(w http.ResponseWriter, r *http.Request) 
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanManageGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationManage(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -745,7 +745,7 @@ func (s *GeolocationServer) SearchRoutes(w http.ResponseWriter, r *http.Request)
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanViewGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationView(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -774,7 +774,7 @@ func (s *GeolocationServer) AssignRoute(
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanManageGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationManage(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -804,7 +804,7 @@ func (s *GeolocationServer) UnassignRoute(w http.ResponseWriter, r *http.Request
 	var spanErr error
 	defer func() { s.metrics.EndSpan(ctx, span, spanErr) }()
 
-	if authErr := s.authz.CanManageGeolocation(ctx); authErr != nil {
+	if authErr := s.authz.CanGeolocationManage(ctx); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return
@@ -841,7 +841,7 @@ func (s *GeolocationServer) GetSubjectRouteAssignments(
 		return
 	}
 
-	if authErr := s.authz.CanViewGeolocationSelf(ctx, subjectID); authErr != nil {
+	if authErr := s.authz.CanGeolocationViewSelf(ctx, subjectID); authErr != nil {
 		spanErr = authErr
 		writeAuthzError(w, authErr)
 		return

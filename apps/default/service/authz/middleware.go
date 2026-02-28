@@ -9,18 +9,18 @@ import (
 
 // Middleware defines authorisation checks for the profile service.
 type Middleware interface {
-	CanViewProfile(ctx context.Context) error
-	CanViewProfileSelf(ctx context.Context, targetProfileID string) error
-	CanCreateProfile(ctx context.Context) error
-	CanUpdateProfile(ctx context.Context) error
-	CanUpdateProfileSelf(ctx context.Context, targetProfileID string) error
-	CanMergeProfiles(ctx context.Context) error
-	CanManageContacts(ctx context.Context) error
-	CanManageContactsSelf(ctx context.Context, targetProfileID string) error
-	CanManageRoster(ctx context.Context) error
-	CanManageRosterSelf(ctx context.Context, targetProfileID string) error
-	CanManageRelationships(ctx context.Context) error
-	CanManageRelationshipsSelf(ctx context.Context, targetProfileID string) error
+	CanProfileView(ctx context.Context) error
+	CanProfileViewSelf(ctx context.Context, targetProfileID string) error
+	CanProfileCreate(ctx context.Context) error
+	CanProfileUpdate(ctx context.Context) error
+	CanProfileUpdateSelf(ctx context.Context, targetProfileID string) error
+	CanProfilesMerge(ctx context.Context) error
+	CanContactsManage(ctx context.Context) error
+	CanContactsManageSelf(ctx context.Context, targetProfileID string) error
+	CanRosterManage(ctx context.Context) error
+	CanRosterManageSelf(ctx context.Context, targetProfileID string) error
+	CanRelationshipsManage(ctx context.Context) error
+	CanRelationshipsManageSelf(ctx context.Context, targetProfileID string) error
 }
 
 type middleware struct {
@@ -47,67 +47,67 @@ func isSelf(ctx context.Context, targetProfileID string) bool {
 
 // --- Self-bypass methods ---
 
-func (m *middleware) CanViewProfileSelf(ctx context.Context, targetProfileID string) error {
+func (m *middleware) CanProfileViewSelf(ctx context.Context, targetProfileID string) error {
 	if isSelf(ctx, targetProfileID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionViewProfile)
+	return m.checker.Check(ctx, PermissionProfileView)
 }
 
-func (m *middleware) CanUpdateProfileSelf(ctx context.Context, targetProfileID string) error {
+func (m *middleware) CanProfileUpdateSelf(ctx context.Context, targetProfileID string) error {
 	if isSelf(ctx, targetProfileID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionUpdateProfile)
+	return m.checker.Check(ctx, PermissionProfileUpdate)
 }
 
-func (m *middleware) CanManageContactsSelf(ctx context.Context, targetProfileID string) error {
+func (m *middleware) CanContactsManageSelf(ctx context.Context, targetProfileID string) error {
 	if isSelf(ctx, targetProfileID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionManageContacts)
+	return m.checker.Check(ctx, PermissionContactsManage)
 }
 
-func (m *middleware) CanManageRosterSelf(ctx context.Context, targetProfileID string) error {
+func (m *middleware) CanRosterManageSelf(ctx context.Context, targetProfileID string) error {
 	if isSelf(ctx, targetProfileID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionManageRoster)
+	return m.checker.Check(ctx, PermissionRosterManage)
 }
 
-func (m *middleware) CanManageRelationshipsSelf(ctx context.Context, targetProfileID string) error {
+func (m *middleware) CanRelationshipsManageSelf(ctx context.Context, targetProfileID string) error {
 	if isSelf(ctx, targetProfileID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionManageRelationships)
+	return m.checker.Check(ctx, PermissionRelationshipsManage)
 }
 
 // --- Non-self methods ---
 
-func (m *middleware) CanViewProfile(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionViewProfile)
+func (m *middleware) CanProfileView(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionProfileView)
 }
 
-func (m *middleware) CanCreateProfile(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionCreateProfile)
+func (m *middleware) CanProfileCreate(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionProfileCreate)
 }
 
-func (m *middleware) CanUpdateProfile(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionUpdateProfile)
+func (m *middleware) CanProfileUpdate(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionProfileUpdate)
 }
 
-func (m *middleware) CanMergeProfiles(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionMergeProfiles)
+func (m *middleware) CanProfilesMerge(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionProfilesMerge)
 }
 
-func (m *middleware) CanManageContacts(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionManageContacts)
+func (m *middleware) CanContactsManage(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionContactsManage)
 }
 
-func (m *middleware) CanManageRoster(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionManageRoster)
+func (m *middleware) CanRosterManage(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionRosterManage)
 }
 
-func (m *middleware) CanManageRelationships(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionManageRelationships)
+func (m *middleware) CanRelationshipsManage(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionRelationshipsManage)
 }

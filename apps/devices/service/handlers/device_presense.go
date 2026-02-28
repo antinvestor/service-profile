@@ -14,7 +14,7 @@ func (ds *DevicesServer) UpdatePresence(
 	ctx context.Context,
 	req *connect.Request[devicev1.UpdatePresenceRequest],
 ) (*connect.Response[devicev1.UpdatePresenceResponse], error) {
-	if err := ds.authz.CanManageDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesManage(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 

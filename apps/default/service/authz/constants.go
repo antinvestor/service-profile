@@ -3,17 +3,17 @@ package authz
 const (
 	NamespaceProfile       = "service_profile"
 	NamespaceTenancyAccess = "tenancy_access"
-	NamespaceProfileUser   = "profile/user"
+	NamespaceProfileUser   = "profile_user"
 )
 
 const (
-	PermissionViewProfile         = "view_profile"
-	PermissionCreateProfile       = "create_profile"
-	PermissionUpdateProfile       = "update_profile"
-	PermissionMergeProfiles       = "merge_profiles"
-	PermissionManageContacts      = "manage_contacts"
-	PermissionManageRoster        = "manage_roster"
-	PermissionManageRelationships = "manage_relationships"
+	PermissionProfileView         = "profile_view"
+	PermissionProfileCreate       = "profile_create"
+	PermissionProfileUpdate       = "profile_update"
+	PermissionProfilesMerge       = "profiles_merge"
+	PermissionContactsManage      = "contacts_manage"
+	PermissionRosterManage        = "roster_manage"
+	PermissionRelationshipsManage = "relationships_manage"
 )
 
 const (
@@ -25,33 +25,40 @@ const (
 	RoleService  = "service"
 )
 
+// GrantedRelation returns the relation name prefixed with "granted_" for use in
+// OPL direct grant relations. This avoids name conflicts where Keto skips permit
+// evaluation when a relation shares the same name as a permit function.
+func GrantedRelation(permission string) string {
+	return "granted_" + permission
+}
+
 // RolePermissions returns the permissions granted by each role.
 func RolePermissions() map[string][]string {
 	return map[string][]string{
 		RoleOwner: {
-			PermissionViewProfile, PermissionCreateProfile, PermissionUpdateProfile,
-			PermissionMergeProfiles, PermissionManageContacts, PermissionManageRoster,
-			PermissionManageRelationships,
+			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
+			PermissionProfilesMerge, PermissionContactsManage, PermissionRosterManage,
+			PermissionRelationshipsManage,
 		},
 		RoleAdmin: {
-			PermissionViewProfile, PermissionCreateProfile, PermissionUpdateProfile,
-			PermissionMergeProfiles, PermissionManageContacts, PermissionManageRoster,
-			PermissionManageRelationships,
+			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
+			PermissionProfilesMerge, PermissionContactsManage, PermissionRosterManage,
+			PermissionRelationshipsManage,
 		},
 		RoleOperator: {
-			PermissionViewProfile, PermissionCreateProfile, PermissionUpdateProfile,
-			PermissionManageContacts, PermissionManageRoster,
+			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
+			PermissionContactsManage, PermissionRosterManage,
 		},
 		RoleViewer: {
-			PermissionViewProfile,
+			PermissionProfileView,
 		},
 		RoleMember: {
-			PermissionViewProfile,
+			PermissionProfileView,
 		},
 		RoleService: {
-			PermissionViewProfile, PermissionCreateProfile, PermissionUpdateProfile,
-			PermissionMergeProfiles, PermissionManageContacts, PermissionManageRoster,
-			PermissionManageRelationships,
+			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
+			PermissionProfilesMerge, PermissionContactsManage, PermissionRosterManage,
+			PermissionRelationshipsManage,
 		},
 	}
 }

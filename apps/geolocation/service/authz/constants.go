@@ -3,13 +3,13 @@ package authz
 const (
 	NamespaceProfile       = "service_profile"
 	NamespaceTenancyAccess = "tenancy_access"
-	NamespaceProfileUser   = "profile/user"
+	NamespaceProfileUser   = "profile_user"
 )
 
 const (
-	PermissionManageGeolocation = "manage_geolocation"
-	PermissionViewGeolocation   = "view_geolocation"
-	PermissionIngestLocation    = "ingest_location"
+	PermissionGeolocationManage = "geolocation_manage"
+	PermissionGeolocationView   = "geolocation_view"
+	PermissionLocationIngest    = "location_ingest"
 )
 
 const (
@@ -21,26 +21,32 @@ const (
 	RoleService  = "service"
 )
 
+// GrantedRelation returns the relation name prefixed with "granted_" for use in
+// OPL direct grant relations.
+func GrantedRelation(permission string) string {
+	return "granted_" + permission
+}
+
 // RolePermissions returns the permissions granted by each role.
 func RolePermissions() map[string][]string {
 	return map[string][]string{
 		RoleOwner: {
-			PermissionManageGeolocation, PermissionViewGeolocation, PermissionIngestLocation,
+			PermissionGeolocationManage, PermissionGeolocationView, PermissionLocationIngest,
 		},
 		RoleAdmin: {
-			PermissionManageGeolocation, PermissionViewGeolocation, PermissionIngestLocation,
+			PermissionGeolocationManage, PermissionGeolocationView, PermissionLocationIngest,
 		},
 		RoleOperator: {
-			PermissionViewGeolocation, PermissionIngestLocation,
+			PermissionGeolocationView, PermissionLocationIngest,
 		},
 		RoleViewer: {
-			PermissionViewGeolocation,
+			PermissionGeolocationView,
 		},
 		RoleMember: {
-			PermissionViewGeolocation,
+			PermissionGeolocationView,
 		},
 		RoleService: {
-			PermissionManageGeolocation, PermissionViewGeolocation, PermissionIngestLocation,
+			PermissionGeolocationManage, PermissionGeolocationView, PermissionLocationIngest,
 		},
 	}
 }

@@ -62,7 +62,7 @@ func (ds *DevicesServer) GetById(
 	ctx context.Context,
 	req *connect.Request[devicev1.GetByIdRequest],
 ) (*connect.Response[devicev1.GetByIdResponse], error) {
-	if err := ds.authz.CanViewDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesView(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -86,7 +86,7 @@ func (ds *DevicesServer) GetById(
 func (ds *DevicesServer) GetBySessionId(
 	ctx context.Context,
 	req *connect.Request[devicev1.GetBySessionIdRequest]) (*connect.Response[devicev1.GetBySessionIdResponse], error) {
-	if err := ds.authz.CanViewDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesView(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -105,7 +105,7 @@ func (ds *DevicesServer) Search(
 	req *connect.Request[devicev1.SearchRequest],
 	stream *connect.ServerStream[devicev1.SearchResponse],
 ) error {
-	if err := ds.authz.CanViewDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesView(ctx); err != nil {
 		return authorizer.ToConnectError(err)
 	}
 
@@ -138,7 +138,7 @@ func (ds *DevicesServer) Create(
 	ctx context.Context,
 	req *connect.Request[devicev1.CreateRequest],
 ) (*connect.Response[devicev1.CreateResponse], error) {
-	if err := ds.authz.CanManageDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesManage(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -183,7 +183,7 @@ func (ds *DevicesServer) Update(
 	ctx context.Context,
 	req *connect.Request[devicev1.UpdateRequest],
 ) (*connect.Response[devicev1.UpdateResponse], error) {
-	if err := ds.authz.CanManageDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesManage(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -204,7 +204,7 @@ func (ds *DevicesServer) Link(
 	ctx context.Context,
 	req *connect.Request[devicev1.LinkRequest],
 ) (*connect.Response[devicev1.LinkResponse], error) {
-	if err := ds.authz.CanManageDevicesSelf(ctx, req.Msg.GetProfileId()); err != nil {
+	if err := ds.authz.CanDevicesManageSelf(ctx, req.Msg.GetProfileId()); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -225,7 +225,7 @@ func (ds *DevicesServer) Remove(
 	ctx context.Context,
 	req *connect.Request[devicev1.RemoveRequest],
 ) (*connect.Response[devicev1.RemoveResponse], error) {
-	if err := ds.authz.CanManageDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesManage(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -245,7 +245,7 @@ func (ds *DevicesServer) Log(
 	ctx context.Context,
 	req *connect.Request[devicev1.LogRequest],
 ) (*connect.Response[devicev1.LogResponse], error) {
-	if err := ds.authz.CanManageDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesManage(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -275,7 +275,7 @@ func (ds *DevicesServer) ListLogs(
 	req *connect.Request[devicev1.ListLogsRequest],
 	stream *connect.ServerStream[devicev1.ListLogsResponse],
 ) error {
-	if err := ds.authz.CanViewDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesView(ctx); err != nil {
 		return authorizer.ToConnectError(err)
 	}
 
@@ -307,7 +307,7 @@ func (ds *DevicesServer) GetTurnCredentials(
 	ctx context.Context,
 	_ *connect.Request[devicev1.GetTurnCredentialsRequest],
 ) (*connect.Response[devicev1.GetTurnCredentialsResponse], error) {
-	if err := ds.authz.CanViewDevices(ctx); err != nil {
+	if err := ds.authz.CanDevicesView(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 

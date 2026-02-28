@@ -9,11 +9,11 @@ import (
 
 // Middleware defines authorisation checks for the geolocation service.
 type Middleware interface {
-	CanManageGeolocation(ctx context.Context) error
-	CanViewGeolocation(ctx context.Context) error
-	CanViewGeolocationSelf(ctx context.Context, targetSubjectID string) error
-	CanIngestLocation(ctx context.Context) error
-	CanIngestLocationSelf(ctx context.Context, targetSubjectID string) error
+	CanGeolocationManage(ctx context.Context) error
+	CanGeolocationView(ctx context.Context) error
+	CanGeolocationViewSelf(ctx context.Context, targetSubjectID string) error
+	CanLocationIngest(ctx context.Context) error
+	CanLocationIngestSelf(ctx context.Context, targetSubjectID string) error
 }
 
 type middleware struct {
@@ -40,30 +40,30 @@ func isSelf(ctx context.Context, targetSubjectID string) bool {
 
 // --- Self-bypass methods ---
 
-func (m *middleware) CanViewGeolocationSelf(ctx context.Context, targetSubjectID string) error {
+func (m *middleware) CanGeolocationViewSelf(ctx context.Context, targetSubjectID string) error {
 	if isSelf(ctx, targetSubjectID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionViewGeolocation)
+	return m.checker.Check(ctx, PermissionGeolocationView)
 }
 
-func (m *middleware) CanIngestLocationSelf(ctx context.Context, targetSubjectID string) error {
+func (m *middleware) CanLocationIngestSelf(ctx context.Context, targetSubjectID string) error {
 	if isSelf(ctx, targetSubjectID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionIngestLocation)
+	return m.checker.Check(ctx, PermissionLocationIngest)
 }
 
 // --- Non-self methods ---
 
-func (m *middleware) CanManageGeolocation(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionManageGeolocation)
+func (m *middleware) CanGeolocationManage(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionGeolocationManage)
 }
 
-func (m *middleware) CanViewGeolocation(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionViewGeolocation)
+func (m *middleware) CanGeolocationView(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionGeolocationView)
 }
 
-func (m *middleware) CanIngestLocation(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionIngestLocation)
+func (m *middleware) CanLocationIngest(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionLocationIngest)
 }

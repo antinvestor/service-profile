@@ -9,10 +9,10 @@ import (
 
 // Middleware defines authorisation checks for the devices service.
 type Middleware interface {
-	CanManageDevices(ctx context.Context) error
-	CanManageDevicesSelf(ctx context.Context, targetProfileID string) error
-	CanViewDevices(ctx context.Context) error
-	CanViewDevicesSelf(ctx context.Context, targetProfileID string) error
+	CanDevicesManage(ctx context.Context) error
+	CanDevicesManageSelf(ctx context.Context, targetProfileID string) error
+	CanDevicesView(ctx context.Context) error
+	CanDevicesViewSelf(ctx context.Context, targetProfileID string) error
 }
 
 type middleware struct {
@@ -39,26 +39,26 @@ func isSelf(ctx context.Context, targetProfileID string) bool {
 
 // --- Self-bypass methods ---
 
-func (m *middleware) CanManageDevicesSelf(ctx context.Context, targetProfileID string) error {
+func (m *middleware) CanDevicesManageSelf(ctx context.Context, targetProfileID string) error {
 	if isSelf(ctx, targetProfileID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionManageDevices)
+	return m.checker.Check(ctx, PermissionDevicesManage)
 }
 
-func (m *middleware) CanViewDevicesSelf(ctx context.Context, targetProfileID string) error {
+func (m *middleware) CanDevicesViewSelf(ctx context.Context, targetProfileID string) error {
 	if isSelf(ctx, targetProfileID) {
 		return nil
 	}
-	return m.checker.Check(ctx, PermissionViewDevices)
+	return m.checker.Check(ctx, PermissionDevicesView)
 }
 
 // --- Non-self methods ---
 
-func (m *middleware) CanManageDevices(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionManageDevices)
+func (m *middleware) CanDevicesManage(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionDevicesManage)
 }
 
-func (m *middleware) CanViewDevices(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionViewDevices)
+func (m *middleware) CanDevicesView(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionDevicesView)
 }

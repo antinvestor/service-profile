@@ -41,7 +41,7 @@ func (s *SettingsServer) Get(
 	ctx context.Context,
 	req *connect.Request[settingsv1.GetRequest],
 ) (*connect.Response[settingsv1.GetResponse], error) {
-	if err := s.authz.CanViewSettings(ctx); err != nil {
+	if err := s.authz.CanSettingsView(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -57,7 +57,7 @@ func (s *SettingsServer) Set(
 	ctx context.Context,
 	req *connect.Request[settingsv1.SetRequest],
 ) (*connect.Response[settingsv1.SetResponse], error) {
-	if err := s.authz.CanManageSettings(ctx); err != nil {
+	if err := s.authz.CanSettingsManage(ctx); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
@@ -74,7 +74,7 @@ func (s *SettingsServer) List(
 	req *connect.Request[settingsv1.ListRequest],
 	stream *connect.ServerStream[settingsv1.ListResponse],
 ) error {
-	if err := s.authz.CanViewSettings(ctx); err != nil {
+	if err := s.authz.CanSettingsView(ctx); err != nil {
 		return authorizer.ToConnectError(err)
 	}
 
@@ -92,7 +92,7 @@ func (s *SettingsServer) Search(
 	req *connect.Request[commonv1.SearchRequest],
 	stream *connect.ServerStream[settingsv1.SearchResponse],
 ) error {
-	if err := s.authz.CanViewSettings(ctx); err != nil {
+	if err := s.authz.CanSettingsView(ctx); err != nil {
 		return authorizer.ToConnectError(err)
 	}
 

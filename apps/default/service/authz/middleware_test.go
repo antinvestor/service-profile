@@ -107,7 +107,7 @@ func (s *MiddlewareTestSuite) seedRole(auth security.Authorizer, tenancyPath, pr
 	for _, perm := range permissions {
 		tuples = append(tuples, security.RelationTuple{
 			Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
-			Relation: perm,
+			Relation: authz.GrantedRelation(perm),
 			Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
 		})
 	}
@@ -127,13 +127,13 @@ func (s *MiddlewareTestSuite) TestOwnerHasAllPermissions() {
 	mw := authz.NewMiddleware(auth)
 	ctx := s.ctxWithClaims("user1")
 
-	s.NoError(mw.CanViewProfile(ctx))
-	s.NoError(mw.CanCreateProfile(ctx))
-	s.NoError(mw.CanUpdateProfile(ctx))
-	s.NoError(mw.CanMergeProfiles(ctx))
-	s.NoError(mw.CanManageContacts(ctx))
-	s.NoError(mw.CanManageRoster(ctx))
-	s.NoError(mw.CanManageRelationships(ctx))
+	s.NoError(mw.CanProfileView(ctx))
+	s.NoError(mw.CanProfileCreate(ctx))
+	s.NoError(mw.CanProfileUpdate(ctx))
+	s.NoError(mw.CanProfilesMerge(ctx))
+	s.NoError(mw.CanContactsManage(ctx))
+	s.NoError(mw.CanRosterManage(ctx))
+	s.NoError(mw.CanRelationshipsManage(ctx))
 }
 
 func (s *MiddlewareTestSuite) TestOperatorPermissions() {
@@ -143,15 +143,15 @@ func (s *MiddlewareTestSuite) TestOperatorPermissions() {
 	mw := authz.NewMiddleware(auth)
 	ctx := s.ctxWithClaims("user2")
 
-	s.NoError(mw.CanViewProfile(ctx))
-	s.NoError(mw.CanCreateProfile(ctx))
-	s.NoError(mw.CanUpdateProfile(ctx))
-	s.NoError(mw.CanManageContacts(ctx))
-	s.NoError(mw.CanManageRoster(ctx))
+	s.NoError(mw.CanProfileView(ctx))
+	s.NoError(mw.CanProfileCreate(ctx))
+	s.NoError(mw.CanProfileUpdate(ctx))
+	s.NoError(mw.CanContactsManage(ctx))
+	s.NoError(mw.CanRosterManage(ctx))
 
 	// Operator cannot merge profiles or manage relationships
-	s.Require().Error(mw.CanMergeProfiles(ctx))
-	s.Require().Error(mw.CanManageRelationships(ctx))
+	s.Require().Error(mw.CanProfilesMerge(ctx))
+	s.Require().Error(mw.CanRelationshipsManage(ctx))
 }
 
 func (s *MiddlewareTestSuite) TestViewerPermissions() {
@@ -161,21 +161,21 @@ func (s *MiddlewareTestSuite) TestViewerPermissions() {
 	mw := authz.NewMiddleware(auth)
 	ctx := s.ctxWithClaims("user3")
 
-	s.Require().NoError(mw.CanViewProfile(ctx))
+	s.Require().NoError(mw.CanProfileView(ctx))
 
-	s.Require().Error(mw.CanCreateProfile(ctx))
-	s.Require().Error(mw.CanUpdateProfile(ctx))
-	s.Require().Error(mw.CanMergeProfiles(ctx))
-	s.Require().Error(mw.CanManageContacts(ctx))
-	s.Require().Error(mw.CanManageRoster(ctx))
-	s.Require().Error(mw.CanManageRelationships(ctx))
+	s.Require().Error(mw.CanProfileCreate(ctx))
+	s.Require().Error(mw.CanProfileUpdate(ctx))
+	s.Require().Error(mw.CanProfilesMerge(ctx))
+	s.Require().Error(mw.CanContactsManage(ctx))
+	s.Require().Error(mw.CanRosterManage(ctx))
+	s.Require().Error(mw.CanRelationshipsManage(ctx))
 }
 
 func (s *MiddlewareTestSuite) TestNoClaims() {
 	auth := s.newAuthorizer()
 	mw := authz.NewMiddleware(auth)
 
-	err := mw.CanViewProfile(context.Background())
+	err := mw.CanProfileView(context.Background())
 	s.ErrorIs(err, authorizer.ErrInvalidSubject)
 }
 
@@ -186,7 +186,7 @@ func (s *MiddlewareTestSuite) TestNoTenant() {
 	claims := &security.AuthenticationClaims{}
 	claims.Subject = "user1"
 	ctx := claims.ClaimsToContext(context.Background())
-	err := mw.CanViewProfile(ctx)
+	err := mw.CanProfileView(ctx)
 	s.ErrorIs(err, authorizer.ErrInvalidObject)
 }
 
@@ -196,13 +196,13 @@ func (s *MiddlewareTestSuite) TestSelfBypass() {
 
 	// User with no roles can still access their own profile via self-bypass
 	ctx := s.ctxWithClaims("self-user")
-	s.NoError(mw.CanViewProfileSelf(ctx, "self-user"))
-	s.NoError(mw.CanUpdateProfileSelf(ctx, "self-user"))
-	s.NoError(mw.CanManageContactsSelf(ctx, "self-user"))
+	s.NoError(mw.CanProfileViewSelf(ctx, "self-user"))
+	s.NoError(mw.CanProfileUpdateSelf(ctx, "self-user"))
+	s.NoError(mw.CanContactsManageSelf(ctx, "self-user"))
 
 	// Accessing someone else's profile without permission fails
-	s.Require().Error(mw.CanViewProfileSelf(ctx, "other-user"))
-	s.Require().Error(mw.CanUpdateProfileSelf(ctx, "other-user"))
+	s.Require().Error(mw.CanProfileViewSelf(ctx, "other-user"))
+	s.Require().Error(mw.CanProfileUpdateSelf(ctx, "other-user"))
 }
 
 func (s *MiddlewareTestSuite) TestAccessChecker_MemberAllowed() {
@@ -254,7 +254,7 @@ func (s *MiddlewareTestSuite) TestServiceBotViaSubjectSets() {
 	botCtx := s.ctxWithSystemInternalClaims("service-bot")
 
 	s.NoError(accessChecker.CheckAccess(botCtx))
-	s.NoError(mw.CanViewProfile(botCtx))
-	s.NoError(mw.CanCreateProfile(botCtx))
-	s.NoError(mw.CanManageContacts(botCtx))
+	s.NoError(mw.CanProfileView(botCtx))
+	s.NoError(mw.CanProfileCreate(botCtx))
+	s.NoError(mw.CanContactsManage(botCtx))
 }

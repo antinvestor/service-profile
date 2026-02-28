@@ -18,112 +18,112 @@ class service_profile implements Namespace {
     member: profile_user[]
     service: (profile_user | tenancy_access)[]
 
-    view_profile: (profile_user | service_profile)[]
-    create_profile: (profile_user | service_profile)[]
-    update_profile: (profile_user | service_profile)[]
-    merge_profiles: (profile_user | service_profile)[]
-    manage_contacts: (profile_user | service_profile)[]
-    manage_roster: (profile_user | service_profile)[]
-    manage_relationships: (profile_user | service_profile)[]
-    manage_devices: (profile_user | service_profile)[]
-    view_devices: (profile_user | service_profile)[]
-    manage_geolocation: (profile_user | service_profile)[]
-    view_geolocation: (profile_user | service_profile)[]
-    ingest_location: (profile_user | service_profile)[]
-    manage_settings: (profile_user | service_profile)[]
-    view_settings: (profile_user | service_profile)[]
+    granted_profile_view: (profile_user | service_profile)[]
+    granted_profile_create: (profile_user | service_profile)[]
+    granted_profile_update: (profile_user | service_profile)[]
+    granted_profiles_merge: (profile_user | service_profile)[]
+    granted_contacts_manage: (profile_user | service_profile)[]
+    granted_roster_manage: (profile_user | service_profile)[]
+    granted_relationships_manage: (profile_user | service_profile)[]
+    granted_devices_manage: (profile_user | service_profile)[]
+    granted_devices_view: (profile_user | service_profile)[]
+    granted_geolocation_manage: (profile_user | service_profile)[]
+    granted_geolocation_view: (profile_user | service_profile)[]
+    granted_location_ingest: (profile_user | service_profile)[]
+    granted_settings_manage: (profile_user | service_profile)[]
+    granted_settings_view: (profile_user | service_profile)[]
   }
 
   permits = {
-    view_profile: (ctx: Context): boolean =>
+    profile_view: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
       this.related.operator.includes(ctx.subject) ||
       this.related.viewer.includes(ctx.subject) ||
       this.related.member.includes(ctx.subject) ||
-      this.related.view_profile.includes(ctx.subject),
+      this.related.granted_profile_view.includes(ctx.subject),
 
-    create_profile: (ctx: Context): boolean =>
+    profile_create: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.create_profile.includes(ctx.subject),
+      this.related.granted_profile_create.includes(ctx.subject),
 
-    update_profile: (ctx: Context): boolean =>
+    profile_update: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.update_profile.includes(ctx.subject),
+      this.related.granted_profile_update.includes(ctx.subject),
 
-    merge_profiles: (ctx: Context): boolean =>
+    profiles_merge: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.merge_profiles.includes(ctx.subject),
+      this.related.granted_profiles_merge.includes(ctx.subject),
 
-    manage_contacts: (ctx: Context): boolean =>
+    contacts_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.manage_contacts.includes(ctx.subject),
+      this.related.granted_contacts_manage.includes(ctx.subject),
 
-    manage_roster: (ctx: Context): boolean =>
+    roster_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.manage_roster.includes(ctx.subject),
+      this.related.granted_roster_manage.includes(ctx.subject),
 
-    manage_relationships: (ctx: Context): boolean =>
+    relationships_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.manage_relationships.includes(ctx.subject),
+      this.related.granted_relationships_manage.includes(ctx.subject),
 
-    manage_devices: (ctx: Context): boolean =>
+    devices_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.manage_devices.includes(ctx.subject),
+      this.related.granted_devices_manage.includes(ctx.subject),
 
-    view_devices: (ctx: Context): boolean =>
-      this.permits.manage_devices(ctx) ||
+    devices_view: (ctx: Context): boolean =>
+      this.permits.devices_manage(ctx) ||
       this.related.operator.includes(ctx.subject) ||
       this.related.viewer.includes(ctx.subject) ||
       this.related.member.includes(ctx.subject) ||
-      this.related.view_devices.includes(ctx.subject),
+      this.related.granted_devices_view.includes(ctx.subject),
 
-    manage_geolocation: (ctx: Context): boolean =>
+    geolocation_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.manage_geolocation.includes(ctx.subject),
+      this.related.granted_geolocation_manage.includes(ctx.subject),
 
-    view_geolocation: (ctx: Context): boolean =>
-      this.permits.manage_geolocation(ctx) ||
+    geolocation_view: (ctx: Context): boolean =>
+      this.permits.geolocation_manage(ctx) ||
       this.related.operator.includes(ctx.subject) ||
       this.related.viewer.includes(ctx.subject) ||
       this.related.member.includes(ctx.subject) ||
-      this.related.view_geolocation.includes(ctx.subject),
+      this.related.granted_geolocation_view.includes(ctx.subject),
 
-    ingest_location: (ctx: Context): boolean =>
+    location_ingest: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
       this.related.operator.includes(ctx.subject) ||
-      this.related.ingest_location.includes(ctx.subject),
+      this.related.granted_location_ingest.includes(ctx.subject),
 
-    manage_settings: (ctx: Context): boolean =>
+    settings_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.manage_settings.includes(ctx.subject),
+      this.related.granted_settings_manage.includes(ctx.subject),
 
-    view_settings: (ctx: Context): boolean =>
-      this.permits.manage_settings(ctx) ||
+    settings_view: (ctx: Context): boolean =>
+      this.permits.settings_manage(ctx) ||
       this.related.operator.includes(ctx.subject) ||
       this.related.viewer.includes(ctx.subject) ||
       this.related.member.includes(ctx.subject) ||
-      this.related.view_settings.includes(ctx.subject),
+      this.related.granted_settings_view.includes(ctx.subject),
   }
 }

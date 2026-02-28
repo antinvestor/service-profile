@@ -3,12 +3,12 @@ package authz
 const (
 	NamespaceProfile       = "service_profile"
 	NamespaceTenancyAccess = "tenancy_access"
-	NamespaceProfileUser   = "profile/user"
+	NamespaceProfileUser   = "profile_user"
 )
 
 const (
-	PermissionManageSettings = "manage_settings"
-	PermissionViewSettings   = "view_settings"
+	PermissionSettingsManage = "settings_manage"
+	PermissionSettingsView   = "settings_view"
 )
 
 const (
@@ -20,26 +20,32 @@ const (
 	RoleService  = "service"
 )
 
+// GrantedRelation returns the relation name prefixed with "granted_" for use in
+// OPL direct grant relations.
+func GrantedRelation(permission string) string {
+	return "granted_" + permission
+}
+
 // RolePermissions returns the permissions granted by each role.
 func RolePermissions() map[string][]string {
 	return map[string][]string{
 		RoleOwner: {
-			PermissionManageSettings, PermissionViewSettings,
+			PermissionSettingsManage, PermissionSettingsView,
 		},
 		RoleAdmin: {
-			PermissionManageSettings, PermissionViewSettings,
+			PermissionSettingsManage, PermissionSettingsView,
 		},
 		RoleOperator: {
-			PermissionViewSettings,
+			PermissionSettingsView,
 		},
 		RoleViewer: {
-			PermissionViewSettings,
+			PermissionSettingsView,
 		},
 		RoleMember: {
-			PermissionViewSettings,
+			PermissionSettingsView,
 		},
 		RoleService: {
-			PermissionManageSettings, PermissionViewSettings,
+			PermissionSettingsManage, PermissionSettingsView,
 		},
 	}
 }

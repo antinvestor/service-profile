@@ -9,8 +9,8 @@ import (
 
 // Middleware defines authorisation checks for the settings service.
 type Middleware interface {
-	CanManageSettings(ctx context.Context) error
-	CanViewSettings(ctx context.Context) error
+	CanSettingsManage(ctx context.Context) error
+	CanSettingsView(ctx context.Context) error
 }
 
 type middleware struct {
@@ -22,10 +22,10 @@ func NewMiddleware(service security.Authorizer) Middleware {
 	return &middleware{checker: authorizer.NewFunctionChecker(service, NamespaceProfile)}
 }
 
-func (m *middleware) CanManageSettings(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionManageSettings)
+func (m *middleware) CanSettingsManage(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionSettingsManage)
 }
 
-func (m *middleware) CanViewSettings(ctx context.Context) error {
-	return m.checker.Check(ctx, PermissionViewSettings)
+func (m *middleware) CanSettingsView(ctx context.Context) error {
+	return m.checker.Check(ctx, PermissionSettingsView)
 }
