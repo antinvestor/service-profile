@@ -1,8 +1,9 @@
 package authz
 
 const (
-	NamespaceTenant  = "profile_tenant"
-	NamespaceProfile = "profile"
+	NamespaceProfile       = "service_profile"
+	NamespaceTenancyAccess = "tenancy_access"
+	NamespaceProfileUser   = "profile/user"
 )
 
 const (
@@ -15,4 +16,30 @@ const (
 	RoleAdmin    = "admin"
 	RoleOperator = "operator"
 	RoleViewer   = "viewer"
+	RoleMember   = "member"
+	RoleService  = "service"
 )
+
+// RolePermissions returns the permissions granted by each role.
+func RolePermissions() map[string][]string {
+	return map[string][]string{
+		RoleOwner: {
+			PermissionManageDevices, PermissionViewDevices,
+		},
+		RoleAdmin: {
+			PermissionManageDevices, PermissionViewDevices,
+		},
+		RoleOperator: {
+			PermissionViewDevices,
+		},
+		RoleViewer: {
+			PermissionViewDevices,
+		},
+		RoleMember: {
+			PermissionViewDevices,
+		},
+		RoleService: {
+			PermissionManageDevices, PermissionViewDevices,
+		},
+	}
+}

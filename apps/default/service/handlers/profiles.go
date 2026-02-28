@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"math"
 	"time"
 
@@ -39,24 +38,6 @@ type ProfileServer struct {
 	relationshipBusiness business.RelationshipBusiness
 
 	profilev1connect.UnimplementedProfileServiceHandler
-}
-
-// toConnectError converts authorisation errors into appropriate connect errors.
-func toConnectError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if errors.Is(err, authorizer.ErrInvalidSubject) || errors.Is(err, authorizer.ErrInvalidObject) {
-		return connect.NewError(connect.CodeUnauthenticated, err)
-	}
-
-	var permErr *authorizer.PermissionDeniedError
-	if errors.As(err, &permErr) {
-		return connect.NewError(connect.CodePermissionDenied, err)
-	}
-
-	return connect.NewError(connect.CodeInternal, err)
 }
 
 // NewProfileServer creates a new ProfileServer with the profile business already initialized.
@@ -115,7 +96,7 @@ func (ps *ProfileServer) GetById(ctx context.Context,
 	request *connect.Request[profilev1.GetByIdRequest]) (
 	*connect.Response[profilev1.GetByIdResponse], error) {
 	if err := ps.authz.CanViewProfileSelf(ctx, request.Msg.GetId()); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	profileObj, err := ps.profileBusiness.GetByID(ctx, request.Msg.GetId())
@@ -130,7 +111,7 @@ func (ps *ProfileServer) GetByContact(ctx context.Context,
 	request *connect.Request[profilev1.GetByContactRequest]) (
 	*connect.Response[profilev1.GetByContactResponse], error) {
 	if err := ps.authz.CanViewProfile(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	profileObj, err := ps.profileBusiness.GetByContact(ctx, request.Msg.GetContact())
@@ -147,7 +128,7 @@ func (ps *ProfileServer) Search(ctx context.Context,
 	stream *connect.ServerStream[profilev1.SearchResponse],
 ) error {
 	if err := ps.authz.CanViewProfile(ctx); err != nil {
-		return toConnectError(err)
+		return authorizer.ToConnectError(err)
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -187,7 +168,7 @@ func (ps *ProfileServer) Merge(
 	request *connect.Request[profilev1.MergeRequest],
 ) (*connect.Response[profilev1.MergeResponse], error) {
 	if err := ps.authz.CanMergeProfiles(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	profileObj, err := ps.profileBusiness.MergeProfile(ctx, request.Msg)
@@ -203,7 +184,7 @@ func (ps *ProfileServer) Create(
 	request *connect.Request[profilev1.CreateRequest],
 ) (*connect.Response[profilev1.CreateResponse], error) {
 	if err := ps.authz.CanCreateProfile(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	profileObj, err := ps.profileBusiness.CreateProfile(ctx, request.Msg)
@@ -220,7 +201,7 @@ func (ps *ProfileServer) Update(
 	request *connect.Request[profilev1.UpdateRequest],
 ) (*connect.Response[profilev1.UpdateResponse], error) {
 	if err := ps.authz.CanUpdateProfileSelf(ctx, request.Msg.GetId()); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	profileObj, err := ps.profileBusiness.UpdateProfile(ctx, request.Msg)
@@ -236,7 +217,7 @@ func (ps *ProfileServer) Update(
 func (ps *ProfileServer) AddAddress(ctx context.Context,
 	request *connect.Request[profilev1.AddAddressRequest]) (*connect.Response[profilev1.AddAddressResponse], error) {
 	if err := ps.authz.CanManageContactsSelf(ctx, request.Msg.GetId()); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	profileObj, err := ps.profileBusiness.AddAddress(ctx, request.Msg)
@@ -252,7 +233,7 @@ func (ps *ProfileServer) AddContact(
 	request *connect.Request[profilev1.AddContactRequest],
 ) (*connect.Response[profilev1.AddContactResponse], error) {
 	if err := ps.authz.CanManageContactsSelf(ctx, request.Msg.GetId()); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	profileObj, verificationID, err := ps.profileBusiness.AddContact(ctx, request.Msg)
@@ -269,7 +250,7 @@ func (ps *ProfileServer) CreateContact(
 	request *connect.Request[profilev1.CreateContactRequest],
 ) (*connect.Response[profilev1.CreateContactResponse], error) {
 	if err := ps.authz.CanManageContacts(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	createReq := request.Msg
@@ -313,7 +294,7 @@ func (ps *ProfileServer) CreateContactVerification(
 	request *connect.Request[profilev1.CreateContactVerificationRequest]) (
 	*connect.Response[profilev1.CreateContactVerificationResponse], error) {
 	if err := ps.authz.CanManageContacts(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	expiryDuration, err := time.ParseDuration(request.Msg.GetDurationToExpire())
@@ -343,7 +324,7 @@ func (ps *ProfileServer) CheckVerification(
 	request *connect.Request[profilev1.CheckVerificationRequest],
 ) (*connect.Response[profilev1.CheckVerificationResponse], error) {
 	if err := ps.authz.CanManageContacts(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	verificationAttempts, verified, err := ps.profileBusiness.CheckVerification(
@@ -373,7 +354,7 @@ func (ps *ProfileServer) RemoveContact(
 	request *connect.Request[profilev1.RemoveContactRequest],
 ) (*connect.Response[profilev1.RemoveContactResponse], error) {
 	if err := ps.authz.CanManageContactsSelf(ctx, request.Msg.GetId()); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	profileObj, err := ps.profileBusiness.RemoveContact(ctx, request.Msg)
@@ -390,7 +371,7 @@ func (ps *ProfileServer) SearchRoster(
 	stream *connect.ServerStream[profilev1.SearchRosterResponse],
 ) error {
 	if err := ps.authz.CanManageRosterSelf(ctx, request.Msg.GetProfileId()); err != nil {
-		return toConnectError(err)
+		return authorizer.ToConnectError(err)
 	}
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -434,7 +415,7 @@ func (ps *ProfileServer) AddRoster(
 	ctx context.Context,
 	request *connect.Request[profilev1.AddRosterRequest]) (*connect.Response[profilev1.AddRosterResponse], error) {
 	if err := ps.authz.CanManageRoster(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	roster, err := ps.rosterBusiness.CreateRoster(ctx, request.Msg)
@@ -453,7 +434,7 @@ func (ps *ProfileServer) RemoveRoster(
 	request *connect.Request[profilev1.RemoveRosterRequest],
 ) (*connect.Response[profilev1.RemoveRosterResponse], error) {
 	if err := ps.authz.CanManageRoster(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	roster, err := ps.rosterBusiness.RemoveRoster(ctx, request.Msg.GetId())
@@ -472,7 +453,7 @@ func (ps *ProfileServer) AddRelationship(
 	request *connect.Request[profilev1.AddRelationshipRequest],
 ) (*connect.Response[profilev1.AddRelationshipResponse], error) {
 	if err := ps.authz.CanManageRelationshipsSelf(ctx, request.Msg.GetId()); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	relationshipObj, err := ps.relationshipBusiness.CreateRelationship(ctx, request.Msg)
@@ -490,7 +471,7 @@ func (ps *ProfileServer) DeleteRelationship(
 	request *connect.Request[profilev1.DeleteRelationshipRequest],
 ) (*connect.Response[profilev1.DeleteRelationshipResponse], error) {
 	if err := ps.authz.CanManageRelationships(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	relationshipObj, err := ps.relationshipBusiness.DeleteRelationship(ctx, request.Msg)
@@ -509,7 +490,7 @@ func (ps *ProfileServer) ListRelationships(
 	stream *connect.ServerStream[profilev1.ListRelationshipResponse],
 ) error {
 	if err := ps.authz.CanManageRelationshipsSelf(ctx, request.Msg.GetPeerId()); err != nil {
-		return toConnectError(err)
+		return authorizer.ToConnectError(err)
 	}
 
 	totalSent := 0

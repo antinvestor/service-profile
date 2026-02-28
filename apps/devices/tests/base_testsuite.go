@@ -209,30 +209,62 @@ func (bs *DeviceBaseTestSuite) CreateService(
 }
 
 // WithAuthClaims adds authentication claims to a context for testing.
-func (bs *DeviceBaseTestSuite) WithAuthClaims(ctx context.Context, tenantID, profileID string) context.Context {
+func (bs *DeviceBaseTestSuite) WithAuthClaims(
+	ctx context.Context,
+	tenantID, partitionID, profileID string,
+) context.Context {
 	claims := &security.AuthenticationClaims{
-		TenantID:  tenantID,
-		AccessID:  util.IDString(),
-		ContactID: profileID,
-		SessionID: util.IDString(),
-		DeviceID:  "test-device",
+		TenantID:    tenantID,
+		PartitionID: partitionID,
+		AccessID:    util.IDString(),
+		ContactID:   profileID,
+		SessionID:   util.IDString(),
+		DeviceID:    "test-device",
 	}
 	claims.Subject = profileID
 	return claims.ClaimsToContext(ctx)
 }
 
-// SeedTenantRole writes a relation tuple granting the given role to a profile on a tenant.
+// SeedTenantAccess writes a tenancy_access member tuple so the profile can pass
+// the TenancyAccessChecker (data access layer).
+func (bs *DeviceBaseTestSuite) SeedTenantAccess(
+	ctx context.Context,
+	svc *frame.Service,
+	tenantID, partitionID, profileID string,
+) {
+	auth := svc.SecurityManager().GetAuthorizer(ctx)
+	tenancyPath := fmt.Sprintf("%s/%s", tenantID, partitionID)
+	err := auth.WriteTuple(ctx, authz.BuildAccessTuple(tenancyPath, profileID))
+	bs.Require().NoError(err, "failed to seed tenant access")
+}
+
+// SeedTenantRole writes functional permission tuples in the service_profile
+// namespace for the given role.
 func (bs *DeviceBaseTestSuite) SeedTenantRole(
 	ctx context.Context,
 	svc *frame.Service,
-	tenantID, profileID, role string,
+	tenantID, partitionID, profileID, role string,
 ) {
 	auth := svc.SecurityManager().GetAuthorizer(ctx)
-	err := auth.WriteTuple(ctx, security.RelationTuple{
-		Object:   security.ObjectRef{Namespace: authz.NamespaceTenant, ID: tenantID},
+	tenancyPath := fmt.Sprintf("%s/%s", tenantID, partitionID)
+
+	permissions := authz.RolePermissions()[role]
+	tuples := make([]security.RelationTuple, 0, 1+len(permissions))
+
+	tuples = append(tuples, security.RelationTuple{
+		Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
 		Relation: role,
-		Subject:  security.SubjectRef{Namespace: authz.NamespaceProfile, ID: profileID},
+		Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
 	})
+	for _, perm := range permissions {
+		tuples = append(tuples, security.RelationTuple{
+			Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
+			Relation: perm,
+			Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
+		})
+	}
+
+	err := auth.WriteTuples(ctx, tuples)
 	bs.Require().NoError(err, "failed to seed tenant role")
 }
 

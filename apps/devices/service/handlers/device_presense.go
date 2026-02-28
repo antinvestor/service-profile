@@ -5,6 +5,7 @@ import (
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
+	"github.com/pitabwire/frame/security/authorizer"
 
 	"github.com/antinvestor/service-profile/internal/errorutil"
 )
@@ -14,7 +15,7 @@ func (ds *DevicesServer) UpdatePresence(
 	req *connect.Request[devicev1.UpdatePresenceRequest],
 ) (*connect.Response[devicev1.UpdatePresenceResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	presence, err := ds.presenceBusiness.UpdatePresence(ctx, req.Msg)

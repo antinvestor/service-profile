@@ -22,24 +22,6 @@ import (
 
 const prefixRateTURN = "rate:turn:"
 
-// toConnectError converts authorisation errors into appropriate connect errors.
-func toConnectError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if errors.Is(err, authorizer.ErrInvalidSubject) || errors.Is(err, authorizer.ErrInvalidObject) {
-		return connect.NewError(connect.CodeUnauthenticated, err)
-	}
-
-	var permErr *authorizer.PermissionDeniedError
-	if errors.As(err, &permErr) {
-		return connect.NewError(connect.CodePermissionDenied, err)
-	}
-
-	return connect.NewError(connect.CodeInternal, err)
-}
-
 type DevicesServer struct {
 	devicev1connect.UnimplementedDeviceServiceHandler
 
@@ -81,7 +63,7 @@ func (ds *DevicesServer) GetById(
 	req *connect.Request[devicev1.GetByIdRequest],
 ) (*connect.Response[devicev1.GetByIdResponse], error) {
 	if err := ds.authz.CanViewDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	ids := req.Msg.GetId()
@@ -105,7 +87,7 @@ func (ds *DevicesServer) GetBySessionId(
 	ctx context.Context,
 	req *connect.Request[devicev1.GetBySessionIdRequest]) (*connect.Response[devicev1.GetBySessionIdResponse], error) {
 	if err := ds.authz.CanViewDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	device, err := ds.deviceBusiness.GetDeviceBySessionID(ctx, req.Msg.GetId())
@@ -124,7 +106,7 @@ func (ds *DevicesServer) Search(
 	stream *connect.ServerStream[devicev1.SearchResponse],
 ) error {
 	if err := ds.authz.CanViewDevices(ctx); err != nil {
-		return toConnectError(err)
+		return authorizer.ToConnectError(err)
 	}
 
 	// Always process the search, even for empty queries
@@ -157,7 +139,7 @@ func (ds *DevicesServer) Create(
 	req *connect.Request[devicev1.CreateRequest],
 ) (*connect.Response[devicev1.CreateResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	// Generate a device ID for tracking
@@ -202,7 +184,7 @@ func (ds *DevicesServer) Update(
 	req *connect.Request[devicev1.UpdateRequest],
 ) (*connect.Response[devicev1.UpdateResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	msg := req.Msg
@@ -223,7 +205,7 @@ func (ds *DevicesServer) Link(
 	req *connect.Request[devicev1.LinkRequest],
 ) (*connect.Response[devicev1.LinkResponse], error) {
 	if err := ds.authz.CanManageDevicesSelf(ctx, req.Msg.GetProfileId()); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	msg := req.Msg
@@ -244,7 +226,7 @@ func (ds *DevicesServer) Remove(
 	req *connect.Request[devicev1.RemoveRequest],
 ) (*connect.Response[devicev1.RemoveResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	msg := req.Msg
@@ -264,7 +246,7 @@ func (ds *DevicesServer) Log(
 	req *connect.Request[devicev1.LogRequest],
 ) (*connect.Response[devicev1.LogResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	msg := req.Msg
@@ -294,7 +276,7 @@ func (ds *DevicesServer) ListLogs(
 	stream *connect.ServerStream[devicev1.ListLogsResponse],
 ) error {
 	if err := ds.authz.CanViewDevices(ctx); err != nil {
-		return toConnectError(err)
+		return authorizer.ToConnectError(err)
 	}
 
 	response, err := ds.deviceBusiness.GetDeviceLogs(ctx, req.Msg.GetDeviceId())
@@ -326,7 +308,7 @@ func (ds *DevicesServer) GetTurnCredentials(
 	_ *connect.Request[devicev1.GetTurnCredentialsRequest],
 ) (*connect.Response[devicev1.GetTurnCredentialsResponse], error) {
 	if err := ds.authz.CanViewDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	if ds.turnBusiness == nil {

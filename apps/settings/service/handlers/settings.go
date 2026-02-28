@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"context"
-	"errors"
 
 	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
 	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/settings/v1/settingsv1connect"
@@ -17,24 +16,6 @@ import (
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	"github.com/antinvestor/service-profile/internal/errorutil"
 )
-
-// toConnectError converts authorisation errors into appropriate connect errors.
-func toConnectError(err error) error {
-	if err == nil {
-		return nil
-	}
-
-	if errors.Is(err, authorizer.ErrInvalidSubject) || errors.Is(err, authorizer.ErrInvalidObject) {
-		return connect.NewError(connect.CodeUnauthenticated, err)
-	}
-
-	var permErr *authorizer.PermissionDeniedError
-	if errors.As(err, &permErr) {
-		return connect.NewError(connect.CodePermissionDenied, err)
-	}
-
-	return connect.NewError(connect.CodeInternal, err)
-}
 
 type SettingsServer struct {
 	authz           authz.Middleware
@@ -61,7 +42,7 @@ func (s *SettingsServer) Get(
 	req *connect.Request[settingsv1.GetRequest],
 ) (*connect.Response[settingsv1.GetResponse], error) {
 	if err := s.authz.CanViewSettings(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	resp, err := s.settingBusiness.Get(ctx, req.Msg)
@@ -77,7 +58,7 @@ func (s *SettingsServer) Set(
 	req *connect.Request[settingsv1.SetRequest],
 ) (*connect.Response[settingsv1.SetResponse], error) {
 	if err := s.authz.CanManageSettings(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	resp, err := s.settingBusiness.Set(ctx, req.Msg)
@@ -94,7 +75,7 @@ func (s *SettingsServer) List(
 	stream *connect.ServerStream[settingsv1.ListResponse],
 ) error {
 	if err := s.authz.CanViewSettings(ctx); err != nil {
-		return toConnectError(err)
+		return authorizer.ToConnectError(err)
 	}
 
 	response, err := s.settingBusiness.List(ctx, req.Msg)
@@ -112,7 +93,7 @@ func (s *SettingsServer) Search(
 	stream *connect.ServerStream[settingsv1.SearchResponse],
 ) error {
 	if err := s.authz.CanViewSettings(ctx); err != nil {
-		return toConnectError(err)
+		return authorizer.ToConnectError(err)
 	}
 
 	resp, err := s.settingBusiness.Search(ctx, req.Msg)

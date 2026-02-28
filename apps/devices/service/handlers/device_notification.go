@@ -5,6 +5,7 @@ import (
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
+	"github.com/pitabwire/frame/security/authorizer"
 
 	"github.com/antinvestor/service-profile/internal/errorutil"
 )
@@ -14,7 +15,7 @@ func (ds *DevicesServer) RegisterKey(
 	req *connect.Request[devicev1.RegisterKeyRequest],
 ) (*connect.Response[devicev1.RegisterKeyResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	response, err := ds.notifyBusiness.RegisterKey(ctx, req.Msg)
@@ -32,7 +33,7 @@ func (ds *DevicesServer) DeRegisterKey(
 	req *connect.Request[devicev1.DeRegisterKeyRequest],
 ) (*connect.Response[devicev1.DeRegisterKeyResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	err := ds.notifyBusiness.DeRegisterKey(ctx, req.Msg)
@@ -51,7 +52,7 @@ func (ds *DevicesServer) Notify(
 	req *connect.Request[devicev1.NotifyRequest],
 ) (*connect.Response[devicev1.NotifyResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	response, err := ds.notifyBusiness.Notify(ctx, req.Msg)

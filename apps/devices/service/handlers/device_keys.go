@@ -5,6 +5,7 @@ import (
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
+	"github.com/pitabwire/frame/security/authorizer"
 
 	"github.com/antinvestor/service-profile/internal/errorutil"
 )
@@ -14,7 +15,7 @@ func (ds *DevicesServer) AddKey(
 	req *connect.Request[devicev1.AddKeyRequest],
 ) (*connect.Response[devicev1.AddKeyResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	msg := req.Msg
@@ -38,7 +39,7 @@ func (ds *DevicesServer) RemoveKey(
 	req *connect.Request[devicev1.RemoveKeyRequest],
 ) (*connect.Response[devicev1.RemoveKeyResponse], error) {
 	if err := ds.authz.CanManageDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	var keyIDList []string
@@ -65,7 +66,7 @@ func (ds *DevicesServer) SearchKey(
 	req *connect.Request[devicev1.SearchKeyRequest],
 ) (*connect.Response[devicev1.SearchKeyResponse], error) {
 	if err := ds.authz.CanViewDevices(ctx); err != nil {
-		return nil, toConnectError(err)
+		return nil, authorizer.ToConnectError(err)
 	}
 
 	msg := req.Msg

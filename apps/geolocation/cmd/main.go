@@ -8,6 +8,7 @@ import (
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/security/authorizer"
 	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
 	"github.com/pitabwire/util"
 
@@ -125,7 +126,13 @@ func main() { //nolint:funlen // wiring function
 	healthMux.HandleFunc("GET /healthz", geoServer.HealthCheck)
 	healthMux.HandleFunc("GET /openapi.yaml", handlers.OpenAPIHandler())
 
-	authenticatedRouter := authenticateRouter(ctx, sm, geoServer.NewRouter())
+	auth := sm.GetAuthorizer(ctx)
+	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
+
+	authenticatedRouter := securityhttp.TenancyAccessMiddleware(
+		authenticateRouter(ctx, sm, geoServer.NewRouter()),
+		tenancyAccessChecker,
+	)
 
 	mux := http.NewServeMux()
 	mux.Handle("/healthz", healthMux)

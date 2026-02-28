@@ -15,6 +15,7 @@ import (
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
 	"github.com/pitabwire/frame/security/openid"
@@ -198,7 +199,11 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 
 	authenticator := securityMan.GetAuthenticator(ctx)
 
-	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator)
+	auth := securityMan.GetAuthorizer(ctx)
+	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
+	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(tenancyAccessChecker)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator, tenancyAccessInterceptor)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
