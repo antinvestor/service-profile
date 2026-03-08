@@ -40,7 +40,6 @@ func main() {
 	ctx, svc := frame.NewServiceWithContext(
 		ctx,
 		frame.WithConfig(&cfg),
-		frame.WithRegisterServerOauth2Client(),
 		frame.WithDatastore(),
 		frame.WithCacheManager(),
 		frame.WithInMemoryCache(aconfig.CacheNameDevices),

@@ -37,7 +37,6 @@ func main() { //nolint:funlen // wiring function
 	ctx, svc := frame.NewServiceWithContext(
 		ctx,
 		frame.WithConfig(&cfg),
-		frame.WithRegisterServerOauth2Client(),
 		frame.WithDatastore(),
 	)
 	defer svc.Stop(ctx)

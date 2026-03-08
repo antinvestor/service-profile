@@ -7,8 +7,10 @@ import (
 type ProfileConfig struct {
 	config.ConfigurationDefault
 
-	NotificationServiceURI string `envDefault:"127.0.0.1:7020" env:"NOTIFICATION_SERVICE_URI"`
-	PartitionServiceURI    string `envDefault:"127.0.0.1:7003" env:"PARTITION_SERVICE_URI"`
+	//nolint:golines // Struct tags must remain a single valid reflect.StructTag literal.
+	NotificationSvcURI                       string `envDefault:"127.0.0.1:7020" env:"NOTIFICATION_SERVICE_URI"`
+	PartitionServiceURI                      string `envDefault:"127.0.0.1:7003" env:"PARTITION_SERVICE_URI"`
+	NotificationServiceWorkloadAPITargetPath string `envDefault:"/ns/notifications/sa/service-notification" env:"NOTIFICATION_SERVICE_WORKLOAD_API_TARGET_PATH"`
 
 	SystemAccessID string `envDefault:"c8cf0ldstmdlinc3eva0" env:"STATIC_SYSTEM_ACCESS_ID"`
 

@@ -14,11 +14,9 @@ import (
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
-	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
-	"github.com/pitabwire/frame/security/openid"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
@@ -46,7 +44,6 @@ func main() {
 	ctx, svc := frame.NewServiceWithContext(
 		ctx,
 		frame.WithConfig(&cfg),
-		frame.WithRegisterServerOauth2Client(),
 		frame.WithDatastore(),
 	)
 	defer svc.Stop(ctx)
@@ -61,7 +58,7 @@ func main() {
 	}
 
 	// Setup clients and services
-	notificationCli, nErr := setupNotificationClient(ctx, sm, cfg)
+	notificationCli, nErr := setupNotificationClient(ctx, cfg)
 	if nErr != nil {
 		log.WithError(nErr).Fatal("main -- Could not setup notification svc")
 	}
@@ -153,15 +150,12 @@ func handleDatabaseMigration(
 // setupNotificationClient creates and configures the notification client.
 func setupNotificationClient(
 	ctx context.Context,
-	clHolder security.InternalOauth2ClientHolder,
 	cfg aconfig.ProfileConfig) (notificationv1connect.NotificationServiceClient, error) {
-	return notification.NewClient(ctx,
-		apis.WithEndpoint(cfg.NotificationServiceURI),
-		apis.WithTokenEndpoint(cfg.GetOauth2TokenEndpoint()),
-		apis.WithTokenUsername(clHolder.JwtClientID()),
-		apis.WithTokenPassword(clHolder.JwtClientSecret()),
-		apis.WithScopes(openid.ConstSystemScopeInternal),
-		apis.WithAudiences("service_notifications"))
+	return notification.NewClient(ctx, &cfg, apis.ServiceTarget{
+		Endpoint:              cfg.NotificationSvcURI,
+		WorkloadAPITargetPath: cfg.NotificationServiceWorkloadAPITargetPath,
+		Audiences:             []string{"service_notifications"},
+	})
 }
 
 // decodeDEK decodes the Base64-encoded encryption keys from config into raw bytes.
