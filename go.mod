@@ -14,9 +14,9 @@ require (
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260219062126-e9b0d15a670e.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.19.0
-	github.com/antinvestor/apis/go/common v1.55.6
-	github.com/antinvestor/apis/go/notification v1.55.7
-	github.com/antinvestor/apis/go/profile v1.55.7
+	github.com/antinvestor/apis/go/common v1.55.8
+	github.com/antinvestor/apis/go/notification v1.55.8
+	github.com/antinvestor/apis/go/profile v1.55.8
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
 	github.com/pitabwire/frame v1.77.1
@@ -172,7 +172,7 @@ require (
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
