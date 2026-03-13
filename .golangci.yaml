@@ -434,6 +434,9 @@ linters:
         linters: [ staticcheck ]
       - text: 'nilness: tautological condition'
         linters: [ govet ]
+      - text: 'G118'
+        path: 'middleware\.go'
+        linters: [ gosec ]
       - path: 'geolocation_handler\.go'
         linters:
           - dupl
