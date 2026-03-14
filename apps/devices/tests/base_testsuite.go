@@ -103,7 +103,7 @@ func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
 }
 
 func initResources(_ context.Context) []definition.TestResource {
-	pg := testpostgres.NewWithOpts("service_devices", definition.WithUserName("ant"))
+	pg := testpostgres.NewWithOpts("service_device", definition.WithUserName("ant"))
 
 	keto := testketo.NewWithOpts(
 		definition.WithDependancies(pg),

@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-	serviceName := "service_devices"
+	serviceName := "service_device"
 
 	ctx := context.Background()
 	cfg, err := config.LoadWithOIDC[aconfig.DevicesConfig](ctx)
