@@ -1,4 +1,2 @@
--- Enable PostGIS extension for spatial operations.
--- This must be run before any spatial columns or functions are used.
-CREATE EXTENSION IF NOT EXISTS postgis;
-CREATE EXTENSION IF NOT EXISTS postgis_topology;
+-- PostGIS extensions are managed by CNPG Database CRD (ensure: present).
+-- Do not CREATE EXTENSION here — the service role lacks superuser privileges.
