@@ -21,6 +21,7 @@ import (
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/authz"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/handlers"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -67,6 +68,9 @@ func main() {
 	if dekErr != nil {
 		log.WithError(dekErr).Fatal("main -- Could not decode DEK encryption keys")
 	}
+
+	// Seed default data (system bot contact) after migration creates the profile row
+	seedDefaultData(ctx, svc, dek)
 
 	// Setup authz middleware
 	authzMiddleware := authz.NewMiddleware(sm.GetAuthorizer(ctx))
@@ -184,6 +188,29 @@ func decodeDEK(cfg aconfig.ProfileConfig) (*aconfig.DEK, error) {
 		OldKey:    oldKey,
 		LookUpKey: lookupKey,
 	}, nil
+}
+
+// seedDefaultData ensures seed data exists (e.g. the system bot contact).
+// The bot profile row is created by SQL migration; this adds the encrypted contact.
+func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) {
+	log := util.Log(ctx)
+	cfg, _ := svc.Config().(*aconfig.ProfileConfig)
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+	evtsMan := svc.EventsManager()
+
+	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
+	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
+	contactBiz := business.NewContactBusiness(ctx, cfg, dek, evtsMan, contactRepo, verificationRepo)
+
+	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
+	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
+	addressBiz := business.NewAddressBusiness(ctx, addressRepo)
+	profileBiz := business.NewProfileBusiness(ctx, cfg, dek, evtsMan, contactBiz, addressBiz, profileRepo)
+
+	if err := business.SeedSystemBotContact(ctx, profileBiz, contactBiz); err != nil {
+		log.WithError(err).Warn("failed to seed system bot contact — will retry on next startup")
+	}
 }
 
 // setupConnectServer initializes and configures the gRPC server.
