@@ -19,12 +19,16 @@
 ALTER TABLE IF EXISTS location_points RENAME TO location_points_old;
 
 -- Step 2: Create partitioned table with same schema.
+-- Column order must match Frame's BaseModel + LocationPoint model exactly,
+-- since Step 5 uses SELECT * to copy data from the old table.
 CREATE TABLE IF NOT EXISTS location_points (
     id VARCHAR(50) NOT NULL,
-    tenant_id VARCHAR(50),
-    partition_id VARCHAR(50),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    version INTEGER NOT NULL DEFAULT 0,
+    tenant_id VARCHAR(50),
+    partition_id VARCHAR(50),
+    access_id VARCHAR(50),
     deleted_at TIMESTAMPTZ,
     subject_id VARCHAR(40) NOT NULL,
     ts TIMESTAMPTZ NOT NULL,
