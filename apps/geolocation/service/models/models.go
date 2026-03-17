@@ -86,7 +86,7 @@ func (et GeoEventType) String() string {
 }
 
 // LocationPoint represents a single location observation from a device or subject.
-// Stored in the geo.location_points table with PostGIS POINT geometry.
+// The geom column is computed by a database trigger from latitude/longitude.
 type LocationPoint struct {
 	data.BaseModel
 
@@ -101,6 +101,7 @@ type LocationPoint struct {
 	Bearing    *float64       `gorm:"type:double precision"`
 	Source     LocationSource `gorm:"type:smallint;not null;default:0"`
 	Extras     data.JSONMap   `gorm:"type:jsonb;default:'{}'"`
+	Geom       *string        `gorm:"type:geometry(Point,4326);column:geom"                                 json:"-"`
 }
 
 func (*LocationPoint) TableName() string {
@@ -133,18 +134,19 @@ func (lp *LocationPoint) ToAPI() *LocationPointAPI {
 }
 
 // Area represents a geographic boundary (polygon/multipolygon) stored via PostGIS.
-// The geometry column (geom) is managed via raw SQL migrations, not GORM auto-migrate.
+// The geom and bbox columns are managed by database triggers that compute from GeometryJSON.
 type Area struct {
 	data.BaseModel
 
-	OwnerID     string   `gorm:"type:varchar(40);not null;index:idx_areas_owner"`
-	Name        string   `gorm:"type:varchar(250);not null"`
-	Description string   `gorm:"type:text"`
-	AreaType    AreaType `gorm:"type:smallint;not null;default:0"`
+	OwnerID      string   `gorm:"type:varchar(40);not null;index:idx_areas_owner"`
+	Name         string   `gorm:"type:varchar(250);not null"`
+	Description  string   `gorm:"type:text"`
+	AreaType     AreaType `gorm:"type:smallint;not null;default:0"`
+	GeometryJSON string   `gorm:"type:text;column:geometry_json"`
 
-	// GeoJSON representation of the geometry; the PostGIS geom column is managed via SQL.
-	// This field is used for API input/output; the actual spatial column is "geom".
-	GeometryJSON string `gorm:"type:text;column:geometry_json"`
+	// PostGIS spatial columns — computed by DB triggers, queried by raw SQL.
+	Geom *string `gorm:"type:geometry(Geometry,4326);column:geom" json:"-"`
+	Bbox *string `gorm:"type:geometry(Polygon,4326);column:bbox"  json:"-"`
 
 	// Computed fields (populated by DB trigger on geom column write).
 	AreaM2     *float64     `gorm:"type:double precision;column:area_m2"`
@@ -243,6 +245,7 @@ func (gs *GeofenceState) BeforeUpdate(_ *gorm.DB) error {
 
 // LatestPosition is a materialized "most recent position" per subject.
 // Used for proximity queries. Maintained by the detection engine.
+// The geom column is computed by a database trigger from latitude/longitude.
 type LatestPosition struct {
 	SubjectID string    `gorm:"type:varchar(40);primaryKey"`
 	Latitude  float64   `gorm:"type:double precision;not null"`
@@ -250,6 +253,7 @@ type LatestPosition struct {
 	Accuracy  float64   `gorm:"type:double precision;not null;default:0"`
 	TS        time.Time `gorm:"type:timestamptz;not null;column:ts"`
 	UpdatedAt time.Time `gorm:"type:timestamptz;not null;default:now();autoUpdateTime"`
+	Geom      *string   `gorm:"type:geometry(Point,4326);column:geom"                  json:"-"`
 }
 
 func (*LatestPosition) TableName() string {
@@ -262,16 +266,17 @@ func (lp *LatestPosition) BeforeUpdate(_ *gorm.DB) error {
 }
 
 // Route represents a predefined path (LineString) stored via PostGIS.
-// The geometry column (geom) is managed via raw SQL migrations, not GORM auto-migrate.
+// The geom column is computed by a database trigger from GeometryJSON.
 type Route struct {
 	data.BaseModel
 
-	OwnerID     string `gorm:"type:varchar(40);not null;index:idx_routes_owner"`
-	Name        string `gorm:"type:varchar(250);not null"`
-	Description string `gorm:"type:text"`
-
-	// GeoJSON representation of the geometry; the PostGIS geom column is managed via SQL.
+	OwnerID      string `gorm:"type:varchar(40);not null;index:idx_routes_owner"`
+	Name         string `gorm:"type:varchar(250);not null"`
+	Description  string `gorm:"type:text"`
 	GeometryJSON string `gorm:"type:text;column:geometry_json"`
+
+	// PostGIS spatial column — computed by DB trigger, queried by raw SQL.
+	Geom *string `gorm:"type:geometry(LineString,4326);column:geom" json:"-"`
 
 	// Computed field (populated by DB trigger on geom column write).
 	LengthM *float64 `gorm:"type:double precision;column:length_m"`

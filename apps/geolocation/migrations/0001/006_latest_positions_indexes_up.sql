@@ -1,9 +1,6 @@
--- Additional columns and indexes for latest_positions proximity queries.
--- The table is defined by GORM auto-migrate with PK on subject_id.
-
--- Add PostGIS POINT geometry column for efficient spatial proximity queries.
-ALTER TABLE latest_positions
-    ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);
+-- PostGIS trigger and spatial indexes for latest_positions.
+-- The geom column is created by GORM auto-migrate from the Go model.
+-- This migration adds the trigger that computes geom from lat/lon.
 
 -- Trigger function: compute geom from latitude/longitude on INSERT/UPDATE.
 CREATE OR REPLACE FUNCTION compute_latest_position_geom()

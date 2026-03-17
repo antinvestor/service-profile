@@ -1,9 +1,6 @@
--- Add PostGIS POINT geometry column to location_points.
--- SRID 4326 = WGS 84 (standard GPS coordinate system).
--- This column is populated by a trigger on INSERT that reads latitude/longitude.
-
-ALTER TABLE location_points
-    ADD COLUMN IF NOT EXISTS geom geometry(Point, 4326);
+-- PostGIS trigger and spatial indexes for location_points.
+-- The geom column is created by GORM auto-migrate from the Go model.
+-- This migration adds the trigger that computes geom from lat/lon on INSERT.
 
 -- Trigger function: compute geom from latitude/longitude on INSERT.
 -- Must be VOLATILE (not IMMUTABLE) because it reads from NEW row fields.

@@ -1,10 +1,6 @@
--- Add PostGIS geometry and bounding box columns to areas.
--- geom: the actual polygon/multipolygon geometry for containment testing.
--- bbox: the bounding box envelope for fast pre-filtering via GIST index.
-
-ALTER TABLE areas
-    ADD COLUMN IF NOT EXISTS geom geometry(Geometry, 4326),
-    ADD COLUMN IF NOT EXISTS bbox geometry(Polygon, 4326);
+-- PostGIS trigger and spatial indexes for areas.
+-- The geom and bbox columns are created by GORM auto-migrate from the Go model.
+-- This migration adds the trigger that computes bbox and metrics when geom is updated.
 
 -- Trigger function: compute bbox and metrics when geom is updated.
 -- Computes: bounding box envelope, area in square meters, perimeter in meters.
