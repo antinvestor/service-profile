@@ -1,26 +1,13 @@
 -- Routes: predefined paths (LineString) for route deviation detection.
 
--- 1. Routes table
-CREATE TABLE IF NOT EXISTS routes (
-    id            VARCHAR(40)      PRIMARY KEY,
-    created_at    TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-    updated_at    TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-    deleted_at    TIMESTAMPTZ,
-    owner_id      VARCHAR(40)      NOT NULL,
-    name          VARCHAR(250)     NOT NULL,
-    description   TEXT,
-    geometry_json TEXT,
-    geom          geometry(LineString, 4326),
-    length_m      DOUBLE PRECISION,
-    state         SMALLINT         NOT NULL DEFAULT 0,
-    extras        JSONB            DEFAULT '{}',
-    modified_at   TIMESTAMPTZ      NOT NULL DEFAULT NOW(),
-
-    -- Per-route deviation thresholds (NULL = skip during evaluation).
-    deviation_threshold_m       DOUBLE PRECISION,
-    deviation_consecutive_count INTEGER,
-    deviation_cooldown_sec      INTEGER
-);
+-- 1. Routes table — base columns created by Frame auto-migrate from Go model.
+-- Add PostGIS and deviation columns that Frame doesn't know about.
+ALTER TABLE routes ADD COLUMN IF NOT EXISTS geometry_json TEXT;
+ALTER TABLE routes ADD COLUMN IF NOT EXISTS geom geometry(LineString, 4326);
+ALTER TABLE routes ADD COLUMN IF NOT EXISTS length_m DOUBLE PRECISION;
+ALTER TABLE routes ADD COLUMN IF NOT EXISTS deviation_threshold_m DOUBLE PRECISION;
+ALTER TABLE routes ADD COLUMN IF NOT EXISTS deviation_consecutive_count INTEGER;
+ALTER TABLE routes ADD COLUMN IF NOT EXISTS deviation_cooldown_sec INTEGER;
 
 -- Trigger function: compute route length when geom is updated.
 CREATE OR REPLACE FUNCTION compute_route_length()
