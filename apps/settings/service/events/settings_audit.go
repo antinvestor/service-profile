@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
@@ -52,6 +53,10 @@ func (e *SettingsAuditor) Execute(ctx context.Context, payload interface{}) erro
 
 	err := e.auditRepo.Create(ctx, audit)
 	if err != nil {
+		if data.ErrorIsDuplicateKey(err) {
+			log.Debug("audit already exists, skipping duplicate")
+			return nil
+		}
 		log.WithError(err).Warn("could not save audit to db")
 		return err
 	}

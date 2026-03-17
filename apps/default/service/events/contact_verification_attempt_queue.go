@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -57,6 +58,10 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 
 	err := vaq.VerificationRepo.SaveAttempt(ctx, attempt)
 	if err != nil {
+		if data.ErrorIsDuplicateKey(err) {
+			logger.Debug("verification attempt already exists, skipping duplicate")
+			return nil
+		}
 		logger.WithError(err).Error("Failed to save verification attempt")
 		return err
 	}

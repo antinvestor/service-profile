@@ -73,6 +73,10 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 
 	err = vq.verificationRepo.Create(ctx, verification)
 	if err != nil {
+		if data.ErrorIsDuplicateKey(err) {
+			logger.Debug("verification already exists, skipping duplicate")
+			return nil
+		}
 		logger.WithError(err).Error("Failed to save verification")
 		return err
 	}
