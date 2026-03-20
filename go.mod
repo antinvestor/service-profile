@@ -2,6 +2,8 @@ module github.com/antinvestor/service-profile
 
 go 1.26
 
+toolchain go1.26.1
+
 require (
 	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20260219054105-fe125014d75c.1
 	buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.1-20260221033317-1a8e101ef7c6.2
@@ -19,7 +21,7 @@ require (
 	github.com/antinvestor/apis/go/profile v1.55.17
 	github.com/gojuno/minimock/v3 v3.4.7
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.80.0
+	github.com/pitabwire/frame v1.80.1
 	github.com/pitabwire/util v0.6.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.41.0
@@ -28,7 +30,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.42.0
 	go.opentelemetry.io/otel/trace v1.42.0
 	golang.org/x/sync v0.20.0
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 	gorm.io/gorm v1.31.1
 )
