@@ -20,8 +20,9 @@ require (
 	github.com/antinvestor/apis/go/notification v1.55.17
 	github.com/antinvestor/apis/go/profile v1.55.17
 	github.com/gojuno/minimock/v3 v3.4.7
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.80.1
+	github.com/pitabwire/frame v1.81.0
 	github.com/pitabwire/util v0.6.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.41.0
@@ -85,7 +86,6 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/cel-go v0.27.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
