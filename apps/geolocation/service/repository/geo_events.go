@@ -81,35 +81,18 @@ func hasDwellEventQuery(
 	subjectID, areaID string,
 	from *time.Time,
 ) (bool, error) {
-	var exists bool
-	query := db.Raw(
-		buildDwellExistsQuery(from),
-		buildDwellExistsArgs(subjectID, areaID, from)...,
-	).Scan(&exists)
-
-	if query.Error != nil {
-		return false, fmt.Errorf(
-			"check dwell event for subject %s area %s: %w",
-			subjectID, areaID, query.Error,
-		)
-	}
-	return exists, nil
-}
-
-func buildDwellExistsQuery(from *time.Time) string {
-	base := "SELECT EXISTS(SELECT 1 FROM geo_events WHERE subject_id = ? AND area_id = ? AND event_type = ?"
+	query := db.Model(&models.GeoEvent{}).
+		Where("subject_id = ? AND area_id = ? AND event_type = ?", subjectID, areaID, models.GeoEventTypeDwell)
 	if from != nil {
-		return base + " AND ts >= ? LIMIT 1)"
+		query = query.Where("ts >= ?", *from)
 	}
-	return base + " LIMIT 1)"
-}
 
-func buildDwellExistsArgs(subjectID, areaID string, from *time.Time) []any {
-	args := []any{subjectID, areaID, models.GeoEventTypeDwell}
-	if from != nil {
-		args = append(args, *from)
+	var count int64
+	if err := query.Limit(1).Count(&count).Error; err != nil {
+		return false, fmt.Errorf("check dwell event for subject %s area %s: %w", subjectID, areaID, err)
 	}
-	return args
+
+	return count > 0, nil
 }
 
 // queryEvents is a shared implementation for querying geo events by a single filter column.

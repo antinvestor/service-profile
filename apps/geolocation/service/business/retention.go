@@ -103,9 +103,9 @@ func (b *retentionBusiness) StartScheduler(ctx context.Context) {
 	}
 }
 
-// RunRetention deletes expired location points, geo events, and stale geofence states in batches.
+// RunRetention deletes expired location points, geo events, and stale mutable state in batches.
 // Designed to be called periodically via StartScheduler.
-func (b *retentionBusiness) RunRetention(ctx context.Context) error {
+func (b *retentionBusiness) RunRetention(ctx context.Context) error { //nolint:gocognit // sequential retention steps
 	log := util.Log(ctx)
 
 	// Delete expired location points.
@@ -138,15 +138,37 @@ func (b *retentionBusiness) RunRetention(ctx context.Context) error {
 		}
 	}
 
-	// Clean up stale geofence_states (subjects that stopped reporting).
-	if b.cfg.GeofenceStateStaleDays > 0 {
+	// Clean up stale mutable state for subjects that stopped reporting.
+	if b.cfg.GeofenceStateStaleDays > 0 { //nolint:nestif // retention cleanup with error handling
 		cutoff := time.Now().AddDate(0, 0, -b.cfg.GeofenceStateStaleDays)
-		deleted, err := b.deleteExpired(ctx, "geofence_states", "updated_at", cutoff)
+		deleted, err := b.deleteExpired(ctx, "geofence_states", "modified_at", cutoff)
 		if err != nil {
 			return fmt.Errorf("retain geofence_states: %w", err)
 		}
 		if deleted > 0 {
 			log.Info("geofence_states retention complete",
+				"deleted", deleted,
+				"cutoff", cutoff,
+			)
+		}
+
+		deleted, err = b.deleteExpired(ctx, "route_deviation_states", "modified_at", cutoff)
+		if err != nil {
+			return fmt.Errorf("retain route_deviation_states: %w", err)
+		}
+		if deleted > 0 {
+			log.Info("route_deviation_states retention complete",
+				"deleted", deleted,
+				"cutoff", cutoff,
+			)
+		}
+
+		deleted, err = b.deleteExpired(ctx, "latest_positions", "ts", cutoff)
+		if err != nil {
+			return fmt.Errorf("retain latest_positions: %w", err)
+		}
+		if deleted > 0 {
+			log.Info("latest_positions retention complete",
 				"deleted", deleted,
 				"cutoff", cutoff,
 			)

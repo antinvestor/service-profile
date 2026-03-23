@@ -36,7 +36,7 @@ type SettingsBaseTestSuite struct {
 }
 
 func initResources(_ context.Context) []definition.TestResource {
-	pg := testpostgres.NewWithOpts("service_settings", definition.WithUserName("ant"))
+	pg := testpostgres.NewWithOpts("service_setting", definition.WithUserName("ant"))
 
 	keto := testketo.NewWithOpts(
 		definition.WithDependancies(pg),

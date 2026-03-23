@@ -73,7 +73,7 @@ func NewTrackBusiness(
 func (b *trackBusiness) GetTrack(ctx context.Context, req *models.GetTrackRequest) ([]*models.LocationPointAPI, error) {
 	log := util.Log(ctx)
 
-	if req == nil || req.SubjectID == "" {
+	if req == nil || req.GetSubjectId() == "" {
 		return nil, errors.New("subject_id is required")
 	}
 
@@ -81,13 +81,13 @@ func (b *trackBusiness) GetTrack(ctx context.Context, req *models.GetTrackReques
 	limit := clampLimit(int(req.Limit), b.cfg.DefaultTrackLimit, b.cfg.MaxTrackLimit)
 	offset := max(int(req.Offset), 0)
 
-	points, err := b.pointRepo.GetTrack(ctx, req.SubjectID, from, to, limit, offset)
+	points, err := b.pointRepo.GetTrack(ctx, req.GetSubjectId(), from, to, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("get track: %w", err)
 	}
 
 	log.Debug("track query completed",
-		"subject_id", req.SubjectID,
+		"subject_id", req.GetSubjectId(),
 		"from", from,
 		"to", to,
 		"points", len(points),
@@ -107,7 +107,7 @@ func (b *trackBusiness) GetSubjectEvents(
 ) ([]*models.GeoEventAPI, error) {
 	log := util.Log(ctx)
 
-	if req == nil || req.SubjectID == "" {
+	if req == nil || req.GetSubjectId() == "" {
 		return nil, errors.New("subject_id is required")
 	}
 
@@ -124,13 +124,13 @@ func (b *trackBusiness) GetSubjectEvents(
 	limit := clampLimit(int(req.Limit), b.cfg.DefaultEventLimit, b.cfg.MaxEventLimit)
 	offset := max(int(req.Offset), 0)
 
-	events, err := b.geoEventRepo.GetBySubject(ctx, req.SubjectID, from, to, limit, offset)
+	events, err := b.geoEventRepo.GetBySubject(ctx, req.GetSubjectId(), from, to, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("get subject events: %w", err)
 	}
 
 	log.Debug("subject events query completed",
-		"subject_id", req.SubjectID,
+		"subject_id", req.GetSubjectId(),
 		"events", len(events),
 	)
 
@@ -148,24 +148,24 @@ func (b *trackBusiness) GetAreaSubjects(
 ) ([]*models.AreaSubjectAPI, error) {
 	log := util.Log(ctx)
 
-	if req == nil || req.AreaID == "" {
+	if req == nil || req.GetAreaId() == "" {
 		return nil, errors.New("area_id is required")
 	}
 
-	states, err := b.stateRepo.GetInsideByArea(ctx, req.AreaID, b.cfg.MaxAreaSubjects)
+	states, err := b.stateRepo.GetInsideByArea(ctx, req.GetAreaId(), b.cfg.MaxAreaSubjects)
 	if err != nil {
 		return nil, fmt.Errorf("get area subjects: %w", err)
 	}
 
 	log.Debug("area subjects query completed",
-		"area_id", req.AreaID,
+		"area_id", req.GetAreaId(),
 		"subjects", len(states),
 	)
 
 	result := make([]*models.AreaSubjectAPI, 0, len(states))
 	for _, s := range states {
 		api := &models.AreaSubjectAPI{
-			SubjectID: s.SubjectID,
+			SubjectId: s.SubjectID,
 		}
 		if s.EnterTS != nil {
 			api.EnterTimestamp = timestamppb.New(*s.EnterTS)

@@ -1,273 +1,211 @@
 package models
 
 import (
-	"google.golang.org/protobuf/types/known/structpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"context"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/pitabwire/frame/security"
+
+	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/v1"
 )
 
-// API types mirror the proto message definitions that will be published at
-// buf.build/antinvestor/geolocation. Once the proto package exists, these
-// can be replaced with the generated types. Until then they serve as the
-// canonical API contract.
+type (
+	LocationPointInput = geolocationv1.LocationPointInput
+	LocationPointAPI   = geolocationv1.LocationPointObject
+	AreaAPI            = geolocationv1.AreaObject
+	GeoEventAPI        = geolocationv1.GeoEventObject
+	NearbySubjectAPI   = geolocationv1.NearbySubjectObject
+	NearbyAreaAPI      = geolocationv1.NearbyAreaObject
+	AreaSubjectAPI     = geolocationv1.AreaSubjectObject
+	RouteAPI           = geolocationv1.RouteObject
+	RouteAssignmentAPI = geolocationv1.RouteAssignmentObject
 
-// LocationPointAPI is the API representation of a location point.
-type LocationPointAPI struct {
-	ID        string                 `json:"id"`
-	SubjectID string                 `json:"subject_id"`
-	Timestamp *timestamppb.Timestamp `json:"timestamp"`
-	Latitude  float64                `json:"latitude"`
-	Longitude float64                `json:"longitude"`
-	Altitude  float64                `json:"altitude,omitempty"`
-	Accuracy  float64                `json:"accuracy"`
-	Speed     float64                `json:"speed,omitempty"`
-	Bearing   float64                `json:"bearing,omitempty"`
-	Source    LocationSource         `json:"source"`
-	Extras    *structpb.Struct       `json:"extras,omitempty"`
-	CreatedAt *timestamppb.Timestamp `json:"created_at,omitempty"`
+	IngestLocationsRequest             = geolocationv1.IngestLocationsRequest
+	IngestLocationsResponse            = geolocationv1.IngestLocationsResponse
+	CreateAreaRequest                  = geolocationv1.CreateAreaRequest
+	CreateAreaResponse                 = geolocationv1.CreateAreaResponse
+	GetAreaRequest                     = geolocationv1.GetAreaRequest
+	GetAreaResponse                    = geolocationv1.GetAreaResponse
+	UpdateAreaRequest                  = geolocationv1.UpdateAreaRequest
+	UpdateAreaResponse                 = geolocationv1.UpdateAreaResponse
+	DeleteAreaRequest                  = geolocationv1.DeleteAreaRequest
+	SearchAreasRequest                 = geolocationv1.SearchAreasRequest
+	SearchAreasResponse                = geolocationv1.SearchAreasResponse
+	CreateRouteRequest                 = geolocationv1.CreateRouteRequest
+	CreateRouteResponse                = geolocationv1.CreateRouteResponse
+	GetRouteRequest                    = geolocationv1.GetRouteRequest
+	GetRouteResponse                   = geolocationv1.GetRouteResponse
+	UpdateRouteRequest                 = geolocationv1.UpdateRouteRequest
+	UpdateRouteResponse                = geolocationv1.UpdateRouteResponse
+	DeleteRouteRequest                 = geolocationv1.DeleteRouteRequest
+	SearchRoutesRequest                = geolocationv1.SearchRoutesRequest
+	SearchRoutesResponse               = geolocationv1.SearchRoutesResponse
+	AssignRouteRequest                 = geolocationv1.AssignRouteRequest
+	AssignRouteResponse                = geolocationv1.AssignRouteResponse
+	UnassignRouteRequest               = geolocationv1.UnassignRouteRequest
+	GetSubjectRouteAssignmentsRequest  = geolocationv1.GetSubjectRouteAssignmentsRequest
+	GetSubjectRouteAssignmentsResponse = geolocationv1.GetSubjectRouteAssignmentsResponse
+	GetTrackRequest                    = geolocationv1.GetTrackRequest
+	GetTrackResponse                   = geolocationv1.GetTrackResponse
+	GetSubjectEventsRequest            = geolocationv1.GetSubjectEventsRequest
+	GetSubjectEventsResponse           = geolocationv1.GetSubjectEventsResponse
+	GetAreaSubjectsRequest             = geolocationv1.GetAreaSubjectsRequest
+	GetAreaSubjectsResponse            = geolocationv1.GetAreaSubjectsResponse
+	GetNearbySubjectsRequest           = geolocationv1.GetNearbySubjectsRequest
+	GetNearbySubjectsResponse          = geolocationv1.GetNearbySubjectsResponse
+	GetNearbyAreasRequest              = geolocationv1.GetNearbyAreasRequest
+	GetNearbyAreasResponse             = geolocationv1.GetNearbyAreasResponse
+)
+
+type EventTenancy struct {
+	TenantID    string `json:"tenant_id"`
+	PartitionID string `json:"partition_id"`
+	AccessID    string `json:"access_id"`
 }
 
-// AreaAPI is the API representation of a geographic area.
-type AreaAPI struct {
-	ID           string                 `json:"id"`
-	OwnerID      string                 `json:"owner_id"`
-	Name         string                 `json:"name"`
-	Description  string                 `json:"description,omitempty"`
-	AreaType     AreaType               `json:"area_type"`
-	GeometryJSON string                 `json:"geometry"`
-	AreaM2       float64                `json:"area_m2,omitempty"`
-	PerimeterM   float64                `json:"perimeter_m,omitempty"`
-	State        int32                  `json:"state"`
-	Extras       *structpb.Struct       `json:"extras,omitempty"`
-	CreatedAt    *timestamppb.Timestamp `json:"created_at,omitempty"`
+func ContextWithEventTenancy(
+	ctx context.Context,
+	tenancy EventTenancy,
+	subjectID string,
+) context.Context {
+	if tenancy.TenantID == "" && tenancy.PartitionID == "" && tenancy.AccessID == "" {
+		return ctx
+	}
+
+	claims := &security.AuthenticationClaims{
+		TenantID:    tenancy.TenantID,
+		PartitionID: tenancy.PartitionID,
+		AccessID:    tenancy.AccessID,
+		ContactID:   subjectID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject: subjectID,
+		},
+	}
+
+	return claims.ClaimsToContext(ctx)
 }
 
-// GeoEventAPI is the API representation of a spatial event.
-type GeoEventAPI struct {
-	ID         string                 `json:"id"`
-	SubjectID  string                 `json:"subject_id"`
-	AreaID     string                 `json:"area_id"`
-	EventType  GeoEventType           `json:"event_type"`
-	Timestamp  *timestamppb.Timestamp `json:"timestamp"`
-	Confidence float64                `json:"confidence"`
-	PointID    string                 `json:"point_id,omitempty"`
-	Extras     *structpb.Struct       `json:"extras,omitempty"`
-}
-
-// NearbySubjectAPI represents a subject found within a proximity query.
-type NearbySubjectAPI struct {
-	SubjectID      string                 `json:"subject_id"`
-	DistanceMeters float64                `json:"distance_meters"`
-	LastSeen       *timestamppb.Timestamp `json:"last_seen"`
-}
-
-// NearbyAreaAPI represents an area found within a proximity query.
-type NearbyAreaAPI struct {
-	AreaID         string   `json:"area_id"`
-	Name           string   `json:"name"`
-	AreaType       AreaType `json:"area_type"`
-	DistanceMeters float64  `json:"distance_meters"`
-}
-
-// IngestLocationsRequest is the batch ingestion request.
-type IngestLocationsRequest struct {
-	SubjectID string              `json:"subject_id"`
-	Points    []*LocationPointAPI `json:"points"`
-}
-
-// IngestLocationsResponse is the batch ingestion response.
-type IngestLocationsResponse struct {
-	Accepted int32 `json:"accepted"`
-	Rejected int32 `json:"rejected"`
-}
-
-// CreateAreaRequest is the request to create a new area.
-type CreateAreaRequest struct {
-	Data *AreaAPI `json:"data"`
-}
-
-// CreateAreaResponse is the response after creating an area.
-type CreateAreaResponse struct {
-	Data *AreaAPI `json:"data"`
-}
-
-// UpdateAreaRequest is the request to update an existing area.
-type UpdateAreaRequest struct {
-	ID          string           `json:"id"`
-	Name        string           `json:"name,omitempty"`
-	Description string           `json:"description,omitempty"`
-	Geometry    string           `json:"geometry,omitempty"`
-	AreaType    *AreaType        `json:"area_type,omitempty"`
-	Extras      *structpb.Struct `json:"extras,omitempty"`
-}
-
-// UpdateAreaResponse is the response after updating an area.
-type UpdateAreaResponse struct {
-	Data *AreaAPI `json:"data"`
-}
-
-// GetTrackRequest is the request for location history.
-type GetTrackRequest struct {
-	SubjectID string                 `json:"subject_id"`
-	From      *timestamppb.Timestamp `json:"from"`
-	To        *timestamppb.Timestamp `json:"to"`
-	Limit     int32                  `json:"limit,omitempty"`
-	Offset    int32                  `json:"offset,omitempty"`
-}
-
-// GetSubjectEventsRequest is the request for a subject's geo events.
-type GetSubjectEventsRequest struct {
-	SubjectID string                 `json:"subject_id"`
-	From      *timestamppb.Timestamp `json:"from,omitempty"`
-	To        *timestamppb.Timestamp `json:"to,omitempty"`
-	Limit     int32                  `json:"limit,omitempty"`
-	Offset    int32                  `json:"offset,omitempty"`
-}
-
-// GetAreaSubjectsRequest is the request to find subjects inside an area.
-type GetAreaSubjectsRequest struct {
-	AreaID string `json:"area_id"`
-}
-
-// AreaSubjectAPI represents a subject currently inside an area.
-type AreaSubjectAPI struct {
-	SubjectID      string                 `json:"subject_id"`
-	EnterTimestamp *timestamppb.Timestamp `json:"enter_timestamp,omitempty"`
-}
-
-// GetNearbySubjectsRequest is a proximity query for nearby subjects.
-type GetNearbySubjectsRequest struct {
-	SubjectID    string  `json:"subject_id"`
-	RadiusMeters float64 `json:"radius_meters"`
-	Limit        int32   `json:"limit,omitempty"`
-}
-
-// GetNearbyAreasRequest is a proximity query for nearby areas.
-type GetNearbyAreasRequest struct {
-	Latitude     float64 `json:"latitude"`
-	Longitude    float64 `json:"longitude"`
-	RadiusMeters float64 `json:"radius_meters"`
-	Limit        int32   `json:"limit,omitempty"`
-}
-
-// LocationPointIngestedEvent is the NATS event payload when a point is ingested.
 type LocationPointIngestedEvent struct {
+	EventTenancy
 	PointID   string  `json:"point_id"`
 	SubjectID string  `json:"subject_id"`
+	DeviceID  string  `json:"device_id"`
 	Latitude  float64 `json:"latitude"`
 	Longitude float64 `json:"longitude"`
 	Accuracy  float64 `json:"accuracy"`
-	Timestamp int64   `json:"timestamp"` // Unix millis
+	Timestamp int64   `json:"timestamp"`
 }
 
-// AreaChangedEvent is the NATS event payload when an area is created/updated/deleted.
 type AreaChangedEvent struct {
+	EventTenancy
 	AreaID  string `json:"area_id"`
-	Action  string `json:"action"` // "created", "updated", "deleted"
+	Action  string `json:"action"`
 	OwnerID string `json:"owner_id"`
 }
 
-// RouteAPI is the API representation of a route.
-type RouteAPI struct {
-	ID                        string                 `json:"id"`
-	OwnerID                   string                 `json:"owner_id"`
-	Name                      string                 `json:"name"`
-	Description               string                 `json:"description,omitempty"`
-	GeometryJSON              string                 `json:"geometry"`
-	LengthM                   float64                `json:"length_m,omitempty"`
-	State                     int32                  `json:"state"`
-	DeviationThresholdM       *float64               `json:"deviation_threshold_m,omitempty"`
-	DeviationConsecutiveCount *int                   `json:"deviation_consecutive_count,omitempty"`
-	DeviationCooldownSec      *int                   `json:"deviation_cooldown_sec,omitempty"`
-	Extras                    *structpb.Struct       `json:"extras,omitempty"`
-	CreatedAt                 *timestamppb.Timestamp `json:"created_at,omitempty"`
-}
-
-// RouteAssignmentAPI is the API representation of a route assignment.
-type RouteAssignmentAPI struct {
-	ID         string                 `json:"id"`
-	SubjectID  string                 `json:"subject_id"`
-	RouteID    string                 `json:"route_id"`
-	ValidFrom  *timestamppb.Timestamp `json:"valid_from,omitempty"`
-	ValidUntil *timestamppb.Timestamp `json:"valid_until,omitempty"`
-	State      int32                  `json:"state"`
-	Extras     *structpb.Struct       `json:"extras,omitempty"`
-	CreatedAt  *timestamppb.Timestamp `json:"created_at,omitempty"`
-}
-
-// CreateRouteRequest is the request to create a new route.
-type CreateRouteRequest struct {
-	Data *RouteAPI `json:"data"`
-}
-
-// CreateRouteResponse is the response after creating a route.
-type CreateRouteResponse struct {
-	Data *RouteAPI `json:"data"`
-}
-
-// UpdateRouteRequest is the request to update an existing route.
-type UpdateRouteRequest struct {
-	ID                        string           `json:"id"`
-	Name                      string           `json:"name,omitempty"`
-	Description               string           `json:"description,omitempty"`
-	Geometry                  string           `json:"geometry,omitempty"`
-	DeviationThresholdM       *float64         `json:"deviation_threshold_m,omitempty"`
-	DeviationConsecutiveCount *int             `json:"deviation_consecutive_count,omitempty"`
-	DeviationCooldownSec      *int             `json:"deviation_cooldown_sec,omitempty"`
-	Extras                    *structpb.Struct `json:"extras,omitempty"`
-}
-
-// UpdateRouteResponse is the response after updating a route.
-type UpdateRouteResponse struct {
-	Data *RouteAPI `json:"data"`
-}
-
-// AssignRouteRequest is the request to assign a subject to a route.
-type AssignRouteRequest struct {
-	SubjectID  string                 `json:"subject_id"`
-	RouteID    string                 `json:"route_id"`
-	ValidFrom  *timestamppb.Timestamp `json:"valid_from,omitempty"`
-	ValidUntil *timestamppb.Timestamp `json:"valid_until,omitempty"`
-}
-
-// AssignRouteResponse is the response after assigning a subject to a route.
-type AssignRouteResponse struct {
-	Data *RouteAssignmentAPI `json:"data"`
-}
-
-// UnassignRouteRequest is the request to remove a route assignment.
-type UnassignRouteRequest struct {
-	AssignmentID string `json:"assignment_id"`
-}
-
-// GetSubjectRouteAssignmentsRequest is the request to get a subject's route assignments.
-type GetSubjectRouteAssignmentsRequest struct {
-	SubjectID string `json:"subject_id"`
-}
-
-// RouteDeviationDetectedEvent is the event payload when route deviation is detected.
 type RouteDeviationDetectedEvent struct {
+	EventTenancy
 	SubjectID      string  `json:"subject_id"`
 	RouteID        string  `json:"route_id"`
-	EventType      string  `json:"event_type"` // "deviated" or "back_on_route"
+	EventType      string  `json:"event_type"`
 	DistanceMeters float64 `json:"distance_meters"`
 	Latitude       float64 `json:"latitude"`
 	Longitude      float64 `json:"longitude"`
-	Timestamp      int64   `json:"timestamp"` // Unix millis
+	Timestamp      int64   `json:"timestamp"`
 }
 
-// RouteChangedEvent is the event payload when a route is created/updated/deleted.
 type RouteChangedEvent struct {
+	EventTenancy
 	RouteID string `json:"route_id"`
-	Action  string `json:"action"` // "created", "updated", "deleted"
+	Action  string `json:"action"`
 	OwnerID string `json:"owner_id"`
 }
 
-// GeoEventEmitted is the NATS event payload when a geofence event occurs.
 type GeoEventEmitted struct {
+	EventTenancy
 	EventID    string       `json:"event_id"`
 	SubjectID  string       `json:"subject_id"`
 	AreaID     string       `json:"area_id"`
 	EventType  GeoEventType `json:"event_type"`
-	Timestamp  int64        `json:"timestamp"` // Unix millis
+	Timestamp  int64        `json:"timestamp"`
 	Confidence float64      `json:"confidence"`
+}
+
+func ToProtoLocationSource(source LocationSource) geolocationv1.LocationSource {
+	switch source {
+	case LocationSourceGPS:
+		return geolocationv1.LocationSource_LOCATION_SOURCE_GPS
+	case LocationSourceNetwork:
+		return geolocationv1.LocationSource_LOCATION_SOURCE_NETWORK
+	case LocationSourceIP:
+		return geolocationv1.LocationSource_LOCATION_SOURCE_IP
+	case LocationSourceManual:
+		return geolocationv1.LocationSource_LOCATION_SOURCE_MANUAL
+	default:
+		return geolocationv1.LocationSource_LOCATION_SOURCE_UNSPECIFIED
+	}
+}
+
+func LocationSourceFromProto(source geolocationv1.LocationSource) LocationSource {
+	switch source {
+	case geolocationv1.LocationSource_LOCATION_SOURCE_NETWORK:
+		return LocationSourceNetwork
+	case geolocationv1.LocationSource_LOCATION_SOURCE_IP:
+		return LocationSourceIP
+	case geolocationv1.LocationSource_LOCATION_SOURCE_MANUAL:
+		return LocationSourceManual
+	case geolocationv1.LocationSource_LOCATION_SOURCE_GPS,
+		geolocationv1.LocationSource_LOCATION_SOURCE_UNSPECIFIED:
+		return LocationSourceGPS
+	default:
+		return LocationSourceGPS
+	}
+}
+
+func ToProtoAreaType(areaType AreaType) geolocationv1.AreaType {
+	switch areaType {
+	case AreaTypeLand:
+		return geolocationv1.AreaType_AREA_TYPE_LAND
+	case AreaTypeBuilding:
+		return geolocationv1.AreaType_AREA_TYPE_BUILDING
+	case AreaTypeZone:
+		return geolocationv1.AreaType_AREA_TYPE_ZONE
+	case AreaTypeFence:
+		return geolocationv1.AreaType_AREA_TYPE_FENCE
+	case AreaTypeCustom:
+		return geolocationv1.AreaType_AREA_TYPE_CUSTOM
+	default:
+		return geolocationv1.AreaType_AREA_TYPE_UNSPECIFIED
+	}
+}
+
+func AreaTypeFromProto(areaType geolocationv1.AreaType) AreaType {
+	switch areaType {
+	case geolocationv1.AreaType_AREA_TYPE_BUILDING:
+		return AreaTypeBuilding
+	case geolocationv1.AreaType_AREA_TYPE_ZONE:
+		return AreaTypeZone
+	case geolocationv1.AreaType_AREA_TYPE_FENCE:
+		return AreaTypeFence
+	case geolocationv1.AreaType_AREA_TYPE_CUSTOM:
+		return AreaTypeCustom
+	case geolocationv1.AreaType_AREA_TYPE_LAND,
+		geolocationv1.AreaType_AREA_TYPE_UNSPECIFIED:
+		return AreaTypeLand
+	default:
+		return AreaTypeLand
+	}
+}
+
+func ToProtoGeoEventType(eventType GeoEventType) geolocationv1.GeoEventType {
+	switch eventType {
+	case GeoEventTypeEnter:
+		return geolocationv1.GeoEventType_GEO_EVENT_TYPE_ENTER
+	case GeoEventTypeExit:
+		return geolocationv1.GeoEventType_GEO_EVENT_TYPE_EXIT
+	case GeoEventTypeDwell:
+		return geolocationv1.GeoEventType_GEO_EVENT_TYPE_DWELL
+	default:
+		return geolocationv1.GeoEventType_GEO_EVENT_TYPE_UNSPECIFIED
+	}
 }

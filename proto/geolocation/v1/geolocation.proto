@@ -1,0 +1,349 @@
+syntax = "proto3";
+
+package geolocation.v1;
+
+option go_package = "github.com/antinvestor/service-profile/proto/geolocation/v1;geolocationv1";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+enum LocationSource {
+  LOCATION_SOURCE_UNSPECIFIED = 0;
+  LOCATION_SOURCE_GPS = 1;
+  LOCATION_SOURCE_NETWORK = 2;
+  LOCATION_SOURCE_IP = 3;
+  LOCATION_SOURCE_MANUAL = 4;
+}
+
+enum AreaType {
+  AREA_TYPE_UNSPECIFIED = 0;
+  AREA_TYPE_LAND = 1;
+  AREA_TYPE_BUILDING = 2;
+  AREA_TYPE_ZONE = 3;
+  AREA_TYPE_FENCE = 4;
+  AREA_TYPE_CUSTOM = 5;
+}
+
+enum GeoEventType {
+  GEO_EVENT_TYPE_UNSPECIFIED = 0;
+  GEO_EVENT_TYPE_ENTER = 1;
+  GEO_EVENT_TYPE_EXIT = 2;
+  GEO_EVENT_TYPE_DWELL = 3;
+}
+
+enum RouteDeviationEventType {
+  ROUTE_DEVIATION_EVENT_TYPE_UNSPECIFIED = 0;
+  ROUTE_DEVIATION_EVENT_TYPE_DEVIATED = 1;
+  ROUTE_DEVIATION_EVENT_TYPE_BACK_ON_ROUTE = 2;
+}
+
+message LocationPointInput {
+  google.protobuf.Timestamp timestamp = 1;
+  double latitude = 2;
+  double longitude = 3;
+  optional double altitude = 4;
+  double accuracy = 5;
+  optional double speed = 6;
+  optional double bearing = 7;
+  LocationSource source = 8;
+  google.protobuf.Struct extra = 9;
+  string device_id = 10;
+}
+
+message LocationPointObject {
+  string id = 1;
+  string subject_id = 2;
+  google.protobuf.Timestamp timestamp = 3;
+  double latitude = 4;
+  double longitude = 5;
+  optional double altitude = 6;
+  double accuracy = 7;
+  optional double speed = 8;
+  optional double bearing = 9;
+  LocationSource source = 10;
+  google.protobuf.Struct extra = 11;
+  google.protobuf.Timestamp created_at = 12;
+  string device_id = 13;
+}
+
+message AreaObject {
+  string id = 1;
+  string owner_id = 2;
+  string name = 3;
+  string description = 4;
+  AreaType area_type = 5;
+  string geometry = 6;
+  double area_m2 = 7;
+  double perimeter_m = 8;
+  int32 state = 9;
+  google.protobuf.Struct extra = 10;
+  google.protobuf.Timestamp created_at = 11;
+}
+
+message GeoEventObject {
+  string id = 1;
+  string subject_id = 2;
+  string area_id = 3;
+  GeoEventType event_type = 4;
+  google.protobuf.Timestamp timestamp = 5;
+  double confidence = 6;
+  string point_id = 7;
+  google.protobuf.Struct extra = 8;
+}
+
+message AreaSubjectObject {
+  string subject_id = 1;
+  google.protobuf.Timestamp enter_timestamp = 2;
+}
+
+message NearbySubjectObject {
+  string subject_id = 1;
+  double distance_meters = 2;
+  google.protobuf.Timestamp last_seen = 3;
+}
+
+message NearbyAreaObject {
+  string area_id = 1;
+  string name = 2;
+  AreaType area_type = 3;
+  double distance_meters = 4;
+}
+
+message RouteObject {
+  string id = 1;
+  string owner_id = 2;
+  string name = 3;
+  string description = 4;
+  string geometry = 5;
+  double length_m = 6;
+  int32 state = 7;
+  optional double deviation_threshold_m = 8;
+  optional int32 deviation_consecutive_count = 9;
+  optional int32 deviation_cooldown_sec = 10;
+  google.protobuf.Struct extra = 11;
+  google.protobuf.Timestamp created_at = 12;
+}
+
+message RouteAssignmentObject {
+  string id = 1;
+  string subject_id = 2;
+  string route_id = 3;
+  google.protobuf.Timestamp valid_from = 4;
+  google.protobuf.Timestamp valid_until = 5;
+  int32 state = 6;
+  google.protobuf.Struct extra = 7;
+  google.protobuf.Timestamp created_at = 8;
+}
+
+message RouteDeviationEventObject {
+  string id = 1;
+  string subject_id = 2;
+  string route_id = 3;
+  RouteDeviationEventType event_type = 4;
+  double distance_meters = 5;
+  double latitude = 6;
+  double longitude = 7;
+  google.protobuf.Timestamp timestamp = 8;
+  google.protobuf.Struct extra = 9;
+}
+
+message IngestLocationsRequest {
+  string subject_id = 1;
+  repeated LocationPointInput points = 2;
+}
+
+message IngestLocationsResponse {
+  int32 accepted = 1;
+  int32 rejected = 2;
+}
+
+message CreateAreaRequest {
+  AreaObject data = 1;
+}
+
+message CreateAreaResponse {
+  AreaObject data = 1;
+}
+
+message GetAreaRequest {
+  string id = 1;
+}
+
+message GetAreaResponse {
+  AreaObject data = 1;
+}
+
+message UpdateAreaRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional AreaType area_type = 4;
+  optional string geometry = 5;
+  google.protobuf.Struct extra = 6;
+}
+
+message UpdateAreaResponse {
+  AreaObject data = 1;
+}
+
+message DeleteAreaRequest {
+  string id = 1;
+}
+
+message SearchAreasRequest {
+  string query = 1;
+  string owner_id = 2;
+  int32 limit = 3;
+}
+
+message SearchAreasResponse {
+  repeated AreaObject data = 1;
+}
+
+message CreateRouteRequest {
+  RouteObject data = 1;
+}
+
+message CreateRouteResponse {
+  RouteObject data = 1;
+}
+
+message GetRouteRequest {
+  string id = 1;
+}
+
+message GetRouteResponse {
+  RouteObject data = 1;
+}
+
+message UpdateRouteRequest {
+  string id = 1;
+  optional string name = 2;
+  optional string description = 3;
+  optional string geometry = 4;
+  optional double deviation_threshold_m = 5;
+  optional int32 deviation_consecutive_count = 6;
+  optional int32 deviation_cooldown_sec = 7;
+  google.protobuf.Struct extra = 8;
+}
+
+message UpdateRouteResponse {
+  RouteObject data = 1;
+}
+
+message DeleteRouteRequest {
+  string id = 1;
+}
+
+message SearchRoutesRequest {
+  string owner_id = 1;
+  int32 limit = 2;
+}
+
+message SearchRoutesResponse {
+  repeated RouteObject data = 1;
+}
+
+message AssignRouteRequest {
+  string subject_id = 1;
+  string route_id = 2;
+  google.protobuf.Timestamp valid_from = 3;
+  google.protobuf.Timestamp valid_until = 4;
+}
+
+message AssignRouteResponse {
+  RouteAssignmentObject data = 1;
+}
+
+message UnassignRouteRequest {
+  string id = 1;
+}
+
+message GetSubjectRouteAssignmentsRequest {
+  string subject_id = 1;
+}
+
+message GetSubjectRouteAssignmentsResponse {
+  repeated RouteAssignmentObject data = 1;
+}
+
+message GetTrackRequest {
+  string subject_id = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message GetTrackResponse {
+  repeated LocationPointObject data = 1;
+}
+
+message GetSubjectEventsRequest {
+  string subject_id = 1;
+  google.protobuf.Timestamp from = 2;
+  google.protobuf.Timestamp to = 3;
+  int32 limit = 4;
+  int32 offset = 5;
+}
+
+message GetSubjectEventsResponse {
+  repeated GeoEventObject data = 1;
+}
+
+message GetAreaSubjectsRequest {
+  string area_id = 1;
+}
+
+message GetAreaSubjectsResponse {
+  repeated AreaSubjectObject data = 1;
+}
+
+message GetNearbySubjectsRequest {
+  string subject_id = 1;
+  double radius_meters = 2;
+  int32 limit = 3;
+}
+
+message GetNearbySubjectsResponse {
+  repeated NearbySubjectObject data = 1;
+}
+
+message GetNearbyAreasRequest {
+  double latitude = 1;
+  double longitude = 2;
+  double radius_meters = 3;
+  int32 limit = 4;
+}
+
+message GetNearbyAreasResponse {
+  repeated NearbyAreaObject data = 1;
+}
+
+service GeolocationService {
+  rpc IngestLocations(IngestLocationsRequest) returns (IngestLocationsResponse);
+
+  rpc CreateArea(CreateAreaRequest) returns (CreateAreaResponse);
+  rpc GetArea(GetAreaRequest) returns (GetAreaResponse);
+  rpc UpdateArea(UpdateAreaRequest) returns (UpdateAreaResponse);
+  rpc DeleteArea(DeleteAreaRequest) returns (google.protobuf.Empty);
+  rpc SearchAreas(SearchAreasRequest) returns (SearchAreasResponse);
+
+  rpc CreateRoute(CreateRouteRequest) returns (CreateRouteResponse);
+  rpc GetRoute(GetRouteRequest) returns (GetRouteResponse);
+  rpc UpdateRoute(UpdateRouteRequest) returns (UpdateRouteResponse);
+  rpc DeleteRoute(DeleteRouteRequest) returns (google.protobuf.Empty);
+  rpc SearchRoutes(SearchRoutesRequest) returns (SearchRoutesResponse);
+
+  rpc AssignRoute(AssignRouteRequest) returns (AssignRouteResponse);
+  rpc UnassignRoute(UnassignRouteRequest) returns (google.protobuf.Empty);
+  rpc GetSubjectRouteAssignments(GetSubjectRouteAssignmentsRequest) returns (GetSubjectRouteAssignmentsResponse);
+
+  rpc GetTrack(GetTrackRequest) returns (GetTrackResponse);
+  rpc GetSubjectEvents(GetSubjectEventsRequest) returns (GetSubjectEventsResponse);
+  rpc GetAreaSubjects(GetAreaSubjectsRequest) returns (GetAreaSubjectsResponse);
+
+  rpc GetNearbySubjects(GetNearbySubjectsRequest) returns (GetNearbySubjectsResponse);
+  rpc GetNearbyAreas(GetNearbyAreasRequest) returns (GetNearbyAreasResponse);
+}

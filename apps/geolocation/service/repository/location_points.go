@@ -8,6 +8,7 @@ import (
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/workerpool"
+	"gorm.io/gorm"
 
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 )
@@ -55,4 +56,84 @@ func (r *locationPointRepository) GetTrack(
 	}
 
 	return points, nil
+}
+
+func (r *locationPointRepository) GetPendingForProcessing(
+	ctx context.Context,
+	limit int,
+) ([]*models.LocationPoint, error) {
+	var points []*models.LocationPoint
+
+	db := r.Pool().DB(ctx, true)
+	query := db.Where(
+		"processing_state IN ? AND deleted_at IS NULL",
+		[]models.LocationPointProcessingState{
+			models.LocationPointProcessingStatePending,
+			models.LocationPointProcessingStateFailed,
+		},
+	).Order("ingested_at ASC")
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
+
+	if err := query.Find(&points).Error; err != nil {
+		return nil, fmt.Errorf("get pending location points: %w", err)
+	}
+
+	return points, nil
+}
+
+func (r *locationPointRepository) MarkProcessed(
+	ctx context.Context,
+	pointID string,
+) error {
+	return r.updateProcessingState(ctx, pointID, models.LocationPointProcessingStateProcessed, "")
+}
+
+func (r *locationPointRepository) MarkFailed(
+	ctx context.Context,
+	pointID string,
+	processingErr error,
+) error {
+	if processingErr == nil {
+		processingErr = gorm.ErrInvalidData
+	}
+	return r.updateProcessingState(
+		ctx,
+		pointID,
+		models.LocationPointProcessingStateFailed,
+		processingErr.Error(),
+	)
+}
+
+func (r *locationPointRepository) updateProcessingState(
+	ctx context.Context,
+	pointID string,
+	state models.LocationPointProcessingState,
+	processingErr string,
+) error {
+	tableName := (&models.LocationPoint{}).TableName()
+	updates := map[string]any{
+		"processing_state": state,
+		"processing_error": processingErr,
+	}
+	if state == models.LocationPointProcessingStateProcessed {
+		updates["processed_at"] = time.Now()
+	} else {
+		updates["processed_at"] = nil
+	}
+
+	result := r.Pool().DB(ctx, false).
+		Table(tableName).
+		Where("id = ?", pointID)
+	result = result.
+		Updates(updates)
+	if result.Error != nil {
+		return fmt.Errorf("update processing state for point %s: %w", pointID, result.Error)
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("location point %s not found or deleted", pointID)
+	}
+
+	return nil
 }

@@ -4,106 +4,92 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 )
 
 type routeDeviationStateRepository struct {
-	dbPool pool.Pool
+	datastore.BaseRepository[*models.RouteDeviationState]
 }
 
-// NewRouteDeviationStateRepository creates a new repository for route deviation state.
-func NewRouteDeviationStateRepository(dbPool pool.Pool) RouteDeviationStateRepository {
-	return &routeDeviationStateRepository{dbPool: dbPool}
+func NewRouteDeviationStateRepository(
+	ctx context.Context,
+	dbPool pool.Pool,
+	workMan workerpool.Manager,
+) RouteDeviationStateRepository {
+	return &routeDeviationStateRepository{
+		BaseRepository: datastore.NewBaseRepository[*models.RouteDeviationState](
+			ctx,
+			dbPool,
+			workMan,
+			func() *models.RouteDeviationState { return &models.RouteDeviationState{} },
+		),
+	}
 }
 
-// Pool returns the underlying database pool for transaction management.
-func (r *routeDeviationStateRepository) Pool() pool.Pool {
-	return r.dbPool
-}
-
-// UpsertTx creates or updates the route deviation state within an existing transaction.
-func (r *routeDeviationStateRepository) UpsertTx(
+func (r *routeDeviationStateRepository) UpsertTx( //nolint:dupl // similar upsert pattern, different models
 	tx *gorm.DB,
 	state *models.RouteDeviationState,
 ) error {
-	result := tx.Exec(
-		`INSERT INTO route_deviation_states
-		     (subject_id, route_id, deviated, consecutive_off_route,
-		      last_deviation_event_at, last_point_ts, last_lat, last_lon, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-		 ON CONFLICT (subject_id, route_id)
-		 DO UPDATE SET
-		     deviated = EXCLUDED.deviated,
-		     consecutive_off_route = EXCLUDED.consecutive_off_route,
-		     last_deviation_event_at = EXCLUDED.last_deviation_event_at,
-		     last_point_ts = EXCLUDED.last_point_ts,
-		     last_lat = EXCLUDED.last_lat,
-		     last_lon = EXCLUDED.last_lon,
-		     updated_at = NOW()`,
-		state.SubjectID,
-		state.RouteID,
-		state.Deviated,
-		state.ConsecutiveOffRoute,
-		state.LastDeviationEventAt,
-		state.LastPointTS,
-		state.LastLat,
-		state.LastLon,
-	)
+	state.GenID(tx.Statement.Context)
+	now := time.Now()
+
+	result := tx.Clauses(clause.OnConflict{
+		Columns: []clause.Column{
+			{Name: "tenant_id"},
+			{Name: "partition_id"},
+			{Name: "subject_id"},
+			{Name: "route_id"},
+		},
+		DoUpdates: clause.Assignments(map[string]any{
+			"deviated":                state.Deviated,
+			"consecutive_off_route":   state.ConsecutiveOffRoute,
+			"last_deviation_event_at": state.LastDeviationEventAt,
+			"last_point_ts":           state.LastPointTS,
+			"last_lat":                state.LastLat,
+			"last_lon":                state.LastLon,
+			"modified_at":             now,
+			"version":                 clause.Expr{SQL: "route_deviation_states.version + 1"},
+		}),
+	}).Create(state)
 	if result.Error != nil {
-		return fmt.Errorf(
-			"upsert route deviation state (%s, %s): %w",
-			state.SubjectID, state.RouteID, result.Error,
-		)
+		return fmt.Errorf("upsert route deviation state (%s, %s): %w", state.SubjectID, state.RouteID, result.Error)
 	}
 	return nil
 }
 
-// GetForUpdate retrieves the route deviation state with a row-level lock.
-// Returns (nil, nil) if no state exists for the given (subject, route) pair.
 func (r *routeDeviationStateRepository) GetForUpdate(
 	tx *gorm.DB,
 	subjectID, routeID string,
 ) (*models.RouteDeviationState, error) {
 	var state models.RouteDeviationState
-	result := tx.Raw(
-		`SELECT * FROM route_deviation_states
-		 WHERE subject_id = ? AND route_id = ? FOR UPDATE`,
-		subjectID, routeID,
-	).Scan(&state)
-
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			return nil, nil //nolint:nilnil // intentional: nil state means "no prior state exists"
-		}
-		return nil, fmt.Errorf(
-			"get route deviation state for update (%s, %s): %w",
-			subjectID, routeID, result.Error,
-		)
+	err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("subject_id = ? AND route_id = ?", subjectID, routeID).
+		Take(&state).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil //nolint:nilnil // not found is a valid empty result
 	}
-
-	if result.RowsAffected == 0 {
-		return nil, nil //nolint:nilnil // intentional: nil state means "no prior state exists"
+	if err != nil {
+		return nil, fmt.Errorf("get route deviation state for update (%s, %s): %w", subjectID, routeID, err)
 	}
-
 	return &state, nil
 }
 
-// DeleteByRoute removes all route deviation state entries for a given route.
 func (r *routeDeviationStateRepository) DeleteByRoute(
 	ctx context.Context,
 	routeID string,
 ) error {
-	db := r.dbPool.DB(ctx, false)
-	result := db.Where("route_id = ?", routeID).Delete(&models.RouteDeviationState{})
-	if result.Error != nil {
-		return fmt.Errorf(
-			"delete route deviation states for route %s: %w",
-			routeID, result.Error,
-		)
+	if err := r.Pool().DB(ctx, false).
+		Where("route_id = ?", routeID).
+		Delete(&models.RouteDeviationState{}).Error; err != nil {
+		return fmt.Errorf("delete route deviation states for route %s: %w", routeID, err)
 	}
 	return nil
 }

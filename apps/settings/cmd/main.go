@@ -20,7 +20,7 @@ import (
 )
 
 func main() {
-	serviceName := "service_settings"
+	serviceName := "service_setting"
 	ctx := context.Background()
 
 	cfg, err := config.LoadWithOIDC[aconfig.SettingsConfig](ctx)

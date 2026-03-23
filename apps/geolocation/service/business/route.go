@@ -48,28 +48,28 @@ func (b *routeBusiness) CreateRoute(
 		return nil, errors.New("create route request data is nil")
 	}
 
-	apiData := req.Data
+	apiData := req.GetData()
 
-	if err := models.ValidateRouteName(apiData.Name); err != nil {
+	if err := models.ValidateRouteName(apiData.GetName()); err != nil {
 		return nil, fmt.Errorf("invalid route name: %w", err)
 	}
-	if err := models.ValidateRouteGeoJSON(apiData.GeometryJSON); err != nil {
+	if err := models.ValidateRouteGeoJSON(apiData.GetGeometry()); err != nil {
 		return nil, fmt.Errorf("invalid geometry: %w", err)
 	}
-	if apiData.OwnerID == "" {
+	if apiData.GetOwnerId() == "" {
 		return nil, errors.New("owner_id is required")
 	}
 
 	route := &models.Route{
-		OwnerID:                   apiData.OwnerID,
-		Name:                      apiData.Name,
-		Description:               apiData.Description,
-		GeometryJSON:              apiData.GeometryJSON,
+		OwnerID:                   apiData.GetOwnerId(),
+		Name:                      apiData.GetName(),
+		Description:               apiData.GetDescription(),
+		GeometryJSON:              apiData.GetGeometry(),
 		State:                     StateActive,
-		Extras:                    models.StructToJSONMap(apiData.Extras),
+		Extras:                    models.StructToJSONMap(apiData.GetExtra()),
 		DeviationThresholdM:       apiData.DeviationThresholdM,
-		DeviationConsecutiveCount: apiData.DeviationConsecutiveCount,
-		DeviationCooldownSec:      apiData.DeviationCooldownSec,
+		DeviationConsecutiveCount: int32PtrToIntPtr(apiData.DeviationConsecutiveCount),
+		DeviationCooldownSec:      int32PtrToIntPtr(apiData.DeviationCooldownSec),
 	}
 	route.GenID(ctx)
 
@@ -79,7 +79,7 @@ func (b *routeBusiness) CreateRoute(
 			return fmt.Errorf("create route: %w", createErr)
 		}
 		if geomErr := b.routeRepo.UpdateGeometryTx(
-			tx, route.GetID(), apiData.GeometryJSON,
+			tx, route.GetID(), apiData.GetGeometry(),
 		); geomErr != nil {
 			return fmt.Errorf("set route geometry: %w", geomErr)
 		}
@@ -94,62 +94,85 @@ func (b *routeBusiness) CreateRoute(
 		return nil, fmt.Errorf("read back created route: %w", err)
 	}
 
-	b.emitRouteChanged(ctx, persisted.GetID(), persisted.OwnerID, "created")
+	b.emitRouteChanged(ctx, persisted, "created")
 
 	log.Info("route created", "route_id", persisted.GetID(), "name", persisted.Name)
 	return persisted.ToAPI(), nil
 }
 
+//nolint:gocognit // update with many optional fields
 func (b *routeBusiness) UpdateRoute(
 	ctx context.Context,
 	req *models.UpdateRouteRequest,
 ) (*models.RouteAPI, error) {
 	log := util.Log(ctx)
 
-	if req == nil || req.ID == "" {
+	if req == nil || req.GetId() == "" {
 		return nil, errors.New("update route request requires an ID")
 	}
 
-	route, err := b.routeRepo.GetByID(ctx, req.ID)
+	route, err := b.routeRepo.GetByID(ctx, req.GetId())
 	if err != nil {
 		return nil, fmt.Errorf("route not found: %w", err)
 	}
 
-	if req.Name != "" {
-		if vErr := models.ValidateRouteName(req.Name); vErr != nil {
+	updateFields := []string{}
+	if req.Name != nil {
+		if vErr := models.ValidateRouteName(req.GetName()); vErr != nil {
 			return nil, fmt.Errorf("invalid route name: %w", vErr)
 		}
-		route.Name = req.Name
+		route.Name = req.GetName()
+		updateFields = append(updateFields, "name")
 	}
-	if req.Description != "" {
-		route.Description = req.Description
+	if req.Description != nil {
+		route.Description = req.GetDescription()
+		updateFields = append(updateFields, "description")
 	}
 	if req.DeviationThresholdM != nil {
 		route.DeviationThresholdM = req.DeviationThresholdM
+		updateFields = append(updateFields, "deviation_threshold_m")
 	}
 	if req.DeviationConsecutiveCount != nil {
-		route.DeviationConsecutiveCount = req.DeviationConsecutiveCount
+		route.DeviationConsecutiveCount = int32PtrToIntPtr(req.DeviationConsecutiveCount)
+		updateFields = append(updateFields, "deviation_consecutive_count")
 	}
 	if req.DeviationCooldownSec != nil {
-		route.DeviationCooldownSec = req.DeviationCooldownSec
+		route.DeviationCooldownSec = int32PtrToIntPtr(req.DeviationCooldownSec)
+		updateFields = append(updateFields, "deviation_cooldown_sec")
 	}
-	if req.Extras != nil {
-		route.Extras = models.StructToJSONMap(req.Extras)
-	}
-
-	if _, err = b.routeRepo.Update(ctx, route); err != nil {
-		return nil, fmt.Errorf("update route: %w", err)
+	if req.GetExtra() != nil {
+		route.Extras = models.StructToJSONMap(req.GetExtra())
+		updateFields = append(updateFields, "extras")
 	}
 
-	if req.Geometry != "" {
-		if vErr := models.ValidateRouteGeoJSON(req.Geometry); vErr != nil {
-			return nil, fmt.Errorf("invalid geometry: %w", vErr)
+	db := b.routeRepo.Pool().DB(ctx, false)
+	txErr := db.Transaction(func(tx *gorm.DB) error {
+		if req.Geometry != nil {
+			if vErr := models.ValidateRouteGeoJSON(req.GetGeometry()); vErr != nil {
+				return fmt.Errorf("invalid geometry: %w", vErr)
+			}
 		}
-		if gErr := b.routeRepo.UpdateGeometry(
-			ctx, route.GetID(), req.Geometry,
-		); gErr != nil {
-			return nil, fmt.Errorf("update route geometry: %w", gErr)
+
+		if len(updateFields) > 0 {
+			if updateErr := tx.Model(route).
+				Select(updateFields).
+				Updates(route).Error; updateErr != nil {
+				return fmt.Errorf("update route: %w", updateErr)
+			}
 		}
+
+		if req.Geometry != nil {
+			if gErr := b.routeRepo.UpdateGeometryTx(
+				tx, route.GetID(), req.GetGeometry(),
+			); gErr != nil {
+				return fmt.Errorf("update route geometry: %w", gErr)
+			}
+		}
+
+		return nil
+	})
+	if txErr != nil {
+		return nil, txErr
 	}
 
 	persisted, err := b.routeRepo.GetByID(ctx, route.GetID())
@@ -157,7 +180,7 @@ func (b *routeBusiness) UpdateRoute(
 		return nil, fmt.Errorf("read back updated route: %w", err)
 	}
 
-	b.emitRouteChanged(ctx, persisted.GetID(), persisted.OwnerID, "updated")
+	b.emitRouteChanged(ctx, persisted, "updated")
 
 	log.Info("route updated", "route_id", persisted.GetID())
 	return persisted.ToAPI(), nil
@@ -190,7 +213,7 @@ func (b *routeBusiness) DeleteRoute(ctx context.Context, routeID string) error {
 		)
 	}
 
-	b.emitRouteChanged(ctx, route.GetID(), route.OwnerID, "deleted")
+	b.emitRouteChanged(ctx, route, "deleted")
 
 	log.Info("route deleted", "route_id", route.GetID())
 	return nil
@@ -240,21 +263,21 @@ func (b *routeBusiness) AssignRoute(
 	if req == nil {
 		return nil, errors.New("assign route request is nil")
 	}
-	if req.SubjectID == "" {
+	if req.GetSubjectId() == "" {
 		return nil, errors.New("subject_id is required")
 	}
-	if req.RouteID == "" {
+	if req.GetRouteId() == "" {
 		return nil, errors.New("route_id is required")
 	}
 
 	// Verify route exists.
-	if _, err := b.routeRepo.GetByID(ctx, req.RouteID); err != nil {
+	if _, err := b.routeRepo.GetByID(ctx, req.GetRouteId()); err != nil {
 		return nil, fmt.Errorf("route not found: %w", err)
 	}
 
 	assignment := &models.RouteAssignment{
-		SubjectID: req.SubjectID,
-		RouteID:   req.RouteID,
+		SubjectID: req.GetSubjectId(),
+		RouteID:   req.GetRouteId(),
 		State:     StateActive,
 	}
 	if req.ValidFrom != nil {
@@ -273,8 +296,8 @@ func (b *routeBusiness) AssignRoute(
 
 	log.Info("route assigned",
 		"assignment_id", assignment.GetID(),
-		"subject_id", req.SubjectID,
-		"route_id", req.RouteID,
+		"subject_id", req.GetSubjectId(),
+		"route_id", req.GetRouteId(),
 	)
 	return assignment.ToAPI(), nil
 }
@@ -315,20 +338,30 @@ func (b *routeBusiness) GetSubjectAssignments(
 	return result, nil
 }
 
-func (b *routeBusiness) emitRouteChanged(
-	ctx context.Context,
-	routeID, ownerID, action string,
-) {
+func (b *routeBusiness) emitRouteChanged(ctx context.Context, route *models.Route, action string) {
 	event := &models.RouteChangedEvent{
-		RouteID: routeID,
-		OwnerID: ownerID,
+		EventTenancy: models.EventTenancy{
+			TenantID:    route.TenantID,
+			PartitionID: route.PartitionID,
+			AccessID:    route.AccessID,
+		},
+		RouteID: route.GetID(),
+		OwnerID: route.OwnerID,
 		Action:  action,
 	}
 
 	if err := b.eventsMan.Emit(ctx, RouteChangedEventName, event); err != nil {
 		util.Log(ctx).WithError(err).Error("failed to emit route changed event",
-			"route_id", routeID,
+			"route_id", route.GetID(),
 			"action", action,
 		)
 	}
+}
+
+func int32PtrToIntPtr(value *int32) *int {
+	if value == nil {
+		return nil
+	}
+	v := int(*value)
+	return &v
 }

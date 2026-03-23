@@ -96,10 +96,12 @@ func (b *routeDeviationBusiness) EvaluatePoint(
 		if evalErr := b.evaluateRouteForSubject(
 			ctx, event, rwa.Route, pointTS,
 		); evalErr != nil {
-			log.WithError(evalErr).Error("route deviation evaluation failed",
+			spanErr = fmt.Errorf("route deviation evaluation failed for route %s: %w", rwa.Route.GetID(), evalErr)
+			log.WithError(spanErr).Error("route deviation evaluation failed",
 				"subject_id", event.SubjectID,
 				"route_id", rwa.Route.GetID(),
 			)
+			return spanErr
 		}
 	}
 
@@ -164,6 +166,9 @@ func (b *routeDeviationBusiness) evaluateRouteForSubject(
 				SubjectID: event.SubjectID,
 				RouteID:   route.GetID(),
 			}
+			state.TenantID = event.TenantID
+			state.PartitionID = event.PartitionID
+			state.AccessID = event.AccessID
 		}
 
 		if state.LastPointTS != nil && pointTS.Before(*state.LastPointTS) {
@@ -300,6 +305,11 @@ func (b *routeDeviationBusiness) emitDeviationEvent(
 	b.metrics.RecordRouteDeviationTransition(ctx, eventType)
 
 	payload := &models.RouteDeviationDetectedEvent{
+		EventTenancy: models.EventTenancy{
+			TenantID:    event.TenantID,
+			PartitionID: event.PartitionID,
+			AccessID:    event.AccessID,
+		},
 		SubjectID:      event.SubjectID,
 		RouteID:        route.GetID(),
 		EventType:      eventType,

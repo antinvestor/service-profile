@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"math"
 	"time"
+
+	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/v1"
 )
 
 const (
@@ -59,6 +61,12 @@ const (
 
 	// MaxSubjectIDLength is the maximum length of a subject ID.
 	MaxSubjectIDLength = 40
+
+	// MinDeviceIDLength is the minimum length of a device ID.
+	MinDeviceIDLength = 3
+
+	// MaxDeviceIDLength is the maximum length of a device ID.
+	MaxDeviceIDLength = 80
 
 	// MaxAreaNameLength is the maximum length of an area name.
 	MaxAreaNameLength = 250
@@ -115,13 +123,21 @@ func ValidateSubjectID(id string) error {
 	return nil
 }
 
+// ValidateDeviceID checks that a device ID is non-empty and within bounds.
+func ValidateDeviceID(id string) error {
+	if len(id) < MinDeviceIDLength {
+		return errors.New("device_id must be at least 3 characters")
+	}
+	if len(id) > MaxDeviceIDLength {
+		return errors.New("device_id must be at most 80 characters")
+	}
+	return nil
+}
+
 // ValidateLocationPoint performs full validation on an incoming location point.
-func ValidateLocationPoint(pt *LocationPointAPI) error {
+func ValidateLocationPoint(pt *LocationPointInput) error {
 	if pt == nil {
 		return errors.New("location point is nil")
-	}
-	if err := ValidateSubjectID(pt.SubjectID); err != nil {
-		return fmt.Errorf("invalid subject_id: %w", err)
 	}
 	if err := ValidateLatLon(pt.Latitude, pt.Longitude); err != nil {
 		return fmt.Errorf("invalid coordinates: %w", err)
@@ -134,7 +150,11 @@ func ValidateLocationPoint(pt *LocationPointAPI) error {
 			return fmt.Errorf("invalid timestamp: %w", err)
 		}
 	}
-	if pt.Source < LocationSourceGPS || pt.Source > LocationSourceManual {
+	if err := ValidateDeviceID(pt.GetDeviceId()); err != nil {
+		return fmt.Errorf("invalid device_id: %w", err)
+	}
+	if pt.Source < geolocationv1.LocationSource_LOCATION_SOURCE_UNSPECIFIED ||
+		pt.Source > geolocationv1.LocationSource_LOCATION_SOURCE_MANUAL {
 		return fmt.Errorf("invalid source: %d", pt.Source)
 	}
 	return nil

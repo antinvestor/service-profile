@@ -62,6 +62,7 @@ func (c *AreaChangeConsumer) Execute(ctx context.Context, payload any) error {
 	if !ok {
 		return errors.New("invalid payload type")
 	}
+	ctx = models.ContextWithEventTenancy(ctx, event.EventTenancy, event.OwnerID)
 
 	log := util.Log(ctx)
 	log.Info("area change event processed",

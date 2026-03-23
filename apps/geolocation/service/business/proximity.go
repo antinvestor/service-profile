@@ -73,11 +73,11 @@ func (b *proximityBusiness) GetNearbySubjects(
 ) ([]*models.NearbySubjectAPI, error) {
 	log := util.Log(ctx)
 
-	if req == nil || req.SubjectID == "" {
+	if req.GetSubjectId() == "" {
 		return nil, errors.New("subject_id is required")
 	}
 
-	radiusMeters := req.RadiusMeters
+	radiusMeters := req.GetRadiusMeters()
 	if radiusMeters <= 0 {
 		radiusMeters = b.cfg.DefaultRadiusM
 	}
@@ -85,12 +85,12 @@ func (b *proximityBusiness) GetNearbySubjects(
 		return nil, fmt.Errorf("radius_meters %f exceeds maximum %f", radiusMeters, b.cfg.MaxRadiusM)
 	}
 
-	limit := clampLimit(int(req.Limit), b.cfg.DefaultLimit, b.cfg.MaxLimit)
+	limit := clampLimit(int(req.GetLimit()), b.cfg.DefaultLimit, b.cfg.MaxLimit)
 
 	// Get the requesting subject's latest position.
-	pos, err := b.latestPosRepo.Get(ctx, req.SubjectID)
+	pos, err := b.latestPosRepo.Get(ctx, req.GetSubjectId())
 	if err != nil {
-		return nil, fmt.Errorf("get position for subject %s: %w", req.SubjectID, err)
+		return nil, fmt.Errorf("get position for subject %s: %w", req.GetSubjectId(), err)
 	}
 
 	// Find nearby subjects excluding the requester.
@@ -99,7 +99,7 @@ func (b *proximityBusiness) GetNearbySubjects(
 		pos.Latitude,
 		pos.Longitude,
 		radiusMeters,
-		req.SubjectID,
+		req.GetSubjectId(),
 		b.cfg.StaleHours,
 		limit,
 	)
@@ -108,7 +108,7 @@ func (b *proximityBusiness) GetNearbySubjects(
 	}
 
 	log.Debug("nearby subjects query completed",
-		"subject_id", req.SubjectID,
+		"subject_id", req.GetSubjectId(),
 		"radius_m", radiusMeters,
 		"results", len(results),
 	)
@@ -116,7 +116,7 @@ func (b *proximityBusiness) GetNearbySubjects(
 	apiResults := make([]*models.NearbySubjectAPI, 0, len(results))
 	for _, r := range results {
 		apiResults = append(apiResults, &models.NearbySubjectAPI{
-			SubjectID:      r.SubjectID,
+			SubjectId:      r.SubjectID,
 			DistanceMeters: r.DistanceMeters,
 			LastSeen:       timestampFromTime(r.LastSeen),
 		})
@@ -134,11 +134,11 @@ func (b *proximityBusiness) GetNearbyAreas(
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
-	if err := models.ValidateLatLon(req.Latitude, req.Longitude); err != nil {
+	if err := models.ValidateLatLon(req.GetLatitude(), req.GetLongitude()); err != nil {
 		return nil, fmt.Errorf("invalid coordinates: %w", err)
 	}
 
-	radiusMeters := req.RadiusMeters
+	radiusMeters := req.GetRadiusMeters()
 	if radiusMeters <= 0 {
 		radiusMeters = b.cfg.DefaultRadiusM
 	}
@@ -146,16 +146,16 @@ func (b *proximityBusiness) GetNearbyAreas(
 		return nil, fmt.Errorf("radius_meters %f exceeds maximum %f", radiusMeters, b.cfg.MaxRadiusM)
 	}
 
-	limit := clampLimit(int(req.Limit), b.cfg.DefaultLimit, b.cfg.MaxLimit)
+	limit := clampLimit(int(req.GetLimit()), b.cfg.DefaultLimit, b.cfg.MaxLimit)
 
-	results, err := b.areaRepo.GetNearbyAreas(ctx, req.Latitude, req.Longitude, radiusMeters, limit)
+	results, err := b.areaRepo.GetNearbyAreas(ctx, req.GetLatitude(), req.GetLongitude(), radiusMeters, limit)
 	if err != nil {
 		return nil, fmt.Errorf("get nearby areas: %w", err)
 	}
 
 	log.Debug("nearby areas query completed",
-		"lat", req.Latitude,
-		"lon", req.Longitude,
+		"lat", req.GetLatitude(),
+		"lon", req.GetLongitude(),
 		"radius_m", radiusMeters,
 		"results", len(results),
 	)
@@ -163,9 +163,9 @@ func (b *proximityBusiness) GetNearbyAreas(
 	apiResults := make([]*models.NearbyAreaAPI, 0, len(results))
 	for _, r := range results {
 		apiResults = append(apiResults, &models.NearbyAreaAPI{
-			AreaID:         r.Area.GetID(),
+			AreaId:         r.Area.GetID(),
 			Name:           r.Area.Name,
-			AreaType:       r.Area.AreaType,
+			AreaType:       models.ToProtoAreaType(r.Area.AreaType),
 			DistanceMeters: r.DistanceMeters,
 		})
 	}
@@ -180,11 +180,16 @@ func (b *proximityBusiness) UpdateLatestPosition(ctx context.Context, event *mod
 
 	pos := &models.LatestPosition{
 		SubjectID: event.SubjectID,
+		DeviceID:  event.DeviceID,
 		Latitude:  event.Latitude,
 		Longitude: event.Longitude,
 		Accuracy:  event.Accuracy,
 		TS:        time.UnixMilli(event.Timestamp),
 	}
+	pos.TenantID = event.TenantID
+	pos.PartitionID = event.PartitionID
+	pos.AccessID = event.AccessID
+	pos.GenID(ctx)
 
 	if err := b.latestPosRepo.Upsert(ctx, pos); err != nil {
 		return fmt.Errorf("upsert latest position for subject %s: %w", event.SubjectID, err)

@@ -50,27 +50,27 @@ func (b *areaBusiness) CreateArea(ctx context.Context, req *models.CreateAreaReq
 		return nil, errors.New("create area request data is nil")
 	}
 
-	apiData := req.Data
+	apiData := req.GetData()
 
 	// Validate.
-	if err := models.ValidateAreaName(apiData.Name); err != nil {
+	if err := models.ValidateAreaName(apiData.GetName()); err != nil {
 		return nil, fmt.Errorf("invalid area name: %w", err)
 	}
-	if err := models.ValidateGeoJSON(apiData.GeometryJSON); err != nil {
+	if err := models.ValidateGeoJSON(apiData.GetGeometry()); err != nil {
 		return nil, fmt.Errorf("invalid geometry: %w", err)
 	}
-	if apiData.OwnerID == "" {
+	if apiData.GetOwnerId() == "" {
 		return nil, errors.New("owner_id is required")
 	}
 
 	area := &models.Area{
-		OwnerID:      apiData.OwnerID,
-		Name:         apiData.Name,
-		Description:  apiData.Description,
-		AreaType:     apiData.AreaType,
-		GeometryJSON: apiData.GeometryJSON,
+		OwnerID:      apiData.GetOwnerId(),
+		Name:         apiData.GetName(),
+		Description:  apiData.GetDescription(),
+		AreaType:     models.AreaTypeFromProto(apiData.GetAreaType()),
+		GeometryJSON: apiData.GetGeometry(),
 		State:        StateActive,
-		Extras:       models.StructToJSONMap(apiData.Extras),
+		Extras:       models.StructToJSONMap(apiData.GetExtra()),
 	}
 	area.GenID(ctx)
 
@@ -81,7 +81,7 @@ func (b *areaBusiness) CreateArea(ctx context.Context, req *models.CreateAreaReq
 		if createErr := tx.Create(area).Error; createErr != nil {
 			return fmt.Errorf("create area: %w", createErr)
 		}
-		if geomErr := b.areaRepo.UpdateGeometryTx(tx, area.GetID(), apiData.GeometryJSON); geomErr != nil {
+		if geomErr := b.areaRepo.UpdateGeometryTx(tx, area.GetID(), apiData.GetGeometry()); geomErr != nil {
 			return fmt.Errorf("set area geometry: %w", geomErr)
 		}
 		return nil
@@ -96,56 +96,78 @@ func (b *areaBusiness) CreateArea(ctx context.Context, req *models.CreateAreaReq
 		return nil, fmt.Errorf("read back created area: %w", err)
 	}
 
-	b.emitAreaChanged(ctx, persisted.GetID(), persisted.OwnerID, "created")
+	b.emitAreaChanged(ctx, persisted, "created")
 
 	log.Info("area created", "area_id", persisted.GetID(), "name", persisted.Name)
 	return persisted.ToAPI(), nil
 }
 
+//nolint:gocognit // update with many optional fields
 func (b *areaBusiness) UpdateArea(ctx context.Context, req *models.UpdateAreaRequest) (*models.AreaAPI, error) {
 	log := util.Log(ctx)
 
-	if req == nil || req.ID == "" {
+	if req == nil || req.GetId() == "" {
 		return nil, errors.New("update area request requires an ID")
 	}
 
-	area, err := b.areaRepo.GetByID(ctx, req.ID)
+	area, err := b.areaRepo.GetByID(ctx, req.GetId())
 	if err != nil {
 		return nil, fmt.Errorf("area not found: %w", err)
 	}
 
 	// Apply field updates.
-	if req.Name != "" {
-		if vErr := models.ValidateAreaName(req.Name); vErr != nil {
+	updateFields := []string{}
+	if req.Name != nil {
+		if vErr := models.ValidateAreaName(req.GetName()); vErr != nil {
 			return nil, fmt.Errorf("invalid area name: %w", vErr)
 		}
-		area.Name = req.Name
+		area.Name = req.GetName()
+		updateFields = append(updateFields, "name")
 	}
-	if req.Description != "" {
-		area.Description = req.Description
+	if req.Description != nil {
+		area.Description = req.GetDescription()
+		updateFields = append(updateFields, "description")
 	}
 	if req.AreaType != nil {
-		area.AreaType = *req.AreaType
+		area.AreaType = models.AreaTypeFromProto(req.GetAreaType())
+		updateFields = append(updateFields, "area_type")
 	}
-	if req.Extras != nil {
-		existing := models.StructToJSONMap(area.ToAPI().Extras)
-		maps.Copy(existing, models.StructToJSONMap(req.Extras))
+	if req.GetExtra() != nil {
+		existing := area.Extras
+		if existing == nil {
+			existing = make(data.JSONMap)
+		}
+		maps.Copy(existing, models.StructToJSONMap(req.GetExtra()))
 		area.Extras = existing
+		updateFields = append(updateFields, "extras")
 	}
 
-	// Save non-spatial updates.
-	if _, err = b.areaRepo.Update(ctx, area); err != nil {
-		return nil, fmt.Errorf("update area: %w", err)
-	}
+	db := b.areaRepo.Pool().DB(ctx, false)
+	txErr := db.Transaction(func(tx *gorm.DB) error {
+		if req.Geometry != nil {
+			if vErr := models.ValidateGeoJSON(req.GetGeometry()); vErr != nil {
+				return fmt.Errorf("invalid geometry: %w", vErr)
+			}
+		}
 
-	// Update geometry if provided.
-	if req.Geometry != "" {
-		if vErr := models.ValidateGeoJSON(req.Geometry); vErr != nil {
-			return nil, fmt.Errorf("invalid geometry: %w", vErr)
+		if len(updateFields) > 0 {
+			if updateErr := tx.Model(area).
+				Select(updateFields).
+				Updates(area).Error; updateErr != nil {
+				return fmt.Errorf("update area: %w", updateErr)
+			}
 		}
-		if gErr := b.areaRepo.UpdateGeometry(ctx, area.GetID(), req.Geometry); gErr != nil {
-			return nil, fmt.Errorf("update area geometry: %w", gErr)
+
+		if req.Geometry != nil {
+			if gErr := b.areaRepo.UpdateGeometryTx(tx, area.GetID(), req.GetGeometry()); gErr != nil {
+				return fmt.Errorf("update area geometry: %w", gErr)
+			}
 		}
+
+		return nil
+	})
+	if txErr != nil {
+		return nil, txErr
 	}
 
 	// Re-read to get updated computed metrics.
@@ -154,7 +176,7 @@ func (b *areaBusiness) UpdateArea(ctx context.Context, req *models.UpdateAreaReq
 		return nil, fmt.Errorf("read back updated area: %w", err)
 	}
 
-	b.emitAreaChanged(ctx, persisted.GetID(), persisted.OwnerID, "updated")
+	b.emitAreaChanged(ctx, persisted, "updated")
 
 	log.Info("area updated", "area_id", persisted.GetID())
 	return persisted.ToAPI(), nil
@@ -182,7 +204,7 @@ func (b *areaBusiness) DeleteArea(ctx context.Context, areaID string) error {
 		// Non-fatal: area is already marked deleted, spatial queries will skip it.
 	}
 
-	b.emitAreaChanged(ctx, area.GetID(), area.OwnerID, "deleted")
+	b.emitAreaChanged(ctx, area, "deleted")
 
 	log.Info("area deleted", "area_id", area.GetID())
 	return nil
@@ -229,16 +251,21 @@ func (b *areaBusiness) SearchAreas(
 	return result, nil
 }
 
-func (b *areaBusiness) emitAreaChanged(ctx context.Context, areaID, ownerID, action string) {
+func (b *areaBusiness) emitAreaChanged(ctx context.Context, area *models.Area, action string) {
 	event := &models.AreaChangedEvent{
-		AreaID:  areaID,
-		OwnerID: ownerID,
+		EventTenancy: models.EventTenancy{
+			TenantID:    area.TenantID,
+			PartitionID: area.PartitionID,
+			AccessID:    area.AccessID,
+		},
+		AreaID:  area.GetID(),
+		OwnerID: area.OwnerID,
 		Action:  action,
 	}
 
 	if err := b.eventsMan.Emit(ctx, AreaChangedEventName, event); err != nil {
 		util.Log(ctx).WithError(err).Error("failed to emit area changed event",
-			"area_id", areaID,
+			"area_id", area.GetID(),
 			"action", action,
 		)
 	}

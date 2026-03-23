@@ -6,8 +6,10 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
@@ -16,25 +18,28 @@ import (
 	"github.com/stretchr/testify/require"
 
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
-	"github.com/antinvestor/service-profile/apps/geolocation/service/authz"
-	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
+	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 	"github.com/antinvestor/service-profile/apps/geolocation/tests/testketo"
 )
 
 const (
 	DefaultRandomStringLength = 8
+	postGISImage              = "postgis/postgis:16-3.4"
 )
 
 type GeolocationBaseTestSuite struct {
 	frametests.FrameBaseTestSuite
 
-	AuthzMiddleware authz.Middleware
-	ketoReadURI     string
-	ketoWriteURI    string
+	ketoReadURI  string
+	ketoWriteURI string
 }
 
 func initResources(_ context.Context) []definition.TestResource {
-	pg := testpostgres.NewWithOpts("service_geolocation", definition.WithUserName("ant"))
+	pg := testpostgres.NewWithOpts(
+		"service_geolocation",
+		definition.WithImageName(postGISImage),
+		definition.WithUserName("postgres"),
+	)
 
 	keto := testketo.NewWithOpts(
 		definition.WithDependancies(pg),
@@ -105,19 +110,43 @@ func (bs *GeolocationBaseTestSuite) CreateService(
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())
 
-	// Wire real Keto authoriser via SecurityManager
-	sm := svc.SecurityManager()
-	bs.AuthzMiddleware = authz.NewMiddleware(sm.GetAuthorizer(ctx))
+	require.NoError(t, enablePostGIS(ctx, testDS.String()))
 
 	svc.Init(ctx)
 
-	err = repository.Migrate(ctx, svc.DatastoreManager(), "../../migrations/0001")
+	err = svc.DatastoreManager().Migrate(
+		ctx,
+		svc.DatastoreManager().GetPool(ctx, datastore.DefaultMigrationPoolName),
+		"../../migrations/0001",
+		&models.LocationPoint{},
+		&models.Area{},
+		&models.GeoEvent{},
+		&models.GeofenceState{},
+		&models.LatestPosition{},
+		&models.Route{},
+		&models.RouteAssignment{},
+		&models.RouteDeviationState{},
+	)
 	require.NoError(t, err)
 
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)
 
 	return ctx, svc
+}
+
+func enablePostGIS(ctx context.Context, dsn string) error {
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		return fmt.Errorf("connect to test database: %w", err)
+	}
+	defer pool.Close()
+
+	if _, err = pool.Exec(ctx, `CREATE EXTENSION IF NOT EXISTS postgis`); err != nil {
+		return fmt.Errorf("create postgis extension: %w", err)
+	}
+
+	return nil
 }
 
 // WithAuthClaims adds authentication claims to a context for testing.
@@ -146,7 +175,11 @@ func (bs *GeolocationBaseTestSuite) SeedTenantAccess(
 ) {
 	auth := svc.SecurityManager().GetAuthorizer(ctx)
 	tenancyPath := fmt.Sprintf("%s/%s", tenantID, partitionID)
-	err := auth.WriteTuple(ctx, authz.BuildAccessTuple(tenancyPath, profileID))
+	err := auth.WriteTuple(ctx, security.RelationTuple{
+		Object:   security.ObjectRef{Namespace: "tenancy_access", ID: tenancyPath},
+		Relation: "member",
+		Subject:  security.SubjectRef{Namespace: "profile_user", ID: profileID},
+	})
 	bs.Require().NoError(err, "failed to seed tenant access")
 }
 
@@ -160,19 +193,26 @@ func (bs *GeolocationBaseTestSuite) SeedTenantRole(
 	auth := svc.SecurityManager().GetAuthorizer(ctx)
 	tenancyPath := fmt.Sprintf("%s/%s", tenantID, partitionID)
 
-	permissions := authz.RolePermissions()[role]
+	permissions := map[string][]string{
+		"owner":    {"geolocation_manage", "geolocation_view", "location_ingest"},
+		"admin":    {"geolocation_manage", "geolocation_view", "location_ingest"},
+		"operator": {"geolocation_view", "location_ingest"},
+		"viewer":   {"geolocation_view"},
+		"member":   {"geolocation_view"},
+		"service":  {"geolocation_manage", "geolocation_view", "location_ingest"},
+	}[role]
 	tuples := make([]security.RelationTuple, 0, 1+len(permissions))
 
 	tuples = append(tuples, security.RelationTuple{
-		Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
+		Object:   security.ObjectRef{Namespace: "service_profile", ID: tenancyPath},
 		Relation: role,
-		Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
+		Subject:  security.SubjectRef{Namespace: "profile_user", ID: profileID},
 	})
 	for _, perm := range permissions {
 		tuples = append(tuples, security.RelationTuple{
-			Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
-			Relation: authz.GrantedRelation(perm),
-			Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
+			Object:   security.ObjectRef{Namespace: "service_profile", ID: tenancyPath},
+			Relation: "granted_" + perm,
+			Subject:  security.SubjectRef{Namespace: "profile_user", ID: profileID},
 		})
 	}
 

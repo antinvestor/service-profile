@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS location_points (
     modified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ,
     subject_id VARCHAR(40) NOT NULL,
+    device_id VARCHAR(80) NOT NULL,
     ts TIMESTAMPTZ NOT NULL,
     ingested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     latitude DOUBLE PRECISION NOT NULL,
@@ -26,6 +27,9 @@ CREATE TABLE IF NOT EXISTS location_points (
     bearing DOUBLE PRECISION,
     source SMALLINT NOT NULL DEFAULT 0,
     extras JSONB DEFAULT '{}',
+    processing_state SMALLINT NOT NULL DEFAULT 0,
+    processed_at TIMESTAMPTZ,
+    processing_error TEXT NOT NULL DEFAULT '',
     geom geometry(Point, 4326)
 );
 
@@ -42,6 +46,9 @@ CREATE INDEX IF NOT EXISTS idx_location_points_geom
 
 CREATE INDEX IF NOT EXISTS idx_lp_subject_ts_desc
     ON location_points (subject_id, ts DESC);
+
+CREATE INDEX IF NOT EXISTS idx_lp_device_ts_desc
+    ON location_points (device_id, ts DESC);
 
 CREATE INDEX IF NOT EXISTS idx_lp_ingested_at
     ON location_points (ingested_at);

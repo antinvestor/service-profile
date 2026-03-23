@@ -61,6 +61,7 @@ func (c *GeoEventConsumer) Execute(ctx context.Context, payload any) error {
 	if !ok {
 		return errors.New("invalid payload type")
 	}
+	ctx = models.ContextWithEventTenancy(ctx, event.EventTenancy, event.SubjectID)
 
 	log := util.Log(ctx)
 	log.Info("geo event emitted",

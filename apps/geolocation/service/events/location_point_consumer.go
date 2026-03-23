@@ -10,6 +10,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
+	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
 )
 
 // LocationPointConsumer consumes LocationPointIngestedEvent events.
@@ -20,6 +21,7 @@ import (
 // These operations are executed sequentially: latest position must be updated
 // before geofence evaluation can use it for any proximity-based lookups.
 type LocationPointConsumer struct {
+	pointRepo         repository.LocationPointRepository
 	proximityBiz      business.ProximityBusiness
 	geofenceBiz       business.GeofenceBusiness
 	routeDeviationBiz business.RouteDeviationBusiness
@@ -28,12 +30,14 @@ type LocationPointConsumer struct {
 
 // NewLocationPointConsumer creates a new event consumer for ingested location points.
 func NewLocationPointConsumer(
+	pointRepo repository.LocationPointRepository,
 	proximityBiz business.ProximityBusiness,
 	geofenceBiz business.GeofenceBusiness,
 	routeDeviationBiz business.RouteDeviationBusiness,
 	metrics *observability.Metrics,
 ) *LocationPointConsumer {
 	return &LocationPointConsumer{
+		pointRepo:         pointRepo,
 		proximityBiz:      proximityBiz,
 		geofenceBiz:       geofenceBiz,
 		routeDeviationBiz: routeDeviationBiz,
@@ -60,6 +64,9 @@ func (c *LocationPointConsumer) Validate(_ context.Context, payload any) error {
 	if event.SubjectID == "" {
 		return errors.New("subject_id is required")
 	}
+	if event.DeviceID == "" {
+		return errors.New("device_id is required")
+	}
 	if event.PointID == "" {
 		return errors.New("point_id is required")
 	}
@@ -78,6 +85,7 @@ func (c *LocationPointConsumer) Execute(ctx context.Context, payload any) error 
 	defer func() { c.metrics.EndSpan(ctx, span, spanErr) }()
 
 	log := util.Log(ctx)
+	ctx = models.ContextWithEventTenancy(ctx, event.EventTenancy, event.SubjectID)
 	log.Debug("processing location point event",
 		"point_id", event.PointID,
 		"subject_id", event.SubjectID,
@@ -90,6 +98,7 @@ func (c *LocationPointConsumer) Execute(ctx context.Context, payload any) error 
 			"point_id", event.PointID,
 		)
 		spanErr = fmt.Errorf("update latest position: %w", err)
+		_ = c.pointRepo.MarkFailed(ctx, event.PointID, spanErr)
 		return spanErr
 	}
 
@@ -100,6 +109,7 @@ func (c *LocationPointConsumer) Execute(ctx context.Context, payload any) error 
 			"point_id", event.PointID,
 		)
 		spanErr = fmt.Errorf("evaluate geofence: %w", err)
+		_ = c.pointRepo.MarkFailed(ctx, event.PointID, spanErr)
 		return spanErr
 	}
 
@@ -109,7 +119,14 @@ func (c *LocationPointConsumer) Execute(ctx context.Context, payload any) error 
 			"subject_id", event.SubjectID,
 			"point_id", event.PointID,
 		)
-		// Non-fatal: route deviation failure should not block the pipeline.
+		spanErr = fmt.Errorf("evaluate route deviation: %w", err)
+		_ = c.pointRepo.MarkFailed(ctx, event.PointID, spanErr)
+		return spanErr
+	}
+
+	if err := c.pointRepo.MarkProcessed(ctx, event.PointID); err != nil {
+		spanErr = fmt.Errorf("mark processed: %w", err)
+		return spanErr
 	}
 
 	return nil

@@ -53,10 +53,14 @@ func (r *areaRepository) ContainsPoint(ctx context.Context, areaID string, lat, 
 	var contains bool
 
 	db := r.Pool().DB(ctx, true)
-	result := db.Raw(
-		"SELECT ST_Contains(geom, ST_SetSRID(ST_Point(?, ?), 4326)) FROM areas WHERE id = ? AND deleted_at IS NULL",
-		lon, lat, areaID,
-	).Scan(&contains)
+	result := db.Table((&models.Area{}).TableName()).
+		Select(
+			"ST_Contains(geom, ST_SetSRID(ST_Point(?, ?), 4326))",
+			lon,
+			lat,
+		).
+		Where("id = ?", areaID).
+		Scan(&contains)
 
 	if result.Error != nil {
 		return false, fmt.Errorf("contains point check for area %s: %w", areaID, result.Error)
@@ -79,14 +83,12 @@ func (r *areaRepository) UpdateGeometryTx(tx *gorm.DB, areaID string, geoJSON st
 
 // executeUpdateGeometry is the shared implementation for geometry updates.
 func executeUpdateGeometry(db *gorm.DB, areaID string, geoJSON string) error {
-	result := db.Exec(
-		`UPDATE areas
-		 SET geom = ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),
-		     geometry_json = ?,
-		     modified_at = NOW()
-		 WHERE id = ? AND deleted_at IS NULL`,
-		geoJSON, geoJSON, areaID,
-	)
+	result := db.Table((&models.Area{}).TableName()).
+		Where("id = ?", areaID).
+		Updates(map[string]any{
+			"geom":          gorm.Expr("ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)", geoJSON),
+			"geometry_json": geoJSON,
+		})
 
 	if result.Error != nil {
 		return fmt.Errorf("update geometry for area %s: %w", areaID, result.Error)
@@ -113,18 +115,24 @@ func (r *areaRepository) GetNearbyAreas(
 
 	var results []rawResult
 
-	query := db.Raw(
-		`SELECT a.*,
-		        ST_Distance(a.geom::geography, ST_SetSRID(ST_Point(?, ?), 4326)::geography) AS distance_meters
-		 FROM areas a
-		 WHERE a.deleted_at IS NULL
-		   AND a.state = 2
-		   AND a.geom IS NOT NULL
-		   AND ST_DWithin(a.geom::geography, ST_SetSRID(ST_Point(?, ?), 4326)::geography, ?)
-		 ORDER BY distance_meters ASC
-		 LIMIT ?`,
-		lon, lat, lon, lat, radiusMeters, limit,
-	)
+	query := db.Table((&models.Area{}).TableName()).
+		Select(
+			"areas.*, ST_Distance(areas.geom::geography, ST_SetSRID(ST_Point(?, ?), 4326)::geography) AS distance_meters",
+			lon,
+			lat,
+		).
+		Where("state = ?", 2). //nolint:mnd // 2 = active state
+		Where("geom IS NOT NULL").
+		Where(
+			"ST_DWithin(areas.geom::geography, ST_SetSRID(ST_Point(?, ?), 4326)::geography, ?)",
+			lon,
+			lat,
+			radiusMeters,
+		).
+		Order("distance_meters ASC")
+	if limit > 0 {
+		query = query.Limit(limit)
+	}
 
 	if err := query.Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf("get nearby areas at (%f, %f) radius %f: %w", lat, lon, radiusMeters, err)

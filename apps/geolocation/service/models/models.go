@@ -7,7 +7,6 @@ import (
 	"github.com/pitabwire/frame/data"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
-	"gorm.io/gorm"
 )
 
 // LocationSource indicates how a location was determined.
@@ -85,23 +84,35 @@ func (et GeoEventType) String() string {
 	}
 }
 
+type LocationPointProcessingState int32
+
+const (
+	LocationPointProcessingStatePending LocationPointProcessingState = iota
+	LocationPointProcessingStateProcessed
+	LocationPointProcessingStateFailed
+)
+
 // LocationPoint represents a single location observation from a device or subject.
 // The geom column is computed by a database trigger from latitude/longitude.
 type LocationPoint struct {
 	data.BaseModel
 
-	SubjectID  string         `gorm:"type:varchar(40);not null;index:idx_lp_subject_ts"`
-	TS         time.Time      `gorm:"type:timestamptz;not null;index:idx_lp_subject_ts,sort:desc;column:ts"`
-	IngestedAt time.Time      `gorm:"type:timestamptz;not null;default:now()"`
-	Latitude   float64        `gorm:"type:double precision;not null"`
-	Longitude  float64        `gorm:"type:double precision;not null"`
-	Altitude   *float64       `gorm:"type:double precision"`
-	Accuracy   float64        `gorm:"type:double precision;not null;default:0"`
-	Speed      *float64       `gorm:"type:double precision"`
-	Bearing    *float64       `gorm:"type:double precision"`
-	Source     LocationSource `gorm:"type:smallint;not null;default:0"`
-	Extras     data.JSONMap   `gorm:"type:jsonb;default:'{}'"`
-	Geom       *string        `gorm:"type:geometry(Point,4326);column:geom"                                 json:"-"`
+	SubjectID       string                       `gorm:"type:varchar(40);not null;index:idx_lp_subject_ts"`
+	DeviceID        string                       `gorm:"type:varchar(80);not null;index:idx_lp_device_ts"`
+	TS              time.Time                    `gorm:"type:timestamptz;not null;index:idx_lp_subject_ts,sort:desc;column:ts"`
+	IngestedAt      time.Time                    `gorm:"type:timestamptz;not null;default:now()"`
+	Latitude        float64                      `gorm:"type:double precision;not null"`
+	Longitude       float64                      `gorm:"type:double precision;not null"`
+	Altitude        *float64                     `gorm:"type:double precision"`
+	Accuracy        float64                      `gorm:"type:double precision;not null;default:0"`
+	Speed           *float64                     `gorm:"type:double precision"`
+	Bearing         *float64                     `gorm:"type:double precision"`
+	Source          LocationSource               `gorm:"type:smallint;not null;default:0"`
+	Extras          data.JSONMap                 `gorm:"serializer:json;type:jsonb;default:'{}'"`
+	ProcessingState LocationPointProcessingState `gorm:"type:smallint;not null;default:0;index:idx_lp_processing_state"`
+	ProcessedAt     *time.Time                   `gorm:"type:timestamptz"`
+	ProcessingError string                       `gorm:"type:text;not null;default:''"`
+	Geom            *string                      `gorm:"type:geometry(Point,4326);column:geom"                                 json:"-"`
 }
 
 func (*LocationPoint) TableName() string {
@@ -111,24 +122,25 @@ func (*LocationPoint) TableName() string {
 // ToAPI converts a LocationPoint to an API-compatible map structure.
 func (lp *LocationPoint) ToAPI() *LocationPointAPI {
 	api := &LocationPointAPI{
-		ID:        lp.GetID(),
-		SubjectID: lp.SubjectID,
+		Id:        lp.GetID(),
+		SubjectId: lp.SubjectID,
+		DeviceId:  lp.DeviceID,
 		Timestamp: timestamppb.New(lp.TS),
 		Latitude:  lp.Latitude,
 		Longitude: lp.Longitude,
 		Accuracy:  lp.Accuracy,
-		Source:    lp.Source,
-		Extras:    jsonMapToStruct(lp.Extras),
+		Source:    ToProtoLocationSource(lp.Source),
+		Extra:     jsonMapToStruct(lp.Extras),
 		CreatedAt: timestamppb.New(lp.CreatedAt),
 	}
 	if lp.Altitude != nil {
-		api.Altitude = *lp.Altitude
+		api.Altitude = lp.Altitude
 	}
 	if lp.Speed != nil {
-		api.Speed = *lp.Speed
+		api.Speed = lp.Speed
 	}
 	if lp.Bearing != nil {
-		api.Bearing = *lp.Bearing
+		api.Bearing = lp.Bearing
 	}
 	return api
 }
@@ -152,30 +164,24 @@ type Area struct {
 	AreaM2     *float64     `gorm:"type:double precision;column:area_m2"`
 	PerimeterM *float64     `gorm:"type:double precision;column:perimeter_m"`
 	State      int32        `gorm:"type:smallint;not null;default:0"`
-	Extras     data.JSONMap `gorm:"type:jsonb;default:'{}'"`
-	ModifiedAt time.Time    `gorm:"type:timestamptz;not null;default:now()"`
+	Extras     data.JSONMap `gorm:"serializer:json;type:jsonb;default:'{}'"`
 }
 
 func (*Area) TableName() string {
 	return "areas"
 }
 
-func (a *Area) BeforeUpdate(_ *gorm.DB) error {
-	a.ModifiedAt = time.Now()
-	return nil
-}
-
 func (a *Area) ToAPI() *AreaAPI {
 	api := &AreaAPI{
-		ID:           a.GetID(),
-		OwnerID:      a.OwnerID,
-		Name:         a.Name,
-		Description:  a.Description,
-		AreaType:     a.AreaType,
-		GeometryJSON: a.GeometryJSON,
-		State:        a.State,
-		Extras:       jsonMapToStruct(a.Extras),
-		CreatedAt:    timestamppb.New(a.CreatedAt),
+		Id:          a.GetID(),
+		OwnerId:     a.OwnerID,
+		Name:        a.Name,
+		Description: a.Description,
+		AreaType:    ToProtoAreaType(a.AreaType),
+		Geometry:    a.GeometryJSON,
+		State:       a.State,
+		Extra:       jsonMapToStruct(a.Extras),
+		CreatedAt:   timestamppb.New(a.CreatedAt),
 	}
 	if a.AreaM2 != nil {
 		api.AreaM2 = *a.AreaM2
@@ -197,7 +203,7 @@ type GeoEvent struct {
 	TS         time.Time    `gorm:"type:timestamptz;not null;index:idx_ge_subject_ts,sort:desc;index:idx_ge_area_ts,sort:desc;column:ts"`
 	Confidence float64      `gorm:"type:double precision;not null;default:1.0"`
 	PointID    string       `gorm:"type:varchar(40)"`
-	Extras     data.JSONMap `gorm:"type:jsonb;default:'{}'"`
+	Extras     data.JSONMap `gorm:"serializer:json;type:jsonb;default:'{}'"`
 }
 
 func (*GeoEvent) TableName() string {
@@ -206,22 +212,24 @@ func (*GeoEvent) TableName() string {
 
 func (ge *GeoEvent) ToAPI() *GeoEventAPI {
 	return &GeoEventAPI{
-		ID:         ge.GetID(),
-		SubjectID:  ge.SubjectID,
-		AreaID:     ge.AreaID,
-		EventType:  ge.EventType,
+		Id:         ge.GetID(),
+		SubjectId:  ge.SubjectID,
+		AreaId:     ge.AreaID,
+		EventType:  ToProtoGeoEventType(ge.EventType),
 		Timestamp:  timestamppb.New(ge.TS),
 		Confidence: ge.Confidence,
-		PointID:    ge.PointID,
-		Extras:     jsonMapToStruct(ge.Extras),
+		PointId:    ge.PointID,
+		Extra:      jsonMapToStruct(ge.Extras),
 	}
 }
 
 // GeofenceState tracks the current inside/outside state for a (subject, area) pair.
 // This is the mutable state that drives enter/exit detection.
 type GeofenceState struct {
-	SubjectID      string     `gorm:"type:varchar(40);not null;primaryKey"`
-	AreaID         string     `gorm:"type:varchar(40);not null;primaryKey"`
+	data.BaseModel
+
+	SubjectID      string     `gorm:"type:varchar(40);not null;index:idx_geofence_state_subject_area,unique"`
+	AreaID         string     `gorm:"type:varchar(40);not null;index:idx_geofence_state_subject_area,unique"`
 	Inside         bool       `gorm:"not null;default:false"`
 	LastTransition *time.Time `gorm:"type:timestamptz"`
 	LastPointTS    *time.Time `gorm:"type:timestamptz;column:last_point_ts"`
@@ -230,39 +238,29 @@ type GeofenceState struct {
 	// Last evaluated position (lat/lon, not PostGIS column — spatial queries use raw SQL).
 	LastLat float64 `gorm:"type:double precision"`
 	LastLon float64 `gorm:"type:double precision"`
-
-	UpdatedAt time.Time `gorm:"type:timestamptz;not null;default:now();autoUpdateTime"`
 }
 
 func (*GeofenceState) TableName() string {
 	return "geofence_states"
 }
 
-func (gs *GeofenceState) BeforeUpdate(_ *gorm.DB) error {
-	gs.UpdatedAt = time.Now()
-	return nil
-}
-
 // LatestPosition is a materialized "most recent position" per subject.
 // Used for proximity queries. Maintained by the detection engine.
 // The geom column is computed by a database trigger from latitude/longitude.
 type LatestPosition struct {
-	SubjectID string    `gorm:"type:varchar(40);primaryKey"`
+	data.BaseModel
+
+	SubjectID string    `gorm:"type:varchar(40);not null;index:idx_latest_position_subject_tenant,unique"`
+	DeviceID  string    `gorm:"type:varchar(80);not null"`
 	Latitude  float64   `gorm:"type:double precision;not null"`
 	Longitude float64   `gorm:"type:double precision;not null"`
 	Accuracy  float64   `gorm:"type:double precision;not null;default:0"`
 	TS        time.Time `gorm:"type:timestamptz;not null;column:ts"`
-	UpdatedAt time.Time `gorm:"type:timestamptz;not null;default:now();autoUpdateTime"`
-	Geom      *string   `gorm:"type:geometry(Point,4326);column:geom"                  json:"-"`
+	Geom      *string   `gorm:"type:geometry(Point,4326);column:geom"                                     json:"-"`
 }
 
 func (*LatestPosition) TableName() string {
 	return "latest_positions"
-}
-
-func (lp *LatestPosition) BeforeUpdate(_ *gorm.DB) error {
-	lp.UpdatedAt = time.Now()
-	return nil
 }
 
 // Route represents a predefined path (LineString) stored via PostGIS.
@@ -281,9 +279,8 @@ type Route struct {
 	// Computed field (populated by DB trigger on geom column write).
 	LengthM *float64 `gorm:"type:double precision;column:length_m"`
 
-	State      int32        `gorm:"type:smallint;not null;default:0"`
-	Extras     data.JSONMap `gorm:"type:jsonb;default:'{}'"`
-	ModifiedAt time.Time    `gorm:"type:timestamptz;not null;default:now()"`
+	State  int32        `gorm:"type:smallint;not null;default:0"`
+	Extras data.JSONMap `gorm:"serializer:json;type:jsonb;default:'{}'"`
 
 	// Per-route deviation thresholds. NULL means skip during evaluation.
 	DeviationThresholdM       *float64 `gorm:"type:double precision;column:deviation_threshold_m"`
@@ -295,11 +292,6 @@ func (*Route) TableName() string {
 	return "routes"
 }
 
-func (r *Route) BeforeUpdate(_ *gorm.DB) error {
-	r.ModifiedAt = time.Now()
-	return nil
-}
-
 // HasDeviationConfig returns true if the route has deviation detection configured.
 func (r *Route) HasDeviationConfig() bool {
 	return r.DeviationThresholdM != nil
@@ -307,21 +299,27 @@ func (r *Route) HasDeviationConfig() bool {
 
 func (r *Route) ToAPI() *RouteAPI {
 	api := &RouteAPI{
-		ID:           r.GetID(),
-		OwnerID:      r.OwnerID,
-		Name:         r.Name,
-		Description:  r.Description,
-		GeometryJSON: r.GeometryJSON,
-		State:        r.State,
-		Extras:       jsonMapToStruct(r.Extras),
-		CreatedAt:    timestamppb.New(r.CreatedAt),
+		Id:          r.GetID(),
+		OwnerId:     r.OwnerID,
+		Name:        r.Name,
+		Description: r.Description,
+		Geometry:    r.GeometryJSON,
+		State:       r.State,
+		Extra:       jsonMapToStruct(r.Extras),
+		CreatedAt:   timestamppb.New(r.CreatedAt),
 	}
 	if r.LengthM != nil {
 		api.LengthM = *r.LengthM
 	}
 	api.DeviationThresholdM = r.DeviationThresholdM
-	api.DeviationConsecutiveCount = r.DeviationConsecutiveCount
-	api.DeviationCooldownSec = r.DeviationCooldownSec
+	if r.DeviationConsecutiveCount != nil {
+		value := int32(*r.DeviationConsecutiveCount) //nolint:gosec // bounded by business validation
+		api.DeviationConsecutiveCount = &value
+	}
+	if r.DeviationCooldownSec != nil {
+		value := int32(*r.DeviationCooldownSec) //nolint:gosec // bounded by business validation
+		api.DeviationCooldownSec = &value
+	}
 	return api
 }
 
@@ -334,7 +332,7 @@ type RouteAssignment struct {
 	ValidFrom  *time.Time   `gorm:"type:timestamptz"`
 	ValidUntil *time.Time   `gorm:"type:timestamptz"`
 	State      int32        `gorm:"type:smallint;not null;default:0"`
-	Extras     data.JSONMap `gorm:"type:jsonb;default:'{}'"`
+	Extras     data.JSONMap `gorm:"serializer:json;type:jsonb;default:'{}'"`
 }
 
 func (*RouteAssignment) TableName() string {
@@ -343,11 +341,11 @@ func (*RouteAssignment) TableName() string {
 
 func (ra *RouteAssignment) ToAPI() *RouteAssignmentAPI {
 	api := &RouteAssignmentAPI{
-		ID:        ra.GetID(),
-		SubjectID: ra.SubjectID,
-		RouteID:   ra.RouteID,
+		Id:        ra.GetID(),
+		SubjectId: ra.SubjectID,
+		RouteId:   ra.RouteID,
 		State:     ra.State,
-		Extras:    jsonMapToStruct(ra.Extras),
+		Extra:     jsonMapToStruct(ra.Extras),
 		CreatedAt: timestamppb.New(ra.CreatedAt),
 	}
 	if ra.ValidFrom != nil {
@@ -362,24 +360,20 @@ func (ra *RouteAssignment) ToAPI() *RouteAssignmentAPI {
 // RouteDeviationState tracks the current on/off-route state for a (subject, route) pair.
 // Composite PK (no BaseModel), same pattern as GeofenceState.
 type RouteDeviationState struct {
-	SubjectID            string     `gorm:"type:varchar(40);not null;primaryKey"`
-	RouteID              string     `gorm:"type:varchar(40);not null;primaryKey"`
+	data.BaseModel
+
+	SubjectID            string     `gorm:"type:varchar(40);not null;index:idx_route_deviation_state_subject_route,unique"`
+	RouteID              string     `gorm:"type:varchar(40);not null;index:idx_route_deviation_state_subject_route,unique"`
 	Deviated             bool       `gorm:"not null;default:false"`
 	ConsecutiveOffRoute  int        `gorm:"not null;default:0"`
 	LastDeviationEventAt *time.Time `gorm:"type:timestamptz"`
 	LastPointTS          *time.Time `gorm:"type:timestamptz;column:last_point_ts"`
 	LastLat              float64    `gorm:"type:double precision"`
 	LastLon              float64    `gorm:"type:double precision"`
-	UpdatedAt            time.Time  `gorm:"type:timestamptz;not null;default:now();autoUpdateTime"`
 }
 
 func (*RouteDeviationState) TableName() string {
 	return "route_deviation_states"
-}
-
-func (rds *RouteDeviationState) BeforeUpdate(_ *gorm.DB) error {
-	rds.UpdatedAt = time.Now()
-	return nil
 }
 
 // jsonMapToStruct converts a data.JSONMap to a protobuf Struct.
@@ -394,7 +388,7 @@ func jsonMapToStruct(m data.JSONMap) *structpb.Struct {
 // StructToJSONMap converts a protobuf Struct to data.JSONMap.
 func StructToJSONMap(s *structpb.Struct) data.JSONMap {
 	if s == nil {
-		return make(data.JSONMap)
+		return nil
 	}
 	return data.JSONMap(s.AsMap())
 }

@@ -4,12 +4,13 @@ import (
 	"context"
 	"net/http"
 
+	"connectrpc.com/connect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/security/authorizer"
-	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
+	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
@@ -19,6 +20,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/geolocation/service/handlers"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
+	"github.com/antinvestor/service-profile/proto/geolocation/v1/geolocationv1connect"
 )
 
 func main() { //nolint:funlen // wiring function
@@ -59,11 +61,11 @@ func main() { //nolint:funlen // wiring function
 	pointRepo := repository.NewLocationPointRepository(ctx, dbPool, workMan)
 	areaRepo := repository.NewAreaRepository(ctx, dbPool, workMan)
 	geoEventRepo := repository.NewGeoEventRepository(ctx, dbPool, workMan)
-	stateRepo := repository.NewGeofenceStateRepository(dbPool)
-	latestPosRepo := repository.NewLatestPositionRepository(dbPool)
+	stateRepo := repository.NewGeofenceStateRepository(ctx, dbPool, workMan)
+	latestPosRepo := repository.NewLatestPositionRepository(ctx, dbPool, workMan)
 	routeRepo := repository.NewRouteRepository(ctx, dbPool, workMan)
 	routeAssignmentRepo := repository.NewRouteAssignmentRepository(ctx, dbPool, workMan)
-	routeDeviationStateRepo := repository.NewRouteDeviationStateRepository(dbPool)
+	routeDeviationStateRepo := repository.NewRouteDeviationStateRepository(ctx, dbPool, workMan)
 
 	// Initialize observability.
 	metrics := observability.NewMetrics()
@@ -93,7 +95,7 @@ func main() { //nolint:funlen // wiring function
 		evtsMan, routeRepo, routeAssignmentRepo, routeDeviationStateRepo,
 	)
 	retentionBiz := business.NewRetentionBusiness(dbPool, cfg.RetentionBusinessConfig())
-	catchupBiz := business.NewCatchupBusiness(dbPool, evtsMan, business.CatchupConfig{})
+	catchupBiz := business.NewCatchupBusiness(pointRepo, evtsMan, business.CatchupConfig{})
 
 	// Start the retention scheduler as a background goroutine.
 	// It runs immediately (including EnsurePartitions) and then every RetentionInterval.
@@ -101,11 +103,9 @@ func main() { //nolint:funlen // wiring function
 	defer cancelRetention()
 	go retentionBiz.StartScheduler(retentionCtx)
 
-	// Run catch-up at startup to re-emit events for any location points that were
-	// persisted but never processed (e.g., due to a crash between INSERT and event emission).
-	if catchupErr := catchupBiz.RunCatchup(ctx); catchupErr != nil {
-		log.WithError(catchupErr).Warn("startup catchup failed")
-	}
+	catchupCtx, cancelCatchup := context.WithCancel(ctx)
+	defer cancelCatchup()
+	go catchupBiz.StartScheduler(catchupCtx)
 
 	// Setup HTTP handler with authentication and rate limiting.
 	sm := svc.SecurityManager()
@@ -120,32 +120,22 @@ func main() { //nolint:funlen // wiring function
 	rl := handlers.NewRateLimitMiddleware(cfg.RateLimitConfig())
 	defer rl.Stop()
 
-	// Health check and OpenAPI are unauthenticated; all other routes require authentication.
-	healthMux := http.NewServeMux()
-	healthMux.HandleFunc("GET /healthz", geoServer.HealthCheck)
-	healthMux.HandleFunc("GET /openapi.yaml", handlers.OpenAPIHandler())
-
-	auth := sm.GetAuthorizer(ctx)
-	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
-
-	authenticatedRouter := securityhttp.TenancyAccessMiddleware(
-		authenticateRouter(ctx, sm, geoServer.NewRouter()),
-		tenancyAccessChecker,
-	)
+	connectHandler := setupConnectServer(ctx, sm, geoServer)
 
 	mux := http.NewServeMux()
-	mux.Handle("/healthz", healthMux)
-	mux.Handle("/openapi.yaml", healthMux)
-	mux.Handle("/", rl.Middleware(authenticatedRouter))
+	mux.HandleFunc("GET /healthz", geoServer.HealthCheck)
+	mux.Handle("/openapi.yaml", handlers.OpenAPIHandler())
+	mux.Handle("/", rl.Middleware(connectHandler))
 
 	// Register event consumers and start service.
 	svc.Init(ctx,
 		frame.WithHTTPHandler(mux),
 		frame.WithRegisterEvents(
 			events.NewLocationPointConsumer(
-				proximityBiz, geofenceBiz, routeDeviationBiz, metrics,
+				pointRepo, proximityBiz, geofenceBiz, routeDeviationBiz, metrics,
 			),
 			events.NewAreaChangeConsumer(areaBiz, stateRepo),
+			events.NewRouteChangeConsumer(routeAssignmentRepo, routeDeviationStateRepo),
 			events.NewGeoEventConsumer(),
 			events.NewRouteDeviationConsumer(),
 		),
@@ -156,12 +146,25 @@ func main() { //nolint:funlen // wiring function
 	}
 }
 
-// authenticateRouter wraps the given handler with OAuth2 authentication middleware.
-func authenticateRouter(
+func setupConnectServer(
 	ctx context.Context,
 	sm security.Manager,
-	handler http.Handler,
+	implementation *handlers.GeolocationServer,
 ) http.Handler {
 	authenticator := sm.GetAuthenticator(ctx)
-	return securityhttp.AuthenticationMiddleware(handler, authenticator)
+	auth := sm.GetAuthorizer(ctx)
+	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
+	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(tenancyAccessChecker)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator, tenancyAccessInterceptor)
+	if err != nil {
+		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
+	}
+
+	_, handler := geolocationv1connect.NewGeolocationServiceHandler(
+		implementation,
+		connect.WithInterceptors(defaultInterceptorList...),
+	)
+
+	return handler
 }

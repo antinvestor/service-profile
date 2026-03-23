@@ -101,7 +101,9 @@ func NewGeofenceBusiness(
 //  2. Bbox pre-filter: find candidate areas whose bounding box contains the point.
 //  3. For each candidate area, run the containment test and state machine within a transaction.
 //  4. Emit enter/exit/dwell events as transitions occur.
-func (b *geofenceBusiness) EvaluatePoint(ctx context.Context, event *models.LocationPointIngestedEvent) error {
+func (b *geofenceBusiness) EvaluatePoint(
+	ctx context.Context, event *models.LocationPointIngestedEvent,
+) error {
 	log := util.Log(ctx)
 	start := time.Now()
 	ctx, span := b.metrics.StartSpan(ctx, "GeofenceEvaluatePoint")
@@ -139,6 +141,16 @@ func (b *geofenceBusiness) EvaluatePoint(ctx context.Context, event *models.Loca
 		return fmt.Errorf("get candidate areas: %w", err)
 	}
 
+	insideStates, err := b.stateRepo.GetInsideBySubject(ctx, event.SubjectID, b.maxCandidateAreas)
+	if err != nil {
+		return fmt.Errorf("get inside states for subject %s: %w", event.SubjectID, err)
+	}
+
+	candidates, err = b.mergeCandidateAreas(ctx, candidates, insideStates)
+	if err != nil {
+		return err
+	}
+
 	if len(candidates) > b.maxCandidateAreas {
 		log.Warn("bbox pre-filter returned too many candidates, truncating",
 			"subject_id", event.SubjectID,
@@ -151,16 +163,52 @@ func (b *geofenceBusiness) EvaluatePoint(ctx context.Context, event *models.Loca
 	// Step 2: For each candidate, test containment and run state machine.
 	for _, area := range candidates {
 		if evalErr := b.evaluateAreaForSubject(ctx, event, area, pointTS); evalErr != nil {
-			// Log and continue — one area failure should not block evaluation of others.
-			log.WithError(evalErr).Error("geofence evaluation failed for area",
+			spanErr = fmt.Errorf("geofence evaluation failed for area %s: %w", area.GetID(), evalErr)
+			log.WithError(spanErr).Error("geofence evaluation failed for area",
 				"subject_id", event.SubjectID,
 				"area_id", area.GetID(),
 			)
+			return spanErr
 		}
 	}
 
 	b.metrics.RecordGeofenceEval(ctx, time.Since(start))
 	return nil
+}
+
+func (b *geofenceBusiness) mergeCandidateAreas(
+	ctx context.Context,
+	bboxCandidates []*models.Area,
+	insideStates []*models.GeofenceState,
+) ([]*models.Area, error) {
+	candidateByID := make(map[string]*models.Area, len(bboxCandidates)+len(insideStates))
+	for _, area := range bboxCandidates {
+		candidateByID[area.GetID()] = area
+	}
+
+	for _, state := range insideStates {
+		if _, exists := candidateByID[state.AreaID]; exists {
+			continue
+		}
+
+		area, err := b.areaRepo.GetByID(ctx, state.AreaID)
+		switch {
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			continue
+		case err != nil:
+			return nil, fmt.Errorf("load area %s from inside state: %w", state.AreaID, err)
+		case area.State != StateActive:
+			continue
+		default:
+			candidateByID[area.GetID()] = area
+		}
+	}
+
+	candidates := make([]*models.Area, 0, len(candidateByID))
+	for _, area := range candidateByID {
+		candidates = append(candidates, area)
+	}
+	return candidates, nil
 }
 
 // evaluateAreaForSubject runs the state machine for a single (subject, area) pair.
@@ -198,6 +246,9 @@ func (b *geofenceBusiness) evaluateAreaForSubject(
 				AreaID:    area.GetID(),
 				Inside:    false,
 			}
+			state.TenantID = event.TenantID
+			state.PartitionID = event.PartitionID
+			state.AccessID = event.AccessID
 		}
 
 		// Timestamp ordering guard: skip out-of-order points.
@@ -228,10 +279,7 @@ func (b *geofenceBusiness) evaluateAreaForSubject(
 
 		case state.Inside && effectiveInside:
 			if dwellErr := b.checkDwell(ctx, tx, event, area, state, pointTS, confidence); dwellErr != nil {
-				log.WithError(dwellErr).Error("dwell check failed",
-					"subject_id", event.SubjectID,
-					"area_id", area.GetID(),
-				)
+				return fmt.Errorf("dwell check failed: %w", dwellErr)
 			}
 			return b.updateStatePosition(tx, state, event, pointTS)
 
@@ -421,6 +469,11 @@ func (b *geofenceBusiness) emitGeoEvent(ctx context.Context, geoEvent *models.Ge
 	b.metrics.RecordGeofenceTransition(ctx, geoEvent.EventType.String())
 
 	emitted := &models.GeoEventEmitted{
+		EventTenancy: models.EventTenancy{
+			TenantID:    geoEvent.TenantID,
+			PartitionID: geoEvent.PartitionID,
+			AccessID:    geoEvent.AccessID,
+		},
 		EventID:    geoEvent.GetID(),
 		SubjectID:  geoEvent.SubjectID,
 		AreaID:     geoEvent.AreaID,

@@ -20,6 +20,9 @@ type LocationPointRepository interface {
 		from, to time.Time,
 		limit, offset int,
 	) ([]*models.LocationPoint, error)
+	GetPendingForProcessing(ctx context.Context, limit int) ([]*models.LocationPoint, error)
+	MarkProcessed(ctx context.Context, pointID string) error
+	MarkFailed(ctx context.Context, pointID string, processingErr error) error
 }
 
 // AreaRepository manages area geometry persistence and spatial queries.
@@ -65,11 +68,14 @@ type GeoEventRepository interface {
 
 // GeofenceStateRepository manages mutable geofence state.
 type GeofenceStateRepository interface {
+	datastore.BaseRepository[*models.GeofenceState]
 	// UpsertTx creates or updates the geofence state within an existing transaction.
 	UpsertTx(tx *gorm.DB, state *models.GeofenceState) error
 	// GetForUpdate retrieves the geofence state with a row-level lock (SELECT FOR UPDATE).
 	// Returns (nil, nil) if no state exists for the given (subject, area) pair.
 	GetForUpdate(tx *gorm.DB, subjectID, areaID string) (*models.GeofenceState, error)
+	// GetInsideBySubject returns areas the subject is currently marked inside.
+	GetInsideBySubject(ctx context.Context, subjectID string, limit int) ([]*models.GeofenceState, error)
 	// GetInsideByArea returns subjects currently inside the given area, with a limit.
 	GetInsideByArea(ctx context.Context, areaID string, limit int) ([]*models.GeofenceState, error)
 	// DeleteByArea removes all geofence state entries for a given area.
@@ -80,6 +86,7 @@ type GeofenceStateRepository interface {
 
 // LatestPositionRepository manages the materialized latest position per subject.
 type LatestPositionRepository interface {
+	datastore.BaseRepository[*models.LatestPosition]
 	Upsert(ctx context.Context, pos *models.LatestPosition) error
 	Get(ctx context.Context, subjectID string) (*models.LatestPosition, error)
 	// GetNearbySubjects finds subjects within radiusMeters of the given point.
@@ -123,6 +130,7 @@ type RouteAssignmentRepository interface {
 
 // RouteDeviationStateRepository manages mutable route deviation state.
 type RouteDeviationStateRepository interface {
+	datastore.BaseRepository[*models.RouteDeviationState]
 	// UpsertTx creates or updates the deviation state within an existing transaction.
 	UpsertTx(tx *gorm.DB, state *models.RouteDeviationState) error
 	// GetForUpdate retrieves the deviation state with a row-level lock.

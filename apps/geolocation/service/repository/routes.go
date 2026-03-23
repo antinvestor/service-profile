@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -50,14 +51,12 @@ func (r *routeRepository) UpdateGeometryTx(
 }
 
 func executeUpdateRouteGeometry(db *gorm.DB, routeID string, geoJSON string) error {
-	result := db.Exec(
-		`UPDATE routes
-		 SET geom = ST_SetSRID(ST_GeomFromGeoJSON(?), 4326),
-		     geometry_json = ?,
-		     modified_at = NOW()
-		 WHERE id = ? AND deleted_at IS NULL`,
-		geoJSON, geoJSON, routeID,
-	)
+	result := db.Table((&models.Route{}).TableName()).
+		Where("id = ?", routeID).
+		Updates(map[string]any{
+			"geom":          gorm.Expr("ST_SetSRID(ST_GeomFromGeoJSON(?), 4326)", geoJSON),
+			"geometry_json": geoJSON,
+		})
 	if result.Error != nil {
 		return fmt.Errorf("update geometry for route %s: %w", routeID, result.Error)
 	}
@@ -86,25 +85,19 @@ func (r *routeRepository) GetActiveAssignmentsForSubject(
 
 	var results []joinResult
 
-	query := db.Raw(
-		`SELECT r.*,
-		        ra.id AS assignment_id,
-		        ra.subject_id,
-		        ra.valid_from,
-		        ra.valid_until
-		 FROM route_assignments ra
-		 JOIN routes r ON r.id = ra.route_id
-		 WHERE ra.subject_id = ?
-		   AND ra.state = 2
-		   AND ra.deleted_at IS NULL
-		   AND r.deleted_at IS NULL
-		   AND r.state = 2
-		   AND r.geom IS NOT NULL
-		   AND r.deviation_threshold_m IS NOT NULL
-		   AND (ra.valid_from IS NULL OR ra.valid_from <= ?)
-		   AND (ra.valid_until IS NULL OR ra.valid_until >= ?)`,
-		subjectID, at, at,
-	)
+	query := db.Table((&models.RouteAssignment{}).TableName()).
+		Select(
+			"routes.*, route_assignments.id AS assignment_id, route_assignments.subject_id, "+
+				"route_assignments.valid_from, route_assignments.valid_until",
+		).
+		Joins("JOIN routes ON routes.id = route_assignments.route_id").
+		Where("route_assignments.subject_id = ?", subjectID).
+		Where("route_assignments.state = ?", 2). //nolint:mnd // 2 = active state
+		Where("routes.state = ?", 2).            //nolint:mnd // 2 = active state
+		Where("routes.geom IS NOT NULL").
+		Where("routes.deviation_threshold_m IS NOT NULL").
+		Where("(route_assignments.valid_from IS NULL OR route_assignments.valid_from <= ?)", at).
+		Where("(route_assignments.valid_until IS NULL OR route_assignments.valid_until >= ?)", at)
 
 	if err := query.Scan(&results).Error; err != nil {
 		return nil, fmt.Errorf(
@@ -138,19 +131,23 @@ func (r *routeRepository) DistanceToRouteMeters(
 	var distance float64
 
 	db := r.Pool().DB(ctx, true)
-	result := db.Raw(
-		`SELECT ST_Distance(
-		     geom::geography,
-		     ST_SetSRID(ST_Point(?, ?), 4326)::geography
-		 ) FROM routes WHERE id = ? AND deleted_at IS NULL`,
-		lon, lat, routeID,
-	).Scan(&distance)
+	result := db.Table((&models.Route{}).TableName()).
+		Select(
+			"ST_Distance(geom::geography, ST_SetSRID(ST_Point(?, ?), 4326)::geography)",
+			lon,
+			lat,
+		).
+		Where("id = ?", routeID).
+		Scan(&distance)
 
 	if result.Error != nil {
 		return 0, fmt.Errorf(
 			"distance to route %s from (%f, %f): %w",
 			routeID, lat, lon, result.Error,
 		)
+	}
+	if result.RowsAffected == 0 {
+		return 0, errors.New("route not found")
 	}
 	return distance, nil
 }

@@ -60,7 +60,8 @@ func (b *ingestionBusiness) IngestBatch(
 	if req == nil {
 		return nil, errors.New("request is nil")
 	}
-	if err := models.ValidateSubjectID(req.SubjectID); err != nil {
+	subjectID := req.GetSubjectId()
+	if err := models.ValidateSubjectID(subjectID); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
 	if len(req.Points) == 0 {
@@ -78,27 +79,25 @@ func (b *ingestionBusiness) IngestBatch(
 
 	// Phase 1: Validate and build domain models for all valid points.
 	validPoints := make([]*models.LocationPoint, 0, len(req.Points))
-	validAPIs := make([]*models.LocationPointAPI, 0, len(req.Points))
+	validInputs := make([]*models.LocationPointInput, 0, len(req.Points))
 	var rejected int32
 
 	for _, pt := range req.Points {
-		pt.SubjectID = req.SubjectID
-
 		if err := models.ValidateLocationPoint(pt); err != nil {
 			log.Debug(
 				"rejecting location point",
 				"reason",
 				err.Error(),
 				"subject_id",
-				req.SubjectID,
+				subjectID,
 			)
 			rejected++
 			continue
 		}
 
-		point := buildLocationPoint(ctx, pt, req.SubjectID, now)
+		point := buildLocationPoint(ctx, pt, subjectID, now)
 		validPoints = append(validPoints, point)
-		validAPIs = append(validAPIs, pt)
+		validInputs = append(validInputs, pt)
 	}
 
 	if len(validPoints) == 0 {
@@ -116,12 +115,18 @@ func (b *ingestionBusiness) IngestBatch(
 	// Phase 3: Emit events for all persisted points.
 	// Event emission failures are non-fatal; the detection engine can catch up from the database.
 	for i, point := range validPoints {
-		pt := validAPIs[i]
+		pt := validInputs[i]
 		ts := point.TS
 
 		ingestedEvent := &models.LocationPointIngestedEvent{
-			PointID:   point.GetID(),
-			SubjectID: req.SubjectID,
+			PointID: point.GetID(),
+			EventTenancy: models.EventTenancy{
+				TenantID:    point.TenantID,
+				PartitionID: point.PartitionID,
+				AccessID:    point.AccessID,
+			},
+			SubjectID: subjectID,
+			DeviceID:  point.DeviceID,
 			Latitude:  pt.Latitude,
 			Longitude: pt.Longitude,
 			Accuracy:  pt.Accuracy,
@@ -130,7 +135,7 @@ func (b *ingestionBusiness) IngestBatch(
 
 		if emitErr := b.eventsMan.Emit(ctx, LocationPointIngestedEventName, ingestedEvent); emitErr != nil {
 			log.WithError(emitErr).Error("failed to emit location point ingested event",
-				"subject_id", req.SubjectID,
+				"subject_id", subjectID,
 				"point_id", point.GetID(),
 			)
 		}
@@ -141,7 +146,7 @@ func (b *ingestionBusiness) IngestBatch(
 		int32(b.cfg.MaxBatchSize), //nolint:gosec // config default 1000, validated at startup
 	)
 	log.Info("batch ingestion complete",
-		"subject_id", req.SubjectID,
+		"subject_id", subjectID,
 		"accepted", accepted,
 		"rejected", rejected,
 	)
@@ -155,7 +160,7 @@ func (b *ingestionBusiness) IngestBatch(
 // buildLocationPoint normalizes an API point into a domain model ready for persistence.
 func buildLocationPoint(
 	ctx context.Context,
-	pt *models.LocationPointAPI,
+	pt *models.LocationPointInput,
 	subjectID string,
 	now time.Time,
 ) *models.LocationPoint {
@@ -165,27 +170,26 @@ func buildLocationPoint(
 	}
 
 	point := &models.LocationPoint{
-		SubjectID:  subjectID,
-		TS:         ts,
-		IngestedAt: now,
-		Latitude:   pt.Latitude,
-		Longitude:  pt.Longitude,
-		Accuracy:   pt.Accuracy,
-		Source:     pt.Source,
-		Extras:     models.StructToJSONMap(pt.Extras),
+		SubjectID:       subjectID,
+		DeviceID:        pt.GetDeviceId(),
+		TS:              ts,
+		IngestedAt:      now,
+		Latitude:        pt.Latitude,
+		Longitude:       pt.Longitude,
+		Accuracy:        pt.Accuracy,
+		Source:          models.LocationSourceFromProto(pt.Source),
+		Extras:          models.StructToJSONMap(pt.Extra),
+		ProcessingState: models.LocationPointProcessingStatePending,
 	}
 
-	if pt.Altitude != 0 {
-		alt := pt.Altitude
-		point.Altitude = &alt
+	if pt.Altitude != nil {
+		point.Altitude = pt.Altitude
 	}
-	if pt.Speed != 0 {
-		spd := pt.Speed
-		point.Speed = &spd
+	if pt.Speed != nil {
+		point.Speed = pt.Speed
 	}
-	if pt.Bearing != 0 {
-		brg := pt.Bearing
-		point.Bearing = &brg
+	if pt.Bearing != nil {
+		point.Bearing = pt.Bearing
 	}
 
 	point.GenID(ctx)
