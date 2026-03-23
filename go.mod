@@ -16,14 +16,13 @@ require (
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260219062126-e9b0d15a670e.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.19.0
-	github.com/antinvestor/apis/go/common v1.55.17
-	github.com/antinvestor/apis/go/notification v1.55.17
-	github.com/antinvestor/apis/go/profile v1.55.17
+	github.com/antinvestor/apis/go/common v1.55.18
+	github.com/antinvestor/apis/go/notification v1.56.0
+	github.com/antinvestor/apis/go/profile v1.56.0
 	github.com/gojuno/minimock/v3 v3.4.7
-	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/mssola/user_agent v0.6.0
 	github.com/pitabwire/frame v1.81.1
-	github.com/pitabwire/util v0.6.1
+	github.com/pitabwire/util v0.7.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.41.0
 	github.com/ttacon/libphonenumber v1.2.1
@@ -86,6 +85,7 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
+	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/cel-go v0.27.0 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
@@ -95,7 +95,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.28.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.8.0 // indirect
+	github.com/jackc/pgx/v5 v5.9.1 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -119,7 +119,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/ory/keto/proto v0.13.0-alpha.0 // indirect
-	github.com/panjf2000/ants/v2 v2.11.6 // indirect
+	github.com/panjf2000/ants/v2 v2.12.0 // indirect
 	github.com/pitabwire/natspubsub v0.8.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
