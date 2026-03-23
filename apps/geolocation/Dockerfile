@@ -21,6 +21,7 @@ RUN go mod download
 # Copy project files
 COPY ./apps/geolocation ./apps/geolocation
 COPY ./internal ./internal
+COPY ./proto ./proto
 
 # Build static binary for target platform
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
