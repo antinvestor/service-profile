@@ -1,6 +1,7 @@
 package tests
 
 import (
+	"errors"
 	"context"
 	"fmt"
 	"net/url"
@@ -175,56 +176,56 @@ func (n *noopNotificationClient) Send(
 	_ context.Context,
 	_ *connect.Request[notificationv1.SendRequest],
 ) (*connect.ServerStreamForClient[notificationv1.SendResponse], error) {
-	return nil, nil
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
 
 func (n *noopNotificationClient) Release(
 	_ context.Context,
 	_ *connect.Request[notificationv1.ReleaseRequest],
 ) (*connect.ServerStreamForClient[notificationv1.ReleaseResponse], error) {
-	return nil, nil
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
 
 func (n *noopNotificationClient) Receive(
 	_ context.Context,
 	_ *connect.Request[notificationv1.ReceiveRequest],
 ) (*connect.ServerStreamForClient[notificationv1.ReceiveResponse], error) {
-	return nil, nil
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
 
 func (n *noopNotificationClient) Search(
 	_ context.Context,
 	_ *connect.Request[commonv1.SearchRequest],
 ) (*connect.ServerStreamForClient[notificationv1.SearchResponse], error) {
-	return nil, nil
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
 
 func (n *noopNotificationClient) Status(
 	_ context.Context,
 	_ *connect.Request[commonv1.StatusRequest],
 ) (*connect.Response[commonv1.StatusResponse], error) {
-	return nil, nil
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
 
 func (n *noopNotificationClient) StatusUpdate(
 	_ context.Context,
 	_ *connect.Request[commonv1.StatusUpdateRequest],
 ) (*connect.Response[commonv1.StatusUpdateResponse], error) {
-	return nil, nil
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
 
 func (n *noopNotificationClient) TemplateSearch(
 	_ context.Context,
 	_ *connect.Request[notificationv1.TemplateSearchRequest],
 ) (*connect.ServerStreamForClient[notificationv1.TemplateSearchResponse], error) {
-	return nil, nil
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
 
 func (n *noopNotificationClient) TemplateSave(
 	_ context.Context,
 	_ *connect.Request[notificationv1.TemplateSaveRequest],
 ) (*connect.Response[notificationv1.TemplateSaveResponse], error) {
-	return nil, nil
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
 }
 
 func (bs *ProfileBaseTestSuite) GetNotificationCli(_ *testing.T) notificationv1connect.NotificationServiceClient {
