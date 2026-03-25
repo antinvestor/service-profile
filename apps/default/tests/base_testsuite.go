@@ -1,8 +1,8 @@
 package tests
 
 import (
-	"errors"
 	"context"
+	"errors"
 	"fmt"
 	"net/url"
 	"testing"
