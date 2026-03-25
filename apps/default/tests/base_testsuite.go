@@ -177,7 +177,7 @@ func (n *noopNotificationClient) Send(
 	_ *connect.Request[notificationv1.SendRequest],
 ) (*connect.ServerStreamForClient[notificationv1.SendResponse], error) {
 	// Return nil response — Execute() already handles nil gracefully.
-	return nil, nil
+	return nil, nil //nolint:nilnil // test stub; caller checks for nil stream
 }
 
 func (n *noopNotificationClient) Release(
