@@ -16,11 +16,10 @@ require (
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260219062126-e9b0d15a670e.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.19.0
-	github.com/antinvestor/common v1.1.0
+	github.com/antinvestor/common v1.2.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/common v1.0.0
 	github.com/pitabwire/frame v1.82.1
 	github.com/pitabwire/util v0.7.0
 	github.com/stretchr/testify v1.11.1

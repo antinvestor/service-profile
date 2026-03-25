@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"connectrpc.com/connect"
-	"github.com/pitabwire/common/permissions"
+	"github.com/antinvestor/common/permissions"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"

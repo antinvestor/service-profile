@@ -12,7 +12,7 @@ import (
 	"connectrpc.com/connect"
 	apis "github.com/antinvestor/common"
 	"github.com/antinvestor/common/connection"
-	"github.com/pitabwire/common/permissions"
+	"github.com/antinvestor/common/permissions"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
