@@ -76,8 +76,8 @@ github.com/MicahParks/keyfunc v1.9.0 h1:lhKd5xrFHLNOWrDc4Tyb/Q1AJ4LCzQ48GVJyVIID
 github.com/MicahParks/keyfunc v1.9.0/go.mod h1:IdnCilugA0O/99dW+/MkvlyrsX8+L8+x95xuVNtM5jw=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
-github.com/antinvestor/common v1.1.0 h1:q7pg2u84FnsGWzNAzoPq8MnEbmch8lqBxJ9MHUZDoFg=
-github.com/antinvestor/common v1.1.0/go.mod h1:QfNAHy35nkmI9fAv6shRqh8cGbk/Ecgh+o4J62dYlAI=
+github.com/antinvestor/common v1.2.0 h1:u+bplpwFXRaxBGiFFy0SkmaJlKyr2MAs9r/WZDHqNZU=
+github.com/antinvestor/common v1.2.0/go.mod h1:QfNAHy35nkmI9fAv6shRqh8cGbk/Ecgh+o4J62dYlAI=
 github.com/antithesishq/antithesis-sdk-go v0.6.0-default-no-op h1:kpBdlEPbRvff0mDD1gk7o9BhI16b9p5yYAXRlidpqJE=
 github.com/antithesishq/antithesis-sdk-go v0.6.0-default-no-op/go.mod h1:IUpT2DPAKh6i/YhSbt6Gl3v2yvUZjmKncl7U91fup7E=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
@@ -250,8 +250,6 @@ github.com/ory/keto/proto v0.13.0-alpha.0 h1:9ZzjDbaBgriHGVC8fUJKD1pDqQ9nHEFOO3b
 github.com/ory/keto/proto v0.13.0-alpha.0/go.mod h1:6RagCXA7X1hhFSVjcy13ruIo8Dq/nj4J0mcN92qL+hY=
 github.com/panjf2000/ants/v2 v2.12.0 h1:u9JhESo83i/GkZnhfTNuFMMWcNt7mnV1bGJ6FT4wXH8=
 github.com/panjf2000/ants/v2 v2.12.0/go.mod h1:tSQuaNQ6r6NRhPt+IZVUevvDyFMTs+eS4ztZc52uJTY=
-github.com/pitabwire/common v1.0.0 h1:IBasnN2j60nOVO0XxUl0bFp0nCsXjQSbIVJaS0toyic=
-github.com/pitabwire/common v1.0.0/go.mod h1:y2boyJTljsX2nAPINMsc+d8AdhQbt7NbAjiVQKrEVro=
 github.com/pitabwire/frame v1.82.1 h1:t2Zhu+3vn5nBogmGEwEhoZSzzX2baAbClK2t/etXW9I=
 github.com/pitabwire/frame v1.82.1/go.mod h1:K4phA2bqdZJhHqX0SNvbtBaS8ojwUkh6ScEWALHstfM=
 github.com/pitabwire/natspubsub v0.8.0 h1:Z3cevthjRVmGhqycGYm6KxvVIiXYNNklBi2Ig2jd8UM=
