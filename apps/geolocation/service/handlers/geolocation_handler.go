@@ -90,6 +90,10 @@ func (s *GeolocationServer) CreateArea(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.CreateAreaRequest],
 ) (*connect.Response[geolocationv1.CreateAreaResponse], error) {
+	if err := s.checker.Check(ctx, "geolocation_manage"); err != nil {
+		return nil, authorizer.ToConnectError(err)
+	}
+
 	area, err := s.areaBiz.CreateArea(ctx, req.Msg)
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
