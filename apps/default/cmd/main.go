@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"encoding/base64"
 	"net/http"
 
@@ -9,9 +10,8 @@ import (
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	profilepb "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
-	apis "github.com/antinvestor/apis/go/common"
-	"github.com/antinvestor/apis/go/notification"
-	profilev1 "github.com/antinvestor/apis/go/profile/v1"
+	apis "github.com/antinvestor/common"
+	"github.com/antinvestor/common/connection"
 	"github.com/pitabwire/common/permissions"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
@@ -28,6 +28,9 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/handlers"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
+
+//go:embed spec/profile.openapi.yaml
+var profileAPISpecFile []byte
 
 func main() {
 	ctx := context.Background()
@@ -153,11 +156,11 @@ func handleDatabaseMigration(
 func setupNotificationClient(
 	ctx context.Context,
 	cfg aconfig.ProfileConfig) (notificationv1connect.NotificationServiceClient, error) {
-	return notification.NewClient(ctx, &cfg, apis.ServiceTarget{
+	return connection.NewServiceClient(ctx, &cfg, apis.ServiceTarget{
 		Endpoint:              cfg.NotificationSvcURI,
 		WorkloadAPITargetPath: cfg.NotificationServiceWorkloadAPITargetPath,
 		Audiences:             []string{"service_notification"},
-	})
+	}, notificationv1connect.NewNotificationServiceClient)
 }
 
 // decodeDEK decodes the Base64-encoded encryption keys from config into raw bytes.
@@ -260,7 +263,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	mux := http.NewServeMux()
 	mux.Handle("/", serverHandler)
 	mux.Handle("/public/", http.StripPrefix("/public", publicRestHandler))
-	mux.Handle("/openapi.yaml", apis.NewOpenAPIHandler(profilev1.ApiSpecFile, nil))
+	mux.Handle("/openapi.yaml", apis.NewOpenAPIHandler(profileAPISpecFile, nil))
 
 	return mux
 }
