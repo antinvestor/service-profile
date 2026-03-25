@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"connectrpc.com/connect"
-	"github.com/antinvestor/apis/go/common/permissions"
+	"github.com/pitabwire/common/permissions"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -21,8 +21,8 @@ import (
 	"github.com/antinvestor/service-profile/apps/geolocation/service/handlers"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
-	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/v1"
-	"github.com/antinvestor/service-profile/proto/geolocation/v1/geolocationv1connect"
+	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/geolocation/v1"
+	"github.com/antinvestor/service-profile/proto/geolocation/geolocation/v1/geolocationv1connect"
 )
 
 func main() { //nolint:funlen // wiring function

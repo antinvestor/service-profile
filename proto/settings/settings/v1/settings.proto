@@ -1,0 +1,248 @@
+// Copyright 2023-2026 Ant Investor Ltd
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package settings.v1;
+
+// -----------------------------------------------------
+// Core notes (normative):
+// - Settings Service provides hierarchical configuration management
+// - Settings can be scoped by object, object_id, language, and module
+// - Supports multi-tenancy and localization
+// - Settings are versioned with update timestamps
+// -----------------------------------------------------
+
+import "buf/validate/validate.proto";
+import "common/v1/common.proto";
+import "common/v1/permissions.proto";
+import "gnostic/openapi/v3/annotations.proto";
+
+option go_package = "github.com/antinvestor/apis/go/settings/v1;settingsv1";
+option java_multiple_files = true;
+option java_package = "settingsv1";
+option (gnostic.openapi.v3.document) = {
+  info: {
+    title: "Settings Service"
+    version: "v1.0.0"
+    description: "The Settings Service provides hierarchical configuration management for applications and services. It supports multi-level scoping (global, object-level, instance-level), localization, and module-specific settings. Settings can be organized by object type, object ID, language, and module, enabling flexible configuration management for multi-tenant applications with internationalization support."
+    contact: {
+      name: "Ant Investor Ltd"
+      url: "https://github.com/antinvestor/service-settings"
+      email: "info@antinvestor.com"
+    }
+    license: {
+      name: "Apache License"
+      url: "https://github.com/antinvestor/apis/blob/master/LICENSE"
+    }
+  }
+  components: {
+    security_schemes: {
+      additional_properties: [
+        {
+          name: "BearerAuth"
+          value: {
+            security_scheme: {
+              type: "http"
+              scheme: "bearer"
+              bearer_format: "JWT"
+            }
+          }
+        }
+      ]
+    }
+  }
+};
+
+// Setting represents a hierarchical key for configuration lookup.
+// Supports multi-level scoping for flexible configuration management.
+message Setting {
+  string name = 1 [(buf.validate.field).string.min_len = 2]; // Setting name (e.g., "theme", "max_upload_size")
+  string object = 2 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string.min_len = 2
+  ]; // Object type scope (e.g., "user", "organization", "application")
+  string object_id = 3 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string.min_len = 3,
+    (buf.validate.field).string.max_len = 40,
+    (buf.validate.field).string.pattern = "[0-9a-z_-]{3,40}"
+  ]; // Specific object instance ID (for instance-level settings)
+  string lang = 4 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string.min_len = 2
+  ]; // Language code for localized settings (ISO 639-1)
+  string module = 5 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string.min_len = 3
+  ]; // Module or feature scope (e.g., "billing", "notifications")
+}
+
+// SettingObject represents a stored setting with its value and metadata.
+message SettingObject {
+  string id = 1 [
+    (buf.validate.field).string.min_len = 3,
+    (buf.validate.field).string.max_len = 40,
+    (buf.validate.field).string.pattern = "[0-9a-z_-]{3,40}"
+  ]; // Unique identifier for this setting instance
+  Setting key = 2; // Hierarchical key identifying the setting
+  string value = 3; // Setting value (JSON string for complex values)
+  string updated = 4; // Last update timestamp (RFC3339)
+}
+
+// GetRequest retrieves a single setting value.
+message GetRequest {
+  Setting key = 1; // Setting key to retrieve
+}
+
+// GetResponse returns the requested setting.
+message GetResponse {
+  SettingObject data = 1; // The requested setting
+}
+
+// SearchResponse returns settings matching search criteria.
+message SearchResponse {
+  repeated SettingObject data = 1; // List of matching settings
+}
+
+// ListRequest retrieves all settings matching a partial key.
+message ListRequest {
+  Setting key = 1; // Partial key for filtering (empty fields match all)
+}
+
+// ListResponse returns matching settings.
+message ListResponse {
+  repeated SettingObject data = 1; // List of matching settings
+}
+
+// SetRequest creates or updates a setting value.
+message SetRequest {
+  Setting key = 1; // Setting key to set
+  string value = 2; // New value for the setting
+}
+
+// SetResponse returns the updated setting.
+message SetResponse {
+  SettingObject data = 1; // The updated setting
+}
+
+// -----------------------------------------------------
+// Settings Service
+// -----------------------------------------------------
+
+// SettingsService provides hierarchical configuration management.
+// All RPCs require authentication via Bearer token.
+service SettingsService {
+  option (common.v1.service_permissions) = {
+    namespace: "service_settings"
+    permissions: [
+      "setting_view",
+      "setting_manage"
+    ]
+    role_bindings: [
+      {
+        role: ROLE_OWNER
+        permissions: [
+          "setting_view",
+          "setting_manage"
+        ]
+      },
+      {
+        role: ROLE_ADMIN
+        permissions: [
+          "setting_view",
+          "setting_manage"
+        ]
+      },
+      {
+        role: ROLE_OPERATOR
+        permissions: ["setting_view"]
+      },
+      {
+        role: ROLE_VIEWER
+        permissions: ["setting_view"]
+      },
+      {
+        role: ROLE_MEMBER
+        permissions: ["setting_view"]
+      },
+      {
+        role: ROLE_SERVICE
+        permissions: [
+          "setting_view",
+          "setting_manage"
+        ]
+      }
+    ]
+  };
+
+  // Get retrieves a single setting value by its hierarchical key.
+  // Returns the most specific matching setting based on the key hierarchy.
+  rpc Get(GetRequest) returns (GetResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (common.v1.method_permissions) = {
+      permissions: ["setting_view"]
+    };
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "getSetting"
+      summary: "Get a setting value"
+      description: "Retrieves a single setting value by its hierarchical key. The service returns the most specific matching setting based on the key hierarchy (instance-level > object-level > global)."
+      tags: "Settings"
+    };
+  }
+
+  // List retrieves all settings matching a partial key.
+  // Empty fields in the key act as wildcards.
+  rpc List(ListRequest) returns (stream ListResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (common.v1.method_permissions) = {
+      permissions: ["setting_view"]
+    };
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "listSettings"
+      summary: "List settings by partial key"
+      description: "Retrieves all settings matching a partial key. Empty fields in the key act as wildcards, allowing flexible queries (e.g., all settings for an object type, all settings in a language)."
+      tags: "Settings"
+    };
+  }
+
+  // Search finds settings matching specified criteria.
+  // Supports full-text search and filtering.
+  rpc Search(common.v1.SearchRequest) returns (stream SearchResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (common.v1.method_permissions) = {
+      permissions: ["setting_view"]
+    };
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "searchSettings"
+      summary: "Search settings"
+      description: "Searches for settings matching specified criteria including full-text search on names and values, date range filtering, and custom properties."
+      tags: "Settings"
+    };
+  }
+
+  // Set creates or updates a setting value.
+  // Creates a new setting if it doesn't exist, updates if it does.
+  rpc Set(SetRequest) returns (SetResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["setting_manage"]
+    };
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "setSetting"
+      summary: "Create or update a setting"
+      description: "Creates or updates a setting value. If the setting exists, it is updated with the new value and timestamp. If it doesn't exist, a new setting is created."
+      tags: "Settings"
+    };
+  }
+}

@@ -11,7 +11,7 @@ import (
 
 	geobusiness "github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
-	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/v1"
+	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/geolocation/v1"
 )
 
 func (s *BusinessSuite) TestLookupsSchedulersAndEdgeCases() {

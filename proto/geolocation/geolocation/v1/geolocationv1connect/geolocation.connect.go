@@ -11,7 +11,7 @@ import (
 	strings "strings"
 
 	connect "connectrpc.com/connect"
-	v1 "github.com/antinvestor/service-profile/proto/geolocation/v1"
+	v1 "github.com/antinvestor/service-profile/proto/geolocation/geolocation/v1"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 

@@ -1,0 +1,33 @@
+version: v2
+managed:
+  enabled: true
+
+plugins:
+  # Go protobuf generation
+  - remote: buf.build/protocolbuffers/go
+    out: ..
+    opt:
+      - paths=source_relative
+
+  # Go ConnectRPC generation
+  - remote: buf.build/connectrpc/go
+    out: ..
+    opt:
+      - paths=source_relative
+
+  # OpenAPI generation
+  - remote: buf.build/community/sudorandom-connect-openapi
+    out: ..
+    opt:
+      - features=connectrpc;gnostic;protovalidate
+      - content-types=json
+      - allow-get
+      - debug
+
+  # Dart protobuf generation
+  - remote: buf.build/protocolbuffers/dart:v21.1.2
+    out: ../sdk/dart
+
+  # Dart ConnectRPC generation
+  - remote: buf.build/connectrpc/dart
+    out: ../sdk/dart

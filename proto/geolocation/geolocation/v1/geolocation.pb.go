@@ -11,7 +11,7 @@ import (
 	sync "sync"
 	unsafe "unsafe"
 
-	_ "github.com/antinvestor/apis/go/common/v1"
+	_ "github.com/pitabwire/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -3377,7 +3377,7 @@ const file_proto_geolocation_v1_geolocation_proto_rawDesc = "" +
 	"route_view\x12\n" +
 	"track_view\x12\vnearby_view\x1a^\b\x06\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
 	"route_view\x12\froute_manage\x12\n" +
-	"track_view\x12\vnearby_viewBKZIgithub.com/antinvestor/service-profile/proto/geolocation/v1;geolocationv1b\x06proto3"
+	"track_view\x12\vnearby_viewBKZIgithub.com/antinvestor/service-profile/proto/geolocation/geolocation/v1;geolocationv1b\x06proto3"
 
 var (
 	file_proto_geolocation_v1_geolocation_proto_rawDescOnce sync.Once
