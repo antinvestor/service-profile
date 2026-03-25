@@ -11,6 +11,7 @@ import (
 	sync "sync"
 	unsafe "unsafe"
 
+	_ "github.com/antinvestor/apis/go/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
@@ -3047,7 +3048,7 @@ var File_proto_geolocation_v1_geolocation_proto protoreflect.FileDescriptor
 
 const file_proto_geolocation_v1_geolocation_proto_rawDesc = "" +
 	"\n" +
-	"&proto/geolocation/v1/geolocation.proto\x12\x0egeolocation.v1\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa6\x03\n" +
+	"&proto/geolocation/v1/geolocation.proto\x12\x0egeolocation.v1\x1a\x1bcommon/v1/permissions.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa6\x03\n" +
 	"\x12LocationPointInput\x128\n" +
 	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x1a\n" +
 	"\blatitude\x18\x02 \x01(\x01R\blatitude\x12\x1c\n" +
@@ -3314,30 +3315,69 @@ const file_proto_geolocation_v1_geolocation_proto_rawDesc = "" +
 	"\x17RouteDeviationEventType\x12*\n" +
 	"&ROUTE_DEVIATION_EVENT_TYPE_UNSPECIFIED\x10\x00\x12'\n" +
 	"#ROUTE_DEVIATION_EVENT_TYPE_DEVIATED\x10\x01\x12,\n" +
-	"(ROUTE_DEVIATION_EVENT_TYPE_BACK_ON_ROUTE\x10\x022\xc6\r\n" +
-	"\x12GeolocationService\x12b\n" +
-	"\x0fIngestLocations\x12&.geolocation.v1.IngestLocationsRequest\x1a'.geolocation.v1.IngestLocationsResponse\x12S\n" +
+	"(ROUTE_DEVIATION_EVENT_TYPE_BACK_ON_ROUTE\x10\x022\xef\x14\n" +
+	"\x12GeolocationService\x12y\n" +
+	"\x0fIngestLocations\x12&.geolocation.v1.IngestLocationsRequest\x1a'.geolocation.v1.IngestLocationsResponse\"\x15\x82\xb5\x18\x11\n" +
+	"\x0flocation_ingest\x12f\n" +
 	"\n" +
-	"CreateArea\x12!.geolocation.v1.CreateAreaRequest\x1a\".geolocation.v1.CreateAreaResponse\x12J\n" +
-	"\aGetArea\x12\x1e.geolocation.v1.GetAreaRequest\x1a\x1f.geolocation.v1.GetAreaResponse\x12S\n" +
+	"CreateArea\x12!.geolocation.v1.CreateAreaRequest\x1a\".geolocation.v1.CreateAreaResponse\"\x11\x82\xb5\x18\r\n" +
+	"\varea_manage\x12[\n" +
+	"\aGetArea\x12\x1e.geolocation.v1.GetAreaRequest\x1a\x1f.geolocation.v1.GetAreaResponse\"\x0f\x82\xb5\x18\v\n" +
+	"\tarea_view\x12f\n" +
 	"\n" +
-	"UpdateArea\x12!.geolocation.v1.UpdateAreaRequest\x1a\".geolocation.v1.UpdateAreaResponse\x12G\n" +
+	"UpdateArea\x12!.geolocation.v1.UpdateAreaRequest\x1a\".geolocation.v1.UpdateAreaResponse\"\x11\x82\xb5\x18\r\n" +
+	"\varea_manage\x12Z\n" +
 	"\n" +
-	"DeleteArea\x12!.geolocation.v1.DeleteAreaRequest\x1a\x16.google.protobuf.Empty\x12V\n" +
-	"\vSearchAreas\x12\".geolocation.v1.SearchAreasRequest\x1a#.geolocation.v1.SearchAreasResponse\x12V\n" +
-	"\vCreateRoute\x12\".geolocation.v1.CreateRouteRequest\x1a#.geolocation.v1.CreateRouteResponse\x12M\n" +
-	"\bGetRoute\x12\x1f.geolocation.v1.GetRouteRequest\x1a .geolocation.v1.GetRouteResponse\x12V\n" +
-	"\vUpdateRoute\x12\".geolocation.v1.UpdateRouteRequest\x1a#.geolocation.v1.UpdateRouteResponse\x12I\n" +
-	"\vDeleteRoute\x12\".geolocation.v1.DeleteRouteRequest\x1a\x16.google.protobuf.Empty\x12Y\n" +
-	"\fSearchRoutes\x12#.geolocation.v1.SearchRoutesRequest\x1a$.geolocation.v1.SearchRoutesResponse\x12V\n" +
-	"\vAssignRoute\x12\".geolocation.v1.AssignRouteRequest\x1a#.geolocation.v1.AssignRouteResponse\x12M\n" +
-	"\rUnassignRoute\x12$.geolocation.v1.UnassignRouteRequest\x1a\x16.google.protobuf.Empty\x12\x83\x01\n" +
-	"\x1aGetSubjectRouteAssignments\x121.geolocation.v1.GetSubjectRouteAssignmentsRequest\x1a2.geolocation.v1.GetSubjectRouteAssignmentsResponse\x12M\n" +
-	"\bGetTrack\x12\x1f.geolocation.v1.GetTrackRequest\x1a .geolocation.v1.GetTrackResponse\x12e\n" +
-	"\x10GetSubjectEvents\x12'.geolocation.v1.GetSubjectEventsRequest\x1a(.geolocation.v1.GetSubjectEventsResponse\x12b\n" +
-	"\x0fGetAreaSubjects\x12&.geolocation.v1.GetAreaSubjectsRequest\x1a'.geolocation.v1.GetAreaSubjectsResponse\x12h\n" +
-	"\x11GetNearbySubjects\x12(.geolocation.v1.GetNearbySubjectsRequest\x1a).geolocation.v1.GetNearbySubjectsResponse\x12_\n" +
-	"\x0eGetNearbyAreas\x12%.geolocation.v1.GetNearbyAreasRequest\x1a&.geolocation.v1.GetNearbyAreasResponseBKZIgithub.com/antinvestor/service-profile/proto/geolocation/v1;geolocationv1b\x06proto3"
+	"DeleteArea\x12!.geolocation.v1.DeleteAreaRequest\x1a\x16.google.protobuf.Empty\"\x11\x82\xb5\x18\r\n" +
+	"\varea_manage\x12g\n" +
+	"\vSearchAreas\x12\".geolocation.v1.SearchAreasRequest\x1a#.geolocation.v1.SearchAreasResponse\"\x0f\x82\xb5\x18\v\n" +
+	"\tarea_view\x12j\n" +
+	"\vCreateRoute\x12\".geolocation.v1.CreateRouteRequest\x1a#.geolocation.v1.CreateRouteResponse\"\x12\x82\xb5\x18\x0e\n" +
+	"\froute_manage\x12_\n" +
+	"\bGetRoute\x12\x1f.geolocation.v1.GetRouteRequest\x1a .geolocation.v1.GetRouteResponse\"\x10\x82\xb5\x18\f\n" +
+	"\n" +
+	"route_view\x12j\n" +
+	"\vUpdateRoute\x12\".geolocation.v1.UpdateRouteRequest\x1a#.geolocation.v1.UpdateRouteResponse\"\x12\x82\xb5\x18\x0e\n" +
+	"\froute_manage\x12]\n" +
+	"\vDeleteRoute\x12\".geolocation.v1.DeleteRouteRequest\x1a\x16.google.protobuf.Empty\"\x12\x82\xb5\x18\x0e\n" +
+	"\froute_manage\x12k\n" +
+	"\fSearchRoutes\x12#.geolocation.v1.SearchRoutesRequest\x1a$.geolocation.v1.SearchRoutesResponse\"\x10\x82\xb5\x18\f\n" +
+	"\n" +
+	"route_view\x12j\n" +
+	"\vAssignRoute\x12\".geolocation.v1.AssignRouteRequest\x1a#.geolocation.v1.AssignRouteResponse\"\x12\x82\xb5\x18\x0e\n" +
+	"\froute_manage\x12a\n" +
+	"\rUnassignRoute\x12$.geolocation.v1.UnassignRouteRequest\x1a\x16.google.protobuf.Empty\"\x12\x82\xb5\x18\x0e\n" +
+	"\froute_manage\x12\x95\x01\n" +
+	"\x1aGetSubjectRouteAssignments\x121.geolocation.v1.GetSubjectRouteAssignmentsRequest\x1a2.geolocation.v1.GetSubjectRouteAssignmentsResponse\"\x10\x82\xb5\x18\f\n" +
+	"\n" +
+	"route_view\x12_\n" +
+	"\bGetTrack\x12\x1f.geolocation.v1.GetTrackRequest\x1a .geolocation.v1.GetTrackResponse\"\x10\x82\xb5\x18\f\n" +
+	"\n" +
+	"track_view\x12w\n" +
+	"\x10GetSubjectEvents\x12'.geolocation.v1.GetSubjectEventsRequest\x1a(.geolocation.v1.GetSubjectEventsResponse\"\x10\x82\xb5\x18\f\n" +
+	"\n" +
+	"track_view\x12s\n" +
+	"\x0fGetAreaSubjects\x12&.geolocation.v1.GetAreaSubjectsRequest\x1a'.geolocation.v1.GetAreaSubjectsResponse\"\x0f\x82\xb5\x18\v\n" +
+	"\tarea_view\x12{\n" +
+	"\x11GetNearbySubjects\x12(.geolocation.v1.GetNearbySubjectsRequest\x1a).geolocation.v1.GetNearbySubjectsResponse\"\x11\x82\xb5\x18\r\n" +
+	"\vnearby_view\x12r\n" +
+	"\x0eGetNearbyAreas\x12%.geolocation.v1.GetNearbyAreasRequest\x1a&.geolocation.v1.GetNearbyAreasResponse\"\x11\x82\xb5\x18\r\n" +
+	"\vnearby_view\x1a\xbf\x04\x82\xb5\x18\xba\x04\n" +
+	"\x0fservice_profile\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
+	"route_view\x12\froute_manage\x12\n" +
+	"track_view\x12\vnearby_view\x1a^\b\x01\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
+	"route_view\x12\froute_manage\x12\n" +
+	"track_view\x12\vnearby_view\x1a^\b\x02\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
+	"route_view\x12\froute_manage\x12\n" +
+	"track_view\x12\vnearby_view\x1aC\b\x03\x12\x0flocation_ingest\x12\tarea_view\x12\n" +
+	"route_view\x12\n" +
+	"track_view\x12\vnearby_view\x1a2\b\x04\x12\tarea_view\x12\n" +
+	"route_view\x12\n" +
+	"track_view\x12\vnearby_view\x1a2\b\x05\x12\tarea_view\x12\n" +
+	"route_view\x12\n" +
+	"track_view\x12\vnearby_view\x1a^\b\x06\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
+	"route_view\x12\froute_manage\x12\n" +
+	"track_view\x12\vnearby_viewBKZIgithub.com/antinvestor/service-profile/proto/geolocation/v1;geolocationv1b\x06proto3"
 
 var (
 	file_proto_geolocation_v1_geolocation_proto_rawDescOnce sync.Once

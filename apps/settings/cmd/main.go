@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/settings/v1/settingsv1connect"
+	settingspb "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
 	"connectrpc.com/connect"
+	"github.com/antinvestor/apis/go/common/permissions"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -88,13 +90,24 @@ func setupConnectServer(ctx context.Context, svc *frame.Service) http.Handler {
 	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
 	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(tenancyAccessChecker)
 
-	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator, tenancyAccessInterceptor)
+	// Build procedure map from proto annotations — no self-bypass RPCs in settings.
+	sd := settingspb.File_settings_v1_settings_proto.Services().ByName("SettingsService")
+	procMap := permissions.BuildProcedureMap(sd)
+
+	functionChecker := authorizer.NewFunctionChecker(auth, "service_profile")
+	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(
+		ctx,
+		authenticator,
+		tenancyAccessInterceptor,
+		functionAccessInterceptor,
+	)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	authzMiddleware := authz.NewMiddleware(securityMan.GetAuthorizer(ctx))
-	implementation := handlers.NewSettingsServer(ctx, svc, authzMiddleware)
+	implementation := handlers.NewSettingsServer(ctx, svc)
 
 	_, serverHandler := settingsv1connect.NewSettingsServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))

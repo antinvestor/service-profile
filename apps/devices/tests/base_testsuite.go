@@ -13,6 +13,7 @@ import (
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/security/authorizer"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -32,7 +33,7 @@ const (
 type DeviceBaseTestSuite struct {
 	frametests.FrameBaseTestSuite
 
-	AuthzMiddleware authz.Middleware
+	FunctionChecker *authorizer.FunctionChecker
 	ketoReadURI     string
 	ketoWriteURI    string
 }
@@ -182,7 +183,7 @@ func (bs *DeviceBaseTestSuite) CreateService(
 
 	// Wire real Keto authoriser via SecurityManager
 	sm := svc.SecurityManager()
-	bs.AuthzMiddleware = authz.NewMiddleware(sm.GetAuthorizer(ctx))
+	bs.FunctionChecker = authorizer.NewFunctionChecker(sm.GetAuthorizer(ctx), "service_profile")
 
 	depsBuilder := BuildRepos(ctx, svc)
 

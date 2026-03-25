@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"connectrpc.com/connect"
+	"github.com/antinvestor/apis/go/common/permissions"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -20,6 +21,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/geolocation/service/handlers"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
+	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/v1"
 	"github.com/antinvestor/service-profile/proto/geolocation/v1/geolocationv1connect"
 )
 
@@ -109,10 +111,12 @@ func main() { //nolint:funlen // wiring function
 
 	// Setup HTTP handler with authentication and rate limiting.
 	sm := svc.SecurityManager()
-	authzMiddleware := authz.NewMiddleware(sm.GetAuthorizer(ctx))
+
+	auth := sm.GetAuthorizer(ctx)
+	functionChecker := authorizer.NewFunctionChecker(auth, "service_profile")
 
 	geoServer := handlers.NewGeolocationServer(
-		svc, authzMiddleware, ingestionBiz, areaBiz, routeBiz, proximityBiz, trackBiz, metrics,
+		svc, functionChecker, ingestionBiz, areaBiz, routeBiz, proximityBiz, trackBiz, metrics,
 		cfg.MaxRequestBodyBytes,
 	)
 
@@ -120,7 +124,7 @@ func main() { //nolint:funlen // wiring function
 	rl := handlers.NewRateLimitMiddleware(cfg.RateLimitConfig())
 	defer rl.Stop()
 
-	connectHandler := setupConnectServer(ctx, sm, geoServer)
+	connectHandler := setupConnectServer(ctx, sm, functionChecker, geoServer)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", geoServer.HealthCheck)
@@ -149,6 +153,7 @@ func main() { //nolint:funlen // wiring function
 func setupConnectServer(
 	ctx context.Context,
 	sm security.Manager,
+	functionChecker *authorizer.FunctionChecker,
 	implementation *handlers.GeolocationServer,
 ) http.Handler {
 	authenticator := sm.GetAuthenticator(ctx)
@@ -156,7 +161,26 @@ func setupConnectServer(
 	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
 	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(tenancyAccessChecker)
 
-	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator, tenancyAccessInterceptor)
+	// Build procedure map from proto annotations and exclude self-bypass RPCs.
+	sd := geolocationv1.File_proto_geolocation_v1_geolocation_proto.Services().ByName("GeolocationService")
+	procMap := permissions.BuildProcedureMap(sd)
+
+	// Exclude self-bypass RPCs from auto-enforcement.
+	// These are checked manually in handlers with self-bypass logic.
+	delete(procMap, "/geolocation.v1.GeolocationService/IngestLocations")
+	delete(procMap, "/geolocation.v1.GeolocationService/GetSubjectRouteAssignments")
+	delete(procMap, "/geolocation.v1.GeolocationService/GetTrack")
+	delete(procMap, "/geolocation.v1.GeolocationService/GetSubjectEvents")
+	delete(procMap, "/geolocation.v1.GeolocationService/GetNearbySubjects")
+
+	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(
+		ctx,
+		authenticator,
+		tenancyAccessInterceptor,
+		functionAccessInterceptor,
+	)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}

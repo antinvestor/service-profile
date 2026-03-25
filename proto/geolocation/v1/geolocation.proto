@@ -4,6 +4,7 @@ package geolocation.v1;
 
 option go_package = "github.com/antinvestor/service-profile/proto/geolocation/v1;geolocationv1";
 
+import "common/v1/permissions.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
@@ -322,28 +323,183 @@ message GetNearbyAreasResponse {
 }
 
 service GeolocationService {
-  rpc IngestLocations(IngestLocationsRequest) returns (IngestLocationsResponse);
+  option (common.v1.service_permissions) = {
+    namespace: "service_profile"
+    permissions: [
+      "location_ingest",
+      "area_view",
+      "area_manage",
+      "route_view",
+      "route_manage",
+      "track_view",
+      "nearby_view"
+    ]
+    role_bindings: [
+      {
+        role: ROLE_OWNER
+        permissions: [
+          "location_ingest",
+          "area_view",
+          "area_manage",
+          "route_view",
+          "route_manage",
+          "track_view",
+          "nearby_view"
+        ]
+      },
+      {
+        role: ROLE_ADMIN
+        permissions: [
+          "location_ingest",
+          "area_view",
+          "area_manage",
+          "route_view",
+          "route_manage",
+          "track_view",
+          "nearby_view"
+        ]
+      },
+      {
+        role: ROLE_OPERATOR
+        permissions: [
+          "location_ingest",
+          "area_view",
+          "route_view",
+          "track_view",
+          "nearby_view"
+        ]
+      },
+      {
+        role: ROLE_VIEWER
+        permissions: [
+          "area_view",
+          "route_view",
+          "track_view",
+          "nearby_view"
+        ]
+      },
+      {
+        role: ROLE_MEMBER
+        permissions: [
+          "area_view",
+          "route_view",
+          "track_view",
+          "nearby_view"
+        ]
+      },
+      {
+        role: ROLE_SERVICE
+        permissions: [
+          "location_ingest",
+          "area_view",
+          "area_manage",
+          "route_view",
+          "route_manage",
+          "track_view",
+          "nearby_view"
+        ]
+      }
+    ]
+  };
 
-  rpc CreateArea(CreateAreaRequest) returns (CreateAreaResponse);
-  rpc GetArea(GetAreaRequest) returns (GetAreaResponse);
-  rpc UpdateArea(UpdateAreaRequest) returns (UpdateAreaResponse);
-  rpc DeleteArea(DeleteAreaRequest) returns (google.protobuf.Empty);
-  rpc SearchAreas(SearchAreasRequest) returns (SearchAreasResponse);
+  rpc IngestLocations(IngestLocationsRequest) returns (IngestLocationsResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["location_ingest"]
+    };
+  }
 
-  rpc CreateRoute(CreateRouteRequest) returns (CreateRouteResponse);
-  rpc GetRoute(GetRouteRequest) returns (GetRouteResponse);
-  rpc UpdateRoute(UpdateRouteRequest) returns (UpdateRouteResponse);
-  rpc DeleteRoute(DeleteRouteRequest) returns (google.protobuf.Empty);
-  rpc SearchRoutes(SearchRoutesRequest) returns (SearchRoutesResponse);
+  rpc CreateArea(CreateAreaRequest) returns (CreateAreaResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["area_manage"]
+    };
+  }
+  rpc GetArea(GetAreaRequest) returns (GetAreaResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["area_view"]
+    };
+  }
+  rpc UpdateArea(UpdateAreaRequest) returns (UpdateAreaResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["area_manage"]
+    };
+  }
+  rpc DeleteArea(DeleteAreaRequest) returns (google.protobuf.Empty) {
+    option (common.v1.method_permissions) = {
+      permissions: ["area_manage"]
+    };
+  }
+  rpc SearchAreas(SearchAreasRequest) returns (SearchAreasResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["area_view"]
+    };
+  }
 
-  rpc AssignRoute(AssignRouteRequest) returns (AssignRouteResponse);
-  rpc UnassignRoute(UnassignRouteRequest) returns (google.protobuf.Empty);
-  rpc GetSubjectRouteAssignments(GetSubjectRouteAssignmentsRequest) returns (GetSubjectRouteAssignmentsResponse);
+  rpc CreateRoute(CreateRouteRequest) returns (CreateRouteResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["route_manage"]
+    };
+  }
+  rpc GetRoute(GetRouteRequest) returns (GetRouteResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["route_view"]
+    };
+  }
+  rpc UpdateRoute(UpdateRouteRequest) returns (UpdateRouteResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["route_manage"]
+    };
+  }
+  rpc DeleteRoute(DeleteRouteRequest) returns (google.protobuf.Empty) {
+    option (common.v1.method_permissions) = {
+      permissions: ["route_manage"]
+    };
+  }
+  rpc SearchRoutes(SearchRoutesRequest) returns (SearchRoutesResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["route_view"]
+    };
+  }
 
-  rpc GetTrack(GetTrackRequest) returns (GetTrackResponse);
-  rpc GetSubjectEvents(GetSubjectEventsRequest) returns (GetSubjectEventsResponse);
-  rpc GetAreaSubjects(GetAreaSubjectsRequest) returns (GetAreaSubjectsResponse);
+  rpc AssignRoute(AssignRouteRequest) returns (AssignRouteResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["route_manage"]
+    };
+  }
+  rpc UnassignRoute(UnassignRouteRequest) returns (google.protobuf.Empty) {
+    option (common.v1.method_permissions) = {
+      permissions: ["route_manage"]
+    };
+  }
+  rpc GetSubjectRouteAssignments(GetSubjectRouteAssignmentsRequest) returns (GetSubjectRouteAssignmentsResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["route_view"]
+    };
+  }
 
-  rpc GetNearbySubjects(GetNearbySubjectsRequest) returns (GetNearbySubjectsResponse);
-  rpc GetNearbyAreas(GetNearbyAreasRequest) returns (GetNearbyAreasResponse);
+  rpc GetTrack(GetTrackRequest) returns (GetTrackResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["track_view"]
+    };
+  }
+  rpc GetSubjectEvents(GetSubjectEventsRequest) returns (GetSubjectEventsResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["track_view"]
+    };
+  }
+  rpc GetAreaSubjects(GetAreaSubjectsRequest) returns (GetAreaSubjectsResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["area_view"]
+    };
+  }
+
+  rpc GetNearbySubjects(GetNearbySubjectsRequest) returns (GetNearbySubjectsResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["nearby_view"]
+    };
+  }
+  rpc GetNearbyAreas(GetNearbyAreasRequest) returns (GetNearbyAreasResponse) {
+    option (common.v1.method_permissions) = {
+      permissions: ["nearby_view"]
+    };
+  }
 }

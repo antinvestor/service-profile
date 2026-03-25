@@ -9,12 +9,12 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/security/authorizer"
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 
-	"github.com/antinvestor/service-profile/apps/geolocation/service/authz"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/v1"
@@ -25,7 +25,7 @@ type GeolocationServer struct {
 	geolocationv1connect.UnimplementedGeolocationServiceHandler
 
 	Service      *frame.Service
-	authz        authz.Middleware
+	checker      *authorizer.FunctionChecker
 	ingestionBiz business.IngestionBusiness
 	areaBiz      business.AreaBusiness
 	routeBiz     business.RouteBusiness
@@ -36,7 +36,7 @@ type GeolocationServer struct {
 
 func NewGeolocationServer(
 	svc *frame.Service,
-	authzMiddleware authz.Middleware,
+	checker *authorizer.FunctionChecker,
 	ingestionBiz business.IngestionBusiness,
 	areaBiz business.AreaBusiness,
 	routeBiz business.RouteBusiness,
@@ -47,7 +47,7 @@ func NewGeolocationServer(
 ) *GeolocationServer {
 	return &GeolocationServer{
 		Service:      svc,
-		authz:        authzMiddleware,
+		checker:      checker,
 		ingestionBiz: ingestionBiz,
 		areaBiz:      areaBiz,
 		routeBiz:     routeBiz,
@@ -72,8 +72,11 @@ func (s *GeolocationServer) IngestLocations(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.IngestLocationsRequest],
 ) (*connect.Response[geolocationv1.IngestLocationsResponse], error) {
-	if err := s.authz.CanLocationIngestSelf(ctx, req.Msg.GetSubjectId()); err != nil {
-		return nil, authorizer.ToConnectError(err)
+	claims := security.ClaimsFromContext(ctx)
+	if sub, _ := claims.GetSubject(); sub != req.Msg.GetSubjectId() {
+		if err := s.checker.Check(ctx, "location_ingest"); err != nil {
+			return nil, authorizer.ToConnectError(err)
+		}
 	}
 
 	resp, err := s.ingestionBiz.IngestBatch(ctx, req.Msg)
@@ -87,10 +90,6 @@ func (s *GeolocationServer) CreateArea(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.CreateAreaRequest],
 ) (*connect.Response[geolocationv1.CreateAreaResponse], error) {
-	if err := s.authz.CanGeolocationManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	area, err := s.areaBiz.CreateArea(ctx, req.Msg)
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -102,10 +101,6 @@ func (s *GeolocationServer) GetArea(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.GetAreaRequest],
 ) (*connect.Response[geolocationv1.GetAreaResponse], error) {
-	if err := s.authz.CanGeolocationView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	area, err := s.areaBiz.GetArea(ctx, req.Msg.GetId())
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -117,10 +112,6 @@ func (s *GeolocationServer) UpdateArea(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.UpdateAreaRequest],
 ) (*connect.Response[geolocationv1.UpdateAreaResponse], error) {
-	if err := s.authz.CanGeolocationManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	area, err := s.areaBiz.UpdateArea(ctx, req.Msg)
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -132,10 +123,6 @@ func (s *GeolocationServer) DeleteArea(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.DeleteAreaRequest],
 ) (*connect.Response[emptypb.Empty], error) {
-	if err := s.authz.CanGeolocationManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	if err := s.areaBiz.DeleteArea(ctx, req.Msg.GetId()); err != nil {
 		return nil, s.cleanErr(ctx, err)
 	}
@@ -146,10 +133,6 @@ func (s *GeolocationServer) SearchAreas(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.SearchAreasRequest],
 ) (*connect.Response[geolocationv1.SearchAreasResponse], error) {
-	if err := s.authz.CanGeolocationView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	areas, err := s.areaBiz.SearchAreas(ctx, req.Msg.GetQuery(), req.Msg.GetOwnerId(), int(req.Msg.GetLimit()))
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -161,10 +144,6 @@ func (s *GeolocationServer) CreateRoute(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.CreateRouteRequest],
 ) (*connect.Response[geolocationv1.CreateRouteResponse], error) {
-	if err := s.authz.CanGeolocationManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	route, err := s.routeBiz.CreateRoute(ctx, req.Msg)
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -176,10 +155,6 @@ func (s *GeolocationServer) GetRoute(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.GetRouteRequest],
 ) (*connect.Response[geolocationv1.GetRouteResponse], error) {
-	if err := s.authz.CanGeolocationView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	route, err := s.routeBiz.GetRoute(ctx, req.Msg.GetId())
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -191,10 +166,6 @@ func (s *GeolocationServer) UpdateRoute(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.UpdateRouteRequest],
 ) (*connect.Response[geolocationv1.UpdateRouteResponse], error) {
-	if err := s.authz.CanGeolocationManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	route, err := s.routeBiz.UpdateRoute(ctx, req.Msg)
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -206,10 +177,6 @@ func (s *GeolocationServer) DeleteRoute(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.DeleteRouteRequest],
 ) (*connect.Response[emptypb.Empty], error) {
-	if err := s.authz.CanGeolocationManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	if err := s.routeBiz.DeleteRoute(ctx, req.Msg.GetId()); err != nil {
 		return nil, s.cleanErr(ctx, err)
 	}
@@ -220,10 +187,6 @@ func (s *GeolocationServer) SearchRoutes(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.SearchRoutesRequest],
 ) (*connect.Response[geolocationv1.SearchRoutesResponse], error) {
-	if err := s.authz.CanGeolocationView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	routes, err := s.routeBiz.SearchRoutes(ctx, req.Msg.GetOwnerId(), int(req.Msg.GetLimit()))
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -235,10 +198,6 @@ func (s *GeolocationServer) AssignRoute(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.AssignRouteRequest],
 ) (*connect.Response[geolocationv1.AssignRouteResponse], error) {
-	if err := s.authz.CanGeolocationManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	assignment, err := s.routeBiz.AssignRoute(ctx, req.Msg)
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -250,10 +209,6 @@ func (s *GeolocationServer) UnassignRoute(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.UnassignRouteRequest],
 ) (*connect.Response[emptypb.Empty], error) {
-	if err := s.authz.CanGeolocationManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	if err := s.routeBiz.UnassignRoute(ctx, req.Msg.GetId()); err != nil {
 		return nil, s.cleanErr(ctx, err)
 	}
@@ -265,8 +220,11 @@ func (s *GeolocationServer) GetSubjectRouteAssignments(
 	req *connect.Request[geolocationv1.GetSubjectRouteAssignmentsRequest],
 ) (*connect.Response[geolocationv1.GetSubjectRouteAssignmentsResponse], error) {
 	subjectID := req.Msg.GetSubjectId()
-	if err := s.authz.CanGeolocationViewSelf(ctx, subjectID); err != nil {
-		return nil, authorizer.ToConnectError(err)
+	claims := security.ClaimsFromContext(ctx)
+	if sub, _ := claims.GetSubject(); sub != subjectID {
+		if err := s.checker.Check(ctx, "geolocation_view"); err != nil {
+			return nil, authorizer.ToConnectError(err)
+		}
 	}
 
 	assignments, err := s.routeBiz.GetSubjectAssignments(ctx, subjectID)
@@ -281,8 +239,11 @@ func (s *GeolocationServer) GetTrack(
 	req *connect.Request[geolocationv1.GetTrackRequest],
 ) (*connect.Response[geolocationv1.GetTrackResponse], error) {
 	subjectID := req.Msg.GetSubjectId()
-	if err := s.authz.CanGeolocationViewSelf(ctx, subjectID); err != nil {
-		return nil, authorizer.ToConnectError(err)
+	claims := security.ClaimsFromContext(ctx)
+	if sub, _ := claims.GetSubject(); sub != subjectID {
+		if err := s.checker.Check(ctx, "geolocation_view"); err != nil {
+			return nil, authorizer.ToConnectError(err)
+		}
 	}
 
 	points, err := s.trackBiz.GetTrack(ctx, req.Msg)
@@ -297,8 +258,11 @@ func (s *GeolocationServer) GetSubjectEvents(
 	req *connect.Request[geolocationv1.GetSubjectEventsRequest],
 ) (*connect.Response[geolocationv1.GetSubjectEventsResponse], error) {
 	subjectID := req.Msg.GetSubjectId()
-	if err := s.authz.CanGeolocationViewSelf(ctx, subjectID); err != nil {
-		return nil, authorizer.ToConnectError(err)
+	claims := security.ClaimsFromContext(ctx)
+	if sub, _ := claims.GetSubject(); sub != subjectID {
+		if err := s.checker.Check(ctx, "geolocation_view"); err != nil {
+			return nil, authorizer.ToConnectError(err)
+		}
 	}
 
 	events, err := s.trackBiz.GetSubjectEvents(ctx, req.Msg)
@@ -312,10 +276,6 @@ func (s *GeolocationServer) GetAreaSubjects(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.GetAreaSubjectsRequest],
 ) (*connect.Response[geolocationv1.GetAreaSubjectsResponse], error) {
-	if err := s.authz.CanGeolocationView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	subjects, err := s.trackBiz.GetAreaSubjects(ctx, req.Msg)
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)
@@ -328,8 +288,11 @@ func (s *GeolocationServer) GetNearbySubjects(
 	req *connect.Request[geolocationv1.GetNearbySubjectsRequest],
 ) (*connect.Response[geolocationv1.GetNearbySubjectsResponse], error) {
 	subjectID := req.Msg.GetSubjectId()
-	if err := s.authz.CanGeolocationViewSelf(ctx, subjectID); err != nil {
-		return nil, authorizer.ToConnectError(err)
+	claims := security.ClaimsFromContext(ctx)
+	if sub, _ := claims.GetSubject(); sub != subjectID {
+		if err := s.checker.Check(ctx, "geolocation_view"); err != nil {
+			return nil, authorizer.ToConnectError(err)
+		}
 	}
 
 	subjects, err := s.proximityBiz.GetNearbySubjects(ctx, req.Msg)
@@ -343,10 +306,6 @@ func (s *GeolocationServer) GetNearbyAreas(
 	ctx context.Context,
 	req *connect.Request[geolocationv1.GetNearbyAreasRequest],
 ) (*connect.Response[geolocationv1.GetNearbyAreasResponse], error) {
-	if err := s.authz.CanGeolocationView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	areas, err := s.proximityBiz.GetNearbyAreas(ctx, req.Msg)
 	if err != nil {
 		return nil, s.cleanErr(ctx, err)

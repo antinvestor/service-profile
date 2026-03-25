@@ -6,10 +6,11 @@ import (
 	"net/url"
 	"testing"
 
+	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
 	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
+	notificationv1 "buf.build/gen/go/antinvestor/notification/protocolbuffers/go/notification/v1"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	notificationv1mocks "github.com/antinvestor/apis/go/notification/mocks"
-	"github.com/gojuno/minimock/v3"
+	"connectrpc.com/connect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -18,6 +19,7 @@ import (
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
 	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/security/authorizer"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -38,7 +40,7 @@ const (
 type ProfileBaseTestSuite struct {
 	frametests.FrameBaseTestSuite
 
-	AuthzMiddleware authz.Middleware
+	FunctionChecker *authorizer.FunctionChecker
 	ketoReadURI     string
 	ketoWriteURI    string
 
@@ -126,7 +128,7 @@ func (bs *ProfileBaseTestSuite) CreateService(
 
 	// Wire real Keto authoriser via SecurityManager
 	sm := svc.SecurityManager()
-	bs.AuthzMiddleware = authz.NewMiddleware(sm.GetAuthorizer(ctx))
+	bs.FunctionChecker = authorizer.NewFunctionChecker(sm.GetAuthorizer(ctx), "service_profile")
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueRelationshipConnectName,
@@ -164,14 +166,69 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	return ctx, svc
 }
 
-func (bs *ProfileBaseTestSuite) GetNotificationCli(t *testing.T) notificationv1connect.NotificationServiceClient {
-	mc := minimock.NewController(t)
+// noopNotificationClient is a minimal stub that satisfies
+// notificationv1connect.NotificationServiceClient for testing.
+// All methods return nil/zero values.
+type noopNotificationClient struct{}
 
-	notificationCli := notificationv1mocks.NewNotificationServiceClientMock(mc)
+func (n *noopNotificationClient) Send(
+	_ context.Context,
+	_ *connect.Request[notificationv1.SendRequest],
+) (*connect.ServerStreamForClient[notificationv1.SendResponse], error) {
+	return nil, nil
+}
 
-	notificationCli.SendMock.Optional().Return(nil, nil)
+func (n *noopNotificationClient) Release(
+	_ context.Context,
+	_ *connect.Request[notificationv1.ReleaseRequest],
+) (*connect.ServerStreamForClient[notificationv1.ReleaseResponse], error) {
+	return nil, nil
+}
 
-	return notificationCli
+func (n *noopNotificationClient) Receive(
+	_ context.Context,
+	_ *connect.Request[notificationv1.ReceiveRequest],
+) (*connect.ServerStreamForClient[notificationv1.ReceiveResponse], error) {
+	return nil, nil
+}
+
+func (n *noopNotificationClient) Search(
+	_ context.Context,
+	_ *connect.Request[commonv1.SearchRequest],
+) (*connect.ServerStreamForClient[notificationv1.SearchResponse], error) {
+	return nil, nil
+}
+
+func (n *noopNotificationClient) Status(
+	_ context.Context,
+	_ *connect.Request[commonv1.StatusRequest],
+) (*connect.Response[commonv1.StatusResponse], error) {
+	return nil, nil
+}
+
+func (n *noopNotificationClient) StatusUpdate(
+	_ context.Context,
+	_ *connect.Request[commonv1.StatusUpdateRequest],
+) (*connect.Response[commonv1.StatusUpdateResponse], error) {
+	return nil, nil
+}
+
+func (n *noopNotificationClient) TemplateSearch(
+	_ context.Context,
+	_ *connect.Request[notificationv1.TemplateSearchRequest],
+) (*connect.ServerStreamForClient[notificationv1.TemplateSearchResponse], error) {
+	return nil, nil
+}
+
+func (n *noopNotificationClient) TemplateSave(
+	_ context.Context,
+	_ *connect.Request[notificationv1.TemplateSaveRequest],
+) (*connect.Response[notificationv1.TemplateSaveResponse], error) {
+	return nil, nil
+}
+
+func (bs *ProfileBaseTestSuite) GetNotificationCli(_ *testing.T) notificationv1connect.NotificationServiceClient {
+	return &noopNotificationClient{}
 }
 
 func (bs *ProfileBaseTestSuite) CreateTestProfiles(

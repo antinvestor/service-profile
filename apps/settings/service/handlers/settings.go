@@ -9,21 +9,18 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
-	"github.com/pitabwire/frame/security/authorizer"
 
-	"github.com/antinvestor/service-profile/apps/settings/service/authz"
 	"github.com/antinvestor/service-profile/apps/settings/service/business"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	"github.com/antinvestor/service-profile/internal/errorutil"
 )
 
 type SettingsServer struct {
-	authz           authz.Middleware
 	settingBusiness business.SettingsBusiness
 	settingsv1connect.UnimplementedSettingsServiceHandler
 }
 
-func NewSettingsServer(ctx context.Context, svc *frame.Service, authzMiddleware authz.Middleware) *SettingsServer {
+func NewSettingsServer(ctx context.Context, svc *frame.Service) *SettingsServer {
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
@@ -31,7 +28,6 @@ func NewSettingsServer(ctx context.Context, svc *frame.Service, authzMiddleware 
 	valRepo := repository.NewSettingValRepository(ctx, dbPool, workMan)
 
 	return &SettingsServer{
-		authz:           authzMiddleware,
 		settingBusiness: business.NewSettingsBusiness(refRepo, valRepo),
 	}
 }
@@ -41,10 +37,6 @@ func (s *SettingsServer) Get(
 	ctx context.Context,
 	req *connect.Request[settingsv1.GetRequest],
 ) (*connect.Response[settingsv1.GetResponse], error) {
-	if err := s.authz.CanSettingsView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	resp, err := s.settingBusiness.Get(ctx, req.Msg)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
@@ -57,10 +49,6 @@ func (s *SettingsServer) Set(
 	ctx context.Context,
 	req *connect.Request[settingsv1.SetRequest],
 ) (*connect.Response[settingsv1.SetResponse], error) {
-	if err := s.authz.CanSettingsManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	resp, err := s.settingBusiness.Set(ctx, req.Msg)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
@@ -74,10 +62,6 @@ func (s *SettingsServer) List(
 	req *connect.Request[settingsv1.ListRequest],
 	stream *connect.ServerStream[settingsv1.ListResponse],
 ) error {
-	if err := s.authz.CanSettingsView(ctx); err != nil {
-		return authorizer.ToConnectError(err)
-	}
-
 	response, err := s.settingBusiness.List(ctx, req.Msg)
 
 	if err != nil {
@@ -92,10 +76,6 @@ func (s *SettingsServer) Search(
 	req *connect.Request[commonv1.SearchRequest],
 	stream *connect.ServerStream[settingsv1.SearchResponse],
 ) error {
-	if err := s.authz.CanSettingsView(ctx); err != nil {
-		return authorizer.ToConnectError(err)
-	}
-
 	resp, err := s.settingBusiness.Search(ctx, req.Msg)
 
 	if err != nil {

@@ -14,7 +14,6 @@ import (
 	"github.com/pitabwire/frame/security/authorizer"
 	"github.com/pitabwire/util"
 
-	"github.com/antinvestor/service-profile/apps/devices/service/authz"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	"github.com/antinvestor/service-profile/internal/errorutil"
@@ -25,7 +24,7 @@ const prefixRateTURN = "rate:turn:"
 type DevicesServer struct {
 	devicev1connect.UnimplementedDeviceServiceHandler
 
-	authz            authz.Middleware
+	checker          *authorizer.FunctionChecker
 	deviceBusiness   business.DeviceBusiness
 	presenceBusiness business.PresenceBusiness
 	keyBusiness      business.KeysBusiness
@@ -37,14 +36,14 @@ type DevicesServer struct {
 	rateLimitTURNPerMinute int64
 }
 
-func NewDeviceServer(_ context.Context, authzMiddleware authz.Middleware,
+func NewDeviceServer(_ context.Context, checker *authorizer.FunctionChecker,
 	deviceBusiness business.DeviceBusiness,
 	presenceBusiness business.PresenceBusiness, keyBusiness business.KeysBusiness,
 	notifyBusiness business.NotifyBusiness, turnBusiness business.TURNBusiness,
 	cacheSvc *caching.DeviceCacheService, turnTTL int32, rateLimitTURNPerMinute int64,
 ) *DevicesServer {
 	return &DevicesServer{
-		authz:                  authzMiddleware,
+		checker:                checker,
 		deviceBusiness:         deviceBusiness,
 		presenceBusiness:       presenceBusiness,
 		keyBusiness:            keyBusiness,
@@ -62,10 +61,6 @@ func (ds *DevicesServer) GetById(
 	ctx context.Context,
 	req *connect.Request[devicev1.GetByIdRequest],
 ) (*connect.Response[devicev1.GetByIdResponse], error) {
-	if err := ds.authz.CanDevicesView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	ids := req.Msg.GetId()
 	if slices.Contains(ids, "") {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("device ID cannot be empty"))
@@ -86,10 +81,6 @@ func (ds *DevicesServer) GetById(
 func (ds *DevicesServer) GetBySessionId(
 	ctx context.Context,
 	req *connect.Request[devicev1.GetBySessionIdRequest]) (*connect.Response[devicev1.GetBySessionIdResponse], error) {
-	if err := ds.authz.CanDevicesView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	device, err := ds.deviceBusiness.GetDeviceBySessionID(ctx, req.Msg.GetId())
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
@@ -105,10 +96,6 @@ func (ds *DevicesServer) Search(
 	req *connect.Request[devicev1.SearchRequest],
 	stream *connect.ServerStream[devicev1.SearchResponse],
 ) error {
-	if err := ds.authz.CanDevicesView(ctx); err != nil {
-		return authorizer.ToConnectError(err)
-	}
-
 	// Always process the search, even for empty queries
 	response, err := ds.deviceBusiness.SearchDevices(ctx, req.Msg)
 	if err != nil {
@@ -138,10 +125,6 @@ func (ds *DevicesServer) Create(
 	ctx context.Context,
 	req *connect.Request[devicev1.CreateRequest],
 ) (*connect.Response[devicev1.CreateResponse], error) {
-	if err := ds.authz.CanDevicesManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	// Generate a device ID for tracking
 	deviceID := util.IDString()
 
@@ -183,10 +166,6 @@ func (ds *DevicesServer) Update(
 	ctx context.Context,
 	req *connect.Request[devicev1.UpdateRequest],
 ) (*connect.Response[devicev1.UpdateResponse], error) {
-	if err := ds.authz.CanDevicesManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	msg := req.Msg
 	device, err := ds.deviceBusiness.SaveDevice(
 		ctx, msg.GetId(), msg.GetName(), msg.GetProperties().AsMap(),
@@ -204,8 +183,11 @@ func (ds *DevicesServer) Link(
 	ctx context.Context,
 	req *connect.Request[devicev1.LinkRequest],
 ) (*connect.Response[devicev1.LinkResponse], error) {
-	if err := ds.authz.CanDevicesManageSelf(ctx, req.Msg.GetProfileId()); err != nil {
-		return nil, authorizer.ToConnectError(err)
+	claims := security.ClaimsFromContext(ctx)
+	if sub, _ := claims.GetSubject(); sub != req.Msg.GetProfileId() {
+		if err := ds.checker.Check(ctx, "devices_manage"); err != nil {
+			return nil, authorizer.ToConnectError(err)
+		}
 	}
 
 	msg := req.Msg
@@ -225,10 +207,6 @@ func (ds *DevicesServer) Remove(
 	ctx context.Context,
 	req *connect.Request[devicev1.RemoveRequest],
 ) (*connect.Response[devicev1.RemoveResponse], error) {
-	if err := ds.authz.CanDevicesManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	msg := req.Msg
 
 	dev, err := ds.deviceBusiness.RemoveDevice(ctx, msg.GetId())
@@ -245,10 +223,6 @@ func (ds *DevicesServer) Log(
 	ctx context.Context,
 	req *connect.Request[devicev1.LogRequest],
 ) (*connect.Response[devicev1.LogResponse], error) {
-	if err := ds.authz.CanDevicesManage(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	msg := req.Msg
 
 	payload := msg.GetExtras().AsMap()
@@ -275,10 +249,6 @@ func (ds *DevicesServer) ListLogs(
 	req *connect.Request[devicev1.ListLogsRequest],
 	stream *connect.ServerStream[devicev1.ListLogsResponse],
 ) error {
-	if err := ds.authz.CanDevicesView(ctx); err != nil {
-		return authorizer.ToConnectError(err)
-	}
-
 	response, err := ds.deviceBusiness.GetDeviceLogs(ctx, req.Msg.GetDeviceId())
 	if err != nil {
 		return errorutil.CleanErr(err)
@@ -307,10 +277,6 @@ func (ds *DevicesServer) GetTurnCredentials(
 	ctx context.Context,
 	_ *connect.Request[devicev1.GetTurnCredentialsRequest],
 ) (*connect.Response[devicev1.GetTurnCredentialsResponse], error) {
-	if err := ds.authz.CanDevicesView(ctx); err != nil {
-		return nil, authorizer.ToConnectError(err)
-	}
-
 	if ds.turnBusiness == nil {
 		return nil, connect.NewError(connect.CodeUnavailable, errors.New("TURN credentials provider is not configured"))
 	}

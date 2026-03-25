@@ -5,7 +5,9 @@ import (
 	"net/http"
 
 	"buf.build/gen/go/antinvestor/device/connectrpc/go/device/v1/devicev1connect"
+	devicepb "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
+	"github.com/antinvestor/apis/go/common/permissions"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -111,11 +113,12 @@ func initServiceComponents(
 		util.Log(ctx).WithError(err).Warn("TURN credentials provider not configured, endpoint will return 503")
 	}
 
-	authzMiddleware := authz.NewMiddleware(securityMan.GetAuthorizer(ctx))
+	auth := securityMan.GetAuthorizer(ctx)
+	functionChecker := authorizer.NewFunctionChecker(auth, "service_profile")
 
-	implementation := handlers.NewDeviceServer(ctx, authzMiddleware, deviceBusiness, presenceBusiness, keyBusiness,
+	implementation := handlers.NewDeviceServer(ctx, functionChecker, deviceBusiness, presenceBusiness, keyBusiness,
 		notifyBusiness, turnBiz, cacheSvc, cfg.TURNTTL, cfg.RateLimitTURNPerMinute)
-	connectHandler := setupConnectServer(ctx, securityMan, implementation)
+	connectHandler := setupConnectServer(ctx, securityMan, functionChecker, implementation)
 
 	analysisHandler := queue.NewDeviceAnalysisQueueHandler(
 		httpClientMan, deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
@@ -132,6 +135,7 @@ func initServiceComponents(
 func setupConnectServer(
 	ctx context.Context,
 	securityMan security.Manager,
+	functionChecker *authorizer.FunctionChecker,
 	implementation *handlers.DevicesServer,
 ) http.Handler {
 	authenticator := securityMan.GetAuthenticator(ctx)
@@ -140,7 +144,22 @@ func setupConnectServer(
 	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
 	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(tenancyAccessChecker)
 
-	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator, tenancyAccessInterceptor)
+	// Build procedure map from proto annotations and exclude self-bypass RPCs.
+	sd := devicepb.File_device_v1_device_proto.Services().ByName("DeviceService")
+	procMap := permissions.BuildProcedureMap(sd)
+
+	// Exclude self-bypass RPCs from auto-enforcement.
+	// Link is checked manually in the handler with self-bypass logic.
+	delete(procMap, "/device.v1.DeviceService/Link")
+
+	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(
+		ctx,
+		authenticator,
+		tenancyAccessInterceptor,
+		functionAccessInterceptor,
+	)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}

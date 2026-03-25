@@ -7,8 +7,10 @@ import (
 
 	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
+	profilepb "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
 	apis "github.com/antinvestor/apis/go/common"
+	"github.com/antinvestor/apis/go/common/permissions"
 	"github.com/antinvestor/apis/go/notification"
 	profilev1 "github.com/antinvestor/apis/go/profile/v1"
 	"github.com/pitabwire/frame"
@@ -50,7 +52,6 @@ func main() {
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
-	sm := svc.SecurityManager()
 	dbManager := svc.DatastoreManager()
 
 	// Handle database migration if requested
@@ -72,11 +73,8 @@ func main() {
 	// Seed default data (system bot contact) after migration creates the profile row
 	seedDefaultData(ctx, svc, dek)
 
-	// Setup authz middleware
-	authzMiddleware := authz.NewMiddleware(sm.GetAuthorizer(ctx))
-
 	// Setup Connect server
-	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli, authzMiddleware)
+	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli)
 
 	// Setup HTTP handlers
 	// Start with datastore option
@@ -215,7 +213,7 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 
 // setupConnectServer initializes and configures the gRPC server.
 func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DEK,
-	notificationCli notificationv1connect.NotificationServiceClient, authzMiddleware authz.Middleware) http.Handler {
+	notificationCli notificationv1connect.NotificationServiceClient) http.Handler {
 	securityMan := svc.SecurityManager()
 
 	authenticator := securityMan.GetAuthenticator(ctx)
@@ -224,12 +222,35 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
 	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(tenancyAccessChecker)
 
-	defaultInterceptorList, err := connectInterceptors.DefaultList(ctx, authenticator, tenancyAccessInterceptor)
+	// Build procedure map from proto annotations and exclude self-bypass RPCs.
+	sd := profilepb.File_profile_v1_profile_proto.Services().ByName("ProfileService")
+	procMap := permissions.BuildProcedureMap(sd)
+
+	// Exclude self-bypass RPCs from auto-enforcement.
+	// These are checked manually in handlers with self-bypass logic.
+	delete(procMap, "/profile.v1.ProfileService/GetById")
+	delete(procMap, "/profile.v1.ProfileService/Update")
+	delete(procMap, "/profile.v1.ProfileService/AddAddress")
+	delete(procMap, "/profile.v1.ProfileService/AddContact")
+	delete(procMap, "/profile.v1.ProfileService/RemoveContact")
+	delete(procMap, "/profile.v1.ProfileService/SearchRoster")
+	delete(procMap, "/profile.v1.ProfileService/AddRelationship")
+	delete(procMap, "/profile.v1.ProfileService/ListRelationships")
+
+	functionChecker := authorizer.NewFunctionChecker(auth, "service_profile")
+	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
+
+	defaultInterceptorList, err := connectInterceptors.DefaultList(
+		ctx,
+		authenticator,
+		tenancyAccessInterceptor,
+		functionAccessInterceptor,
+	)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	implementation := handlers.NewProfileServer(ctx, svc, dek, notificationCli, authzMiddleware)
+	implementation := handlers.NewProfileServer(ctx, svc, dek, notificationCli, functionChecker)
 
 	_, serverHandler := profilev1connect.NewProfileServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))

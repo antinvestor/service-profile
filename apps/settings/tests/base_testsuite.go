@@ -30,9 +30,8 @@ const (
 type SettingsBaseTestSuite struct {
 	frametests.FrameBaseTestSuite
 
-	AuthzMiddleware authz.Middleware
-	ketoReadURI     string
-	ketoWriteURI    string
+	ketoReadURI  string
+	ketoWriteURI string
 }
 
 func initResources(_ context.Context) []definition.TestResource {
@@ -106,10 +105,6 @@ func (bs *SettingsBaseTestSuite) CreateService(
 		frame.WithConfig(&cfg),
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())
-
-	// Wire real Keto authoriser via SecurityManager
-	sm := svc.SecurityManager()
-	bs.AuthzMiddleware = authz.NewMiddleware(sm.GetAuthorizer(ctx))
 
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 

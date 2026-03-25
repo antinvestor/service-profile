@@ -11,6 +11,7 @@ import (
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/security/authorizer"
 	"github.com/pitabwire/frame/workerpool"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -18,7 +19,6 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
-	"github.com/antinvestor/service-profile/apps/geolocation/service/authz"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	geoevents "github.com/antinvestor/service-profile/apps/geolocation/service/events"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/handlers"
@@ -104,7 +104,7 @@ func newHandlerStack(ctx context.Context, svc *frame.Service) *handlerStack {
 	return &handlerStack{
 		GeoServer: handlers.NewGeolocationServer(
 			svc,
-			authz.NewMiddleware(svc.SecurityManager().GetAuthorizer(ctx)),
+			authorizer.NewFunctionChecker(svc.SecurityManager().GetAuthorizer(ctx), "service_profile"),
 			ingestionBiz,
 			areaBiz,
 			routeBiz,
