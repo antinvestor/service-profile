@@ -2,21 +2,20 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: proto/geolocation/v1/geolocation.proto
+// source: geolocation/v1/geolocation.proto
 
 package geolocationv1
 
 import (
-	reflect "reflect"
-	sync "sync"
-	unsafe "unsafe"
-
 	_ "github.com/antinvestor/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	structpb "google.golang.org/protobuf/types/known/structpb"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	reflect "reflect"
+	sync "sync"
+	unsafe "unsafe"
 )
 
 const (
@@ -65,11 +64,11 @@ func (x LocationSource) String() string {
 }
 
 func (LocationSource) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_geolocation_v1_geolocation_proto_enumTypes[0].Descriptor()
+	return file_geolocation_v1_geolocation_proto_enumTypes[0].Descriptor()
 }
 
 func (LocationSource) Type() protoreflect.EnumType {
-	return &file_proto_geolocation_v1_geolocation_proto_enumTypes[0]
+	return &file_geolocation_v1_geolocation_proto_enumTypes[0]
 }
 
 func (x LocationSource) Number() protoreflect.EnumNumber {
@@ -78,7 +77,7 @@ func (x LocationSource) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use LocationSource.Descriptor instead.
 func (LocationSource) EnumDescriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{0}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{0}
 }
 
 type AreaType int32
@@ -123,11 +122,11 @@ func (x AreaType) String() string {
 }
 
 func (AreaType) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_geolocation_v1_geolocation_proto_enumTypes[1].Descriptor()
+	return file_geolocation_v1_geolocation_proto_enumTypes[1].Descriptor()
 }
 
 func (AreaType) Type() protoreflect.EnumType {
-	return &file_proto_geolocation_v1_geolocation_proto_enumTypes[1]
+	return &file_geolocation_v1_geolocation_proto_enumTypes[1]
 }
 
 func (x AreaType) Number() protoreflect.EnumNumber {
@@ -136,7 +135,7 @@ func (x AreaType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use AreaType.Descriptor instead.
 func (AreaType) EnumDescriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{1}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{1}
 }
 
 type GeoEventType int32
@@ -175,11 +174,11 @@ func (x GeoEventType) String() string {
 }
 
 func (GeoEventType) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_geolocation_v1_geolocation_proto_enumTypes[2].Descriptor()
+	return file_geolocation_v1_geolocation_proto_enumTypes[2].Descriptor()
 }
 
 func (GeoEventType) Type() protoreflect.EnumType {
-	return &file_proto_geolocation_v1_geolocation_proto_enumTypes[2]
+	return &file_geolocation_v1_geolocation_proto_enumTypes[2]
 }
 
 func (x GeoEventType) Number() protoreflect.EnumNumber {
@@ -188,7 +187,7 @@ func (x GeoEventType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GeoEventType.Descriptor instead.
 func (GeoEventType) EnumDescriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{2}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{2}
 }
 
 type RouteDeviationEventType int32
@@ -224,11 +223,11 @@ func (x RouteDeviationEventType) String() string {
 }
 
 func (RouteDeviationEventType) Descriptor() protoreflect.EnumDescriptor {
-	return file_proto_geolocation_v1_geolocation_proto_enumTypes[3].Descriptor()
+	return file_geolocation_v1_geolocation_proto_enumTypes[3].Descriptor()
 }
 
 func (RouteDeviationEventType) Type() protoreflect.EnumType {
-	return &file_proto_geolocation_v1_geolocation_proto_enumTypes[3]
+	return &file_geolocation_v1_geolocation_proto_enumTypes[3]
 }
 
 func (x RouteDeviationEventType) Number() protoreflect.EnumNumber {
@@ -237,7 +236,7 @@ func (x RouteDeviationEventType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RouteDeviationEventType.Descriptor instead.
 func (RouteDeviationEventType) EnumDescriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{3}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{3}
 }
 
 type LocationPointInput struct {
@@ -258,7 +257,7 @@ type LocationPointInput struct {
 
 func (x *LocationPointInput) Reset() {
 	*x = LocationPointInput{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[0]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -270,7 +269,7 @@ func (x *LocationPointInput) String() string {
 func (*LocationPointInput) ProtoMessage() {}
 
 func (x *LocationPointInput) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[0]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -283,7 +282,7 @@ func (x *LocationPointInput) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocationPointInput.ProtoReflect.Descriptor instead.
 func (*LocationPointInput) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{0}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *LocationPointInput) GetTimestamp() *timestamppb.Timestamp {
@@ -377,7 +376,7 @@ type LocationPointObject struct {
 
 func (x *LocationPointObject) Reset() {
 	*x = LocationPointObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[1]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -389,7 +388,7 @@ func (x *LocationPointObject) String() string {
 func (*LocationPointObject) ProtoMessage() {}
 
 func (x *LocationPointObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[1]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -402,7 +401,7 @@ func (x *LocationPointObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LocationPointObject.ProtoReflect.Descriptor instead.
 func (*LocationPointObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{1}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *LocationPointObject) GetId() string {
@@ -515,7 +514,7 @@ type AreaObject struct {
 
 func (x *AreaObject) Reset() {
 	*x = AreaObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[2]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -527,7 +526,7 @@ func (x *AreaObject) String() string {
 func (*AreaObject) ProtoMessage() {}
 
 func (x *AreaObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[2]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -540,7 +539,7 @@ func (x *AreaObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AreaObject.ProtoReflect.Descriptor instead.
 func (*AreaObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{2}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *AreaObject) GetId() string {
@@ -636,7 +635,7 @@ type GeoEventObject struct {
 
 func (x *GeoEventObject) Reset() {
 	*x = GeoEventObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[3]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -648,7 +647,7 @@ func (x *GeoEventObject) String() string {
 func (*GeoEventObject) ProtoMessage() {}
 
 func (x *GeoEventObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[3]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -661,7 +660,7 @@ func (x *GeoEventObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GeoEventObject.ProtoReflect.Descriptor instead.
 func (*GeoEventObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{3}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *GeoEventObject) GetId() string {
@@ -730,7 +729,7 @@ type AreaSubjectObject struct {
 
 func (x *AreaSubjectObject) Reset() {
 	*x = AreaSubjectObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[4]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -742,7 +741,7 @@ func (x *AreaSubjectObject) String() string {
 func (*AreaSubjectObject) ProtoMessage() {}
 
 func (x *AreaSubjectObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[4]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -755,7 +754,7 @@ func (x *AreaSubjectObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AreaSubjectObject.ProtoReflect.Descriptor instead.
 func (*AreaSubjectObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{4}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *AreaSubjectObject) GetSubjectId() string {
@@ -783,7 +782,7 @@ type NearbySubjectObject struct {
 
 func (x *NearbySubjectObject) Reset() {
 	*x = NearbySubjectObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[5]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -795,7 +794,7 @@ func (x *NearbySubjectObject) String() string {
 func (*NearbySubjectObject) ProtoMessage() {}
 
 func (x *NearbySubjectObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[5]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -808,7 +807,7 @@ func (x *NearbySubjectObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NearbySubjectObject.ProtoReflect.Descriptor instead.
 func (*NearbySubjectObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{5}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *NearbySubjectObject) GetSubjectId() string {
@@ -844,7 +843,7 @@ type NearbyAreaObject struct {
 
 func (x *NearbyAreaObject) Reset() {
 	*x = NearbyAreaObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[6]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -856,7 +855,7 @@ func (x *NearbyAreaObject) String() string {
 func (*NearbyAreaObject) ProtoMessage() {}
 
 func (x *NearbyAreaObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[6]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -869,7 +868,7 @@ func (x *NearbyAreaObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NearbyAreaObject.ProtoReflect.Descriptor instead.
 func (*NearbyAreaObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{6}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *NearbyAreaObject) GetAreaId() string {
@@ -920,7 +919,7 @@ type RouteObject struct {
 
 func (x *RouteObject) Reset() {
 	*x = RouteObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[7]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -932,7 +931,7 @@ func (x *RouteObject) String() string {
 func (*RouteObject) ProtoMessage() {}
 
 func (x *RouteObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[7]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -945,7 +944,7 @@ func (x *RouteObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouteObject.ProtoReflect.Descriptor instead.
 func (*RouteObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{7}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *RouteObject) GetId() string {
@@ -1048,7 +1047,7 @@ type RouteAssignmentObject struct {
 
 func (x *RouteAssignmentObject) Reset() {
 	*x = RouteAssignmentObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[8]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1060,7 +1059,7 @@ func (x *RouteAssignmentObject) String() string {
 func (*RouteAssignmentObject) ProtoMessage() {}
 
 func (x *RouteAssignmentObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[8]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1073,7 +1072,7 @@ func (x *RouteAssignmentObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouteAssignmentObject.ProtoReflect.Descriptor instead.
 func (*RouteAssignmentObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{8}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *RouteAssignmentObject) GetId() string {
@@ -1149,7 +1148,7 @@ type RouteDeviationEventObject struct {
 
 func (x *RouteDeviationEventObject) Reset() {
 	*x = RouteDeviationEventObject{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[9]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1161,7 +1160,7 @@ func (x *RouteDeviationEventObject) String() string {
 func (*RouteDeviationEventObject) ProtoMessage() {}
 
 func (x *RouteDeviationEventObject) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[9]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1174,7 +1173,7 @@ func (x *RouteDeviationEventObject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RouteDeviationEventObject.ProtoReflect.Descriptor instead.
 func (*RouteDeviationEventObject) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{9}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *RouteDeviationEventObject) GetId() string {
@@ -1250,7 +1249,7 @@ type IngestLocationsRequest struct {
 
 func (x *IngestLocationsRequest) Reset() {
 	*x = IngestLocationsRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[10]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1262,7 +1261,7 @@ func (x *IngestLocationsRequest) String() string {
 func (*IngestLocationsRequest) ProtoMessage() {}
 
 func (x *IngestLocationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[10]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1275,7 +1274,7 @@ func (x *IngestLocationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestLocationsRequest.ProtoReflect.Descriptor instead.
 func (*IngestLocationsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{10}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *IngestLocationsRequest) GetSubjectId() string {
@@ -1302,7 +1301,7 @@ type IngestLocationsResponse struct {
 
 func (x *IngestLocationsResponse) Reset() {
 	*x = IngestLocationsResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[11]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1314,7 +1313,7 @@ func (x *IngestLocationsResponse) String() string {
 func (*IngestLocationsResponse) ProtoMessage() {}
 
 func (x *IngestLocationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[11]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1327,7 +1326,7 @@ func (x *IngestLocationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IngestLocationsResponse.ProtoReflect.Descriptor instead.
 func (*IngestLocationsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{11}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *IngestLocationsResponse) GetAccepted() int32 {
@@ -1353,7 +1352,7 @@ type CreateAreaRequest struct {
 
 func (x *CreateAreaRequest) Reset() {
 	*x = CreateAreaRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[12]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1365,7 +1364,7 @@ func (x *CreateAreaRequest) String() string {
 func (*CreateAreaRequest) ProtoMessage() {}
 
 func (x *CreateAreaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[12]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1378,7 +1377,7 @@ func (x *CreateAreaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAreaRequest.ProtoReflect.Descriptor instead.
 func (*CreateAreaRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{12}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CreateAreaRequest) GetData() *AreaObject {
@@ -1397,7 +1396,7 @@ type CreateAreaResponse struct {
 
 func (x *CreateAreaResponse) Reset() {
 	*x = CreateAreaResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[13]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1409,7 +1408,7 @@ func (x *CreateAreaResponse) String() string {
 func (*CreateAreaResponse) ProtoMessage() {}
 
 func (x *CreateAreaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[13]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1422,7 +1421,7 @@ func (x *CreateAreaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateAreaResponse.ProtoReflect.Descriptor instead.
 func (*CreateAreaResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{13}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *CreateAreaResponse) GetData() *AreaObject {
@@ -1441,7 +1440,7 @@ type GetAreaRequest struct {
 
 func (x *GetAreaRequest) Reset() {
 	*x = GetAreaRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[14]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1453,7 +1452,7 @@ func (x *GetAreaRequest) String() string {
 func (*GetAreaRequest) ProtoMessage() {}
 
 func (x *GetAreaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[14]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1466,7 +1465,7 @@ func (x *GetAreaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAreaRequest.ProtoReflect.Descriptor instead.
 func (*GetAreaRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{14}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *GetAreaRequest) GetId() string {
@@ -1485,7 +1484,7 @@ type GetAreaResponse struct {
 
 func (x *GetAreaResponse) Reset() {
 	*x = GetAreaResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[15]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1497,7 +1496,7 @@ func (x *GetAreaResponse) String() string {
 func (*GetAreaResponse) ProtoMessage() {}
 
 func (x *GetAreaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[15]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1510,7 +1509,7 @@ func (x *GetAreaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAreaResponse.ProtoReflect.Descriptor instead.
 func (*GetAreaResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{15}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *GetAreaResponse) GetData() *AreaObject {
@@ -1534,7 +1533,7 @@ type UpdateAreaRequest struct {
 
 func (x *UpdateAreaRequest) Reset() {
 	*x = UpdateAreaRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[16]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1546,7 +1545,7 @@ func (x *UpdateAreaRequest) String() string {
 func (*UpdateAreaRequest) ProtoMessage() {}
 
 func (x *UpdateAreaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[16]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1559,7 +1558,7 @@ func (x *UpdateAreaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAreaRequest.ProtoReflect.Descriptor instead.
 func (*UpdateAreaRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{16}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *UpdateAreaRequest) GetId() string {
@@ -1613,7 +1612,7 @@ type UpdateAreaResponse struct {
 
 func (x *UpdateAreaResponse) Reset() {
 	*x = UpdateAreaResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[17]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1625,7 +1624,7 @@ func (x *UpdateAreaResponse) String() string {
 func (*UpdateAreaResponse) ProtoMessage() {}
 
 func (x *UpdateAreaResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[17]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1638,7 +1637,7 @@ func (x *UpdateAreaResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateAreaResponse.ProtoReflect.Descriptor instead.
 func (*UpdateAreaResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{17}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *UpdateAreaResponse) GetData() *AreaObject {
@@ -1657,7 +1656,7 @@ type DeleteAreaRequest struct {
 
 func (x *DeleteAreaRequest) Reset() {
 	*x = DeleteAreaRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[18]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1669,7 +1668,7 @@ func (x *DeleteAreaRequest) String() string {
 func (*DeleteAreaRequest) ProtoMessage() {}
 
 func (x *DeleteAreaRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[18]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1682,7 +1681,7 @@ func (x *DeleteAreaRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteAreaRequest.ProtoReflect.Descriptor instead.
 func (*DeleteAreaRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{18}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *DeleteAreaRequest) GetId() string {
@@ -1703,7 +1702,7 @@ type SearchAreasRequest struct {
 
 func (x *SearchAreasRequest) Reset() {
 	*x = SearchAreasRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[19]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1715,7 +1714,7 @@ func (x *SearchAreasRequest) String() string {
 func (*SearchAreasRequest) ProtoMessage() {}
 
 func (x *SearchAreasRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[19]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1728,7 +1727,7 @@ func (x *SearchAreasRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchAreasRequest.ProtoReflect.Descriptor instead.
 func (*SearchAreasRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{19}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SearchAreasRequest) GetQuery() string {
@@ -1761,7 +1760,7 @@ type SearchAreasResponse struct {
 
 func (x *SearchAreasResponse) Reset() {
 	*x = SearchAreasResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[20]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1773,7 +1772,7 @@ func (x *SearchAreasResponse) String() string {
 func (*SearchAreasResponse) ProtoMessage() {}
 
 func (x *SearchAreasResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[20]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1786,7 +1785,7 @@ func (x *SearchAreasResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchAreasResponse.ProtoReflect.Descriptor instead.
 func (*SearchAreasResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{20}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *SearchAreasResponse) GetData() []*AreaObject {
@@ -1805,7 +1804,7 @@ type CreateRouteRequest struct {
 
 func (x *CreateRouteRequest) Reset() {
 	*x = CreateRouteRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[21]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1817,7 +1816,7 @@ func (x *CreateRouteRequest) String() string {
 func (*CreateRouteRequest) ProtoMessage() {}
 
 func (x *CreateRouteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[21]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1830,7 +1829,7 @@ func (x *CreateRouteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRouteRequest.ProtoReflect.Descriptor instead.
 func (*CreateRouteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{21}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *CreateRouteRequest) GetData() *RouteObject {
@@ -1849,7 +1848,7 @@ type CreateRouteResponse struct {
 
 func (x *CreateRouteResponse) Reset() {
 	*x = CreateRouteResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[22]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1861,7 +1860,7 @@ func (x *CreateRouteResponse) String() string {
 func (*CreateRouteResponse) ProtoMessage() {}
 
 func (x *CreateRouteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[22]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1874,7 +1873,7 @@ func (x *CreateRouteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateRouteResponse.ProtoReflect.Descriptor instead.
 func (*CreateRouteResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{22}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CreateRouteResponse) GetData() *RouteObject {
@@ -1893,7 +1892,7 @@ type GetRouteRequest struct {
 
 func (x *GetRouteRequest) Reset() {
 	*x = GetRouteRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[23]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1905,7 +1904,7 @@ func (x *GetRouteRequest) String() string {
 func (*GetRouteRequest) ProtoMessage() {}
 
 func (x *GetRouteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[23]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1918,7 +1917,7 @@ func (x *GetRouteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRouteRequest.ProtoReflect.Descriptor instead.
 func (*GetRouteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{23}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetRouteRequest) GetId() string {
@@ -1937,7 +1936,7 @@ type GetRouteResponse struct {
 
 func (x *GetRouteResponse) Reset() {
 	*x = GetRouteResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[24]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1949,7 +1948,7 @@ func (x *GetRouteResponse) String() string {
 func (*GetRouteResponse) ProtoMessage() {}
 
 func (x *GetRouteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[24]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1962,7 +1961,7 @@ func (x *GetRouteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRouteResponse.ProtoReflect.Descriptor instead.
 func (*GetRouteResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{24}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetRouteResponse) GetData() *RouteObject {
@@ -1988,7 +1987,7 @@ type UpdateRouteRequest struct {
 
 func (x *UpdateRouteRequest) Reset() {
 	*x = UpdateRouteRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[25]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2000,7 +1999,7 @@ func (x *UpdateRouteRequest) String() string {
 func (*UpdateRouteRequest) ProtoMessage() {}
 
 func (x *UpdateRouteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[25]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2013,7 +2012,7 @@ func (x *UpdateRouteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRouteRequest.ProtoReflect.Descriptor instead.
 func (*UpdateRouteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{25}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *UpdateRouteRequest) GetId() string {
@@ -2081,7 +2080,7 @@ type UpdateRouteResponse struct {
 
 func (x *UpdateRouteResponse) Reset() {
 	*x = UpdateRouteResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[26]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2093,7 +2092,7 @@ func (x *UpdateRouteResponse) String() string {
 func (*UpdateRouteResponse) ProtoMessage() {}
 
 func (x *UpdateRouteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[26]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2106,7 +2105,7 @@ func (x *UpdateRouteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRouteResponse.ProtoReflect.Descriptor instead.
 func (*UpdateRouteResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{26}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *UpdateRouteResponse) GetData() *RouteObject {
@@ -2125,7 +2124,7 @@ type DeleteRouteRequest struct {
 
 func (x *DeleteRouteRequest) Reset() {
 	*x = DeleteRouteRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[27]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2137,7 +2136,7 @@ func (x *DeleteRouteRequest) String() string {
 func (*DeleteRouteRequest) ProtoMessage() {}
 
 func (x *DeleteRouteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[27]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2150,7 +2149,7 @@ func (x *DeleteRouteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRouteRequest.ProtoReflect.Descriptor instead.
 func (*DeleteRouteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{27}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *DeleteRouteRequest) GetId() string {
@@ -2170,7 +2169,7 @@ type SearchRoutesRequest struct {
 
 func (x *SearchRoutesRequest) Reset() {
 	*x = SearchRoutesRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[28]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2182,7 +2181,7 @@ func (x *SearchRoutesRequest) String() string {
 func (*SearchRoutesRequest) ProtoMessage() {}
 
 func (x *SearchRoutesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[28]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2195,7 +2194,7 @@ func (x *SearchRoutesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchRoutesRequest.ProtoReflect.Descriptor instead.
 func (*SearchRoutesRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{28}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *SearchRoutesRequest) GetOwnerId() string {
@@ -2221,7 +2220,7 @@ type SearchRoutesResponse struct {
 
 func (x *SearchRoutesResponse) Reset() {
 	*x = SearchRoutesResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[29]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2233,7 +2232,7 @@ func (x *SearchRoutesResponse) String() string {
 func (*SearchRoutesResponse) ProtoMessage() {}
 
 func (x *SearchRoutesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[29]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2246,7 +2245,7 @@ func (x *SearchRoutesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SearchRoutesResponse.ProtoReflect.Descriptor instead.
 func (*SearchRoutesResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{29}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *SearchRoutesResponse) GetData() []*RouteObject {
@@ -2268,7 +2267,7 @@ type AssignRouteRequest struct {
 
 func (x *AssignRouteRequest) Reset() {
 	*x = AssignRouteRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[30]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2280,7 +2279,7 @@ func (x *AssignRouteRequest) String() string {
 func (*AssignRouteRequest) ProtoMessage() {}
 
 func (x *AssignRouteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[30]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2293,7 +2292,7 @@ func (x *AssignRouteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignRouteRequest.ProtoReflect.Descriptor instead.
 func (*AssignRouteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{30}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AssignRouteRequest) GetSubjectId() string {
@@ -2333,7 +2332,7 @@ type AssignRouteResponse struct {
 
 func (x *AssignRouteResponse) Reset() {
 	*x = AssignRouteResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[31]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2345,7 +2344,7 @@ func (x *AssignRouteResponse) String() string {
 func (*AssignRouteResponse) ProtoMessage() {}
 
 func (x *AssignRouteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[31]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2358,7 +2357,7 @@ func (x *AssignRouteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AssignRouteResponse.ProtoReflect.Descriptor instead.
 func (*AssignRouteResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{31}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *AssignRouteResponse) GetData() *RouteAssignmentObject {
@@ -2377,7 +2376,7 @@ type UnassignRouteRequest struct {
 
 func (x *UnassignRouteRequest) Reset() {
 	*x = UnassignRouteRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[32]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2389,7 +2388,7 @@ func (x *UnassignRouteRequest) String() string {
 func (*UnassignRouteRequest) ProtoMessage() {}
 
 func (x *UnassignRouteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[32]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2402,7 +2401,7 @@ func (x *UnassignRouteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnassignRouteRequest.ProtoReflect.Descriptor instead.
 func (*UnassignRouteRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{32}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *UnassignRouteRequest) GetId() string {
@@ -2421,7 +2420,7 @@ type GetSubjectRouteAssignmentsRequest struct {
 
 func (x *GetSubjectRouteAssignmentsRequest) Reset() {
 	*x = GetSubjectRouteAssignmentsRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[33]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2433,7 +2432,7 @@ func (x *GetSubjectRouteAssignmentsRequest) String() string {
 func (*GetSubjectRouteAssignmentsRequest) ProtoMessage() {}
 
 func (x *GetSubjectRouteAssignmentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[33]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2446,7 +2445,7 @@ func (x *GetSubjectRouteAssignmentsRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use GetSubjectRouteAssignmentsRequest.ProtoReflect.Descriptor instead.
 func (*GetSubjectRouteAssignmentsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{33}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *GetSubjectRouteAssignmentsRequest) GetSubjectId() string {
@@ -2465,7 +2464,7 @@ type GetSubjectRouteAssignmentsResponse struct {
 
 func (x *GetSubjectRouteAssignmentsResponse) Reset() {
 	*x = GetSubjectRouteAssignmentsResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[34]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2477,7 +2476,7 @@ func (x *GetSubjectRouteAssignmentsResponse) String() string {
 func (*GetSubjectRouteAssignmentsResponse) ProtoMessage() {}
 
 func (x *GetSubjectRouteAssignmentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[34]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2490,7 +2489,7 @@ func (x *GetSubjectRouteAssignmentsResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use GetSubjectRouteAssignmentsResponse.ProtoReflect.Descriptor instead.
 func (*GetSubjectRouteAssignmentsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{34}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *GetSubjectRouteAssignmentsResponse) GetData() []*RouteAssignmentObject {
@@ -2513,7 +2512,7 @@ type GetTrackRequest struct {
 
 func (x *GetTrackRequest) Reset() {
 	*x = GetTrackRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[35]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2525,7 +2524,7 @@ func (x *GetTrackRequest) String() string {
 func (*GetTrackRequest) ProtoMessage() {}
 
 func (x *GetTrackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[35]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2538,7 +2537,7 @@ func (x *GetTrackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrackRequest.ProtoReflect.Descriptor instead.
 func (*GetTrackRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{35}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *GetTrackRequest) GetSubjectId() string {
@@ -2585,7 +2584,7 @@ type GetTrackResponse struct {
 
 func (x *GetTrackResponse) Reset() {
 	*x = GetTrackResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[36]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2597,7 +2596,7 @@ func (x *GetTrackResponse) String() string {
 func (*GetTrackResponse) ProtoMessage() {}
 
 func (x *GetTrackResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[36]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2610,7 +2609,7 @@ func (x *GetTrackResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrackResponse.ProtoReflect.Descriptor instead.
 func (*GetTrackResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{36}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *GetTrackResponse) GetData() []*LocationPointObject {
@@ -2633,7 +2632,7 @@ type GetSubjectEventsRequest struct {
 
 func (x *GetSubjectEventsRequest) Reset() {
 	*x = GetSubjectEventsRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[37]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2645,7 +2644,7 @@ func (x *GetSubjectEventsRequest) String() string {
 func (*GetSubjectEventsRequest) ProtoMessage() {}
 
 func (x *GetSubjectEventsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[37]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2658,7 +2657,7 @@ func (x *GetSubjectEventsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSubjectEventsRequest.ProtoReflect.Descriptor instead.
 func (*GetSubjectEventsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{37}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *GetSubjectEventsRequest) GetSubjectId() string {
@@ -2705,7 +2704,7 @@ type GetSubjectEventsResponse struct {
 
 func (x *GetSubjectEventsResponse) Reset() {
 	*x = GetSubjectEventsResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[38]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2717,7 +2716,7 @@ func (x *GetSubjectEventsResponse) String() string {
 func (*GetSubjectEventsResponse) ProtoMessage() {}
 
 func (x *GetSubjectEventsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[38]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2730,7 +2729,7 @@ func (x *GetSubjectEventsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSubjectEventsResponse.ProtoReflect.Descriptor instead.
 func (*GetSubjectEventsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{38}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *GetSubjectEventsResponse) GetData() []*GeoEventObject {
@@ -2749,7 +2748,7 @@ type GetAreaSubjectsRequest struct {
 
 func (x *GetAreaSubjectsRequest) Reset() {
 	*x = GetAreaSubjectsRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[39]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2761,7 +2760,7 @@ func (x *GetAreaSubjectsRequest) String() string {
 func (*GetAreaSubjectsRequest) ProtoMessage() {}
 
 func (x *GetAreaSubjectsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[39]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2774,7 +2773,7 @@ func (x *GetAreaSubjectsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAreaSubjectsRequest.ProtoReflect.Descriptor instead.
 func (*GetAreaSubjectsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{39}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *GetAreaSubjectsRequest) GetAreaId() string {
@@ -2793,7 +2792,7 @@ type GetAreaSubjectsResponse struct {
 
 func (x *GetAreaSubjectsResponse) Reset() {
 	*x = GetAreaSubjectsResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[40]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2805,7 +2804,7 @@ func (x *GetAreaSubjectsResponse) String() string {
 func (*GetAreaSubjectsResponse) ProtoMessage() {}
 
 func (x *GetAreaSubjectsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[40]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2818,7 +2817,7 @@ func (x *GetAreaSubjectsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetAreaSubjectsResponse.ProtoReflect.Descriptor instead.
 func (*GetAreaSubjectsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{40}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *GetAreaSubjectsResponse) GetData() []*AreaSubjectObject {
@@ -2839,7 +2838,7 @@ type GetNearbySubjectsRequest struct {
 
 func (x *GetNearbySubjectsRequest) Reset() {
 	*x = GetNearbySubjectsRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[41]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2851,7 +2850,7 @@ func (x *GetNearbySubjectsRequest) String() string {
 func (*GetNearbySubjectsRequest) ProtoMessage() {}
 
 func (x *GetNearbySubjectsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[41]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2864,7 +2863,7 @@ func (x *GetNearbySubjectsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNearbySubjectsRequest.ProtoReflect.Descriptor instead.
 func (*GetNearbySubjectsRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{41}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *GetNearbySubjectsRequest) GetSubjectId() string {
@@ -2897,7 +2896,7 @@ type GetNearbySubjectsResponse struct {
 
 func (x *GetNearbySubjectsResponse) Reset() {
 	*x = GetNearbySubjectsResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[42]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2909,7 +2908,7 @@ func (x *GetNearbySubjectsResponse) String() string {
 func (*GetNearbySubjectsResponse) ProtoMessage() {}
 
 func (x *GetNearbySubjectsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[42]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2922,7 +2921,7 @@ func (x *GetNearbySubjectsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNearbySubjectsResponse.ProtoReflect.Descriptor instead.
 func (*GetNearbySubjectsResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{42}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *GetNearbySubjectsResponse) GetData() []*NearbySubjectObject {
@@ -2944,7 +2943,7 @@ type GetNearbyAreasRequest struct {
 
 func (x *GetNearbyAreasRequest) Reset() {
 	*x = GetNearbyAreasRequest{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[43]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2956,7 +2955,7 @@ func (x *GetNearbyAreasRequest) String() string {
 func (*GetNearbyAreasRequest) ProtoMessage() {}
 
 func (x *GetNearbyAreasRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[43]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2969,7 +2968,7 @@ func (x *GetNearbyAreasRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNearbyAreasRequest.ProtoReflect.Descriptor instead.
 func (*GetNearbyAreasRequest) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{43}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *GetNearbyAreasRequest) GetLatitude() float64 {
@@ -3009,7 +3008,7 @@ type GetNearbyAreasResponse struct {
 
 func (x *GetNearbyAreasResponse) Reset() {
 	*x = GetNearbyAreasResponse{}
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[44]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3021,7 +3020,7 @@ func (x *GetNearbyAreasResponse) String() string {
 func (*GetNearbyAreasResponse) ProtoMessage() {}
 
 func (x *GetNearbyAreasResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_geolocation_v1_geolocation_proto_msgTypes[44]
+	mi := &file_geolocation_v1_geolocation_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3034,7 +3033,7 @@ func (x *GetNearbyAreasResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetNearbyAreasResponse.ProtoReflect.Descriptor instead.
 func (*GetNearbyAreasResponse) Descriptor() ([]byte, []int) {
-	return file_proto_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{44}
+	return file_geolocation_v1_geolocation_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *GetNearbyAreasResponse) GetData() []*NearbyAreaObject {
@@ -3044,11 +3043,11 @@ func (x *GetNearbyAreasResponse) GetData() []*NearbyAreaObject {
 	return nil
 }
 
-var File_proto_geolocation_v1_geolocation_proto protoreflect.FileDescriptor
+var File_geolocation_v1_geolocation_proto protoreflect.FileDescriptor
 
-const file_proto_geolocation_v1_geolocation_proto_rawDesc = "" +
+const file_geolocation_v1_geolocation_proto_rawDesc = "" +
 	"\n" +
-	"&proto/geolocation/v1/geolocation.proto\x12\x0egeolocation.v1\x1a\x1bcommon/v1/permissions.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa6\x03\n" +
+	" geolocation/v1/geolocation.proto\x12\x0egeolocation.v1\x1a\x1bcommon/v1/permissions.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa6\x03\n" +
 	"\x12LocationPointInput\x128\n" +
 	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x12\x1a\n" +
 	"\blatitude\x18\x02 \x01(\x01R\blatitude\x12\x1c\n" +
@@ -3377,23 +3376,24 @@ const file_proto_geolocation_v1_geolocation_proto_rawDesc = "" +
 	"route_view\x12\n" +
 	"track_view\x12\vnearby_view\x1a^\b\x06\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
 	"route_view\x12\froute_manage\x12\n" +
-	"track_view\x12\vnearby_viewBKZIgithub.com/antinvestor/service-profile/proto/geolocation/geolocation/v1;geolocationv1b\x06proto3"
+	"track_view\x12\vnearby_viewB\xd6\x01\n" +
+	"\x12com.geolocation.v1B\x10GeolocationProtoP\x01ZUgithub.com/antinvestor/service-profile/proto/geolocation/geolocation/v1;geolocationv1\xa2\x02\x03GXX\xaa\x02\x0eGeolocation.V1\xca\x02\x0eGeolocation\\V1\xe2\x02\x1aGeolocation\\V1\\GPBMetadata\xea\x02\x0fGeolocation::V1b\x06proto3"
 
 var (
-	file_proto_geolocation_v1_geolocation_proto_rawDescOnce sync.Once
-	file_proto_geolocation_v1_geolocation_proto_rawDescData []byte
+	file_geolocation_v1_geolocation_proto_rawDescOnce sync.Once
+	file_geolocation_v1_geolocation_proto_rawDescData []byte
 )
 
-func file_proto_geolocation_v1_geolocation_proto_rawDescGZIP() []byte {
-	file_proto_geolocation_v1_geolocation_proto_rawDescOnce.Do(func() {
-		file_proto_geolocation_v1_geolocation_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_proto_geolocation_v1_geolocation_proto_rawDesc), len(file_proto_geolocation_v1_geolocation_proto_rawDesc)))
+func file_geolocation_v1_geolocation_proto_rawDescGZIP() []byte {
+	file_geolocation_v1_geolocation_proto_rawDescOnce.Do(func() {
+		file_geolocation_v1_geolocation_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_geolocation_v1_geolocation_proto_rawDesc), len(file_geolocation_v1_geolocation_proto_rawDesc)))
 	})
-	return file_proto_geolocation_v1_geolocation_proto_rawDescData
+	return file_geolocation_v1_geolocation_proto_rawDescData
 }
 
-var file_proto_geolocation_v1_geolocation_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_proto_geolocation_v1_geolocation_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
-var file_proto_geolocation_v1_geolocation_proto_goTypes = []any{
+var file_geolocation_v1_geolocation_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
+var file_geolocation_v1_geolocation_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_geolocation_v1_geolocation_proto_goTypes = []any{
 	(LocationSource)(0),                        // 0: geolocation.v1.LocationSource
 	(AreaType)(0),                              // 1: geolocation.v1.AreaType
 	(GeoEventType)(0),                          // 2: geolocation.v1.GeoEventType
@@ -3447,7 +3447,7 @@ var file_proto_geolocation_v1_geolocation_proto_goTypes = []any{
 	(*structpb.Struct)(nil),                    // 50: google.protobuf.Struct
 	(*emptypb.Empty)(nil),                      // 51: google.protobuf.Empty
 }
-var file_proto_geolocation_v1_geolocation_proto_depIdxs = []int32{
+var file_geolocation_v1_geolocation_proto_depIdxs = []int32{
 	49, // 0: geolocation.v1.LocationPointInput.timestamp:type_name -> google.protobuf.Timestamp
 	0,  // 1: geolocation.v1.LocationPointInput.source:type_name -> geolocation.v1.LocationSource
 	50, // 2: geolocation.v1.LocationPointInput.extra:type_name -> google.protobuf.Struct
@@ -3545,32 +3545,32 @@ var file_proto_geolocation_v1_geolocation_proto_depIdxs = []int32{
 	0,  // [0:52] is the sub-list for field type_name
 }
 
-func init() { file_proto_geolocation_v1_geolocation_proto_init() }
-func file_proto_geolocation_v1_geolocation_proto_init() {
-	if File_proto_geolocation_v1_geolocation_proto != nil {
+func init() { file_geolocation_v1_geolocation_proto_init() }
+func file_geolocation_v1_geolocation_proto_init() {
+	if File_geolocation_v1_geolocation_proto != nil {
 		return
 	}
-	file_proto_geolocation_v1_geolocation_proto_msgTypes[0].OneofWrappers = []any{}
-	file_proto_geolocation_v1_geolocation_proto_msgTypes[1].OneofWrappers = []any{}
-	file_proto_geolocation_v1_geolocation_proto_msgTypes[7].OneofWrappers = []any{}
-	file_proto_geolocation_v1_geolocation_proto_msgTypes[16].OneofWrappers = []any{}
-	file_proto_geolocation_v1_geolocation_proto_msgTypes[25].OneofWrappers = []any{}
+	file_geolocation_v1_geolocation_proto_msgTypes[0].OneofWrappers = []any{}
+	file_geolocation_v1_geolocation_proto_msgTypes[1].OneofWrappers = []any{}
+	file_geolocation_v1_geolocation_proto_msgTypes[7].OneofWrappers = []any{}
+	file_geolocation_v1_geolocation_proto_msgTypes[16].OneofWrappers = []any{}
+	file_geolocation_v1_geolocation_proto_msgTypes[25].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_geolocation_v1_geolocation_proto_rawDesc), len(file_proto_geolocation_v1_geolocation_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_geolocation_v1_geolocation_proto_rawDesc), len(file_geolocation_v1_geolocation_proto_rawDesc)),
 			NumEnums:      4,
 			NumMessages:   45,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_proto_geolocation_v1_geolocation_proto_goTypes,
-		DependencyIndexes: file_proto_geolocation_v1_geolocation_proto_depIdxs,
-		EnumInfos:         file_proto_geolocation_v1_geolocation_proto_enumTypes,
-		MessageInfos:      file_proto_geolocation_v1_geolocation_proto_msgTypes,
+		GoTypes:           file_geolocation_v1_geolocation_proto_goTypes,
+		DependencyIndexes: file_geolocation_v1_geolocation_proto_depIdxs,
+		EnumInfos:         file_geolocation_v1_geolocation_proto_enumTypes,
+		MessageInfos:      file_geolocation_v1_geolocation_proto_msgTypes,
 	}.Build()
-	File_proto_geolocation_v1_geolocation_proto = out.File
-	file_proto_geolocation_v1_geolocation_proto_goTypes = nil
-	file_proto_geolocation_v1_geolocation_proto_depIdxs = nil
+	File_geolocation_v1_geolocation_proto = out.File
+	file_geolocation_v1_geolocation_proto_goTypes = nil
+	file_geolocation_v1_geolocation_proto_depIdxs = nil
 }

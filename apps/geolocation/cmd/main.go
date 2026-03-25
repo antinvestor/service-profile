@@ -162,7 +162,7 @@ func setupConnectServer(
 	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(tenancyAccessChecker)
 
 	// Build procedure map from proto annotations and exclude self-bypass RPCs.
-	sd := geolocationv1.File_proto_geolocation_v1_geolocation_proto.Services().ByName("GeolocationService")
+	sd := geolocationv1.File_geolocation_v1_geolocation_proto.Services().ByName("GeolocationService")
 	procMap := permissions.BuildProcedureMap(sd)
 
 	// Exclude self-bypass RPCs from auto-enforcement.
