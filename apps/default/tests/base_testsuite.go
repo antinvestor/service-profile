@@ -176,7 +176,8 @@ func (n *noopNotificationClient) Send(
 	_ context.Context,
 	_ *connect.Request[notificationv1.SendRequest],
 ) (*connect.ServerStreamForClient[notificationv1.SendResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
+	// Return nil response — Execute() already handles nil gracefully.
+	return nil, nil
 }
 
 func (n *noopNotificationClient) Release(
