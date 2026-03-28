@@ -7,7 +7,7 @@
 package geolocationv1
 
 import (
-	_ "github.com/antinvestor/common/v1"
+	_ "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	emptypb "google.golang.org/protobuf/types/known/emptypb"
