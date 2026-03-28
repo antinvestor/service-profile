@@ -334,7 +334,7 @@ const file_ocr_v1_ocr_proto_rawDesc = "" +
 	"ocr_submit\x12\x0focr_status_view\x1a\x1f\b\x02\x12\n" +
 	"ocr_submit\x12\x0focr_status_view\x1a\x1f\b\x03\x12\n" +
 	"ocr_submit\x12\x0focr_status_view\x1a\x13\b\x04\x12\x0focr_status_view\x1a\x13\b\x05\x12\x0focr_status_view\x1a\x1f\b\x06\x12\n" +
-	"ocr_submit\x12\x0focr_status_viewB\xd3\x05\xbaG\xd3\x04\x12\xa7\x04\n" +
+	"ocr_submit\x12\x0focr_status_viewB\xdb\x05\xbaG\xd3\x04\x12\xa7\x04\n" +
 	"\vOCR Service\x12\xee\x02The OCR (Optical Character Recognition) Service provides text extraction capabilities from images and documents. It supports multiple languages, various file formats (PDF, images), and both synchronous and asynchronous processing modes. The service is optimized for document processing workflows including invoice parsing, ID verification, and document digitization.\"T\n" +
 	"\x10Ant Investor Ltd\x12*https://github.com/antinvestor/service-ocr\x1a\x14info@antinvestor.com*I\n" +
 	"\x0eApache License\x127https://github.com/antinvestor/apis/blob/master/LICENSE2\x06v1.0.0*':%\n" +
@@ -344,7 +344,7 @@ const file_ocr_v1_ocr_proto_rawDesc = "" +
 	"\x13\n" +
 	"\x04http*\x06bearer2\x03JWT\n" +
 	"\n" +
-	"com.ocr.v1B\bOcrProtoP\x01Z+github.com/antinvestor/apis/go/ocr/v1;ocrv1\xa2\x02\x03OXX\xaa\x02\x06Ocr.V1\xca\x02\x06Ocr\\V1\xe2\x02\x12Ocr\\V1\\GPBMetadata\xea\x02\aOcr::V1b\x06proto3"
+	"com.ocr.v1B\bOcrProtoP\x01Z3github.com/antinvestor/service-profile/ocr/v1;ocrv1\xa2\x02\x03OXX\xaa\x02\x06Ocr.V1\xca\x02\x06Ocr\\V1\xe2\x02\x12Ocr\\V1\\GPBMetadata\xea\x02\aOcr::V1b\x06proto3"
 
 var (
 	file_ocr_v1_ocr_proto_rawDescOnce sync.Once

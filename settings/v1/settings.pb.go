@@ -559,7 +559,7 @@ const file_settings_v1_settings_proto_rawDesc = "" +
 	"\bSettings\x12\x1aCreate or update a setting\x1a\x99\x01Creates or updates a setting value. If the setting exists, it is updated with the new value and timestamp. If it doesn't exist, a new setting is created.*\n" +
 	"setSetting\x82\xb5\x18\x10\n" +
 	"\x0esetting_manage\x1a\xd1\x01\x82\xb5\x18\xcc\x01\n" +
-	"\x10service_settings\x12\fsetting_view\x12\x0esetting_manage\x1a \b\x01\x12\fsetting_view\x12\x0esetting_manage\x1a \b\x02\x12\fsetting_view\x12\x0esetting_manage\x1a\x10\b\x03\x12\fsetting_view\x1a\x10\b\x04\x12\fsetting_view\x1a\x10\b\x05\x12\fsetting_view\x1a \b\x06\x12\fsetting_view\x12\x0esetting_manageB\xa4\x06\xbaG\xfc\x04\x12\xd0\x04\n" +
+	"\x10service_settings\x12\fsetting_view\x12\x0esetting_manage\x1a \b\x01\x12\fsetting_view\x12\x0esetting_manage\x1a \b\x02\x12\fsetting_view\x12\x0esetting_manage\x1a\x10\b\x03\x12\fsetting_view\x1a\x10\b\x04\x12\fsetting_view\x1a\x10\b\x05\x12\fsetting_view\x1a \b\x06\x12\fsetting_view\x12\x0esetting_manageB\xac\x06\xbaG\xfc\x04\x12\xd0\x04\n" +
 	"\x10Settings Service\x12\x8d\x03The Settings Service provides hierarchical configuration management for applications and services. It supports multi-level scoping (global, object-level, instance-level), localization, and module-specific settings. Settings can be organized by object type, object ID, language, and module, enabling flexible configuration management for multi-tenant applications with internationalization support.\"Y\n" +
 	"\x10Ant Investor Ltd\x12/https://github.com/antinvestor/service-settings\x1a\x14info@antinvestor.com*I\n" +
 	"\x0eApache License\x127https://github.com/antinvestor/apis/blob/master/LICENSE2\x06v1.0.0*':%\n" +
@@ -568,7 +568,7 @@ const file_settings_v1_settings_proto_rawDesc = "" +
 	"BearerAuth\x12\x15\n" +
 	"\x13\n" +
 	"\x04http*\x06bearer2\x03JWT\n" +
-	"\x0fcom.settings.v1B\rSettingsProtoP\x01Z5github.com/antinvestor/apis/go/settings/v1;settingsv1\xa2\x02\x03SXX\xaa\x02\vSettings.V1\xca\x02\vSettings\\V1\xe2\x02\x17Settings\\V1\\GPBMetadata\xea\x02\fSettings::V1b\x06proto3"
+	"\x0fcom.settings.v1B\rSettingsProtoP\x01Z=github.com/antinvestor/service-profile/settings/v1;settingsv1\xa2\x02\x03SXX\xaa\x02\vSettings.V1\xca\x02\vSettings\\V1\xe2\x02\x17Settings\\V1\\GPBMetadata\xea\x02\fSettings::V1b\x06proto3"
 
 var (
 	file_settings_v1_settings_proto_rawDescOnce sync.Once

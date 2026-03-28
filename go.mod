@@ -18,10 +18,6 @@ require (
 	buf.build/gen/go/gnostic/gnostic/protocolbuffers/go v1.36.11-20230414000709-087bc8072ce4.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.19.0
-	github.com/antinvestor/apis/go/device v1.58.0
-	github.com/antinvestor/apis/go/ocr v1.58.0
-	github.com/antinvestor/apis/go/profile v1.58.0
-	github.com/antinvestor/apis/go/settings v1.58.0
 	github.com/antinvestor/common v1.3.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/jackc/pgx/v5 v5.9.1

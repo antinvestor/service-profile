@@ -3376,8 +3376,8 @@ const file_geolocation_v1_geolocation_proto_rawDesc = "" +
 	"route_view\x12\n" +
 	"track_view\x12\vnearby_view\x1a^\b\x06\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
 	"route_view\x12\froute_manage\x12\n" +
-	"track_view\x12\vnearby_viewB\xd6\x01\n" +
-	"\x12com.geolocation.v1B\x10GeolocationProtoP\x01ZUgithub.com/antinvestor/service-profile/proto/geolocation/geolocation/v1;geolocationv1\xa2\x02\x03GXX\xaa\x02\x0eGeolocation.V1\xca\x02\x0eGeolocation\\V1\xe2\x02\x1aGeolocation\\V1\\GPBMetadata\xea\x02\x0fGeolocation::V1b\x06proto3"
+	"track_view\x12\vnearby_viewB\xc4\x01\n" +
+	"\x12com.geolocation.v1B\x10GeolocationProtoP\x01ZCgithub.com/antinvestor/service-profile/geolocation/v1;geolocationv1\xa2\x02\x03GXX\xaa\x02\x0eGeolocation.V1\xca\x02\x0eGeolocation\\V1\xe2\x02\x1aGeolocation\\V1\\GPBMetadata\xea\x02\x0fGeolocation::V1b\x06proto3"
 
 var (
 	file_geolocation_v1_geolocation_proto_rawDescOnce sync.Once

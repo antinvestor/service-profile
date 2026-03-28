@@ -76,14 +76,6 @@ github.com/MicahParks/keyfunc v1.9.0 h1:lhKd5xrFHLNOWrDc4Tyb/Q1AJ4LCzQ48GVJyVIID
 github.com/MicahParks/keyfunc v1.9.0/go.mod h1:IdnCilugA0O/99dW+/MkvlyrsX8+L8+x95xuVNtM5jw=
 github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERoyfY=
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
-github.com/antinvestor/apis/go/device v1.58.0 h1:KU5ayosz/YhKmn6vfTOI1FIlOlSbE6SAwR4QOoz9Q5A=
-github.com/antinvestor/apis/go/device v1.58.0/go.mod h1:fQu8yod3NBv1K3hPtVwS6ox8c9SXTq40/BRzq6Tm/Uw=
-github.com/antinvestor/apis/go/ocr v1.58.0 h1:Lgc8sABzyl77Aw/wBrFfDBxcgA93lLSv3GB6n6YgPGs=
-github.com/antinvestor/apis/go/ocr v1.58.0/go.mod h1:3AmBG5Z9tsEo5bwMGJEI+f0xR7U/1Fh05pgbMg8mMas=
-github.com/antinvestor/apis/go/profile v1.58.0 h1:7l2ONrhsxU8iVJo/PNT3V+52I5LwzXaejWEnJ8sdy18=
-github.com/antinvestor/apis/go/profile v1.58.0/go.mod h1:09TvIDeNvaXPAo5vvDa5GrfNIwgcAUmx5DxOSemz18E=
-github.com/antinvestor/apis/go/settings v1.58.0 h1:GYVz1d1nhvXBciTH2vjXQjMVe3LlZmgxf/q9HISy0+w=
-github.com/antinvestor/apis/go/settings v1.58.0/go.mod h1:99vaU48EUNq28JALtKqhL/6Ebq8EDLXOHeblWw5TWfE=
 github.com/antinvestor/common v1.3.0 h1:L2qNPzgX3xbBrmA09yygdOOdzqRavWUn1vhIEI1bA7A=
 github.com/antinvestor/common v1.3.0/go.mod h1:LIeoXEv10e9LlXPUz4fDm3Hml7TWxxKEtXcAW5HqnEM=
 github.com/antithesishq/antithesis-sdk-go v0.6.0-default-no-op h1:kpBdlEPbRvff0mDD1gk7o9BhI16b9p5yYAXRlidpqJE=

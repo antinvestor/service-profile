@@ -32,7 +32,7 @@ import "common/v1/permissions.proto";
 import "gnostic/openapi/v3/annotations.proto";
 import "google/protobuf/struct.proto";
 
-option go_package = "github.com/antinvestor/apis/go/profile/v1;profilev1";
+option go_package = "github.com/antinvestor/service-profile/profile/v1;profilev1";
 option java_multiple_files = true;
 option java_package = "profilev1";
 option (gnostic.openapi.v3.document) = {
