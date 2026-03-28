@@ -1,0 +1,1717 @@
+openapi: 3.1.0
+info:
+  title: geolocation.v1
+paths:
+  /geolocation.v1.GeolocationService/AssignRoute:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: AssignRoute
+      operationId: geolocation.v1.GeolocationService.AssignRoute
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.AssignRouteRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.AssignRouteResponse'
+  /geolocation.v1.GeolocationService/CreateArea:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: CreateArea
+      operationId: geolocation.v1.GeolocationService.CreateArea
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.CreateAreaRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.CreateAreaResponse'
+  /geolocation.v1.GeolocationService/CreateRoute:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: CreateRoute
+      operationId: geolocation.v1.GeolocationService.CreateRoute
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.CreateRouteRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.CreateRouteResponse'
+  /geolocation.v1.GeolocationService/DeleteArea:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: DeleteArea
+      operationId: geolocation.v1.GeolocationService.DeleteArea
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.DeleteAreaRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google.protobuf.Empty'
+  /geolocation.v1.GeolocationService/DeleteRoute:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: DeleteRoute
+      operationId: geolocation.v1.GeolocationService.DeleteRoute
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.DeleteRouteRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google.protobuf.Empty'
+  /geolocation.v1.GeolocationService/GetArea:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: GetArea
+      operationId: geolocation.v1.GeolocationService.GetArea
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.GetAreaRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.GetAreaResponse'
+  /geolocation.v1.GeolocationService/GetAreaSubjects:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: GetAreaSubjects
+      operationId: geolocation.v1.GeolocationService.GetAreaSubjects
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.GetAreaSubjectsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.GetAreaSubjectsResponse'
+  /geolocation.v1.GeolocationService/GetNearbyAreas:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: GetNearbyAreas
+      operationId: geolocation.v1.GeolocationService.GetNearbyAreas
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.GetNearbyAreasRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.GetNearbyAreasResponse'
+  /geolocation.v1.GeolocationService/GetNearbySubjects:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: GetNearbySubjects
+      operationId: geolocation.v1.GeolocationService.GetNearbySubjects
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.GetNearbySubjectsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.GetNearbySubjectsResponse'
+  /geolocation.v1.GeolocationService/GetRoute:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: GetRoute
+      operationId: geolocation.v1.GeolocationService.GetRoute
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.GetRouteRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.GetRouteResponse'
+  /geolocation.v1.GeolocationService/GetSubjectEvents:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: GetSubjectEvents
+      operationId: geolocation.v1.GeolocationService.GetSubjectEvents
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.GetSubjectEventsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.GetSubjectEventsResponse'
+  /geolocation.v1.GeolocationService/GetSubjectRouteAssignments:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: GetSubjectRouteAssignments
+      operationId: geolocation.v1.GeolocationService.GetSubjectRouteAssignments
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.GetSubjectRouteAssignmentsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.GetSubjectRouteAssignmentsResponse'
+  /geolocation.v1.GeolocationService/GetTrack:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: GetTrack
+      operationId: geolocation.v1.GeolocationService.GetTrack
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.GetTrackRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.GetTrackResponse'
+  /geolocation.v1.GeolocationService/IngestLocations:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: IngestLocations
+      operationId: geolocation.v1.GeolocationService.IngestLocations
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.IngestLocationsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.IngestLocationsResponse'
+  /geolocation.v1.GeolocationService/SearchAreas:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: SearchAreas
+      operationId: geolocation.v1.GeolocationService.SearchAreas
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.SearchAreasRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.SearchAreasResponse'
+  /geolocation.v1.GeolocationService/SearchRoutes:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: SearchRoutes
+      operationId: geolocation.v1.GeolocationService.SearchRoutes
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.SearchRoutesRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.SearchRoutesResponse'
+  /geolocation.v1.GeolocationService/UnassignRoute:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: UnassignRoute
+      operationId: geolocation.v1.GeolocationService.UnassignRoute
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.UnassignRouteRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/google.protobuf.Empty'
+  /geolocation.v1.GeolocationService/UpdateArea:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: UpdateArea
+      operationId: geolocation.v1.GeolocationService.UpdateArea
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.UpdateAreaRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.UpdateAreaResponse'
+  /geolocation.v1.GeolocationService/UpdateRoute:
+    post:
+      tags:
+        - geolocation.v1.GeolocationService
+      summary: UpdateRoute
+      operationId: geolocation.v1.GeolocationService.UpdateRoute
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/geolocation.v1.UpdateRouteRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/geolocation.v1.UpdateRouteResponse'
+components:
+  schemas:
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+    geolocation.v1.AreaObject:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        ownerId:
+          type: string
+          title: owner_id
+        name:
+          type: string
+          title: name
+        description:
+          type: string
+          title: description
+        areaType:
+          title: area_type
+          $ref: '#/components/schemas/geolocation.v1.AreaType'
+        geometry:
+          type: string
+          title: geometry
+        areaM2:
+          type: number
+          title: area_m2
+          format: double
+        perimeterM:
+          type: number
+          title: perimeter_m
+          format: double
+        state:
+          type: integer
+          title: state
+          format: int32
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: AreaObject
+      additionalProperties: false
+    geolocation.v1.AreaSubjectObject:
+      type: object
+      properties:
+        subjectId:
+          type: string
+          title: subject_id
+        enterTimestamp:
+          title: enter_timestamp
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: AreaSubjectObject
+      additionalProperties: false
+    geolocation.v1.AreaType:
+      type: string
+      title: AreaType
+      enum:
+        - AREA_TYPE_UNSPECIFIED
+        - AREA_TYPE_LAND
+        - AREA_TYPE_BUILDING
+        - AREA_TYPE_ZONE
+        - AREA_TYPE_FENCE
+        - AREA_TYPE_CUSTOM
+    geolocation.v1.AssignRouteRequest:
+      type: object
+      properties:
+        subjectId:
+          type: string
+          title: subject_id
+        routeId:
+          type: string
+          title: route_id
+        validFrom:
+          title: valid_from
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        validUntil:
+          title: valid_until
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: AssignRouteRequest
+      additionalProperties: false
+    geolocation.v1.AssignRouteResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.RouteAssignmentObject'
+      title: AssignRouteResponse
+      additionalProperties: false
+    geolocation.v1.CreateAreaRequest:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.AreaObject'
+      title: CreateAreaRequest
+      additionalProperties: false
+    geolocation.v1.CreateAreaResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.AreaObject'
+      title: CreateAreaResponse
+      additionalProperties: false
+    geolocation.v1.CreateRouteRequest:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.RouteObject'
+      title: CreateRouteRequest
+      additionalProperties: false
+    geolocation.v1.CreateRouteResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.RouteObject'
+      title: CreateRouteResponse
+      additionalProperties: false
+    geolocation.v1.DeleteAreaRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+      title: DeleteAreaRequest
+      additionalProperties: false
+    geolocation.v1.DeleteRouteRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+      title: DeleteRouteRequest
+      additionalProperties: false
+    geolocation.v1.GeoEventObject:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        subjectId:
+          type: string
+          title: subject_id
+        areaId:
+          type: string
+          title: area_id
+        eventType:
+          title: event_type
+          $ref: '#/components/schemas/geolocation.v1.GeoEventType'
+        timestamp:
+          title: timestamp
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        confidence:
+          type: number
+          title: confidence
+          format: double
+        pointId:
+          type: string
+          title: point_id
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: GeoEventObject
+      additionalProperties: false
+    geolocation.v1.GeoEventType:
+      type: string
+      title: GeoEventType
+      enum:
+        - GEO_EVENT_TYPE_UNSPECIFIED
+        - GEO_EVENT_TYPE_ENTER
+        - GEO_EVENT_TYPE_EXIT
+        - GEO_EVENT_TYPE_DWELL
+    geolocation.v1.GetAreaRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+      title: GetAreaRequest
+      additionalProperties: false
+    geolocation.v1.GetAreaResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.AreaObject'
+      title: GetAreaResponse
+      additionalProperties: false
+    geolocation.v1.GetAreaSubjectsRequest:
+      type: object
+      properties:
+        areaId:
+          type: string
+          title: area_id
+      title: GetAreaSubjectsRequest
+      additionalProperties: false
+    geolocation.v1.GetAreaSubjectsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.AreaSubjectObject'
+          title: data
+      title: GetAreaSubjectsResponse
+      additionalProperties: false
+    geolocation.v1.GetNearbyAreasRequest:
+      type: object
+      properties:
+        latitude:
+          type: number
+          title: latitude
+          format: double
+        longitude:
+          type: number
+          title: longitude
+          format: double
+        radiusMeters:
+          type: number
+          title: radius_meters
+          format: double
+        limit:
+          type: integer
+          title: limit
+          format: int32
+      title: GetNearbyAreasRequest
+      additionalProperties: false
+    geolocation.v1.GetNearbyAreasResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.NearbyAreaObject'
+          title: data
+      title: GetNearbyAreasResponse
+      additionalProperties: false
+    geolocation.v1.GetNearbySubjectsRequest:
+      type: object
+      properties:
+        subjectId:
+          type: string
+          title: subject_id
+        radiusMeters:
+          type: number
+          title: radius_meters
+          format: double
+        limit:
+          type: integer
+          title: limit
+          format: int32
+      title: GetNearbySubjectsRequest
+      additionalProperties: false
+    geolocation.v1.GetNearbySubjectsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.NearbySubjectObject'
+          title: data
+      title: GetNearbySubjectsResponse
+      additionalProperties: false
+    geolocation.v1.GetRouteRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+      title: GetRouteRequest
+      additionalProperties: false
+    geolocation.v1.GetRouteResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.RouteObject'
+      title: GetRouteResponse
+      additionalProperties: false
+    geolocation.v1.GetSubjectEventsRequest:
+      type: object
+      properties:
+        subjectId:
+          type: string
+          title: subject_id
+        from:
+          title: from
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        to:
+          title: to
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        limit:
+          type: integer
+          title: limit
+          format: int32
+        offset:
+          type: integer
+          title: offset
+          format: int32
+      title: GetSubjectEventsRequest
+      additionalProperties: false
+    geolocation.v1.GetSubjectEventsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.GeoEventObject'
+          title: data
+      title: GetSubjectEventsResponse
+      additionalProperties: false
+    geolocation.v1.GetSubjectRouteAssignmentsRequest:
+      type: object
+      properties:
+        subjectId:
+          type: string
+          title: subject_id
+      title: GetSubjectRouteAssignmentsRequest
+      additionalProperties: false
+    geolocation.v1.GetSubjectRouteAssignmentsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.RouteAssignmentObject'
+          title: data
+      title: GetSubjectRouteAssignmentsResponse
+      additionalProperties: false
+    geolocation.v1.GetTrackRequest:
+      type: object
+      properties:
+        subjectId:
+          type: string
+          title: subject_id
+        from:
+          title: from
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        to:
+          title: to
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        limit:
+          type: integer
+          title: limit
+          format: int32
+        offset:
+          type: integer
+          title: offset
+          format: int32
+      title: GetTrackRequest
+      additionalProperties: false
+    geolocation.v1.GetTrackResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.LocationPointObject'
+          title: data
+      title: GetTrackResponse
+      additionalProperties: false
+    geolocation.v1.IngestLocationsRequest:
+      type: object
+      properties:
+        subjectId:
+          type: string
+          title: subject_id
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.LocationPointInput'
+          title: points
+      title: IngestLocationsRequest
+      additionalProperties: false
+    geolocation.v1.IngestLocationsResponse:
+      type: object
+      properties:
+        accepted:
+          type: integer
+          title: accepted
+          format: int32
+        rejected:
+          type: integer
+          title: rejected
+          format: int32
+      title: IngestLocationsResponse
+      additionalProperties: false
+    geolocation.v1.LocationPointInput:
+      type: object
+      properties:
+        timestamp:
+          title: timestamp
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        latitude:
+          type: number
+          title: latitude
+          format: double
+        longitude:
+          type: number
+          title: longitude
+          format: double
+        altitude:
+          type:
+            - number
+            - "null"
+          title: altitude
+          format: double
+        accuracy:
+          type: number
+          title: accuracy
+          format: double
+        speed:
+          type:
+            - number
+            - "null"
+          title: speed
+          format: double
+        bearing:
+          type:
+            - number
+            - "null"
+          title: bearing
+          format: double
+        source:
+          title: source
+          $ref: '#/components/schemas/geolocation.v1.LocationSource'
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+        deviceId:
+          type: string
+          title: device_id
+      title: LocationPointInput
+      additionalProperties: false
+    geolocation.v1.LocationPointObject:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        subjectId:
+          type: string
+          title: subject_id
+        timestamp:
+          title: timestamp
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        latitude:
+          type: number
+          title: latitude
+          format: double
+        longitude:
+          type: number
+          title: longitude
+          format: double
+        altitude:
+          type:
+            - number
+            - "null"
+          title: altitude
+          format: double
+        accuracy:
+          type: number
+          title: accuracy
+          format: double
+        speed:
+          type:
+            - number
+            - "null"
+          title: speed
+          format: double
+        bearing:
+          type:
+            - number
+            - "null"
+          title: bearing
+          format: double
+        source:
+          title: source
+          $ref: '#/components/schemas/geolocation.v1.LocationSource'
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        deviceId:
+          type: string
+          title: device_id
+      title: LocationPointObject
+      additionalProperties: false
+    geolocation.v1.LocationSource:
+      type: string
+      title: LocationSource
+      enum:
+        - LOCATION_SOURCE_UNSPECIFIED
+        - LOCATION_SOURCE_GPS
+        - LOCATION_SOURCE_NETWORK
+        - LOCATION_SOURCE_IP
+        - LOCATION_SOURCE_MANUAL
+    geolocation.v1.NearbyAreaObject:
+      type: object
+      properties:
+        areaId:
+          type: string
+          title: area_id
+        name:
+          type: string
+          title: name
+        areaType:
+          title: area_type
+          $ref: '#/components/schemas/geolocation.v1.AreaType'
+        distanceMeters:
+          type: number
+          title: distance_meters
+          format: double
+      title: NearbyAreaObject
+      additionalProperties: false
+    geolocation.v1.NearbySubjectObject:
+      type: object
+      properties:
+        subjectId:
+          type: string
+          title: subject_id
+        distanceMeters:
+          type: number
+          title: distance_meters
+          format: double
+        lastSeen:
+          title: last_seen
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: NearbySubjectObject
+      additionalProperties: false
+    geolocation.v1.RouteAssignmentObject:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        subjectId:
+          type: string
+          title: subject_id
+        routeId:
+          type: string
+          title: route_id
+        validFrom:
+          title: valid_from
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        validUntil:
+          title: valid_until
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        state:
+          type: integer
+          title: state
+          format: int32
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: RouteAssignmentObject
+      additionalProperties: false
+    geolocation.v1.RouteDeviationEventObject:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        subjectId:
+          type: string
+          title: subject_id
+        routeId:
+          type: string
+          title: route_id
+        eventType:
+          title: event_type
+          $ref: '#/components/schemas/geolocation.v1.RouteDeviationEventType'
+        distanceMeters:
+          type: number
+          title: distance_meters
+          format: double
+        latitude:
+          type: number
+          title: latitude
+          format: double
+        longitude:
+          type: number
+          title: longitude
+          format: double
+        timestamp:
+          title: timestamp
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: RouteDeviationEventObject
+      additionalProperties: false
+    geolocation.v1.RouteDeviationEventType:
+      type: string
+      title: RouteDeviationEventType
+      enum:
+        - ROUTE_DEVIATION_EVENT_TYPE_UNSPECIFIED
+        - ROUTE_DEVIATION_EVENT_TYPE_DEVIATED
+        - ROUTE_DEVIATION_EVENT_TYPE_BACK_ON_ROUTE
+    geolocation.v1.RouteObject:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        ownerId:
+          type: string
+          title: owner_id
+        name:
+          type: string
+          title: name
+        description:
+          type: string
+          title: description
+        geometry:
+          type: string
+          title: geometry
+        lengthM:
+          type: number
+          title: length_m
+          format: double
+        state:
+          type: integer
+          title: state
+          format: int32
+        deviationThresholdM:
+          type:
+            - number
+            - "null"
+          title: deviation_threshold_m
+          format: double
+        deviationConsecutiveCount:
+          type:
+            - integer
+            - "null"
+          title: deviation_consecutive_count
+          format: int32
+        deviationCooldownSec:
+          type:
+            - integer
+            - "null"
+          title: deviation_cooldown_sec
+          format: int32
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+        createdAt:
+          title: created_at
+          $ref: '#/components/schemas/google.protobuf.Timestamp'
+      title: RouteObject
+      additionalProperties: false
+    geolocation.v1.SearchAreasRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          title: query
+        ownerId:
+          type: string
+          title: owner_id
+        limit:
+          type: integer
+          title: limit
+          format: int32
+      title: SearchAreasRequest
+      additionalProperties: false
+    geolocation.v1.SearchAreasResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.AreaObject'
+          title: data
+      title: SearchAreasResponse
+      additionalProperties: false
+    geolocation.v1.SearchRoutesRequest:
+      type: object
+      properties:
+        ownerId:
+          type: string
+          title: owner_id
+        limit:
+          type: integer
+          title: limit
+          format: int32
+      title: SearchRoutesRequest
+      additionalProperties: false
+    geolocation.v1.SearchRoutesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/geolocation.v1.RouteObject'
+          title: data
+      title: SearchRoutesResponse
+      additionalProperties: false
+    geolocation.v1.UnassignRouteRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+      title: UnassignRouteRequest
+      additionalProperties: false
+    geolocation.v1.UpdateAreaRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        name:
+          type:
+            - string
+            - "null"
+          title: name
+        description:
+          type:
+            - string
+            - "null"
+          title: description
+        areaType:
+          oneOf:
+            - $ref: '#/components/schemas/geolocation.v1.AreaType'
+            - type: "null"
+          title: area_type
+        geometry:
+          type:
+            - string
+            - "null"
+          title: geometry
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: UpdateAreaRequest
+      additionalProperties: false
+    geolocation.v1.UpdateAreaResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.AreaObject'
+      title: UpdateAreaResponse
+      additionalProperties: false
+    geolocation.v1.UpdateRouteRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+        name:
+          type:
+            - string
+            - "null"
+          title: name
+        description:
+          type:
+            - string
+            - "null"
+          title: description
+        geometry:
+          type:
+            - string
+            - "null"
+          title: geometry
+        deviationThresholdM:
+          type:
+            - number
+            - "null"
+          title: deviation_threshold_m
+          format: double
+        deviationConsecutiveCount:
+          type:
+            - integer
+            - "null"
+          title: deviation_consecutive_count
+          format: int32
+        deviationCooldownSec:
+          type:
+            - integer
+            - "null"
+          title: deviation_cooldown_sec
+          format: int32
+        extra:
+          title: extra
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: UpdateRouteRequest
+      additionalProperties: false
+    geolocation.v1.UpdateRouteResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          $ref: '#/components/schemas/geolocation.v1.RouteObject'
+      title: UpdateRouteResponse
+      additionalProperties: false
+    google.protobuf.Empty:
+      type: object
+      description: |-
+        A generic empty message that you can re-use to avoid defining duplicated
+         empty messages in your APIs. A typical example is to use it as the request
+         or the response type of an API method. For instance:
+
+             service Foo {
+               rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty);
+             }
+    google.protobuf.ListValue:
+      type: object
+      properties:
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/google.protobuf.Value'
+          title: values
+          description: Repeated field of dynamically typed values.
+      title: ListValue
+      additionalProperties: false
+      description: |-
+        `ListValue` is a wrapper around a repeated field of values.
+
+         The JSON representation for `ListValue` is JSON array.
+    google.protobuf.NullValue:
+      type: string
+      title: NullValue
+      enum:
+        - NULL_VALUE
+      description: |-
+        `NullValue` is a singleton enumeration to represent the null value for the
+         `Value` type union.
+
+         The JSON representation for `NullValue` is JSON `null`.
+    google.protobuf.Struct:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/google.protobuf.Value'
+      description: |-
+        `Struct` represents a structured data value, consisting of fields
+         which map to dynamically typed values. In some languages, `Struct`
+         might be supported by a native representation. For example, in
+         scripting languages like JS a struct is represented as an
+         object. The details of that representation are described together
+         with the proto support for the language.
+
+         The JSON representation for `Struct` is JSON object.
+    google.protobuf.Struct.FieldsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          title: value
+          $ref: '#/components/schemas/google.protobuf.Value'
+      title: FieldsEntry
+      additionalProperties: false
+    google.protobuf.Timestamp:
+      type: string
+      examples:
+        - "2023-01-15T01:30:15.01Z"
+        - "2024-12-25T12:00:00Z"
+      format: date-time
+      description: |-
+        A Timestamp represents a point in time independent of any time zone or local
+         calendar, encoded as a count of seconds and fractions of seconds at
+         nanosecond resolution. The count is relative to an epoch at UTC midnight on
+         January 1, 1970, in the proleptic Gregorian calendar which extends the
+         Gregorian calendar backwards to year one.
+
+         All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
+         second table is needed for interpretation, using a [24-hour linear
+         smear](https://developers.google.com/time/smear).
+
+         The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
+         restricting to that range, we ensure that we can convert to and from [RFC
+         3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
+
+         # Examples
+
+         Example 1: Compute Timestamp from POSIX `time()`.
+
+             Timestamp timestamp;
+             timestamp.set_seconds(time(NULL));
+             timestamp.set_nanos(0);
+
+         Example 2: Compute Timestamp from POSIX `gettimeofday()`.
+
+             struct timeval tv;
+             gettimeofday(&tv, NULL);
+
+             Timestamp timestamp;
+             timestamp.set_seconds(tv.tv_sec);
+             timestamp.set_nanos(tv.tv_usec * 1000);
+
+         Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
+
+             FILETIME ft;
+             GetSystemTimeAsFileTime(&ft);
+             UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
+
+             // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
+             // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
+             Timestamp timestamp;
+             timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
+             timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
+
+         Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
+
+             long millis = System.currentTimeMillis();
+
+             Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
+                 .setNanos((int) ((millis % 1000) * 1000000)).build();
+
+         Example 5: Compute Timestamp from Java `Instant.now()`.
+
+             Instant now = Instant.now();
+
+             Timestamp timestamp =
+                 Timestamp.newBuilder().setSeconds(now.getEpochSecond())
+                     .setNanos(now.getNano()).build();
+
+         Example 6: Compute Timestamp from current time in Python.
+
+             timestamp = Timestamp()
+             timestamp.GetCurrentTime()
+
+         # JSON Mapping
+
+         In JSON format, the Timestamp type is encoded as a string in the
+         [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
+         format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
+         where {year} is always expressed using four digits while {month}, {day},
+         {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
+         seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
+         are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
+         is required. A proto3 JSON serializer should always use UTC (as indicated by
+         "Z") when printing the Timestamp type and a proto3 JSON parser should be
+         able to accept both UTC and other timezones (as indicated by an offset).
+
+         For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
+         01:30 UTC on January 15, 2017.
+
+         In JavaScript, one can convert a Date object to this format using the
+         standard
+         [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
+         method. In Python, a standard `datetime.datetime` object can be converted
+         to this format using
+         [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
+         the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
+         the Joda Time's [`ISODateTimeFormat.dateTime()`](
+         http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
+         ) to obtain a formatter capable of generating timestamps in this format.
+    google.protobuf.Value:
+      oneOf:
+        - type: "null"
+        - type: number
+        - type: string
+        - type: boolean
+        - type: array
+        - type: object
+          additionalProperties: true
+      description: |-
+        `Value` represents a dynamically typed value which can be either
+         null, a number, a string, a boolean, a recursive struct value, or a
+         list of values. A producer of value is expected to set one of these
+         variants. Absence of any variant indicates an error.
+
+         The JSON representation for `Value` is JSON value.
+security: []
+tags:
+  - name: geolocation.v1.GeolocationService

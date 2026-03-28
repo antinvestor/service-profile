@@ -1,0 +1,1843 @@
+openapi: 3.1.0
+info:
+  title: Device Management API
+  description: The Device Management API provides comprehensive device management capabilities including device registration, session tracking, and unified key/token management. The API uses a unified KeyObject model for all key types including FCM tokens, encryption keys (Curve25519, Ed25519, Pickle), Matrix keys, and notification keys. This enables applications to register and track user devices across platforms (mobile, web, desktop), manage push notification tokens, handle encryption keys for secure communications, and maintain detailed logs of device activity for security and compliance purposes.
+  contact:
+    name: Ant Investor Ltd
+    url: https://github.com/antinvestor/service-device
+    email: info@antinvestor.com
+  license:
+    name: Apache License
+    url: https://github.com/antinvestor/apis/blob/master/LICENSE
+  version: v1.0.0
+paths:
+  /device.v1.DeviceService/AddKey:
+    post:
+      tags:
+        - Device Keys
+        - device.v1.DeviceService
+      summary: Add key or token
+      description: Adds a key or token to a device. Supports FCM tokens, encryption keys (Curve25519, Ed25519), and other key types.
+      operationId: addDeviceKey
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.AddKeyRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.AddKeyResponse'
+  /device.v1.DeviceService/Create:
+    post:
+      tags:
+        - Devices
+        - device.v1.DeviceService
+      summary: Register a new device
+      description: Registers a new device in the system. The device must be linked to a profile before it can be used for authenticated operations.
+      operationId: createDevice
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.CreateRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.CreateResponse'
+  /device.v1.DeviceService/DeRegisterKey:
+    post:
+      tags:
+        - Key Registration
+        - device.v1.DeviceService
+      summary: DeRegister key from third-party service
+      description: DeRegisters a key or token from third-party services (like FCM) and removes it from storage. This method handles both the external service cleanup and local deletion.
+      operationId: deRegisterKey
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.DeRegisterKeyRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.DeRegisterKeyResponse'
+  /device.v1.DeviceService/GetById:
+    get:
+      tags:
+        - Devices
+        - device.v1.DeviceService
+      summary: Get devices by ID
+      description: Retrieves one or more devices by their unique identifiers. Supports batch retrieval and optional extensive details including logs and key counts.
+      operationId: getDeviceById
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+        - name: message
+          in: query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.GetByIdRequest'
+        - name: encoding
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/encoding'
+        - name: base64
+          in: query
+          schema:
+            $ref: '#/components/schemas/base64'
+        - name: compression
+          in: query
+          schema:
+            $ref: '#/components/schemas/compression'
+        - name: connect
+          in: query
+          schema:
+            $ref: '#/components/schemas/connect'
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.GetByIdResponse'
+    post:
+      tags:
+        - Devices
+        - device.v1.DeviceService
+      summary: Get devices by ID
+      description: Retrieves one or more devices by their unique identifiers. Supports batch retrieval and optional extensive details including logs and key counts.
+      operationId: getDeviceById
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.GetByIdRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.GetByIdResponse'
+  /device.v1.DeviceService/GetBySessionId:
+    get:
+      tags:
+        - Devices
+        - device.v1.DeviceService
+      summary: Get device by session ID
+      description: Retrieves a device by its active session identifier. Used to resolve device information from session tokens.
+      operationId: getDeviceBySessionId
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+        - name: message
+          in: query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.GetBySessionIdRequest'
+        - name: encoding
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/encoding'
+        - name: base64
+          in: query
+          schema:
+            $ref: '#/components/schemas/base64'
+        - name: compression
+          in: query
+          schema:
+            $ref: '#/components/schemas/compression'
+        - name: connect
+          in: query
+          schema:
+            $ref: '#/components/schemas/connect'
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.GetBySessionIdResponse'
+    post:
+      tags:
+        - Devices
+        - device.v1.DeviceService
+      summary: Get device by session ID
+      description: Retrieves a device by its active session identifier. Used to resolve device information from session tokens.
+      operationId: getDeviceBySessionId
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.GetBySessionIdRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.GetBySessionIdResponse'
+  /device.v1.DeviceService/GetTurnCredentials:
+    post:
+      tags:
+        - Media
+        - device.v1.DeviceService
+      summary: Get TURN server credentials
+      description: Returns short-lived TURN server credentials for WebRTC media relay.
+      operationId: getTurnCredentials
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.GetTurnCredentialsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.GetTurnCredentialsResponse'
+  /device.v1.DeviceService/Link:
+    post:
+      tags:
+        - Devices
+        - device.v1.DeviceService
+      summary: Link device to profile
+      description: Links a device to a user profile. This operation is required before the device can be used for authenticated operations.
+      operationId: linkDevice
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.LinkRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.LinkResponse'
+  /device.v1.DeviceService/ListLogs: {}
+  /device.v1.DeviceService/Log:
+    post:
+      tags:
+        - Device Logs
+        - device.v1.DeviceService
+      summary: Log device activity
+      description: Creates a new activity log entry for a device. Used for tracking device sessions, locations, and activity for security auditing and compliance.
+      operationId: logDeviceActivity
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.LogRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.LogResponse'
+  /device.v1.DeviceService/Notify:
+    post:
+      tags:
+        - Device Notifications
+        - device.v1.DeviceService
+      summary: Notify device using registered key
+      description: Sends a notification to a device using one of its registered keys (FCM token, notification key, etc.). The service automatically selects an appropriate active key based on the key_type, or uses a specific key if key_id is provided.
+      operationId: notifyDevice
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.NotifyRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.NotifyResponse'
+  /device.v1.DeviceService/RegisterKey:
+    post:
+      tags:
+        - Key Registration
+        - device.v1.DeviceService
+      summary: Register key with third-party service
+      description: Registers a key or token with third-party services (like FCM for push notifications) and stores it. This method handles both the external service integration and local storage.
+      operationId: registerKey
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.RegisterKeyRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.RegisterKeyResponse'
+  /device.v1.DeviceService/Remove:
+    post:
+      tags:
+        - Devices
+        - device.v1.DeviceService
+      summary: Remove a device
+      description: Removes a device from the system. This operation is typically used when a user logs out or removes a device from their account. This action cannot be undone.
+      operationId: removeDevice
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.RemoveRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.RemoveResponse'
+  /device.v1.DeviceService/RemoveKey:
+    post:
+      tags:
+        - Device Keys
+        - device.v1.DeviceService
+      summary: Remove keys or tokens
+      description: Removes one or more keys or tokens from a device. Used for key rotation, token management, or when removing a device.
+      operationId: removeDeviceKey
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.RemoveKeyRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.RemoveKeyResponse'
+  /device.v1.DeviceService/Search: {}
+  /device.v1.DeviceService/SearchKey:
+    get:
+      tags:
+        - Device Keys
+        - device.v1.DeviceService
+      summary: Search keys or tokens
+      description: Searches for keys or tokens associated with a device. Supports filtering by key type and expiration.
+      operationId: searchDeviceKey
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+        - name: message
+          in: query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.SearchKeyRequest'
+        - name: encoding
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/encoding'
+        - name: base64
+          in: query
+          schema:
+            $ref: '#/components/schemas/base64'
+        - name: compression
+          in: query
+          schema:
+            $ref: '#/components/schemas/compression'
+        - name: connect
+          in: query
+          schema:
+            $ref: '#/components/schemas/connect'
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.SearchKeyResponse'
+    post:
+      tags:
+        - Device Keys
+        - device.v1.DeviceService
+      summary: Search keys or tokens
+      description: Searches for keys or tokens associated with a device. Supports filtering by key type and expiration.
+      operationId: searchDeviceKey
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.SearchKeyRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.SearchKeyResponse'
+  /device.v1.DeviceService/Update:
+    post:
+      tags:
+        - Devices
+        - device.v1.DeviceService
+      summary: Update device information
+      description: Updates an existing device's name and properties. Only the device owner or administrators can perform this operation.
+      operationId: updateDevice
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.UpdateRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.UpdateResponse'
+  /device.v1.DeviceService/UpdatePresence:
+    post:
+      tags:
+        - Device Presence
+        - device.v1.DeviceService
+      summary: Update device presence
+      description: Updates the presence status of a device. Used to indicate online/offline/away/busy status and track last activity for real-time communication features.
+      operationId: updatePresence
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/device.v1.UpdatePresenceRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/device.v1.UpdatePresenceResponse'
+components:
+  schemas:
+    base64:
+      type: boolean
+      title: base64
+      description: Specifies if the message query param is base64 encoded, which may be required for binary data
+    compression:
+      title: compression
+      enum:
+        - identity
+        - gzip
+        - br
+      description: Which compression algorithm to use for this request
+    connect:
+      title: connect
+      enum:
+        - v1
+      description: Define the version of the Connect protocol
+    connect-protocol-version:
+      type: number
+      title: Connect-Protocol-Version
+      enum:
+        - 1
+      description: Define the version of the Connect protocol
+      const: 1
+    connect-timeout-header:
+      type: number
+      title: Connect-Timeout-Ms
+      description: Define the timeout, in ms
+    connect.error:
+      type: object
+      properties:
+        code:
+          type: string
+          examples:
+            - not_found
+          enum:
+            - canceled
+            - unknown
+            - invalid_argument
+            - deadline_exceeded
+            - not_found
+            - already_exists
+            - permission_denied
+            - resource_exhausted
+            - failed_precondition
+            - aborted
+            - out_of_range
+            - unimplemented
+            - internal
+            - unavailable
+            - data_loss
+            - unauthenticated
+          description: The status code, which should be an enum value of [google.rpc.Code][google.rpc.Code].
+        message:
+          type: string
+          description: A developer-facing error message, which should be in English. Any user-facing error message should be localized and sent in the [google.rpc.Status.details][google.rpc.Status.details] field, or localized by the client.
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/connect.error_details.Any'
+          description: A list of messages that carry the error details. There is no limit on the number of messages.
+      title: Connect Error
+      additionalProperties: true
+      description: 'Error type returned by Connect: https://connectrpc.com/docs/go/errors/#http-representation'
+    connect.error_details.Any:
+      type: object
+      properties:
+        type:
+          type: string
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+        value:
+          type: string
+          format: binary
+          description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
+        debug:
+          oneOf:
+            - type: object
+              title: Any
+              additionalProperties: true
+              description: Detailed error information.
+          discriminator:
+            propertyName: type
+          title: Debug
+          description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
+      additionalProperties: true
+      description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
+    device.v1.AddKeyRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Unique identifier for the key
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device this key belongs to
+        keyType:
+          title: key_type
+          description: Type of key (Matrix, FCM, Encryption, etc.)
+          $ref: '#/components/schemas/device.v1.KeyType'
+        data:
+          type: string
+          title: data
+          format: byte
+          description: The key material or token (will be encrypted at rest)
+        expiresAt:
+          type: string
+          title: expires_at
+          description: Optional expiration timestamp (RFC3339)
+        extras:
+          title: extras
+          description: Additional key metadata (algorithm, app_id, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: AddKeyRequest
+      additionalProperties: false
+      description: |-
+        AddKeyRequest adds a key or token to a device.
+         Keys are used for secure communications (Matrix E2EE, push notifications, FCM tokens, etc.).
+    device.v1.AddKeyResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: The created key object
+          $ref: '#/components/schemas/device.v1.KeyObject'
+      title: AddKeyResponse
+      additionalProperties: false
+      description: AddKeyResponse returns the created key.
+    device.v1.CreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          title: name
+          description: User-friendly name for the device
+        properties:
+          title: properties
+          description: Device properties (model, manufacturer, OS version, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: CreateRequest
+      additionalProperties: false
+      description: CreateRequest registers a new device in the system.
+    device.v1.CreateResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: The created device object
+          $ref: '#/components/schemas/device.v1.DeviceObject'
+      title: CreateResponse
+      additionalProperties: false
+      description: CreateResponse returns the newly created device.
+    device.v1.DeRegisterKeyRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Key ID to deregister from external service
+      title: DeRegisterKeyRequest
+      additionalProperties: false
+      description: |-
+        DeRegisterKeyRequest removes device registration from third-party services.
+         This cleans up the connection with external services like FCM.
+    device.v1.DeRegisterKeyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: True if successfully deregistered from service
+        message:
+          type: string
+          title: message
+          description: Status message from the external service
+      title: DeRegisterKeyResponse
+      additionalProperties: false
+      description: DeRegisterKeyResponse confirms service deregistration.
+    device.v1.DeviceLog:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Unique identifier for this log entry
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device this log entry belongs to
+        sessionId:
+          type: string
+          title: session_id
+          description: Session identifier for this activity
+        ip:
+          type: string
+          title: ip
+          description: IP address of the device during this session
+        locale:
+          title: locale
+          description: Locale settings during this session
+          $ref: '#/components/schemas/device.v1.Locale'
+        userAgent:
+          type: string
+          title: user_agent
+          description: User agent string (browser/app info)
+        os:
+          type: string
+          title: os
+          description: Operating system and version
+        lastSeen:
+          type: string
+          title: last_seen
+          description: Last activity timestamp (RFC3339)
+        location:
+          title: location
+          description: Geographic location data (lat/long, city, country)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+        extra:
+          title: extra
+          description: Additional log metadata
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: DeviceLog
+      additionalProperties: false
+      description: |-
+        DeviceLog represents an activity log entry for a device.
+         Logs track device sessions, locations, and activity for security auditing.
+    device.v1.DeviceObject:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Unique identifier for the device
+        name:
+          type: string
+          title: name
+          description: User-friendly device name (e.g., "John's iPhone")
+        sessionId:
+          type: string
+          title: session_id
+          description: Current active session identifier
+        ip:
+          type: string
+          title: ip
+          description: Last known IP address
+        userAgent:
+          type: string
+          title: user_agent
+          description: User agent string
+        os:
+          type: string
+          title: os
+          description: Operating system and version
+        lastSeen:
+          type: string
+          title: last_seen
+          description: Last activity timestamp (RFC3339)
+        profileId:
+          type: string
+          title: profile_id
+          description: Profile this device is linked to
+        locale:
+          title: locale
+          description: Device locale settings
+          $ref: '#/components/schemas/device.v1.Locale'
+        presence:
+          title: presence
+          description: Device presense status
+          $ref: '#/components/schemas/device.v1.PresenceStatus'
+        location:
+          title: location
+          description: Last known geographic location
+          $ref: '#/components/schemas/google.protobuf.Struct'
+        properties:
+          title: properties
+          description: Additional device properties (model, manufacturer, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: DeviceObject
+      additionalProperties: false
+      description: |-
+        DeviceObject represents a registered device in the system.
+         Devices must be registered and linked to a profile before use.
+    device.v1.GetByIdRequest:
+      type: object
+      properties:
+        id:
+          type: array
+          items:
+            type: string
+            maxLength: 40
+            minLength: 3
+            pattern: '[0-9a-z_-]{3,20}'
+          title: id
+          description: List of device IDs to retrieve
+        extensive:
+          type: boolean
+          title: extensive
+          description: If true, include additional details (logs, keys count, etc.)
+      title: GetByIdRequest
+      additionalProperties: false
+      description: GetByIdRequest retrieves one or more devices by their unique identifiers.
+    device.v1.GetByIdResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/device.v1.DeviceObject'
+          title: data
+          description: List of devices matching the request
+      title: GetByIdResponse
+      additionalProperties: false
+      description: GetByIdResponse returns the requested devices.
+    device.v1.GetBySessionIdRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,20}'
+          description: Session ID to look up
+      title: GetBySessionIdRequest
+      additionalProperties: false
+      description: GetBySessionIdRequest retrieves a device by its active session identifier.
+    device.v1.GetBySessionIdResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: Device object for the session
+          $ref: '#/components/schemas/device.v1.DeviceObject'
+      title: GetBySessionIdResponse
+      additionalProperties: false
+      description: GetBySessionIdResponse returns the device associated with the session.
+    device.v1.GetTurnCredentialsRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          title: device_id
+          description: Device making the request (for audit/rate-limiting)
+      title: GetTurnCredentialsRequest
+      additionalProperties: false
+    device.v1.GetTurnCredentialsResponse:
+      type: object
+      properties:
+        servers:
+          type: array
+          items:
+            $ref: '#/components/schemas/device.v1.TurnServer'
+          title: servers
+          description: One or more TURN servers with credentials
+        ttlSeconds:
+          type: integer
+          title: ttl_seconds
+          format: int32
+          description: Suggested TTL in seconds — client should re-fetch before this
+      title: GetTurnCredentialsResponse
+      additionalProperties: false
+    device.v1.KeyObject:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Unique identifier for the key
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device this key belongs to
+        keyType:
+          title: key_type
+          description: Type of key (FCM token, encryption key, etc.)
+          $ref: '#/components/schemas/device.v1.KeyType'
+        key:
+          type: string
+          title: key
+          format: byte
+          description: The actual key material or token (encrypted at rest)
+        createdAt:
+          type: string
+          title: created_at
+          description: Timestamp when key was created (RFC3339)
+        expiresAt:
+          type: string
+          title: expires_at
+          description: Optional expiration timestamp (RFC3339)
+        isActive:
+          type: boolean
+          title: is_active
+          description: Whether the key is currently active
+        extra:
+          title: extra
+          description: Additional key metadata (algorithm, app_id, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: KeyObject
+      additionalProperties: false
+      description: |-
+        KeyObject represents a key or token associated with a device.
+         Keys are used for secure communications, authentication, and push notifications.
+    device.v1.KeyType:
+      type: string
+      title: KeyType
+      enum:
+        - MATRIX_KEY
+        - NOTIFICATION_KEY
+        - FCM_TOKEN
+        - CURVE25519_KEY
+        - ED25519_KEY
+        - PICKLE_KEY
+      description: |-
+        KeyType defines the types of keys that can be stored for a device.
+         Different key types serve different purposes in the security infrastructure.
+         buf:lint:ignore ENUM_VALUE_PREFIX
+    device.v1.LinkRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device ID to link
+        profileId:
+          type: string
+          title: profile_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Profile ID to link the device to
+        properties:
+          title: properties
+          description: Additional linking properties
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: LinkRequest
+      additionalProperties: false
+      description: |-
+        LinkRequest links a device to a user profile.
+         Devices must be linked before they can be used for authenticated operations.
+    device.v1.LinkResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: The linked device object
+          $ref: '#/components/schemas/device.v1.DeviceObject'
+      title: LinkResponse
+      additionalProperties: false
+      description: LinkResponse returns the linked device.
+    device.v1.ListLogsRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device ID to retrieve logs for
+        count:
+          type: integer
+          title: count
+          format: int32
+          description: Maximum number of log entries to return
+      title: ListLogsRequest
+      additionalProperties: false
+      description: |-
+        ListLogsRequest retrieves activity logs for a device.
+         Useful for security auditing and tracking device usage patterns.
+    device.v1.ListLogsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/device.v1.DeviceLog'
+          title: data
+          description: List of log entries
+      title: ListLogsResponse
+      additionalProperties: false
+      description: ListLogsResponse returns device activity logs.
+    device.v1.Locale:
+      type: object
+      properties:
+        language:
+          type: array
+          items:
+            type: string
+          title: language
+          description: Preferred languages in priority order (e.g., ["en-US", "en"])
+        timezone:
+          type: string
+          title: timezone
+          description: IANA timezone identifier (e.g., "America/New_York")
+        utcOffset:
+          type: string
+          title: utc_offset
+          description: UTC offset in format "+HH:MM" or "-HH:MM"
+        currency:
+          type: string
+          title: currency
+          description: ISO 4217 currency code (e.g., "USD", "EUR")
+        currencyName:
+          type: string
+          title: currency_name
+          description: Human-readable currency name
+        code:
+          type: string
+          title: code
+          description: ISO 3166-1 alpha-2 country code (e.g., "US", "GB")
+      title: Locale
+      additionalProperties: false
+      description: |-
+        Locale represents the localization settings for a device.
+         Used to provide localized content and format data appropriately for the user.
+    device.v1.LogRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device ID (optional if session_id is provided)
+        sessionId:
+          type: string
+          title: session_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Session identifier for this activity
+        ip:
+          type: string
+          title: ip
+          description: IP address of the device
+        locale:
+          type: string
+          title: locale
+          description: Locale settings (JSON string)
+        userAgent:
+          type: string
+          title: user_agent
+          description: User agent string
+        os:
+          type: string
+          title: os
+          description: Operating system and version
+        lastSeen:
+          type: string
+          title: last_seen
+          description: Timestamp of this activity (RFC3339)
+        extras:
+          title: extras
+          description: Additional log data (location, app version, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: LogRequest
+      additionalProperties: false
+      description: |-
+        LogRequest creates a new activity log entry for a device.
+         Used for tracking device sessions and security auditing.
+    device.v1.LogResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: The created log entry
+          $ref: '#/components/schemas/device.v1.DeviceLog'
+      title: LogResponse
+      additionalProperties: false
+      description: LogResponse returns the created log entry.
+    device.v1.NotifyMessage:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+        title:
+          type: string
+          title: title
+          description: Notification title
+        body:
+          type: string
+          title: body
+          description: Notification body/message
+        data:
+          title: data
+          description: Additional notification data/payload (custom data, actions, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+        extras:
+          title: extras
+          description: Extra notification options (priority, TTL, badge, sound, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: NotifyMessage
+      additionalProperties: false
+      description: NotifyPayload represents the content and metadata of a single notification.
+    device.v1.NotifyRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device ID to notify
+        keyId:
+          type: string
+          title: key_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: |-
+            The following fields remain for backward compatibility and represent a single notification payload.
+             New integrations should prefer the notifications field for bulk sending. Specific key ID to use (optional - if not provided, uses key_type to select)
+        keyType:
+          title: key_type
+          description: Type of key to use for notification (e.g., FCM_TOKEN, NOTIFICATION_KEY)
+          $ref: '#/components/schemas/device.v1.KeyType'
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/device.v1.NotifyMessage'
+          title: notifications
+          maxItems: 500
+          minItems: 1
+          description: Collection of notifications to send in bulk.
+      title: NotifyRequest
+      additionalProperties: false
+      description: |-
+        NotifyRequest sends one or more notifications to a device using its registered keys.
+         The service will select an appropriate key based on key_type (e.g., FCM_TOKEN for push notifications).
+    device.v1.NotifyResponse:
+      type: object
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/device.v1.NotifyResult'
+          title: results
+          description: Per-notification send results when using bulk notifications
+      title: NotifyResponse
+      additionalProperties: false
+      description: NotifyResponse confirms the notifications were sent.
+    device.v1.NotifyResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+          title: success
+          description: True if notification was successfully sent
+        message:
+          type: string
+          title: message
+          description: Status message or error details
+        notificationId:
+          type: string
+          title: notification_id
+          description: Unique identifier for the sent notification (if provided by service)
+        extras:
+          title: extras
+          description: Additional response metadata from notification service
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: NotifyResult
+      additionalProperties: false
+      description: NotifyResult details the outcome of sending an individual notification payload.
+    device.v1.PresenceObject:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device this presence status belongs to
+        profileId:
+          type: string
+          title: profile_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Profile this device belongs to
+        status:
+          title: status
+          description: Current presence status
+          $ref: '#/components/schemas/device.v1.PresenceStatus'
+        statusMessage:
+          type: string
+          title: status_message
+          description: Optional custom status message
+        lastActive:
+          type: string
+          title: last_active
+          description: Timestamp of last activity (RFC3339)
+        updatedAt:
+          type: string
+          title: updated_at
+          description: Timestamp when presence was last updated (RFC3339)
+        extras:
+          title: extras
+          description: Additional presence metadata (activity type, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: PresenceObject
+      additionalProperties: false
+      description: |-
+        PresenceObject represents the presence/availability status of a device.
+         Tracks online/offline status and last activity for real-time communication features.
+    device.v1.PresenceStatus:
+      type: string
+      title: PresenceStatus
+      enum:
+        - OFFLINE
+        - ONLINE
+        - AWAY
+        - BUSY
+        - INVISIBLE
+      description: |-
+        PresenceStatus defines the online/offline status of a device.
+         buf:lint:ignore ENUM_VALUE_PREFIX
+    device.v1.RegisterKeyRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device to register with the service
+        keyType:
+          title: key_type
+          description: Type of service to register with (FCM_TOKEN, etc.)
+          $ref: '#/components/schemas/device.v1.KeyType'
+        extras:
+          title: extras
+          description: Service-specific metadata (app_id, platform, etc.)
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: RegisterKeyRequest
+      additionalProperties: false
+      description: |-
+        RegisterKeyRequest registers a device with third-party services.
+         Used when the key/token is generated by the third-party service (e.g., FCM token
+         generated on device by FCM SDK). This links the device to the external service.
+         For storing key material, use AddKeyRequest instead.
+    device.v1.RegisterKeyResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: Registered key object with service metadata
+          $ref: '#/components/schemas/device.v1.KeyObject'
+      title: RegisterKeyResponse
+      additionalProperties: false
+      description: |-
+        RegisterKeyResponse returns confirmation of registration.
+         The actual key/token data is managed by the third-party service.
+    device.v1.RemoveKeyRequest:
+      type: object
+      properties:
+        id:
+          type: array
+          items:
+            type: string
+            maxLength: 40
+            minLength: 3
+            pattern: '[0-9a-z_-]{3,20}'
+          title: id
+          description: List of key IDs to remove
+      title: RemoveKeyRequest
+      additionalProperties: false
+      description: |-
+        RemoveKeyRequest removes one or more keys or tokens from a device.
+         Used when rotating keys, removing tokens, or removing a device.
+    device.v1.RemoveKeyResponse:
+      type: object
+      properties:
+        id:
+          type: array
+          items:
+            type: string
+          title: id
+          description: List of removed key IDs
+      title: RemoveKeyResponse
+      additionalProperties: false
+      description: RemoveKeyResponse returns the IDs of removed keys.
+    device.v1.RemoveRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device ID to remove
+      title: RemoveRequest
+      additionalProperties: false
+      description: |-
+        RemoveRequest removes a device from the system.
+         This is typically used when a user logs out or removes a device from their account.
+    device.v1.RemoveResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: The removed device object
+          $ref: '#/components/schemas/device.v1.DeviceObject'
+      title: RemoveResponse
+      additionalProperties: false
+      description: RemoveResponse returns the removed device.
+    device.v1.SearchKeyRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          title: query
+          description: Search query (key ID pattern, etc.)
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device ID to search keys for
+        keyTypes:
+          type: array
+          items:
+            $ref: '#/components/schemas/device.v1.KeyType'
+          title: key_types
+          description: Filter by key types (if empty, returns all)
+        includeExpired:
+          type: boolean
+          title: include_expired
+          description: If true, includes expired keys
+        page:
+          type: integer
+          title: page
+          format: int32
+          description: Page number for pagination
+        count:
+          type: integer
+          title: count
+          format: int32
+          description: Number of results per page
+      title: SearchKeyRequest
+      additionalProperties: false
+      description: SearchKeyRequest searches for keys or tokens associated with a device.
+    device.v1.SearchKeyResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/device.v1.KeyObject'
+          title: data
+          description: List of matching keys
+      title: SearchKeyResponse
+      additionalProperties: false
+      description: SearchKeyResponse returns matching keys or tokens.
+    device.v1.SearchRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          title: query
+          description: Search query (device name, OS, etc.)
+        page:
+          type: integer
+          title: page
+          format: int32
+          description: Page number for pagination
+        count:
+          type: integer
+          title: count
+          format: int32
+          description: Number of results per page
+        startDate:
+          type: string
+          title: start_date
+          description: Filter devices created after this date (RFC3339)
+        endDate:
+          type: string
+          title: end_date
+          description: Filter devices created before this date (RFC3339)
+        properties:
+          type: array
+          items:
+            type: string
+          title: properties
+          description: Specific properties to include in results
+        extras:
+          title: extras
+          description: Additional search filters
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: SearchRequest
+      additionalProperties: false
+      description: SearchRequest searches for devices matching specified criteria.
+    device.v1.SearchResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/device.v1.DeviceObject'
+          title: data
+          description: List of matching devices
+      title: SearchResponse
+      additionalProperties: false
+      description: SearchResponse returns devices matching the search criteria.
+    device.v1.TurnServer:
+      type: object
+      properties:
+        url:
+          type: string
+          title: url
+          description: TURN URI, e.g. "turn:turn.example.com:443?transport=tcp"
+        username:
+          type: string
+          title: username
+          description: 'Temporary username (typically: unix_expiry_timestamp:device_id)'
+        credential:
+          type: string
+          title: credential
+          description: HMAC-SHA1(username, shared_secret) — base64-encoded
+        expiresAt:
+          type:
+            - integer
+            - string
+          title: expires_at
+          format: int64
+          description: Unix timestamp (seconds) when this credential expires
+      title: TurnServer
+      additionalProperties: false
+    device.v1.UpdatePresenceRequest:
+      type: object
+      properties:
+        deviceId:
+          type: string
+          title: device_id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device ID to update presence for
+        status:
+          title: status
+          description: New presence status
+          $ref: '#/components/schemas/device.v1.PresenceStatus'
+        statusMessage:
+          type: string
+          title: status_message
+          description: Optional custom status message
+        extras:
+          title: extras
+          description: Additional presence metadata
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: UpdatePresenceRequest
+      additionalProperties: false
+      description: UpdatePresenceRequest updates the presence status of a device.
+    device.v1.UpdatePresenceResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: Updated presence object
+          $ref: '#/components/schemas/device.v1.PresenceObject'
+      title: UpdatePresenceResponse
+      additionalProperties: false
+      description: UpdatePresenceResponse returns the updated presence.
+    device.v1.UpdateRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          title: id
+          maxLength: 40
+          minLength: 3
+          pattern: '[0-9a-z_-]{3,40}'
+          description: Device ID to update
+        name:
+          type: string
+          title: name
+          description: New device name (if changing)
+        properties:
+          title: properties
+          description: Updated device properties
+          $ref: '#/components/schemas/google.protobuf.Struct'
+      title: UpdateRequest
+      additionalProperties: false
+      description: UpdateRequest updates an existing device's information.
+    device.v1.UpdateResponse:
+      type: object
+      properties:
+        data:
+          title: data
+          description: The updated device object
+          $ref: '#/components/schemas/device.v1.DeviceObject'
+      title: UpdateResponse
+      additionalProperties: false
+      description: UpdateResponse returns the updated device.
+    encoding:
+      title: encoding
+      enum:
+        - proto
+        - json
+      description: Define which encoding or 'Message-Codec' to use
+    google.protobuf.ListValue:
+      type: object
+      properties:
+        values:
+          type: array
+          items:
+            $ref: '#/components/schemas/google.protobuf.Value'
+          title: values
+          description: Repeated field of dynamically typed values.
+      title: ListValue
+      additionalProperties: false
+      description: |-
+        `ListValue` is a wrapper around a repeated field of values.
+
+         The JSON representation for `ListValue` is JSON array.
+    google.protobuf.NullValue:
+      type: string
+      title: NullValue
+      enum:
+        - NULL_VALUE
+      description: |-
+        `NullValue` is a singleton enumeration to represent the null value for the
+         `Value` type union.
+
+         The JSON representation for `NullValue` is JSON `null`.
+    google.protobuf.Struct:
+      type: object
+      additionalProperties:
+        $ref: '#/components/schemas/google.protobuf.Value'
+      description: |-
+        `Struct` represents a structured data value, consisting of fields
+         which map to dynamically typed values. In some languages, `Struct`
+         might be supported by a native representation. For example, in
+         scripting languages like JS a struct is represented as an
+         object. The details of that representation are described together
+         with the proto support for the language.
+
+         The JSON representation for `Struct` is JSON object.
+    google.protobuf.Struct.FieldsEntry:
+      type: object
+      properties:
+        key:
+          type: string
+          title: key
+        value:
+          title: value
+          $ref: '#/components/schemas/google.protobuf.Value'
+      title: FieldsEntry
+      additionalProperties: false
+    google.protobuf.Value:
+      oneOf:
+        - type: "null"
+        - type: number
+        - type: string
+        - type: boolean
+        - type: array
+        - type: object
+          additionalProperties: true
+      description: |-
+        `Value` represents a dynamically typed value which can be either
+         null, a number, a string, a boolean, a recursive struct value, or a
+         list of values. A producer of value is expected to set one of these
+         variants. Absence of any variant indicates an error.
+
+         The JSON representation for `Value` is JSON value.
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security: []
+tags:
+  - name: device.v1.DeviceService
+    description: |-
+      DeviceService provides core device management and key/token management.
+       All RPCs require authentication via Bearer token unless otherwise specified.
