@@ -19,10 +19,10 @@
 package settingsv1connect
 
 import (
-	v11 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
 	connect "connectrpc.com/connect"
 	context "context"
 	errors "errors"
+	v11 "github.com/antinvestor/common/v1"
 	v1 "github.com/antinvestor/service-profile/settings/v1"
 	http "net/http"
 	strings "strings"
