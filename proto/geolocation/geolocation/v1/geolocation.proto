@@ -2,12 +2,12 @@ syntax = "proto3";
 
 package geolocation.v1;
 
-option go_package = "github.com/antinvestor/service-profile/geolocation/v1;geolocationv1";
-
 import "common/v1/permissions.proto";
 import "google/protobuf/empty.proto";
 import "google/protobuf/struct.proto";
 import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/antinvestor/service-profile/geolocation/v1;geolocationv1";
 
 enum LocationSource {
   LOCATION_SOURCE_UNSPECIFIED = 0;
