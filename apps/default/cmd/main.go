@@ -240,7 +240,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	delete(procMap, "/profile.v1.ProfileService/AddRelationship")
 	delete(procMap, "/profile.v1.ProfileService/ListRelationships")
 
-	functionChecker := authorizer.NewFunctionChecker(auth, "service_profile")
+	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
 	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
 
 	defaultInterceptorList, err := connectInterceptors.DefaultList(
