@@ -15,7 +15,6 @@
 import 'package:antinvestor_api_common/antinvestor_api_common.dart';
 import 'package:connectrpc/connect.dart' show Interceptor;
 import '../antinvestor_api_profile.dart';
-import '../device.dart';
 
 /// Default endpoint for the Profile service.
 const String defaultProfileEndpoint = 'https://profile.antinvestor.com';
@@ -43,30 +42,3 @@ Future<ConnectClientBase<ProfileServiceClient>> newProfileClient({
 
 /// Type alias for Profile client for convenience.
 typedef ProfileClient = ConnectClientBase<ProfileServiceClient>;
-
-/// Default endpoint for the Device service.
-const String defaultDeviceEndpoint = 'https://profile.antinvestor.com';
-
-/// Creates a new Device service client.
-Future<ConnectClientBase<DeviceServiceClient>> newDeviceClient({
-  required TransportFactory createTransport,
-  String? endpoint,
-  TokenManager? tokenManager,
-  TokenRefreshCallback? onTokenRefresh,
-  List<Interceptor>? additionalInterceptors,
-  bool noAuth = false,
-}) {
-  return newClient<DeviceServiceClient>(
-    defaultEndpoint: defaultDeviceEndpoint,
-    createServiceClient: DeviceServiceClient.new,
-    createTransport: createTransport,
-    endpoint: endpoint,
-    tokenManager: tokenManager,
-    onTokenRefresh: onTokenRefresh,
-    additionalInterceptors: additionalInterceptors,
-    noAuth: noAuth,
-  );
-}
-
-/// Type alias for Device client for convenience.
-typedef DeviceClient = ConnectClientBase<DeviceServiceClient>;
