@@ -12,7 +12,7 @@ const (
 	PermissionProfileView         = "profile_view"
 	PermissionProfileCreate       = "profile_create"
 	PermissionProfileUpdate       = "profile_update"
-	PermissionProfilesMerge       = "profiles_merge"
+	PermissionProfilesMerge       = "profile_merge"
 	PermissionContactsManage      = "contacts_manage"
 	PermissionRosterManage        = "roster_manage"
 	PermissionRelationshipsManage = "relationships_manage"
