@@ -17,13 +17,13 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.19.0
-	github.com/antinvestor/common v1.3.1
+	github.com/antinvestor/common v1.4.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/gnostic v0.7.1
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.92.2
-	github.com/pitabwire/util v0.7.0
+	github.com/pitabwire/frame v1.93.0
+	github.com/pitabwire/util v0.8.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.41.0
 	github.com/ttacon/libphonenumber v1.2.1
