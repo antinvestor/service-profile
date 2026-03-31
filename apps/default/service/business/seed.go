@@ -11,11 +11,27 @@ import (
 // by other services to look up or authenticate against known accounts.
 const (
 	SystemBotProfileID = "system_bot_profile_01"
-	AdminProfileID     = "admin_profile_01"
+	AdminProfileID     = "d75qclkpf2t1uum8ij3g"
 
-	SvcAuthenticationProfileID = "svc_authentication_01"
-	SvcNotificationProfileID   = "svc_notification_01"
-	SvcTenancyProfileID        = "svc_tenancy_01"
+	SvcAuthenticationProfileID             = "d75qclkpf2t1uum8ij40"
+	SvcProfileProfileID                    = "d75qclkpf2t1uum8ij4g"
+	SvcTenancyProfileID                    = "d75qclkpf2t1uum8ij50"
+	SvcNotificationProfileID               = "d75qclkpf2t1uum8ij5g"
+	SvcDevicesProfileID                    = "d75qclkpf2t1uum8ij60"
+	SvcSettingProfileID                    = "d75qclkpf2t1uum8ij6g"
+	SvcPaymentProfileID                    = "d75qclkpf2t1uum8ij70"
+	SvcPaymentJengaProfileID               = "d75qclkpf2t1uum8ij7g"
+	SvcLedgerProfileID                     = "d75qclkpf2t1uum8ij80"
+	SvcBillingProfileID                    = "d75qclkpf2t1uum8ij8g"
+	SvcFileProfileID                       = "d75qclkpf2t1uum8ij90"
+	SvcChatDroneProfileID                  = "d75qclkpf2t1uum8ij9g"
+	SvcChatGatewayProfileID                = "d75qclkpf2t1uum8ija0"
+	SvcFoundryProfileID                    = "d75qclkpf2t1uum8ijag"
+	SvcGitvaultProfileID                   = "d75qclkpf2t1uum8ijb0"
+	SvcTrustageProfileID                   = "d75qclkpf2t1uum8ijbg"
+	SvcNotificationAfricastalkingProfileID = "d75qclkpf2t1uum8ijc0"
+	SvcNotificationEmailSMTPProfileID      = "d75qclkpf2t1uum8ijcg"
+	SvcLenderProfileID                     = "d75qclkpf2t1uum8ijd0"
 )
 
 // bootstrapProfile pairs a migration-created profile with the contact
@@ -31,9 +47,25 @@ type bootstrapProfile struct {
 var bootstrapProfiles = []bootstrapProfile{
 	{SystemBotProfileID, "system.bot@stawi.org"},
 	{AdminProfileID, "bwire517@gmail.com"},
-	{SvcAuthenticationProfileID, "service-authentication@internal.antinvestor.com"},
-	{SvcNotificationProfileID, "service-notification@internal.antinvestor.com"},
-	{SvcTenancyProfileID, "service-tenancy@internal.antinvestor.com"},
+	{SvcAuthenticationProfileID, "authentication.bot@stawi.org"},
+	{SvcProfileProfileID, "profile.bot@stawi.org"},
+	{SvcTenancyProfileID, "tenancy.bot@stawi.org"},
+	{SvcNotificationProfileID, "notification.bot@stawi.org"},
+	{SvcDevicesProfileID, "devices.bot@stawi.org"},
+	{SvcSettingProfileID, "setting.bot@stawi.org"},
+	{SvcPaymentProfileID, "payment.bot@stawi.org"},
+	{SvcPaymentJengaProfileID, "payment-jenga.bot@stawi.org"},
+	{SvcLedgerProfileID, "ledger.bot@stawi.org"},
+	{SvcBillingProfileID, "billing.bot@stawi.org"},
+	{SvcFileProfileID, "file.bot@stawi.org"},
+	{SvcChatDroneProfileID, "chat-drone.bot@stawi.org"},
+	{SvcChatGatewayProfileID, "chat-gateway.bot@stawi.org"},
+	{SvcFoundryProfileID, "foundry.bot@stawi.org"},
+	{SvcGitvaultProfileID, "gitvault.bot@stawi.org"},
+	{SvcTrustageProfileID, "trustage.bot@stawi.org"},
+	{SvcNotificationAfricastalkingProfileID, "notification-africastalking.bot@stawi.org"},
+	{SvcNotificationEmailSMTPProfileID, "notification-emailsmtp.bot@stawi.org"},
+	{SvcLenderProfileID, "lender.bot@stawi.org"},
 }
 
 // SeedBootstrapContacts ensures every bootstrap profile has its encrypted
