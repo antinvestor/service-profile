@@ -44,7 +44,7 @@ type bootstrapProfile struct {
 // bootstrapProfiles lists every profile created by migration that needs an
 // encrypted contact record. Add new service accounts here and in the
 // corresponding SQL migration.
-var bootstrapProfiles = []bootstrapProfile{
+var bootstrapProfiles = []bootstrapProfile{ //nolint:gochecknoglobals // bootstrap registry
 	{SystemBotProfileID, "system.bot@stawi.org"},
 	{AdminProfileID, "bwire517@gmail.com"},
 	{SvcAuthenticationProfileID, "authentication.bot@stawi.org"},
