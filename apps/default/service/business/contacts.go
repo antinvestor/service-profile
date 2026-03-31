@@ -238,11 +238,11 @@ func (cb *contactBusiness) VerifyContact(
 	code string,
 	durationToExpiry time.Duration,
 ) (*models.Verification, error) {
-	logger := util.Log(ctx).WithField("contact", contact)
-
 	if contact == nil {
 		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no contact specified"))
 	}
+
+	logger := util.Log(ctx).WithField("contact_id", contact.GetID())
 
 	if durationToExpiry == 0 {
 		durationToExpiry = time.Duration(cb.cfg.VerificationPinExpiryTimeInSec)

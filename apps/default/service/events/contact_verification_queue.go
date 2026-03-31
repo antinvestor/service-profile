@@ -64,7 +64,10 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		return errors.New(" invalid payload type, expected *models.Verification")
 	}
 
-	logger := util.Log(ctx).WithField("payload", verification.GetID()).WithField("type", vq.Name())
+	logger := util.Log(ctx).WithFields(map[string]any{
+		"verification_id": verification.GetID(),
+		"type":            vq.Name(),
+	})
 
 	contact, err := vq.contactRepo.GetByID(ctx, verification.ContactID)
 	if err != nil {
@@ -77,7 +80,7 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 			logger.Debug("verification already exists, skipping duplicate")
 			return nil
 		}
-		logger.WithError(err).Error("Failed to save verification")
+		logger.WithError(err).Error("failed to save verification")
 		return err
 	}
 
@@ -109,27 +112,23 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 
 	resp, err := vq.notificationCli.Send(ctx, req)
 	if err != nil {
-		logger.WithError(err).Error("Failed to send out verification")
+		logger.WithField("contact_id", contact.ID).WithError(err).Error("failed to send verification notification")
 		return err
 	}
 
 	if resp == nil {
-		logger.Warn("resp will only be nil if we are testing, this shouldn't happen normally")
+		logger.Debug("notification response is nil, likely in test mode")
 		return nil
 	}
 
 	for resp.Receive() {
 		err = resp.Err()
 		if err != nil {
-			logger.WithField("contact", contact.ID).
-				WithError(err).
-				Info("failed submitting verification for contact")
+			logger.WithField("contact_id", contact.ID).WithError(err).Error("failed submitting verification for contact")
 			return err
 		}
 
-		logger.WithField("contact", contact.ID).
-			WithField("resp", resp.Msg()).
-			Info("successfully submitted verification for contact")
+		logger.WithField("contact_id", contact.ID).Debug("verification notification submitted")
 	}
 	return nil
 }

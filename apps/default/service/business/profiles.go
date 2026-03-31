@@ -473,7 +473,7 @@ func (pb *profileBusiness) CheckVerification(
 	code string,
 	ipAddress string,
 ) (int, bool, error) {
-	logger := util.Log(ctx).WithField("verificationID", verificationID)
+	logger := util.Log(ctx).WithField("verification_id", verificationID)
 
 	verification, verifyErr := pb.contactBusiness.GetVerification(ctx, verificationID)
 	if verifyErr != nil {

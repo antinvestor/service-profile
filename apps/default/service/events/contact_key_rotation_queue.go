@@ -54,7 +54,10 @@ func (vq *ContactKeyRotationQueue) Execute(ctx context.Context, payload any) err
 
 	contactID := *contactIDPtr
 
-	logger := util.Log(ctx).WithField("payload", contactID).WithField("type", vq.Name())
+	logger := util.Log(ctx).WithFields(map[string]any{
+		"contact_id": contactID,
+		"type":       vq.Name(),
+	})
 
 	contact, err := vq.contactRepo.GetByID(ctx, contactID)
 	if err != nil {
@@ -82,8 +85,7 @@ func (vq *ContactKeyRotationQueue) Execute(ctx context.Context, payload any) err
 		return err
 	}
 
-	logger.WithField("contact", contact.ID).
-		Debug("successfully processed key rotation for contact")
+	logger.Debug("key rotation processed")
 
 	return nil
 }

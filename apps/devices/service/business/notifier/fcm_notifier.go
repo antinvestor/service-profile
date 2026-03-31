@@ -90,7 +90,6 @@ func (f *fcmNotifier) Notify(
 			if len(messages) >= batchSize {
 				batchResponses, err := f.sendBatch(ctx, messages)
 				if err != nil {
-					util.Log(ctx).WithError(err).Error("failed to send FCM batch")
 					return nil, err
 				}
 				responses = append(responses, batchResponses...)
@@ -102,7 +101,6 @@ func (f *fcmNotifier) Notify(
 		if len(messages) > 0 {
 			batchResponses, err := f.sendBatch(ctx, messages)
 			if err != nil {
-				util.Log(ctx).WithError(err).Error("failed to send FCM batch")
 				return nil, err
 			}
 			responses = append(responses, batchResponses...)
@@ -122,11 +120,11 @@ func (f *fcmNotifier) sendBatch(ctx context.Context, messages []*messaging.Messa
 		return nil, err
 	}
 
-	util.Log(ctx).
-		WithField("batch_size", len(messages)).
-		WithField("success_count", br.SuccessCount).
-		WithField("failure_count", br.FailureCount).
-		Debug("FCM notification batch sent")
+	util.Log(ctx).WithFields(map[string]any{
+		"batch_size":    len(messages),
+		"success_count": br.SuccessCount,
+		"failure_count": br.FailureCount,
+	}).Debug("FCM notification batch sent")
 
 	return f.toNotifyResult(br), nil
 }

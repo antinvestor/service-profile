@@ -48,8 +48,10 @@ func (e *SettingsAuditor) Execute(ctx context.Context, payload interface{}) erro
 		return errors.New("payload is not of type models.SettingAudit")
 	}
 
-	log := util.Log(ctx).WithField("type", e.Name())
-	log.WithField("payload", audit).Debug("handling event")
+	log := util.Log(ctx).WithFields(map[string]any{
+		"type":     e.Name(),
+		"audit_id": audit.GetID(),
+	})
 
 	err := e.auditRepo.Create(ctx, audit)
 	if err != nil {

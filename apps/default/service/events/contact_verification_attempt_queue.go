@@ -54,7 +54,10 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 		return errors.New("invalid payload type, expected *models.VerificationAttempt")
 	}
 
-	logger := util.Log(ctx).WithField("attempt", attempt.GetID()).WithField("type", vaq.Name())
+	logger := util.Log(ctx).WithFields(map[string]any{
+		"attempt_id": attempt.GetID(),
+		"type":       vaq.Name(),
+	})
 
 	err := vaq.VerificationRepo.SaveAttempt(ctx, attempt)
 	if err != nil {
@@ -62,13 +65,13 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 			logger.Debug("verification attempt already exists, skipping duplicate")
 			return nil
 		}
-		logger.WithError(err).Error("Failed to save verification attempt")
+		logger.WithError(err).Error("failed to save verification attempt")
 		return err
 	}
 
 	verification, err := vaq.VerificationRepo.GetByID(ctx, attempt.VerificationID)
 	if err != nil {
-		logger.WithError(err).Error("Failed to get verification attempted")
+		logger.WithError(err).Error("failed to get verification")
 		return nil
 	}
 
@@ -78,14 +81,14 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 
 	contact, err := vaq.ContactRepo.GetByID(ctx, verification.ContactID)
 	if err != nil {
-		logger.WithError(err).Error("Failed to get contact")
+		logger.WithField("contact_id", verification.ContactID).WithError(err).Error("failed to get contact")
 		return nil
 	}
 
 	verification.VerifiedAt = time.Now()
 	_, err = vaq.VerificationRepo.Update(ctx, verification, "verified_at")
 	if err != nil {
-		logger.WithError(err).Error("Failed to save verification")
+		logger.WithError(err).Error("failed to save verification")
 		return err
 	}
 
@@ -93,7 +96,7 @@ func (vaq *ContactVerificationAttemptedQueue) Execute(ctx context.Context, paylo
 
 	_, err = vaq.ContactRepo.Update(ctx, contact, "verification_id")
 	if err != nil {
-		logger.WithError(err).Error("Failed to save contact")
+		logger.WithField("contact_id", contact.GetID()).WithError(err).Error("failed to save contact")
 		return nil
 	}
 

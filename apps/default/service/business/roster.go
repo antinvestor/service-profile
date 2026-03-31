@@ -340,7 +340,7 @@ func (rb *rosterBusiness) batchCreateContacts(
 			data.JSONMap{},
 		)
 		if createErr != nil {
-			util.Log(ctx).WithField("detail", contactDetail).Error("Failed to create contact", "error", createErr)
+			util.Log(ctx).WithField("detail", contactDetail).WithError(createErr).Error("failed to create contact")
 			continue
 		}
 

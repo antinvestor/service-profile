@@ -63,8 +63,10 @@ func (csq *ClientConnectedSetupQueue) Execute(ctx context.Context, payload any) 
 	}
 	relationshipID := *relationshipIDPtr
 
-	logger := util.Log(ctx).WithField("payload", relationshipID).WithField("type", csq.Name())
-	logger.Debug("handling csq")
+	logger := util.Log(ctx).WithFields(map[string]any{
+		"relationship_id": relationshipID,
+		"type":            csq.Name(),
+	})
 
 	relationship, err := csq.relationshipRepo.GetByID(ctx, relationshipID)
 	if err != nil {
@@ -78,7 +80,8 @@ func (csq *ClientConnectedSetupQueue) Execute(ctx context.Context, payload any) 
 
 	relationshipTopic, err := csq.queueMan.GetPublisher(csq.relationshipTopicName)
 	if err != nil {
-		util.Log(ctx).WithError(err).Fatal("could not get  publisher")
+		logger.WithError(err).Error("could not get publisher")
+		return err
 	}
 
 	// Queue relationship for further processing by peripheral services
@@ -88,8 +91,7 @@ func (csq *ClientConnectedSetupQueue) Execute(ctx context.Context, payload any) 
 		return err
 	}
 
-	logger.WithField("relationship_id", relationship.GetID()).
-		Debug(" We have successfully queued relationship connect")
+	logger.Debug("queued relationship connect")
 
 	return nil
 }

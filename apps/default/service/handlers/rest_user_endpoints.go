@@ -51,7 +51,7 @@ func (ps *ProfileServer) RestListRelationshipsEndpoint(rw http.ResponseWriter, r
 
 	// Parse request parameters
 	urlQuery := req.URL.Query()
-	log.WithField("url params", urlQuery).Debug("listing relationships request")
+	log.WithField("url_params", urlQuery).Debug("listing relationships request")
 
 	// Extract parameters and build request
 	request := ps.buildRelationshipListRequest(urlQuery, claims)

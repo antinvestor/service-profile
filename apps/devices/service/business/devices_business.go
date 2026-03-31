@@ -109,8 +109,10 @@ func (b *deviceBusiness) LogDeviceActivity(
 		allowed, count := b.cache.CheckLogRateLimit(ctx, deviceID, b.cfg.RateLimitLogPerMinute)
 		if !allowed {
 			caching.RecordRateLimited(ctx, "log_device_activity")
-			util.Log(ctx).WithField("device_id", deviceID).WithField("count", count).
-				Warn("device log rate limited")
+			util.Log(ctx).WithFields(map[string]any{
+				"device_id": deviceID,
+				"count":     count,
+			}).Warn("device log rate limited")
 			return nil, connect.NewError(connect.CodeResourceExhausted,
 				errors.New("device log rate limit exceeded"))
 		}

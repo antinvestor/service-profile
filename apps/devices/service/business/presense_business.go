@@ -87,8 +87,10 @@ func (p *presenceBusiness) UpdatePresence(
 		allowed, count := p.cache.CheckPresenceRateLimit(ctx, deviceID, p.cfg.RateLimitPresencePerMinute)
 		if !allowed {
 			caching.RecordRateLimited(ctx, "update_presence")
-			util.Log(ctx).WithField("device_id", deviceID).WithField("count", count).
-				Warn("presence update rate limited")
+			util.Log(ctx).WithFields(map[string]any{
+				"device_id": deviceID,
+				"count":     count,
+			}).Warn("presence update rate limited")
 			return nil, connect.NewError(connect.CodeResourceExhausted,
 				errors.New("presence update rate limit exceeded"))
 		}

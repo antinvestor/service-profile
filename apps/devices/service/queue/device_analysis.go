@@ -82,14 +82,14 @@ func (dq *DeviceAnalysisQueueHandler) getDeviceLog(
 
 	deviceLogID := idPayload["id"]
 	if deviceLogID == "" {
-		util.Log(ctx).WithField("payload", idPayload).Warn("no device log id found in payload")
+		util.Log(ctx).Warn("no device log id found in payload")
 		return nil, ErrDeviceLogIDMissing
 	}
 
 	deviceLog, err := dq.DeviceLogRepository.GetByID(ctx, deviceLogID)
 	if err != nil {
 		if data.ErrorIsNoRows(err) {
-			util.Log(ctx).WithField("deviceLogID", deviceLogID).Warn("device log not found")
+			util.Log(ctx).WithField("device_log_id", deviceLogID).Warn("device log not found")
 			return nil, ErrDeviceLogNotFound
 		}
 		return nil, err
@@ -112,7 +112,7 @@ func (dq *DeviceAnalysisQueueHandler) getOrCreateSession(
 	}
 
 	if !data.ErrorIsNoRows(err) {
-		util.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
+		util.Log(ctx).WithField("session_id", deviceLog.DeviceSessionID).WithError(err).
 			Warn("error fetching device session")
 		return nil, err
 	}
@@ -161,11 +161,9 @@ func (dq *DeviceAnalysisQueueHandler) createSessionFromLog(
 	ctx context.Context,
 	deviceLog *models.DeviceLog,
 ) (*models.DeviceSession, error) {
-	util.Log(ctx).WithField("deviceLogID", deviceLog.GetID()).Info("creating session from device log")
-
 	session, err := dq.CreateSessionFromLog(ctx, deviceLog)
 	if err != nil {
-		util.Log(ctx).WithField("sessionID", deviceLog.DeviceSessionID).WithError(err).
+		util.Log(ctx).WithField("device_log_id", deviceLog.GetID()).WithError(err).
 			Warn("could not create device session from log")
 		return nil, err
 	}
@@ -186,7 +184,7 @@ func (dq *DeviceAnalysisQueueHandler) getOrCreateDevice(
 	}
 
 	if !data.ErrorIsNoRows(err) {
-		util.Log(ctx).WithField("deviceID", session.DeviceID).WithError(err).
+		util.Log(ctx).WithField("device_id", session.DeviceID).WithError(err).
 			Warn("error fetching device")
 		return nil, err
 	}
@@ -199,12 +197,10 @@ func (dq *DeviceAnalysisQueueHandler) createDeviceFromSession(
 	ctx context.Context,
 	session *models.DeviceSession,
 ) (*models.Device, error) {
-	util.Log(ctx).WithField("sessionID", session.GetID()).Info("creating device from session")
-
 	device, err := dq.CreateDeviceFromSess(ctx, session)
 	if err != nil {
-		util.Log(ctx).WithError(err).
-			Warn("could not auto create device from session")
+		util.Log(ctx).WithField("session_id", session.GetID()).WithError(err).
+			Warn("could not create device from session")
 		return nil, err
 	}
 	return device, nil

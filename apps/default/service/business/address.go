@@ -65,7 +65,11 @@ func (aB *addressBusiness) CreateAddress(
 	ctx context.Context,
 	request *profilev1.AddressObject,
 ) (*profilev1.AddressObject, error) {
-	logger := util.Log(ctx).WithField("request", request)
+	logger := util.Log(ctx).WithFields(map[string]any{
+		"country":    request.GetCountry(),
+		"name":       request.GetName(),
+		"admin_unit": request.GetArea(),
+	})
 
 	country, err := aB.addressRepo.CountryGetByAny(ctx, request.GetCountry())
 	if err != nil {

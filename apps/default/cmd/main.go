@@ -191,8 +191,9 @@ func decodeDEK(cfg aconfig.ProfileConfig) (*aconfig.DEK, error) {
 	}, nil
 }
 
-// seedDefaultData ensures seed data exists (e.g. the system bot contact).
-// The bot profile row is created by SQL migration; this adds the encrypted contact.
+// seedDefaultData ensures bootstrap profiles have their encrypted contacts.
+// Profile rows are created by SQL migration; this adds contacts since they
+// require application-level encryption. Safe to call on every startup.
 func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) {
 	log := util.Log(ctx)
 	cfg, _ := svc.Config().(*aconfig.ProfileConfig)
@@ -209,8 +210,8 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 	addressBiz := business.NewAddressBusiness(ctx, addressRepo)
 	profileBiz := business.NewProfileBusiness(ctx, cfg, dek, evtsMan, contactBiz, addressBiz, profileRepo)
 
-	if err := business.SeedSystemBotContact(ctx, profileBiz, contactBiz); err != nil {
-		log.WithError(err).Warn("failed to seed system bot contact — will retry on next startup")
+	if err := business.SeedBootstrapContacts(ctx, profileBiz, contactBiz); err != nil {
+		log.WithError(err).Warn("failed to seed bootstrap contacts — will retry on next startup")
 	}
 }
 

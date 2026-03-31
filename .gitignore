@@ -27,3 +27,4 @@ vendor/
 
 # Shared Makefile cache
 .tmp/
+WORK_STATE.md

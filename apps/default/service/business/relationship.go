@@ -93,7 +93,11 @@ func (rb *relationshipBusiness) CreateRelationship(
 	ctx context.Context,
 	request *profilev1.AddRelationshipRequest,
 ) (*profilev1.RelationshipObject, error) {
-	logger := util.Log(ctx).WithField("request", request)
+	logger := util.Log(ctx).WithFields(map[string]any{
+		"parent":    request.GetParent(),
+		"parent_id": request.GetParentId(),
+		"child_id":  request.GetChildId(),
+	})
 
 	relationships, err := rb.relationshipRepo.List(
 		ctx,
@@ -144,7 +148,7 @@ func (rb *relationshipBusiness) CreateRelationship(
 		return nil, err
 	}
 
-	logger.Debug("successfully add relationship relationship")
+	logger.WithField("relationship_id", relationship.GetID()).Debug("relationship created")
 
 	return relationship.ToAPI(), nil
 }

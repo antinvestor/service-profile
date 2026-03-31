@@ -9,7 +9,6 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/workerpool"
-	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
@@ -44,9 +43,6 @@ func (nb *settingsBusiness) Get(
 	ctx context.Context,
 	req *settingsv1.GetRequest,
 ) (*settingsv1.GetResponse, error) {
-	logger := util.Log(ctx).WithField("request", req)
-	logger.Debug("handling get request")
-
 	ref := req.GetKey()
 	sRef, err := nb.refRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
 		ref.GetName(), ref.GetObject(), ref.GetObjectId(), ref.GetLang())
@@ -76,16 +72,12 @@ func (nb *settingsBusiness) Set(
 	ctx context.Context,
 	req *settingsv1.SetRequest,
 ) (*settingsv1.SetResponse, error) {
-	logger := util.Log(ctx).WithField("request", req)
-	logger.Debug("handling set/update setting")
-
 	ref := req.GetKey()
 
 	sRef, err := nb.refRepo.GetByNameAndObjectAndLanguage(ctx, ref.GetModule(),
 		ref.GetName(), ref.GetObject(), ref.GetObjectId(), ref.GetLang())
 	if err != nil {
 		if !data.ErrorIsNoRows(err) {
-			logger.WithError(err).Error("error querying for setting ref")
 			return nil, err
 		}
 
@@ -135,10 +127,6 @@ func (nb *settingsBusiness) List(
 	ctx context.Context,
 	req *settingsv1.ListRequest,
 ) ([]*settingsv1.SettingObject, error) {
-	logger := util.Log(ctx).WithField("request", req)
-
-	logger.Info("handling setting list request")
-
 	setting := req.GetKey()
 	settingsList, err := nb.refRepo.SearchRef(ctx, setting.GetModule(),
 		setting.GetName(), setting.GetObject(), setting.GetObjectId(), setting.GetLang())
