@@ -94,7 +94,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service) http.Handler {
 	sd := settingspb.File_settings_v1_settings_proto.Services().ByName("SettingsService")
 	procMap := permissions.BuildProcedureMap(sd)
 
-	functionChecker := authorizer.NewFunctionChecker(auth, "service_profile")
+	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
 	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
 
 	defaultInterceptorList, err := connectInterceptors.DefaultList(

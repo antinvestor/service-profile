@@ -114,7 +114,8 @@ func initServiceComponents(
 	}
 
 	auth := securityMan.GetAuthorizer(ctx)
-	functionChecker := authorizer.NewFunctionChecker(auth, "service_profile")
+	sd := devicepb.File_device_v1_device_proto.Services().ByName("DeviceService")
+	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
 
 	implementation := handlers.NewDeviceServer(ctx, functionChecker, deviceBusiness, presenceBusiness, keyBusiness,
 		notifyBusiness, turnBiz, cacheSvc, cfg.TURNTTL, cfg.RateLimitTURNPerMinute)

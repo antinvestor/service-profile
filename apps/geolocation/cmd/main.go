@@ -113,7 +113,8 @@ func main() { //nolint:funlen // wiring function
 	sm := svc.SecurityManager()
 
 	auth := sm.GetAuthorizer(ctx)
-	functionChecker := authorizer.NewFunctionChecker(auth, "service_profile")
+	sd := geolocationv1.File_geolocation_v1_geolocation_proto.Services().ByName("GeolocationService")
+	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
 
 	geoServer := handlers.NewGeolocationServer(
 		svc, functionChecker, ingestionBiz, areaBiz, routeBiz, proximityBiz, trackBiz, metrics,
