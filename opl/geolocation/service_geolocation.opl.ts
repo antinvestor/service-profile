@@ -9,7 +9,7 @@ class tenancy_access implements Namespace {
   }
 }
 
-class service_profile implements Namespace {
+class service_geolocation implements Namespace {
   related: {
     owner: profile_user[]
     admin: profile_user[]
@@ -18,13 +18,13 @@ class service_profile implements Namespace {
     member: profile_user[]
     service: (profile_user | tenancy_access)[]
 
-    granted_location_ingest: (profile_user | service_profile)[]
-    granted_area_view: (profile_user | service_profile)[]
-    granted_area_manage: (profile_user | service_profile)[]
-    granted_route_view: (profile_user | service_profile)[]
-    granted_route_manage: (profile_user | service_profile)[]
-    granted_track_view: (profile_user | service_profile)[]
-    granted_nearby_view: (profile_user | service_profile)[]
+    granted_location_ingest: (profile_user | service_geolocation)[]
+    granted_area_view: (profile_user | service_geolocation)[]
+    granted_area_manage: (profile_user | service_geolocation)[]
+    granted_route_view: (profile_user | service_geolocation)[]
+    granted_route_manage: (profile_user | service_geolocation)[]
+    granted_track_view: (profile_user | service_geolocation)[]
+    granted_nearby_view: (profile_user | service_geolocation)[]
   }
 
   permits = {
