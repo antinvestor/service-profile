@@ -26,7 +26,7 @@ VALUES
     ('d75qclkpf2t1uum8ij5g', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
      '{"name": "service-notification", "description": "Notification service"}'),
     ('d75qclkpf2t1uum8ij60', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
-     '{"name": "service-devices", "description": "Devices service"}'),
+     '{"name": "service-device", "description": "Devices service"}'),
     ('d75qclkpf2t1uum8ij6g', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
      '{"name": "service-setting", "description": "Settings service"}'),
     ('d75qclkpf2t1uum8ij70', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
