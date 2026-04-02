@@ -180,16 +180,9 @@ func (pb *profileBusiness) GetByID(
 
 func (pb *profileBusiness) SearchProfile(ctx context.Context,
 	request *profilev1.SearchRequest) (workerpool.JobResultPipe[[]*models.Profile], error) {
-	profileID := ""
-	claims := security.ClaimsFromContext(ctx)
-	if claims != nil {
-		profileID, _ = claims.GetSubject()
-	}
-
 	query := data.NewSearchQuery(
 		data.WithSearchLimit(int(request.GetCount())),
 		data.WithSearchOffset(int(request.GetPage())),
-		data.WithSearchFiltersAndByValue(map[string]any{"profile_id": profileID}),
 		data.WithSearchFiltersOrByValue(map[string]any{
 			"searchable @@ websearch_to_tsquery( 'english', ?) ": request.GetQuery(),
 		}))
