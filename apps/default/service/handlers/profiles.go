@@ -208,7 +208,7 @@ func (ps *ProfileServer) AddAddress(ctx context.Context,
 	request *connect.Request[profilev1.AddAddressRequest]) (*connect.Response[profilev1.AddAddressResponse], error) {
 	claims := security.ClaimsFromContext(ctx)
 	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
-		if err := ps.checker.Check(ctx, "contacts_manage"); err != nil {
+		if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
@@ -227,7 +227,7 @@ func (ps *ProfileServer) AddContact(
 ) (*connect.Response[profilev1.AddContactResponse], error) {
 	claims := security.ClaimsFromContext(ctx)
 	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
-		if err := ps.checker.Check(ctx, "contacts_manage"); err != nil {
+		if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
@@ -339,7 +339,7 @@ func (ps *ProfileServer) RemoveContact(
 ) (*connect.Response[profilev1.RemoveContactResponse], error) {
 	claims := security.ClaimsFromContext(ctx)
 	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
-		if err := ps.checker.Check(ctx, "contacts_manage"); err != nil {
+		if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
@@ -436,7 +436,7 @@ func (ps *ProfileServer) AddRelationship(
 ) (*connect.Response[profilev1.AddRelationshipResponse], error) {
 	claims := security.ClaimsFromContext(ctx)
 	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
-		if err := ps.checker.Check(ctx, "relationships_manage"); err != nil {
+		if err := ps.checker.Check(ctx, "relationship_manage"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
@@ -472,7 +472,7 @@ func (ps *ProfileServer) ListRelationships(
 ) error {
 	claims := security.ClaimsFromContext(ctx)
 	if sub, _ := claims.GetSubject(); sub != request.Msg.GetPeerId() {
-		if err := ps.checker.Check(ctx, "relationships_manage"); err != nil {
+		if err := ps.checker.Check(ctx, "relationship_manage"); err != nil {
 			return authorizer.ToConnectError(err)
 		}
 	}

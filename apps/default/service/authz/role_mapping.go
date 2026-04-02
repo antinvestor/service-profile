@@ -13,9 +13,9 @@ const (
 	PermissionProfileCreate       = "profile_create"
 	PermissionProfileUpdate       = "profile_update"
 	PermissionProfilesMerge       = "profile_merge"
-	PermissionContactsManage      = "contacts_manage"
+	PermissionContactsManage      = "contact_manage"
 	PermissionRosterManage        = "roster_manage"
-	PermissionRelationshipsManage = "relationships_manage"
+	PermissionRelationshipsManage = "relationship_manage"
 )
 
 const (

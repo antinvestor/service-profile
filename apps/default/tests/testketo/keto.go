@@ -61,9 +61,9 @@ class service_profile implements Namespace {
     granted_profile_create: (profile_user | service_profile)[]
     granted_profile_update: (profile_user | service_profile)[]
     granted_profile_merge: (profile_user | service_profile)[]
-    granted_contacts_manage: (profile_user | service_profile)[]
+    granted_contact_manage: (profile_user | service_profile)[]
     granted_roster_manage: (profile_user | service_profile)[]
-    granted_relationships_manage: (profile_user | service_profile)[]
+    granted_relationship_manage: (profile_user | service_profile)[]
     granted_devices_manage: (profile_user | service_profile)[]
     granted_devices_view: (profile_user | service_profile)[]
     granted_geolocation_manage: (profile_user | service_profile)[]
@@ -101,11 +101,11 @@ class service_profile implements Namespace {
       this.related.admin.includes(ctx.subject) ||
       this.related.granted_profile_merge.includes(ctx.subject),
 
-    contacts_manage: (ctx: Context): boolean =>
+    contact_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.granted_contacts_manage.includes(ctx.subject),
+      this.related.granted_contact_manage.includes(ctx.subject),
 
     roster_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
@@ -113,11 +113,11 @@ class service_profile implements Namespace {
       this.related.admin.includes(ctx.subject) ||
       this.related.granted_roster_manage.includes(ctx.subject),
 
-    relationships_manage: (ctx: Context): boolean =>
+    relationship_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.granted_relationships_manage.includes(ctx.subject),
+      this.related.granted_relationship_manage.includes(ctx.subject),
 
     devices_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
