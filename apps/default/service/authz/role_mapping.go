@@ -13,7 +13,7 @@ const (
 	PermissionProfileCreate       = "profile_create"
 	PermissionProfileUpdate       = "profile_update"
 	PermissionProfilesMerge       = "profile_merge"
-	PermissionContactsManage      = "contacts_manage"
+	PermissionContactManage       = "contact_manage"
 	PermissionRosterManage        = "roster_manage"
 	PermissionRelationshipsManage = "relationships_manage"
 )
@@ -38,17 +38,17 @@ func RolePermissions() map[string][]string {
 	return map[string][]string{
 		RoleOwner: {
 			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
-			PermissionProfilesMerge, PermissionContactsManage, PermissionRosterManage,
+			PermissionProfilesMerge, PermissionContactManage, PermissionRosterManage,
 			PermissionRelationshipsManage,
 		},
 		RoleAdmin: {
 			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
-			PermissionProfilesMerge, PermissionContactsManage, PermissionRosterManage,
+			PermissionProfilesMerge, PermissionContactManage, PermissionRosterManage,
 			PermissionRelationshipsManage,
 		},
 		RoleOperator: {
 			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
-			PermissionContactsManage, PermissionRosterManage,
+			PermissionContactManage, PermissionRosterManage,
 		},
 		RoleViewer: {
 			PermissionProfileView,
@@ -58,7 +58,7 @@ func RolePermissions() map[string][]string {
 		},
 		RoleService: {
 			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
-			PermissionProfilesMerge, PermissionContactsManage, PermissionRosterManage,
+			PermissionProfilesMerge, PermissionContactManage, PermissionRosterManage,
 			PermissionRelationshipsManage,
 		},
 	}

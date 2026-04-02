@@ -9,7 +9,7 @@ class tenancy_access implements Namespace {
   }
 }
 
-class service_settings implements Namespace {
+class service_setting implements Namespace {
   related: {
     owner: profile_user[]
     admin: profile_user[]
@@ -18,8 +18,8 @@ class service_settings implements Namespace {
     member: profile_user[]
     service: (profile_user | tenancy_access)[]
 
-    granted_setting_view: (profile_user | service_settings)[]
-    granted_setting_manage: (profile_user | service_settings)[]
+    granted_setting_view: (profile_user | service_setting)[]
+    granted_setting_manage: (profile_user | service_setting)[]
   }
 
   permits = {
