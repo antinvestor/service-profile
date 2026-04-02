@@ -3,6 +3,7 @@
 /// Provides Geolocation service functionality using Connect RPC protocol.
 library;
 
+export 'src/client.dart';
 export 'src/geolocation/v1/geolocation.connect.client.dart';
 export 'src/geolocation/v1/geolocation.connect.spec.dart';
 export 'src/geolocation/v1/geolocation.pb.dart';
