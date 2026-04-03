@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 )
 
@@ -74,6 +75,10 @@ var bootstrapProfiles = []bootstrapProfile{ //nolint:gochecknoglobals // bootstr
 // adds the contacts since they require application-level encryption.
 // Safe to call multiple times — skips profiles that already have contacts.
 func SeedBootstrapContacts(ctx context.Context, pb ProfileBusiness, cb ContactBusiness) error {
+	// Skip tenancy scoping — bootstrap profiles have no tenant/partition in
+	// the migration context, and the seed must be able to read all profiles
+	// regardless of tenancy.
+	ctx = security.SkipTenancyChecksOnClaims(ctx)
 	log := util.Log(ctx)
 
 	var firstErr error
