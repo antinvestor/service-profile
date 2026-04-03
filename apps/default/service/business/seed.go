@@ -103,12 +103,33 @@ func seedProfileContact(
 		return nil
 	}
 
-	// Skip if contact already linked.
+	// Skip if the bootstrap profile already owns a contact.
 	contacts, err := cb.GetByProfile(ctx, bp.ProfileID)
 	if err == nil && len(contacts) > 0 {
 		return nil
 	}
 
+	// Check whether the contact detail already exists (e.g. a previous login
+	// auto-created a profile and registered the same email). If so, reassign
+	// the existing contact to the bootstrap profile rather than creating a
+	// duplicate that would collide on the unique lookup-token index.
+	existing, _ := cb.GetByDetail(ctx, bp.Contact)
+	if len(existing) > 0 {
+		contact := existing[0]
+		if contact.ProfileID != bp.ProfileID {
+			log.WithField("profile_id", bp.ProfileID).
+				WithField("contact_id", contact.GetID()).
+				WithField("old_profile_id", contact.ProfileID).
+				Info("claiming existing contact for bootstrap profile")
+
+			if _, updateErr := cb.UpdateContact(ctx, contact.GetID(), bp.ProfileID, nil); updateErr != nil {
+				return updateErr
+			}
+		}
+		return nil
+	}
+
+	// No existing contact — create a fresh one and link it.
 	contact, err := cb.CreateContact(ctx, bp.Contact, data.JSONMap{"source": "seed"})
 	if err != nil {
 		return err
