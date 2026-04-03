@@ -63,15 +63,18 @@ func main() {
 	}
 
 	// Handle database migration if requested.
-	// Seed runs immediately after migration succeeds so that bootstrap
-	// profiles have their encrypted contacts before the service accepts
-	// traffic. This prevents a race where a user logs in between migration
-	// and the first normal startup, which would auto-create a duplicate
-	// profile for the same contact email.
 	if handleDatabaseMigration(ctx, dbManager, cfg) {
 		seedDefaultData(ctx, svc, dek)
 		return
 	}
+
+	// Ensure bootstrap profiles have their encrypted contacts.
+	// Runs on every startup but is idempotent — skips profiles that already
+	// have contacts linked. This covers the case where a migration job ran
+	// with older code that didn't include the seed step, or where the seed
+	// failed transiently (e.g. DEK not yet rotated). Without this, a user
+	// login would auto-create a duplicate profile for the same contact.
+	seedDefaultData(ctx, svc, dek)
 
 	// Setup clients and services
 	notificationCli, nErr := setupNotificationClient(ctx, cfg)
