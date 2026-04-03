@@ -3,6 +3,7 @@
 /// Provides Settings service functionality using Connect RPC protocol.
 library;
 
+export 'src/client.dart';
 export 'src/settings/v1/settings.connect.client.dart';
 export 'src/settings/v1/settings.connect.spec.dart';
 export 'src/settings/v1/settings.pb.dart';
