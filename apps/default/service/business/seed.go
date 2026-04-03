@@ -2,6 +2,7 @@ package business
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/util"
@@ -99,13 +100,11 @@ func seedProfileContact(
 	log := util.Log(ctx)
 
 	profile, err := pb.GetByID(ctx, bp.ProfileID)
-	if err != nil {
+	if err != nil || profile == nil {
 		log.WithError(err).WithField("profile_id", bp.ProfileID).
-			Warn("bootstrap profile not found — run migration first")
-		return nil
-	}
-	if profile == nil {
-		return nil
+			WithField("contact", bp.Contact).
+			Error("bootstrap profile not found — SQL migration must create it before seed runs")
+		return fmt.Errorf("bootstrap profile %s not found: %w", bp.ProfileID, err)
 	}
 
 	// Skip if the bootstrap profile already owns a contact.
