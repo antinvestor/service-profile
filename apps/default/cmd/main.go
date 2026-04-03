@@ -57,8 +57,20 @@ func main() {
 
 	dbManager := svc.DatastoreManager()
 
-	// Handle database migration if requested
+	// Setup DEK early — needed by both migration seed and normal startup.
+	dek, dekErr := decodeDEK(cfg)
+	if dekErr != nil {
+		log.WithError(dekErr).Fatal("main -- Could not decode DEK encryption keys")
+	}
+
+	// Handle database migration if requested.
+	// Seed runs immediately after migration succeeds so that bootstrap
+	// profiles have their encrypted contacts before the service accepts
+	// traffic. This prevents a race where a user logs in between migration
+	// and the first normal startup, which would auto-create a duplicate
+	// profile for the same contact email.
 	if handleDatabaseMigration(ctx, dbManager, cfg) {
+		seedDefaultData(ctx, svc, dek)
 		return
 	}
 
@@ -68,12 +80,8 @@ func main() {
 		log.WithError(nErr).Fatal("main -- Could not setup notification svc")
 	}
 
-	dek, dekErr := decodeDEK(cfg)
-	if dekErr != nil {
-		log.WithError(dekErr).Fatal("main -- Could not decode DEK encryption keys")
-	}
-
-	// Seed default data (system bot contact) after migration creates the profile row
+	// Seed on normal startup as well — idempotent, catches any contacts
+	// that failed to seed during migration (e.g. DEK not yet available).
 	seedDefaultData(ctx, svc, dek)
 
 	// Setup Connect server
