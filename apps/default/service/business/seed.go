@@ -75,14 +75,19 @@ var bootstrapProfiles = []bootstrapProfile{ //nolint:gochecknoglobals // bootstr
 func SeedBootstrapContacts(ctx context.Context, pb ProfileBusiness, cb ContactBusiness) error {
 	log := util.Log(ctx)
 
+	var firstErr error
 	for _, bp := range bootstrapProfiles {
 		if err := seedProfileContact(ctx, pb, cb, bp); err != nil {
 			log.WithError(err).WithField("profile_id", bp.ProfileID).
-				Warn("failed to seed bootstrap contact — will retry on next startup")
+				WithField("contact", bp.Contact).
+				Error("failed to seed bootstrap contact")
+			if firstErr == nil {
+				firstErr = err
+			}
 		}
 	}
 
-	return nil
+	return firstErr
 }
 
 func seedProfileContact(

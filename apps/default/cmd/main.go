@@ -63,18 +63,14 @@ func main() {
 	}
 
 	// Handle database migration if requested.
+	// The seed MUST run after migration to create encrypted contacts for
+	// bootstrap profiles. Without contacts, login creates duplicate profiles.
+	// The migration job must have DEK env vars configured:
+	//   DEK_ACTIVE_KEY_ID, DEK_AES256GCM_KEY, DEK_LOOKUP_TOKEN_HMACSHA256_KEY
 	if handleDatabaseMigration(ctx, dbManager, cfg) {
 		seedDefaultData(ctx, svc, dek)
 		return
 	}
-
-	// Ensure bootstrap profiles have their encrypted contacts.
-	// Runs on every startup but is idempotent — skips profiles that already
-	// have contacts linked. This covers the case where a migration job ran
-	// with older code that didn't include the seed step, or where the seed
-	// failed transiently (e.g. DEK not yet rotated). Without this, a user
-	// login would auto-create a duplicate profile for the same contact.
-	seedDefaultData(ctx, svc, dek)
 
 	// Setup clients and services
 	notificationCli, nErr := setupNotificationClient(ctx, cfg)
@@ -198,8 +194,16 @@ func decodeDEK(cfg aconfig.ProfileConfig) (*aconfig.DEK, error) {
 }
 
 // seedDefaultData ensures bootstrap profiles have their encrypted contacts.
-// Profile rows are created by SQL migration; this adds contacts since they
-// require application-level encryption. Safe to call on every startup.
+// Profile rows are created by SQL migration; this function adds contacts
+// since they require application-level encryption (DEK).
+//
+// This runs as part of the migration job and is critical — if it fails,
+// bootstrap profiles will have no contacts and user logins will create
+// duplicate profiles. The migration job MUST have these env vars:
+//
+//	DEK_ACTIVE_KEY_ID              — identifies the active encryption key
+//	DEK_AES256GCM_KEY              — AES-256-GCM key for encrypting contact details
+//	DEK_LOOKUP_TOKEN_HMACSHA256_KEY — HMAC key for deterministic contact lookup tokens
 func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) {
 	log := util.Log(ctx)
 	cfg, _ := svc.Config().(*aconfig.ProfileConfig)
@@ -217,7 +221,7 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 	profileBiz := business.NewProfileBusiness(ctx, cfg, dek, evtsMan, contactBiz, addressBiz, profileRepo)
 
 	if err := business.SeedBootstrapContacts(ctx, profileBiz, contactBiz); err != nil {
-		log.WithError(err).Warn("failed to seed bootstrap contacts — will retry on next startup")
+		log.WithError(err).Fatal("failed to seed bootstrap contacts — migration incomplete, check DEK env vars")
 	}
 }
 
