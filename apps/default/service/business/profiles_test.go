@@ -88,7 +88,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 	t := pts.T()
 
 	requestProp, _ := structpb.NewStruct(data.JSONMap{
-		"name": "Profile Tester",
+		"au_name": "Profile Tester",
 	})
 	testcases := []struct {
 		name    string
@@ -139,10 +139,10 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByID() {
 		pbc, _ := pts.getProfileBusiness(ctx, svc)
 
 		prop1 := data.JSONMap{
-			"name": "Profile Tester Get",
+			"au_name": "Profile Tester Get",
 		}
 		prop2 := data.JSONMap{
-			"name": "Profile Tester Get 2",
+			"au_name": "Profile Tester Get 2",
 		}
 
 		for _, val := range []*profilev1.CreateRequest{
@@ -213,7 +213,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact() {
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
-			"name": "Get By Contact Test",
+			"au_name": "Get By Contact Test",
 		}
 		// Create a profile first
 		createReq := &profilev1.CreateRequest{
@@ -263,7 +263,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
-			"name": "Original Name",
+			"au_name": "Original Name",
 		}
 		// Create a profile first
 		createReq := &profilev1.CreateRequest{
@@ -279,8 +279,8 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 		}
 
 		reqProperties := data.JSONMap{
-			"name": "Updated Name",
-			"age":  "30",
+			"au_name": "Updated Name",
+			"age":     "30",
 		}
 		// Update the profile
 		updateReq := &profilev1.UpdateRequest{
@@ -295,10 +295,10 @@ func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProfile() {
 		}
 
 		updateProperties := updated.GetProperties().AsMap()
-		if updateProperties["name"] != "Updated Name" {
+		if updateProperties["au_name"] != "Updated Name" {
 			t.Errorf(
 				"UpdateProfile() name not updated, got = %v, want = %v",
-				updateProperties["name"],
+				updateProperties["au_name"],
 				"Updated Name",
 			)
 		}
@@ -317,7 +317,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
-			"name": "Target Profile",
+			"au_name": "Target Profile",
 		}
 		// Create target profile
 		targetReq := &profilev1.CreateRequest{
@@ -363,8 +363,8 @@ func (pts *ProfileTestSuite) Test_profileBusiness_MergeProfile() {
 
 		finalProps := merged.GetProperties().AsMap()
 		// Check merged properties
-		if finalProps["name"] != "Target Profile" {
-			t.Errorf("MergeProfile() original property lost, got = %v", finalProps["name"])
+		if finalProps["au_name"] != "Target Profile" {
+			t.Errorf("MergeProfile() original property lost, got = %v", finalProps["au_name"])
 		}
 
 		if finalProps["age"] != "25" {
@@ -385,7 +385,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_GetContactByID() {
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
-			"name": "Get Contact Test",
+			"au_name": "Get Contact Test",
 		}
 		// Create a profile first
 		createReq := &profilev1.CreateRequest{
@@ -430,7 +430,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_VerifyContact() {
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
-			"name": "Verify Contact Test",
+			"au_name": "Verify Contact Test",
 		}
 		// Create a profile first
 		createReq := &profilev1.CreateRequest{
@@ -471,7 +471,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CheckVerification_Success() {
 		pb, verificationRepo := pts.getProfileBusiness(ctx, svc)
 
 		properties := data.JSONMap{
-			"name": "Check Verify Test",
+			"au_name": "Check Verify Test",
 		}
 		// Create a profile and verify contact first
 		createReq := &profilev1.CreateRequest{
@@ -579,7 +579,7 @@ func (pts *ProfileTestSuite) setupVerificationForTest(
 	email string,
 ) string {
 	properties := data.JSONMap{
-		"name": "Check Verify Test",
+		"au_name": "Check Verify Test",
 	}
 	// Create a profile and verify contact first
 	createReq := &profilev1.CreateRequest{
@@ -628,7 +628,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 
 		t.Run("empty contact", func(t *testing.T) {
 			properties := data.JSONMap{
-				"name": "Invalid Contact Test",
+				"au_name": "Invalid Contact Test",
 			}
 
 			createReq := &profilev1.CreateRequest{
@@ -645,7 +645,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_EdgeCases() {
 
 		t.Run("invalid contact format", func(t *testing.T) {
 			properties := data.JSONMap{
-				"name": "Invalid Contact Test 2",
+				"au_name": "Invalid Contact Test 2",
 			}
 
 			createReq2 := &profilev1.CreateRequest{
@@ -671,7 +671,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_SearchProfile() {
 
 		// Create a profile first
 		properties := data.JSONMap{
-			"name": "Search Test User",
+			"au_name": "Search Test User",
 		}
 
 		createReq := &profilev1.CreateRequest{
@@ -712,7 +712,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_AddContact() {
 		require.Error(t, err, "AddContact should fail without claims")
 
 		// Create a profile first
-		properties := data.JSONMap{"name": "AddContact Claims Test"}
+		properties := data.JSONMap{"au_name": "AddContact Claims Test"}
 		createReq := &profilev1.CreateRequest{
 			Type:       profilev1.ProfileType_PERSON,
 			Contact:    "addcontact@testing.com",
@@ -784,7 +784,7 @@ func (pts *ProfileTestSuite) Test_profileBusiness_AddAddress() {
 
 		// Create a profile first
 		properties := data.JSONMap{
-			"name": "Address Test User",
+			"au_name": "Address Test User",
 		}
 
 		createReq := &profilev1.CreateRequest{

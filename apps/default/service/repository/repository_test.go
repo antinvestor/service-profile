@@ -142,7 +142,7 @@ func (rts *RepositoryTestSuite) TestProfileRepository_Create() {
 		require.NoError(t, err)
 
 		profile := &models.Profile{
-			Properties:    map[string]any{"name": "Test User"},
+			Properties:    map[string]any{"au_name": "Test User"},
 			ProfileTypeID: profileType.GetID(),
 		}
 		profile.GenID(ctx)

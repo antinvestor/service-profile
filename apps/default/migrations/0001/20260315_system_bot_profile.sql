@@ -9,6 +9,6 @@ VALUES (
     NOW(),
     1,
     'bjt4h376abi8cg3kgr80',  -- bot profile type
-    '{"name": "System Bot", "description": "Default bot profile for internal service accounts"}'
+    '{"au_name": "System Bot", "description": "Default bot profile for internal service accounts"}'
 )
 ON CONFLICT (id) DO NOTHING;

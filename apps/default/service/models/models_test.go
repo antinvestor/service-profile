@@ -240,7 +240,7 @@ func TestRoster_ToAPI(t *testing.T) {
 		ProfileID:  "profile-123",
 		ContactID:  contact.ID,
 		Contact:    contact,
-		Properties: data.JSONMap{"name": "Test User"},
+		Properties: data.JSONMap{"au_name": "Test User"},
 	}
 
 	result, err := roster.ToAPI(dek)
