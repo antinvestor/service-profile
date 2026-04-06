@@ -8,18 +8,16 @@ import (
 	settingspb "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
 	"connectrpc.com/connect"
 	"github.com/antinvestor/common/permissions"
+	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
+	"github.com/antinvestor/service-profile/apps/settings/service/authz"
+	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
+	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
-	"google.golang.org/protobuf/reflect/protoreflect"
-
-	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
-	"github.com/antinvestor/service-profile/apps/settings/service/authz"
-	"github.com/antinvestor/service-profile/apps/settings/service/handlers"
-	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 )
 
 func main() {
@@ -54,14 +52,11 @@ func main() {
 
 	// Register permission manifest for the settings service namespace.
 	settingsSD := settingspb.File_settings_v1_settings_proto.Services().ByName("SettingsService")
-	manifestBuilder := func(desc protoreflect.ServiceDescriptor) any {
-		return permissions.BuildManifest(desc)
-	}
 
 	// Setup HTTP handlers
 	serviceOptions := []frame.Option{
 		frame.WithHTTPHandler(connectHandler),
-		frame.WithPermissionRegistration(settingsSD, manifestBuilder),
+		frame.WithPermissionRegistration(settingsSD),
 	}
 
 	svc.Init(ctx, serviceOptions...)

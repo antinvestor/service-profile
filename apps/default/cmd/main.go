@@ -13,6 +13,12 @@ import (
 	apis "github.com/antinvestor/common"
 	"github.com/antinvestor/common/connection"
 	"github.com/antinvestor/common/permissions"
+	aconfig "github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/authz"
+	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/events"
+	"github.com/antinvestor/service-profile/apps/default/service/handlers"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -20,14 +26,6 @@ import (
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
 	"github.com/pitabwire/util"
-	"google.golang.org/protobuf/reflect/protoreflect"
-
-	aconfig "github.com/antinvestor/service-profile/apps/default/config"
-	"github.com/antinvestor/service-profile/apps/default/service/authz"
-	"github.com/antinvestor/service-profile/apps/default/service/business"
-	"github.com/antinvestor/service-profile/apps/default/service/events"
-	"github.com/antinvestor/service-profile/apps/default/service/handlers"
-	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
 //go:embed spec/profile.openapi.yaml
@@ -84,14 +82,11 @@ func main() {
 
 	// Register permission manifest for the profile service namespace.
 	profileSD := profilepb.File_profile_v1_profile_proto.Services().ByName("ProfileService")
-	manifestBuilder := func(desc protoreflect.ServiceDescriptor) any {
-		return permissions.BuildManifest(desc)
-	}
 
 	// Setup HTTP handlers
 	serviceOptions := []frame.Option{
 		frame.WithHTTPHandler(connectHandler),
-		frame.WithPermissionRegistration(profileSD, manifestBuilder),
+		frame.WithPermissionRegistration(profileSD),
 	}
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(

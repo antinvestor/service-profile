@@ -8,15 +8,6 @@ import (
 	devicepb "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
 	"github.com/antinvestor/common/permissions"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/config"
-	"github.com/pitabwire/frame/datastore"
-	"github.com/pitabwire/frame/security"
-	"github.com/pitabwire/frame/security/authorizer"
-	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
-	"github.com/pitabwire/util"
-	"google.golang.org/protobuf/reflect/protoreflect"
-
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/authz"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
@@ -24,6 +15,13 @@ import (
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/pitabwire/frame"
+	"github.com/pitabwire/frame/config"
+	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/security/authorizer"
+	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
+	"github.com/pitabwire/util"
 )
 
 func main() {
@@ -126,14 +124,9 @@ func initServiceComponents(
 		httpClientMan, deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
 	)
 
-	// Register permission manifest for the device service namespace.
-	manifestBuilder := func(desc protoreflect.ServiceDescriptor) any {
-		return permissions.BuildManifest(desc)
-	}
-
 	return []frame.Option{
 		frame.WithHTTPHandler(connectHandler),
-		frame.WithPermissionRegistration(sd, manifestBuilder),
+		frame.WithPermissionRegistration(sd),
 		frame.WithRegisterSubscriber(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis, analysisHandler),
 		frame.WithRegisterPublisher(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis),
 	}
