@@ -15,6 +15,7 @@ import (
 	"github.com/pitabwire/frame/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/authz"
@@ -125,8 +126,14 @@ func initServiceComponents(
 		httpClientMan, deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
 	)
 
+	// Register permission manifest for the device service namespace.
+	manifestBuilder := func(desc protoreflect.ServiceDescriptor) any {
+		return permissions.BuildManifest(desc)
+	}
+
 	return []frame.Option{
 		frame.WithHTTPHandler(connectHandler),
+		frame.WithPermissionRegistration(sd, manifestBuilder),
 		frame.WithRegisterSubscriber(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis, analysisHandler),
 		frame.WithRegisterPublisher(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis),
 	}

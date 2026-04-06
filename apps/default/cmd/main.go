@@ -20,6 +20,7 @@ import (
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
 	"github.com/pitabwire/util"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/authz"
@@ -81,9 +82,17 @@ func main() {
 	// Setup Connect server
 	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli)
 
+	// Register permission manifest for the profile service namespace.
+	profileSD := profilepb.File_profile_v1_profile_proto.Services().ByName("ProfileService")
+	manifestBuilder := func(desc protoreflect.ServiceDescriptor) any {
+		return permissions.BuildManifest(desc)
+	}
+
 	// Setup HTTP handlers
-	// Start with datastore option
-	serviceOptions := []frame.Option{frame.WithHTTPHandler(connectHandler)}
+	serviceOptions := []frame.Option{
+		frame.WithHTTPHandler(connectHandler),
+		frame.WithPermissionRegistration(profileSD, manifestBuilder),
+	}
 
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueRelationshipConnectName,

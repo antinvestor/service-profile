@@ -14,6 +14,7 @@ import (
 	"github.com/pitabwire/frame/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
 	"github.com/antinvestor/service-profile/apps/settings/service/authz"
@@ -51,9 +52,17 @@ func main() {
 	// Setup Connect server
 	connectHandler := setupConnectServer(ctx, svc)
 
+	// Register permission manifest for the settings service namespace.
+	settingsSD := settingspb.File_settings_v1_settings_proto.Services().ByName("SettingsService")
+	manifestBuilder := func(desc protoreflect.ServiceDescriptor) any {
+		return permissions.BuildManifest(desc)
+	}
+
 	// Setup HTTP handlers
-	// Start with datastore option
-	serviceOptions := []frame.Option{frame.WithHTTPHandler(connectHandler)}
+	serviceOptions := []frame.Option{
+		frame.WithHTTPHandler(connectHandler),
+		frame.WithPermissionRegistration(settingsSD, manifestBuilder),
+	}
 
 	svc.Init(ctx, serviceOptions...)
 
