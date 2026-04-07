@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS location_points (
     id VARCHAR(50) NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     modified_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_by VARCHAR(50) DEFAULT '',
+    modified_by VARCHAR(50) DEFAULT '',
     version INTEGER NOT NULL DEFAULT 0,
     tenant_id VARCHAR(50),
     partition_id VARCHAR(50),

@@ -132,9 +132,10 @@ func main() { //nolint:funlen // wiring function
 	mux.Handle("/openapi.yaml", handlers.OpenAPIHandler())
 	mux.Handle("/", rl.Middleware(connectHandler))
 
-	// Register event consumers and start service.
+	// Register permission manifest and event consumers, then start service.
 	svc.Init(ctx,
 		frame.WithHTTPHandler(mux),
+		frame.WithPermissionRegistration(sd),
 		frame.WithRegisterEvents(
 			events.NewLocationPointConsumer(
 				pointRepo, proximityBiz, geofenceBiz, routeDeviationBiz, metrics,
