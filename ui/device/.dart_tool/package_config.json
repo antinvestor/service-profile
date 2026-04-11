@@ -26,8 +26,8 @@
       "languageVersion": "3.7"
     },
     {
-      "name": "antinvestor_api_profile",
-      "rootUri": "file:///home/j/.pub-cache/hosted/pub.dev/antinvestor_api_profile-1.53.0",
+      "name": "antinvestor_api_device",
+      "rootUri": "file:///home/j/.pub-cache/hosted/pub.dev/antinvestor_api_device-1.53.13",
       "packageUri": "lib/",
       "languageVersion": "3.3"
     },
@@ -848,7 +848,7 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "antinvestor_ui_profile",
+      "name": "antinvestor_ui_device",
       "rootUri": "../",
       "packageUri": "lib/",
       "languageVersion": "3.11"

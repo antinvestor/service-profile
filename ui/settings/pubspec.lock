@@ -33,14 +33,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.52.0"
-  antinvestor_api_profile:
+  antinvestor_api_settings:
     dependency: "direct main"
     description:
-      name: antinvestor_api_profile
-      sha256: fb540379b01a5c2b899a74a4ef0c8ceec96ff43846d9b18488a628cf0ab734c5
+      name: antinvestor_api_settings
+      sha256: f54a36f15398b668ffe190ff16ac8b4aac820ee03f9df884826bb1b3ed73b5de
       url: "https://pub.dev"
     source: hosted
-    version: "1.53.0"
+    version: "1.52.1"
   antinvestor_ui_core:
     dependency: "direct main"
     description:
@@ -226,7 +226,7 @@ packages:
     source: hosted
     version: "3.0.7"
   csv:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: csv
       sha256: "2e0a52fb729f2faacd19c9c0c954ff450bba37aa8ab999410309e2342e7013a2"

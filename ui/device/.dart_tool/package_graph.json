@@ -1,17 +1,16 @@
 {
   "roots": [
-    "antinvestor_ui_profile"
+    "antinvestor_ui_device"
   ],
   "packages": [
     {
-      "name": "antinvestor_ui_profile",
+      "name": "antinvestor_ui_device",
       "version": "0.1.0",
       "dependencies": [
         "antinvestor_api_common",
-        "antinvestor_api_profile",
+        "antinvestor_api_device",
         "antinvestor_ui_core",
         "connectrpc",
-        "csv",
         "flutter",
         "flutter_riverpod",
         "go_router",
@@ -146,11 +145,6 @@
       ]
     },
     {
-      "name": "csv",
-      "version": "8.0.0",
-      "dependencies": []
-    },
-    {
       "name": "connectrpc",
       "version": "1.0.0",
       "dependencies": [
@@ -170,8 +164,8 @@
       ]
     },
     {
-      "name": "antinvestor_api_profile",
-      "version": "1.53.0",
+      "name": "antinvestor_api_device",
+      "version": "1.53.13",
       "dependencies": [
         "antinvestor_api_common",
         "connectrpc",
@@ -716,6 +710,11 @@
         "flutter_secure_storage_windows",
         "meta"
       ]
+    },
+    {
+      "name": "csv",
+      "version": "8.0.0",
+      "dependencies": []
     },
     {
       "name": "connectivity_plus",
