@@ -1,5 +1,6 @@
 import 'package:antinvestor_api_settings/antinvestor_api_settings.dart';
 import 'package:antinvestor_ui_core/navigation/nav_items.dart';
+import 'package:antinvestor_ui_core/permissions/permission_manifest.dart';
 import 'package:antinvestor_ui_core/routing/route_module.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -58,18 +59,21 @@ class SettingsRouteModule extends RouteModule {
         icon: Icons.settings_outlined,
         activeIcon: Icons.settings,
         route: '/settings',
+        requiredPermissions: {'setting_view'},
         children: [
           NavItem(
             id: 'settings-list',
             label: 'All Settings',
             icon: Icons.list,
             route: '/settings',
+            requiredPermissions: {'setting_view'},
           ),
           NavItem(
             id: 'settings-bulk-edit',
             label: 'Bulk Edit',
             icon: Icons.edit_note,
             route: '/settings/bulk-edit',
+            requiredPermissions: {'setting_update'},
           ),
         ],
       ),
@@ -78,8 +82,25 @@ class SettingsRouteModule extends RouteModule {
 
   @override
   Map<String, Set<String>> get routePermissions => {
-        '/settings': {'settings:read', 'admin'},
-        '/settings/detail': {'settings:read', 'admin'},
-        '/settings/bulk-edit': {'settings:write', 'admin'},
+        '/settings': {'setting_view'},
+        '/settings/detail': {'setting_view'},
+        '/settings/bulk-edit': {'setting_update'},
       };
+
+  @override
+  PermissionManifest get permissionManifest => const PermissionManifest(
+        namespace: 'service_setting',
+        permissions: [
+          PermissionEntry(
+            key: 'setting_view',
+            label: 'View Settings',
+            scope: PermissionScope.service,
+          ),
+          PermissionEntry(
+            key: 'setting_update',
+            label: 'Update Settings',
+            scope: PermissionScope.action,
+          ),
+        ],
+      );
 }

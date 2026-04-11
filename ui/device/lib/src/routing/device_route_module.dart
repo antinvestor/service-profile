@@ -1,5 +1,6 @@
 import 'package:antinvestor_api_device/antinvestor_api_device.dart';
 import 'package:antinvestor_ui_core/navigation/nav_items.dart';
+import 'package:antinvestor_ui_core/permissions/permission_manifest.dart';
 import 'package:antinvestor_ui_core/routing/route_module.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -57,18 +58,21 @@ class DeviceRouteModule extends RouteModule {
         icon: Icons.devices_outlined,
         activeIcon: Icons.devices,
         route: '/devices',
+        requiredPermissions: {'device_view'},
         children: [
           NavItem(
             id: 'devices-list',
             label: 'All Devices',
             icon: Icons.list,
             route: '/devices',
+            requiredPermissions: {'device_view'},
           ),
           NavItem(
             id: 'devices-link',
             label: 'Register Device',
             icon: Icons.add_circle_outline,
             route: '/devices/link',
+            requiredPermissions: {'device_create'},
           ),
         ],
       ),
@@ -77,8 +81,45 @@ class DeviceRouteModule extends RouteModule {
 
   @override
   Map<String, Set<String>> get routePermissions => {
-        '/devices': {'device:read', 'admin'},
-        '/devices/detail': {'device:read', 'admin'},
-        '/devices/link': {'device:write', 'admin'},
+        '/devices': {'device_view'},
+        '/devices/detail': {'device_view'},
+        '/devices/link': {'device_create'},
       };
+
+  @override
+  PermissionManifest get permissionManifest => const PermissionManifest(
+        namespace: 'service_device',
+        permissions: [
+          PermissionEntry(
+            key: 'device_view',
+            label: 'View Devices',
+            scope: PermissionScope.service,
+          ),
+          PermissionEntry(
+            key: 'device_create',
+            label: 'Create Devices',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'device_update',
+            label: 'Update Devices',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'device_remove',
+            label: 'Remove Devices',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'device_key_manage',
+            label: 'Manage Device Keys',
+            scope: PermissionScope.feature,
+          ),
+          PermissionEntry(
+            key: 'device_log_view',
+            label: 'View Device Logs',
+            scope: PermissionScope.feature,
+          ),
+        ],
+      );
 }

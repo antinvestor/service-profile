@@ -1,4 +1,5 @@
 import 'package:antinvestor_ui_core/navigation/nav_items.dart';
+import 'package:antinvestor_ui_core/permissions/permission_manifest.dart';
 import 'package:antinvestor_ui_core/routing/route_module.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -87,11 +88,71 @@ class ProfileRouteModule extends RouteModule {
           icon: Icons.people_outline,
           activeIcon: Icons.people,
           route: '/profiles',
+          requiredPermissions: {'profile_view'},
         ),
       ];
 
   @override
   Map<String, Set<String>> get routePermissions => {
-        '/profiles': {},
+        '/profiles': {'profile_view'},
+        '/profiles/new': {'profile_create'},
+        '/profiles/merge': {'profile_merge'},
       };
+
+  @override
+  PermissionManifest get permissionManifest => const PermissionManifest(
+        namespace: 'service_profile',
+        permissions: [
+          PermissionEntry(
+            key: 'profile_view',
+            label: 'View Profiles',
+            scope: PermissionScope.service,
+          ),
+          PermissionEntry(
+            key: 'profile_create',
+            label: 'Create Profiles',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'profile_update',
+            label: 'Update Profiles',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'profile_merge',
+            label: 'Merge Profiles',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'contact_manage',
+            label: 'Manage Contacts',
+            scope: PermissionScope.feature,
+          ),
+          PermissionEntry(
+            key: 'roster_view',
+            label: 'View Roster',
+            scope: PermissionScope.feature,
+          ),
+          PermissionEntry(
+            key: 'roster_manage',
+            label: 'Manage Roster',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'address_manage',
+            label: 'Manage Addresses',
+            scope: PermissionScope.feature,
+          ),
+          PermissionEntry(
+            key: 'relationship_view',
+            label: 'View Relationships',
+            scope: PermissionScope.feature,
+          ),
+          PermissionEntry(
+            key: 'relationship_manage',
+            label: 'Manage Relationships',
+            scope: PermissionScope.action,
+          ),
+        ],
+      );
 }

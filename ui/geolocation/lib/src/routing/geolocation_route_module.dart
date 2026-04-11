@@ -1,4 +1,5 @@
 import 'package:antinvestor_ui_core/navigation/nav_items.dart';
+import 'package:antinvestor_ui_core/permissions/permission_manifest.dart';
 import 'package:antinvestor_ui_core/routing/route_module.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -79,6 +80,7 @@ class GeolocationRouteModule extends RouteModule {
           icon: Icons.map_outlined,
           activeIcon: Icons.map,
           route: '/geo/areas',
+          requiredPermissions: const {'area_view', 'route_view'},
           children: [
             const NavItem(
               id: 'geo-areas',
@@ -86,6 +88,7 @@ class GeolocationRouteModule extends RouteModule {
               icon: Icons.layers_outlined,
               activeIcon: Icons.layers,
               route: '/geo/areas',
+              requiredPermissions: {'area_view'},
             ),
             const NavItem(
               id: 'geo-routes',
@@ -93,6 +96,7 @@ class GeolocationRouteModule extends RouteModule {
               icon: Icons.route_outlined,
               activeIcon: Icons.route,
               route: '/geo/routes',
+              requiredPermissions: {'route_view'},
             ),
             const NavItem(
               id: 'geo-events',
@@ -100,6 +104,7 @@ class GeolocationRouteModule extends RouteModule {
               icon: Icons.event_note_outlined,
               activeIcon: Icons.event_note,
               route: '/geo/events',
+              requiredPermissions: {'event_view'},
             ),
           ],
         ),
@@ -107,9 +112,48 @@ class GeolocationRouteModule extends RouteModule {
 
   @override
   Map<String, Set<String>> get routePermissions => {
-        '/geo/areas': {},
-        '/geo/routes': {},
-        '/geo/track': {},
-        '/geo/events': {},
+        '/geo/areas': {'area_view'},
+        '/geo/areas/new': {'area_manage'},
+        '/geo/routes': {'route_view'},
+        '/geo/routes/new': {'route_manage'},
+        '/geo/track': {'location_view'},
+        '/geo/events': {'event_view'},
       };
+
+  @override
+  PermissionManifest get permissionManifest => const PermissionManifest(
+        namespace: 'service_geolocation',
+        permissions: [
+          PermissionEntry(
+            key: 'area_view',
+            label: 'View Areas',
+            scope: PermissionScope.feature,
+          ),
+          PermissionEntry(
+            key: 'area_manage',
+            label: 'Manage Areas',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'route_view',
+            label: 'View Routes',
+            scope: PermissionScope.feature,
+          ),
+          PermissionEntry(
+            key: 'route_manage',
+            label: 'Manage Routes',
+            scope: PermissionScope.action,
+          ),
+          PermissionEntry(
+            key: 'location_view',
+            label: 'View Locations',
+            scope: PermissionScope.feature,
+          ),
+          PermissionEntry(
+            key: 'event_view',
+            label: 'View Geo Events',
+            scope: PermissionScope.feature,
+          ),
+        ],
+      );
 }
