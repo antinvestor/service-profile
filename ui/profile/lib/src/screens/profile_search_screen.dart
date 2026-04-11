@@ -63,6 +63,10 @@ class _ProfileSearchScreenState extends ConsumerState<ProfileSearchScreen> {
         .toList();
     final csv = const CsvEncoder().convert([headers, ...rows]);
     Clipboard.setData(ClipboardData(text: csv));
+
+    // Audit: log the export event
+    debugPrint('[AUDIT] Exported ${rows.length} Profiles as csv');
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

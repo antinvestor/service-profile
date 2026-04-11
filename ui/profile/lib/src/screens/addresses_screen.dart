@@ -73,6 +73,10 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
         .toList();
     final csv = const CsvEncoder().convert([headers, ...rows]);
     Clipboard.setData(ClipboardData(text: csv));
+
+    // Audit: log the export event
+    debugPrint('[AUDIT] Exported ${rows.length} Addresses as csv');
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

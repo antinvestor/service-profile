@@ -1,12 +1,14 @@
+import 'dart:convert';
+
 import 'package:antinvestor_api_device/antinvestor_api_device.dart';
+import 'package:antinvestor_ui_core/widgets/admin_entity_list_page.dart';
 import 'package:antinvestor_ui_core/widgets/error_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/device_key_providers.dart';
-import '../widgets/device_key_tile.dart';
 
-/// Screen displaying keys associated with a device.
+/// Screen displaying keys associated with a device as a paginated DataTable.
 /// Supports adding and removing keys.
 class DeviceKeysScreen extends ConsumerStatefulWidget {
   const DeviceKeysScreen({
@@ -21,105 +23,118 @@ class DeviceKeysScreen extends ConsumerStatefulWidget {
 }
 
 class _DeviceKeysScreenState extends ConsumerState<DeviceKeysScreen> {
+  String _keyTypeLabel(KeyType type) {
+    switch (type) {
+      case KeyType.MATRIX_KEY:
+        return 'Matrix';
+      case KeyType.NOTIFICATION_KEY:
+        return 'Notification';
+      case KeyType.FCM_TOKEN:
+        return 'FCM';
+      case KeyType.CURVE25519_KEY:
+        return 'Curve25519';
+      case KeyType.ED25519_KEY:
+        return 'Ed25519';
+      case KeyType.PICKLE_KEY:
+        return 'Pickle';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  String _truncateKey(KeyObject keyObj) {
+    try {
+      final decoded = utf8.decode(keyObj.key, allowMalformed: true);
+      if (decoded.length <= 20) return decoded;
+      return '${decoded.substring(0, 17)}...';
+    } catch (_) {
+      final hex = keyObj.key
+          .take(10)
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .join();
+      return '$hex...';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final asyncKeys = ref.watch(deviceKeysProvider(widget.deviceId));
 
-    return Column(
-      children: [
-        // Header with add button
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-          child: Row(
-            children: [
-              Text(
-                'Device Keys',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              FilledButton.tonalIcon(
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Add Key'),
-                onPressed: () => _showAddKeyDialog(context),
-              ),
-            ],
-          ),
-        ),
-
-        // Keys list
-        Expanded(
-          child: asyncKeys.when(
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: theme.colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(friendlyError(error)),
-                  const SizedBox(height: 12),
-                  FilledButton.tonal(
-                    onPressed: () => ref.invalidate(
-                      deviceKeysProvider(widget.deviceId),
-                    ),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+    return asyncKeys.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 48,
+                color: Theme.of(context).colorScheme.error),
+            const SizedBox(height: 16),
+            Text(friendlyError(error)),
+            const SizedBox(height: 12),
+            FilledButton.tonal(
+              onPressed: () =>
+                  ref.invalidate(deviceKeysProvider(widget.deviceId)),
+              child: const Text('Retry'),
             ),
-            data: (keys) {
-              if (keys.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.vpn_key_off,
-                          size: 28,
-                          color: theme.colorScheme.primary.withAlpha(160),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No keys registered for this device.',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
+          ],
+        ),
+      ),
+      data: (keys) => _buildTable(keys),
+    );
+  }
 
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                itemCount: keys.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  final keyObj = keys[index];
-                  return DeviceKeyTile(
-                    keyObject: keyObj,
-                    onRemove: () => _confirmRemoveKey(context, keyObj),
-                  );
-                },
-              );
-            },
-          ),
+  Widget _buildTable(List<KeyObject> keys) {
+    return AdminEntityListPage<KeyObject>(
+      title: 'Device Keys',
+      breadcrumbs: const ['Home', 'Devices', 'Keys'],
+      columns: const [
+        DataColumn(label: Text('Type')),
+        DataColumn(label: Text('Key')),
+        DataColumn(label: Text('Created')),
+        DataColumn(label: Text('Expires')),
+        DataColumn(label: Text('Active')),
+      ],
+      items: keys,
+      searchHint: 'Search keys...',
+      onAdd: () => _showAddKeyDialog(context),
+      addLabel: 'Add Key',
+      rowBuilder: (keyObj, selected, onSelect) {
+        return DataRow(
+          selected: selected,
+          onSelectChanged: (_) => onSelect(),
+          cells: [
+            DataCell(Text(_keyTypeLabel(keyObj.keyType))),
+            DataCell(Text(
+              _truncateKey(keyObj),
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+            )),
+            DataCell(Text(keyObj.createdAt)),
+            DataCell(Text(
+              keyObj.expiresAt.isNotEmpty ? keyObj.expiresAt : '-',
+            )),
+            DataCell(Icon(
+              keyObj.isActive ? Icons.check_circle : Icons.cancel,
+              color: keyObj.isActive ? Colors.green : Colors.red,
+              size: 18,
+            )),
+          ],
+        );
+      },
+      exportRow: (keyObj) => [
+        _keyTypeLabel(keyObj.keyType),
+        keyObj.id,
+        keyObj.createdAt,
+        keyObj.expiresAt,
+        keyObj.isActive ? 'Active' : 'Inactive',
+      ],
+      onExport: (format, count) =>
+          debugPrint('Exported $count Device Keys rows as $format'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, size: 20),
+          tooltip: 'Refresh',
+          onPressed: () =>
+              ref.invalidate(deviceKeysProvider(widget.deviceId)),
         ),
       ],
     );
@@ -207,53 +222,5 @@ class _DeviceKeysScreenState extends ConsumerState<DeviceKeysScreen> {
       }
     }
     keyValueController.dispose();
-  }
-
-  Future<void> _confirmRemoveKey(
-    BuildContext context,
-    KeyObject keyObj,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Remove Key'),
-        content: Text(
-          'Remove ${keyObj.keyType.name} key "${keyObj.id}"? '
-          'This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-            ),
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true && mounted) {
-      try {
-        final notifier = ref.read(deviceKeyNotifierProvider.notifier);
-        await notifier.removeKey(
-          RemoveKeyRequest()..id.add(keyObj.id),
-        );
-        ref.invalidate(deviceKeysProvider(widget.deviceId));
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(friendlyError(e)),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
-    }
   }
 }

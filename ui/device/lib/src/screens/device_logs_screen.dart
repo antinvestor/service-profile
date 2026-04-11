@@ -1,11 +1,13 @@
+import 'package:antinvestor_api_device/antinvestor_api_device.dart';
+import 'package:antinvestor_ui_core/widgets/admin_entity_list_page.dart';
 import 'package:antinvestor_ui_core/widgets/error_helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../providers/device_log_providers.dart';
-import '../widgets/session_log_entry.dart';
 
-/// Screen displaying session activity logs for a device.
+/// Screen displaying session activity logs for a device as a paginated
+/// DataTable with CSV export.
 class DeviceLogsScreen extends ConsumerWidget {
   const DeviceLogsScreen({
     super.key,
@@ -14,100 +16,103 @@ class DeviceLogsScreen extends ConsumerWidget {
 
   final String deviceId;
 
+  String _locationSummary(DeviceLog log) {
+    if (!log.hasLocation()) return '-';
+    final fields = log.location.fields;
+    if (fields.isEmpty) return '-';
+    final parts = <String>[];
+    if (fields.containsKey('city')) {
+      parts.add(fields['city']!.stringValue);
+    }
+    if (fields.containsKey('country')) {
+      parts.add(fields['country']!.stringValue);
+    }
+    return parts.isNotEmpty ? parts.join(', ') : '-';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     final asyncLogs = ref.watch(deviceLogsProvider(deviceId));
 
-    return Column(
-      children: [
-        // Header
-        Padding(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
-          child: Row(
-            children: [
-              Text(
-                'Session Logs',
-                style: theme.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                icon: const Icon(Icons.refresh, size: 20),
-                tooltip: 'Refresh',
-                onPressed: () => ref.invalidate(deviceLogsProvider(deviceId)),
-              ),
-            ],
-          ),
-        ),
-
-        // Logs list
-        Expanded(
-          child: asyncLogs.when(
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
-            error: (error, _) => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 48,
-                    color: theme.colorScheme.error,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(friendlyError(error)),
-                  const SizedBox(height: 12),
-                  FilledButton.tonal(
-                    onPressed: () =>
-                        ref.invalidate(deviceLogsProvider(deviceId)),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
+    return asyncLogs.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (error, _) => Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 48,
+                color: Theme.of(context).colorScheme.error),
+            const SizedBox(height: 16),
+            Text(friendlyError(error)),
+            const SizedBox(height: 12),
+            FilledButton.tonal(
+              onPressed: () => ref.invalidate(deviceLogsProvider(deviceId)),
+              child: const Text('Retry'),
             ),
-            data: (logs) {
-              if (logs.isEmpty) {
-                return Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 64,
-                        height: 64,
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerLow,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Icon(
-                          Icons.history,
-                          size: 28,
-                          color: theme.colorScheme.primary.withAlpha(160),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No session logs found.',
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
+          ],
+        ),
+      ),
+      data: (logs) => _buildTable(context, ref, logs),
+    );
+  }
 
-              return ListView.separated(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                itemCount: logs.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                itemBuilder: (context, index) {
-                  return SessionLogEntry(log: logs[index]);
-                },
-              );
-            },
-          ),
+  Widget _buildTable(BuildContext context, WidgetRef ref, List<DeviceLog> logs) {
+    return AdminEntityListPage<DeviceLog>(
+      title: 'Session Logs',
+      breadcrumbs: const ['Home', 'Devices', 'Session Logs'],
+      columns: const [
+        DataColumn(label: Text('Session')),
+        DataColumn(label: Text('IP')),
+        DataColumn(label: Text('OS')),
+        DataColumn(label: Text('User Agent')),
+        DataColumn(label: Text('Last Seen')),
+        DataColumn(label: Text('Location')),
+      ],
+      items: logs,
+      searchHint: 'Search logs...',
+      rowBuilder: (log, selected, onSelect) {
+        return DataRow(
+          selected: selected,
+          onSelectChanged: (_) => onSelect(),
+          cells: [
+            DataCell(Text(
+              log.sessionId.isNotEmpty
+                  ? log.sessionId.length > 12
+                      ? '${log.sessionId.substring(0, 12)}...'
+                      : log.sessionId
+                  : '-',
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+            )),
+            DataCell(Text(log.ip)),
+            DataCell(Text(log.os)),
+            DataCell(ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 200),
+              child: Text(
+                log.userAgent,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+              ),
+            )),
+            DataCell(Text(log.lastSeen)),
+            DataCell(Text(_locationSummary(log))),
+          ],
+        );
+      },
+      exportRow: (log) => [
+        log.sessionId,
+        log.ip,
+        log.os,
+        log.userAgent,
+        log.lastSeen,
+        _locationSummary(log),
+      ],
+      onExport: (format, count) =>
+          debugPrint('Exported $count Session Logs rows as $format'),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh, size: 20),
+          tooltip: 'Refresh',
+          onPressed: () => ref.invalidate(deviceLogsProvider(deviceId)),
         ),
       ],
     );
