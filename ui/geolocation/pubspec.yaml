@@ -1,8 +1,16 @@
 name: antinvestor_ui_geolocation
 description: >
   Geolocation UI library for Antinvestor. Location tracking, areas, routes, events.
-publish_to: 'none'
 version: 0.1.0
+repository: https://github.com/antinvestor/service-profile
+homepage: https://github.com/antinvestor/service-profile/tree/main/ui/geolocation
+issue_tracker: https://github.com/antinvestor/service-profile/issues
+topics:
+  - flutter
+  - ui
+  - geolocation
+  - antinvestor
+  - maps
 
 environment:
   sdk: ^3.11.0
@@ -10,8 +18,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  antinvestor_ui_core:
-    path: ../../../common/ui_core
+  antinvestor_ui_core: ^0.1.0
   antinvestor_api_geolocation: ^1.53.0
   antinvestor_api_common: ^1.52.0
   connectrpc: ^1.0.0
