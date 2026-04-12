@@ -2,7 +2,7 @@ name: antinvestor_ui_profile
 description: >
   Profile management UI library for Antinvestor. Embeddable screens and widgets
   for profiles, contacts, addresses, relationships, and roster management.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/antinvestor/service-profile
 homepage: https://github.com/antinvestor/service-profile/tree/main/ui/profile
 issue_tracker: https://github.com/antinvestor/service-profile/issues
