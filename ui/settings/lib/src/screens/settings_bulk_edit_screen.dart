@@ -257,7 +257,7 @@ class _SettingsBulkEditScreenState
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       itemCount: settings.length + 1, // +1 for header
-      separatorBuilder: (_, __) => const SizedBox(height: 2),
+      separatorBuilder: (_, _) => const SizedBox(height: 2),
       itemBuilder: (context, index) {
         if (index == 0) {
           return _buildTableHeader(theme);

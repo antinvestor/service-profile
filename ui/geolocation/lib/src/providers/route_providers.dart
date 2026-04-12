@@ -35,9 +35,12 @@ final subjectRouteAssignmentsProvider =
 });
 
 /// Notifier for route mutations.
-class RouteNotifier extends StateNotifier<AsyncValue<void>> {
-  RouteNotifier(this._client) : super(const AsyncValue.data(null));
-  final GeolocationServiceClient _client;
+class RouteNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  GeolocationServiceClient get _client =>
+      ref.read(geolocationServiceClientProvider);
 
   Future<RouteObject> createRoute(RouteObject data) async {
     state = const AsyncValue.loading();
@@ -112,7 +115,4 @@ class RouteNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final routeNotifierProvider =
-    StateNotifierProvider<RouteNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(geolocationServiceClientProvider);
-  return RouteNotifier(client);
-});
+    NotifierProvider<RouteNotifier, AsyncValue<void>>(RouteNotifier.new);

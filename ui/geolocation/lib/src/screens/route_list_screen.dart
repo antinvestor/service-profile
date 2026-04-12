@@ -33,14 +33,6 @@ class _RouteListScreenState extends ConsumerState<RouteListScreen> {
     return '${(meters / 1000).toStringAsFixed(1)} km';
   }
 
-  int _waypointCount(RouteObject route) {
-    // The geometry field holds GeoJSON; count coordinates as a proxy
-    // for waypoints. If geometry is empty, show 0.
-    if (route.geometry.isEmpty) return 0;
-    // Count coordinate pairs by occurrences of ','
-    return RegExp(r'\[[-\d]').allMatches(route.geometry).length;
-  }
-
   @override
   Widget build(BuildContext context) {
     final asyncRoutes = ref.watch(searchRoutesProvider(_ownerId));

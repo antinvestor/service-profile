@@ -57,7 +57,7 @@ class SettingValueWidget extends ConsumerWidget {
         return '$prefix$value';
       },
       loading: () => '$prefix...',
-      error: (_, __) => placeholder,
+      error: (_, _) => placeholder,
     );
 
     final textStyle = style ?? theme.textTheme.bodyMedium;

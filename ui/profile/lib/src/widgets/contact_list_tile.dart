@@ -25,7 +25,7 @@ class ContactListTile extends StatelessWidget {
   String _communicationLabel(CommunicationLevel level) {
     return switch (level) {
       CommunicationLevel.ALL => 'All communications',
-      CommunicationLevel.NONE => 'No communications',
+      CommunicationLevel.NO_CONTACT => 'No communications',
       _ => level.name,
     };
   }

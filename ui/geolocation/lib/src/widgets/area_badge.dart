@@ -59,7 +59,7 @@ class AreaBadge extends ConsumerWidget {
             ),
             if (showType) ...[
               const SizedBox(width: 8),
-              AreaTypeBadge(areaType: area.type),
+              AreaTypeBadge(areaType: area.areaType),
             ],
           ],
         );
@@ -79,7 +79,7 @@ class AreaBadge extends ConsumerWidget {
           Text(fallback, style: style ?? theme.textTheme.bodyMedium),
         ],
       ),
-      error: (_, __) => Row(
+      error: (_, _) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(

@@ -153,7 +153,7 @@ class _DeviceKeysScreenState extends ConsumerState<DeviceKeysScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               DropdownButtonFormField<KeyType>(
-                value: selectedType,
+                initialValue: selectedType,
                 decoration: InputDecoration(
                   labelText: 'Key Type',
                   border: OutlineInputBorder(
@@ -211,7 +211,7 @@ class _DeviceKeysScreenState extends ConsumerState<DeviceKeysScreen> {
         );
         ref.invalidate(deviceKeysProvider(widget.deviceId));
       } catch (e) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),

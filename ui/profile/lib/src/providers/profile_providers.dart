@@ -1,5 +1,3 @@
-import 'package:antinvestor_api_common/antinvestor_api_common.dart'
-    show SearchRequest;
 import 'package:antinvestor_api_profile/antinvestor_api_profile.dart';
 import 'package:antinvestor_ui_core/api/stream_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,9 +35,12 @@ final profileByContactProvider =
 });
 
 /// Notifier for profile mutations (create, update, merge).
-class ProfileNotifier extends StateNotifier<AsyncValue<void>> {
-  ProfileNotifier(this._client) : super(const AsyncValue.data(null));
-  final ProfileServiceClient _client;
+class ProfileNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  ProfileServiceClient get _client =>
+      ref.read(profileServiceClientProvider);
 
   Future<ProfileObject> create(CreateRequest request) async {
     state = const AsyncValue.loading();
@@ -79,7 +80,4 @@ class ProfileNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final profileNotifierProvider =
-    StateNotifierProvider<ProfileNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(profileServiceClientProvider);
-  return ProfileNotifier(client);
-});
+    NotifierProvider<ProfileNotifier, AsyncValue<void>>(ProfileNotifier.new);

@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'profile_transport_provider.dart';
 
 /// Notifier for address operations.
-class AddressNotifier extends StateNotifier<AsyncValue<void>> {
-  AddressNotifier(this._client) : super(const AsyncValue.data(null));
-  final ProfileServiceClient _client;
+class AddressNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
 
-  Future<AddressObject> addAddress(AddAddressRequest request) async {
+  ProfileServiceClient get _client =>
+      ref.read(profileServiceClientProvider);
+
+  Future<ProfileObject> addAddress(AddAddressRequest request) async {
     state = const AsyncValue.loading();
     try {
       final response = await _client.addAddress(request);
@@ -22,7 +25,4 @@ class AddressNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final addressNotifierProvider =
-    StateNotifierProvider<AddressNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(profileServiceClientProvider);
-  return AddressNotifier(client);
-});
+    NotifierProvider<AddressNotifier, AsyncValue<void>>(AddressNotifier.new);

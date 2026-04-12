@@ -584,7 +584,7 @@ class _ContactsTab extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: contacts.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final contact = contacts[index];
                 return ExpansionTile(
@@ -801,7 +801,7 @@ class _AddressesTab extends ConsumerWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: addresses.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final addr = addresses[index];
                 final parts = [
@@ -1088,7 +1088,7 @@ class _RosterTab extends ConsumerWidget {
               child: ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: entries.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final entry = entries[index];
                   final contact = entry.contact;

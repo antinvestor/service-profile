@@ -80,7 +80,7 @@ class _AreaCreateScreenState extends ConsumerState<AreaCreateScreen> {
               isRequired: true,
               description: 'The classification of this area.',
               child: DropdownButtonFormField<AreaType>(
-                value: _areaType,
+                initialValue: _areaType,
                 onChanged: (v) {
                   if (v != null) setState(() => _areaType = v);
                 },

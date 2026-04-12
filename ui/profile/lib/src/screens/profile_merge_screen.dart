@@ -1,3 +1,4 @@
+import 'package:antinvestor_api_common/antinvestor_api_common.dart' as common;
 import 'package:antinvestor_api_profile/antinvestor_api_profile.dart';
 import 'package:antinvestor_ui_core/widgets/error_helpers.dart';
 import 'package:antinvestor_ui_core/widgets/form_field_card.dart';
@@ -276,7 +277,7 @@ class _ProfileMergeScreenState extends ConsumerState<ProfileMergeScreen> {
                     children: [
                       ProfileTypeBadge(type: profile.type),
                       const SizedBox(width: 8),
-                      StateBadge(state: profile.state),
+                      StateBadge(state: common.STATE.valueOf(profile.state.value)!),
                     ],
                   ),
                   if (profile.contacts.isNotEmpty) ...[

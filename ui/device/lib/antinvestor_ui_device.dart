@@ -2,7 +2,7 @@
 ///
 /// Provides embeddable screens, widgets, and Riverpod providers for device
 /// registration, key management, session logs, and presence tracking.
-library antinvestor_ui_device;
+library;
 
 // Providers
 export 'src/providers/device_transport_provider.dart';

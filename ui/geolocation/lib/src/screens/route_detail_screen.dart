@@ -353,7 +353,7 @@ class _AssignmentsSection extends ConsumerWidget {
           children: assignments.map((assignment) {
             return RouteAssignmentChip(
               assignment: assignment,
-              onUnassign: () async {
+              onRemove: () async {
                 await ref
                     .read(routeNotifierProvider.notifier)
                     .unassignRoute(assignment.id);

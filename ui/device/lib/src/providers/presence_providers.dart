@@ -4,9 +4,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'device_transport_provider.dart';
 
 /// Notifier for presence updates.
-class PresenceNotifier extends StateNotifier<AsyncValue<void>> {
-  PresenceNotifier(this._client) : super(const AsyncValue.data(null));
-  final DeviceServiceClient _client;
+class PresenceNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  DeviceServiceClient get _client =>
+      ref.read(deviceServiceClientProvider);
 
   Future<PresenceObject> updatePresence(
       UpdatePresenceRequest request) async {
@@ -23,7 +26,5 @@ class PresenceNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final presenceNotifierProvider =
-    StateNotifierProvider<PresenceNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(deviceServiceClientProvider);
-  return PresenceNotifier(client);
-});
+    NotifierProvider<PresenceNotifier, AsyncValue<void>>(
+        PresenceNotifier.new);

@@ -17,16 +17,19 @@ final rosterSearchProvider =
 });
 
 /// Notifier for roster mutations.
-class RosterNotifier extends StateNotifier<AsyncValue<void>> {
-  RosterNotifier(this._client) : super(const AsyncValue.data(null));
-  final ProfileServiceClient _client;
+class RosterNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  ProfileServiceClient get _client =>
+      ref.read(profileServiceClientProvider);
 
   Future<RosterObject> add(AddRosterRequest request) async {
     state = const AsyncValue.loading();
     try {
       final response = await _client.addRoster(request);
       state = const AsyncValue.data(null);
-      return response.data;
+      return response.data.first;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
@@ -46,7 +49,4 @@ class RosterNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final rosterNotifierProvider =
-    StateNotifierProvider<RosterNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(profileServiceClientProvider);
-  return RosterNotifier(client);
-});
+    NotifierProvider<RosterNotifier, AsyncValue<void>>(RosterNotifier.new);

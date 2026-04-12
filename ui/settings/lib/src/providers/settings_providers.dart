@@ -63,7 +63,7 @@ final settingByKeyProvider =
     FutureProvider.family<SettingObject, SettingKey>((ref, key) async {
   final client = ref.watch(settingsServiceClientProvider);
   final request = GetRequest()
-    ..setting = (Setting()
+    ..key = (Setting()
       ..name = key.name
       ..object = key.object
       ..objectId = key.objectId
@@ -78,7 +78,7 @@ final settingsListProvider = FutureProvider.family<List<SettingObject>,
     SettingListParams>((ref, params) async {
   final client = ref.watch(settingsServiceClientProvider);
   final request = ListRequest()
-    ..setting = (Setting()
+    ..key = (Setting()
       ..object = params.object
       ..objectId = params.objectId
       ..module = params.module);
@@ -94,7 +94,7 @@ final settingsSearchProvider =
     FutureProvider.family<List<SettingObject>, String>((ref, query) async {
   final client = ref.watch(settingsServiceClientProvider);
   final request = ListRequest()
-    ..setting = (Setting()..name = query);
+    ..key = (Setting()..name = query);
   final stream = client.search(request);
   return collectStream<SearchResponse, SettingObject>(
     stream,
@@ -103,9 +103,12 @@ final settingsSearchProvider =
 });
 
 /// Notifier for setting mutations (set / update).
-class SettingsNotifier extends StateNotifier<AsyncValue<void>> {
-  SettingsNotifier(this._client) : super(const AsyncValue.data(null));
-  final SettingsServiceClient _client;
+class SettingsNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  SettingsServiceClient get _client =>
+      ref.read(settingsServiceClientProvider);
 
   Future<SettingObject> set(SetRequest request) async {
     state = const AsyncValue.loading();
@@ -121,7 +124,5 @@ class SettingsNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final settingsNotifierProvider =
-    StateNotifierProvider<SettingsNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(settingsServiceClientProvider);
-  return SettingsNotifier(client);
-});
+    NotifierProvider<SettingsNotifier, AsyncValue<void>>(
+        SettingsNotifier.new);

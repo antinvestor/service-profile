@@ -41,7 +41,7 @@ class ProfileBadgeById extends ConsumerWidget {
         avatarSize: avatarSize,
         trailing: trailing,
       ),
-      error: (_, __) => ProfileBadge(
+      error: (_, _) => ProfileBadge(
         profileId: profileId,
         name: fallback,
         avatarSize: avatarSize,
@@ -106,7 +106,7 @@ class ProfileNameText extends ConsumerWidget {
         return fallback;
       },
       loading: () => fallback,
-      error: (_, __) => fallback,
+      error: (_, _) => fallback,
     );
 
     return Text('$prefix$name', style: style);

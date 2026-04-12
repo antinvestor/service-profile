@@ -13,9 +13,12 @@ final deviceKeysProvider =
 });
 
 /// Notifier for key mutations (add, remove).
-class DeviceKeyNotifier extends StateNotifier<AsyncValue<void>> {
-  DeviceKeyNotifier(this._client) : super(const AsyncValue.data(null));
-  final DeviceServiceClient _client;
+class DeviceKeyNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  DeviceServiceClient get _client =>
+      ref.read(deviceServiceClientProvider);
 
   Future<KeyObject> addKey(AddKeyRequest request) async {
     state = const AsyncValue.loading();
@@ -42,7 +45,5 @@ class DeviceKeyNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final deviceKeyNotifierProvider =
-    StateNotifierProvider<DeviceKeyNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(deviceServiceClientProvider);
-  return DeviceKeyNotifier(client);
-});
+    NotifierProvider<DeviceKeyNotifier, AsyncValue<void>>(
+        DeviceKeyNotifier.new);

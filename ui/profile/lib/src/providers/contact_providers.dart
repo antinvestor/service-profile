@@ -4,11 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'profile_transport_provider.dart';
 
 /// Notifier for contact management operations.
-class ContactNotifier extends StateNotifier<AsyncValue<void>> {
-  ContactNotifier(this._client) : super(const AsyncValue.data(null));
-  final ProfileServiceClient _client;
+class ContactNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
 
-  Future<ContactObject> addContact(AddContactRequest request) async {
+  ProfileServiceClient get _client =>
+      ref.read(profileServiceClientProvider);
+
+  Future<ProfileObject> addContact(AddContactRequest request) async {
     state = const AsyncValue.loading();
     try {
       final response = await _client.addContact(request);
@@ -61,7 +64,7 @@ class ContactNotifier extends StateNotifier<AsyncValue<void>> {
     try {
       final response = await _client.checkVerification(request);
       state = const AsyncValue.data(null);
-      return response.passed;
+      return response.success;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
       rethrow;
@@ -70,7 +73,4 @@ class ContactNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final contactNotifierProvider =
-    StateNotifierProvider<ContactNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(profileServiceClientProvider);
-  return ContactNotifier(client);
-});
+    NotifierProvider<ContactNotifier, AsyncValue<void>>(ContactNotifier.new);

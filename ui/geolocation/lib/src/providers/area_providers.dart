@@ -24,9 +24,12 @@ final getAreaProvider =
 });
 
 /// Notifier for area mutations (create, update, delete).
-class AreaNotifier extends StateNotifier<AsyncValue<void>> {
-  AreaNotifier(this._client) : super(const AsyncValue.data(null));
-  final GeolocationServiceClient _client;
+class AreaNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  GeolocationServiceClient get _client =>
+      ref.read(geolocationServiceClientProvider);
 
   Future<AreaObject> createArea(AreaObject data) async {
     state = const AsyncValue.loading();
@@ -67,7 +70,4 @@ class AreaNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final areaNotifierProvider =
-    StateNotifierProvider<AreaNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(geolocationServiceClientProvider);
-  return AreaNotifier(client);
-});
+    NotifierProvider<AreaNotifier, AsyncValue<void>>(AreaNotifier.new);

@@ -19,8 +19,9 @@ class SettingTile extends StatelessWidget {
   }
 
   String _formatUpdated(SettingObject s) {
-    if (!s.hasUpdated()) return '';
-    final ts = s.updated.toDateTime();
+    if (s.updated.isEmpty) return '';
+    final ts = DateTime.tryParse(s.updated);
+    if (ts == null) return '';
     final now = DateTime.now();
     final diff = now.difference(ts);
     if (diff.inMinutes < 1) return 'just now';

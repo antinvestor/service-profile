@@ -404,13 +404,13 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen>
       ),
     );
 
-    if (confirmed == true && mounted) {
+    if (confirmed == true && context.mounted) {
       try {
         final notifier = ref.read(deviceNotifierProvider.notifier);
         await notifier.remove(RemoveRequest()..id = device.id);
-        if (mounted) context.go('/devices');
+        if (context.mounted) context.go('/devices');
       } catch (e) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),
@@ -445,7 +445,7 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen>
       ),
     );
 
-    if (selected != null && mounted) {
+    if (selected != null && context.mounted) {
       try {
         final notifier = ref.read(presenceNotifierProvider.notifier);
         await notifier.updatePresence(
@@ -455,7 +455,7 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen>
         );
         ref.invalidate(deviceByIdProvider(widget.deviceId));
       } catch (e) {
-        if (mounted) {
+        if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(friendlyError(e)),

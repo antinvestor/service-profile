@@ -1,6 +1,6 @@
 /// Geolocation UI library for Antinvestor. Location tracking, areas, routes,
 /// events.
-library antinvestor_ui_geolocation;
+library;
 
 // Providers
 export 'src/providers/geolocation_transport_provider.dart';

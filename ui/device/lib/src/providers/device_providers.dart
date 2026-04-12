@@ -31,9 +31,12 @@ final deviceByIdProvider =
 });
 
 /// Notifier for device mutations (create, update, remove, link).
-class DeviceNotifier extends StateNotifier<AsyncValue<void>> {
-  DeviceNotifier(this._client) : super(const AsyncValue.data(null));
-  final DeviceServiceClient _client;
+class DeviceNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  DeviceServiceClient get _client =>
+      ref.read(deviceServiceClientProvider);
 
   Future<DeviceObject> create(CreateRequest request) async {
     state = const AsyncValue.loading();
@@ -84,7 +87,4 @@ class DeviceNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final deviceNotifierProvider =
-    StateNotifierProvider<DeviceNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(deviceServiceClientProvider);
-  return DeviceNotifier(client);
-});
+    NotifierProvider<DeviceNotifier, AsyncValue<void>>(DeviceNotifier.new);

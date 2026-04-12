@@ -104,7 +104,7 @@ class _SettingsScopeSelectorState extends State<SettingsScopeSelector> {
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
-                    value: widget.scope.object.isEmpty
+                    initialValue: widget.scope.object.isEmpty
                         ? null
                         : widget.scope.object,
                     decoration: InputDecoration(
@@ -166,7 +166,7 @@ class _SettingsScopeSelectorState extends State<SettingsScopeSelector> {
                 Expanded(
                   flex: 2,
                   child: DropdownButtonFormField<String>(
-                    value: widget.scope.lang,
+                    initialValue: widget.scope.lang,
                     decoration: InputDecoration(
                       labelText: 'Language',
                       border: OutlineInputBorder(

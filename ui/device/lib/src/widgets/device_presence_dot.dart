@@ -45,7 +45,7 @@ class DevicePresenceDot extends ConsumerWidget {
     final status = presenceAsync.when(
       data: (s) => s,
       loading: () => PresenceStatus.OFFLINE,
-      error: (_, __) => PresenceStatus.OFFLINE,
+      error: (_, _) => PresenceStatus.OFFLINE,
     );
 
     return PresenceIndicator(

@@ -95,7 +95,7 @@ class _ProfileCreateScreenState extends ConsumerState<ProfileCreateScreen> {
               label: 'Profile Type',
               isRequired: true,
               child: DropdownButtonFormField<ProfileType>(
-                value: _type,
+                initialValue: _type,
                 decoration: const InputDecoration(
                   hintText: 'Select type...',
                 ),

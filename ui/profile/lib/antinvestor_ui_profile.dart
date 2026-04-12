@@ -1,5 +1,3 @@
-library antinvestor_ui_profile;
-
 // Routing
 export 'src/routing/profile_route_module.dart';
 

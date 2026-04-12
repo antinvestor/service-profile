@@ -9,7 +9,9 @@ final relationshipListProvider =
     FutureProvider.family<List<RelationshipObject>, String>(
         (ref, profileId) async {
   final client = ref.watch(profileServiceClientProvider);
-  final request = ListRelationshipRequest()..profileId = profileId;
+  final request = ListRelationshipRequest()
+    ..peerName = 'profile'
+    ..peerId = profileId;
   final stream = client.listRelationship(request);
   return collectStream<ListRelationshipResponse, RelationshipObject>(
     stream,
@@ -18,9 +20,12 @@ final relationshipListProvider =
 });
 
 /// Notifier for relationship mutations.
-class RelationshipNotifier extends StateNotifier<AsyncValue<void>> {
-  RelationshipNotifier(this._client) : super(const AsyncValue.data(null));
-  final ProfileServiceClient _client;
+class RelationshipNotifier extends Notifier<AsyncValue<void>> {
+  @override
+  AsyncValue<void> build() => const AsyncValue.data(null);
+
+  ProfileServiceClient get _client =>
+      ref.read(profileServiceClientProvider);
 
   Future<RelationshipObject> add(AddRelationshipRequest request) async {
     state = const AsyncValue.loading();
@@ -47,7 +52,5 @@ class RelationshipNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 final relationshipNotifierProvider =
-    StateNotifierProvider<RelationshipNotifier, AsyncValue<void>>((ref) {
-  final client = ref.watch(profileServiceClientProvider);
-  return RelationshipNotifier(client);
-});
+    NotifierProvider<RelationshipNotifier, AsyncValue<void>>(
+        RelationshipNotifier.new);

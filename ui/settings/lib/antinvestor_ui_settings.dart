@@ -2,7 +2,7 @@
 ///
 /// Provides embeddable screens, widgets, and Riverpod providers for viewing,
 /// searching, and editing application settings.
-library antinvestor_ui_settings;
+library;
 
 // Providers
 export 'src/providers/settings_transport_provider.dart';
