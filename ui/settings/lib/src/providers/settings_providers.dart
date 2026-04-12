@@ -1,3 +1,5 @@
+// ignore: implementation_imports
+import 'package:antinvestor_api_settings/src/common/v1/common.pb.dart' show SearchRequest;
 import 'package:antinvestor_api_settings/antinvestor_api_settings.dart';
 import 'package:antinvestor_ui_core/api/stream_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -93,8 +95,7 @@ final settingsListProvider = FutureProvider.family<List<SettingObject>,
 final settingsSearchProvider =
     FutureProvider.family<List<SettingObject>, String>((ref, query) async {
   final client = ref.watch(settingsServiceClientProvider);
-  final request = ListRequest()
-    ..key = (Setting()..name = query);
+  final request = SearchRequest()..query = query;
   final stream = client.search(request);
   return collectStream<SearchResponse, SettingObject>(
     stream,
