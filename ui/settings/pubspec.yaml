@@ -2,7 +2,7 @@ name: antinvestor_ui_settings
 description: >
   Settings management UI library for Antinvestor. Embeddable screens and widgets
   for viewing, searching, and editing application settings.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/antinvestor/service-profile
 homepage: https://github.com/antinvestor/service-profile/tree/main/ui/settings
 issue_tracker: https://github.com/antinvestor/service-profile/issues

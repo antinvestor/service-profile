@@ -1,7 +1,7 @@
 name: antinvestor_ui_geolocation
 description: >
   Geolocation UI library for Antinvestor. Location tracking, areas, routes, events.
-version: 0.1.0
+version: 0.1.1
 repository: https://github.com/antinvestor/service-profile
 homepage: https://github.com/antinvestor/service-profile/tree/main/ui/geolocation
 issue_tracker: https://github.com/antinvestor/service-profile/issues
