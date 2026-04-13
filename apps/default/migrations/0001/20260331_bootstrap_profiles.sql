@@ -54,5 +54,21 @@ VALUES
     ('d75qclkpf2t1uum8ijcg', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
      '{"au_name":"service-notification-emailsmtp", "description": "Email SMTP notification integration"}'),
     ('d75qclkpf2t1uum8ijd0', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
-     '{"au_name":"service-lender", "description": "Lender service"}')
+     '{"au_name":"service-lender", "description": "Lender service"}'),
+    ('d75qclkpf2t1uum8ijdg', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
+     '{"au_name":"service-identity", "description": "Identity and KYC verification service"}'),
+    ('d75qclkpf2t1uum8ije0', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
+     '{"au_name":"service-loans", "description": "Loan management service"}'),
+    ('d75qclkpf2t1uum8ijeg', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
+     '{"au_name":"service-origination", "description": "Loan origination service"}'),
+    ('d75qclkpf2t1uum8ijf0', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
+     '{"au_name":"service-funding", "description": "Loan funding and disbursement service"}'),
+    ('d75qclkpf2t1uum8ijfg', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
+     '{"au_name":"service-savings", "description": "Savings account management service"}'),
+    ('d75qclkpf2t1uum8ijg0', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
+     '{"au_name":"service-operations", "description": "Operations and transfer service"}'),
+    ('d75qclkpf2t1uum8ijgg', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
+     '{"au_name":"service-seed", "description": "Seed direct lending service"}'),
+    ('d75qclkpf2t1uum8ijh0', NOW(), NOW(), 1, 'bjt4h376abi8cg3kgr80',
+     '{"au_name":"service-stawi", "description": "Stawi workflow orchestration service"}')
 ON CONFLICT (id) DO NOTHING;
