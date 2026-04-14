@@ -12,7 +12,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/settings/service/business"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
-	"github.com/antinvestor/service-profile/internal/errorutil"
+	"github.com/antinvestor/service-profile/pkg/errorutil"
 )
 
 type SettingsServer struct {

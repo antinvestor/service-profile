@@ -18,7 +18,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
-	"github.com/antinvestor/service-profile/internal/errorutil"
+	"github.com/antinvestor/service-profile/pkg/errorutil"
 )
 
 // Constants for pagination and batch sizes.

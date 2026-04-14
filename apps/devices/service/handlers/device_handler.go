@@ -16,7 +16,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/caching"
-	"github.com/antinvestor/service-profile/internal/errorutil"
+	"github.com/antinvestor/service-profile/pkg/errorutil"
 )
 
 const prefixRateTURN = "rate:turn:"

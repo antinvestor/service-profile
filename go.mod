@@ -22,7 +22,7 @@ require (
 	github.com/google/gnostic v0.7.1
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.93.9
+	github.com/pitabwire/frame v1.94.0
 	github.com/pitabwire/util v0.8.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.42.0

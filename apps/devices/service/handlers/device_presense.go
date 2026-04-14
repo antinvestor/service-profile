@@ -6,7 +6,7 @@ import (
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
 
-	"github.com/antinvestor/service-profile/internal/errorutil"
+	"github.com/antinvestor/service-profile/pkg/errorutil"
 )
 
 func (ds *DevicesServer) UpdatePresence(
