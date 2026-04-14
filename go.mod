@@ -22,7 +22,7 @@ require (
 	github.com/google/gnostic v0.7.1
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.93.8
+	github.com/pitabwire/frame v1.93.9
 	github.com/pitabwire/util v0.8.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.42.0
@@ -177,7 +177,7 @@ require (
 	golang.org/x/text v0.36.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	google.golang.org/api v0.274.0 // indirect
+	google.golang.org/api v0.275.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260406210006-6f92a3bedf2d // indirect
