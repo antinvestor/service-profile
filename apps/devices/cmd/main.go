@@ -8,13 +8,6 @@ import (
 	devicepb "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"connectrpc.com/connect"
 	"github.com/antinvestor/common/permissions"
-	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
-	"github.com/antinvestor/service-profile/apps/devices/service/authz"
-	"github.com/antinvestor/service-profile/apps/devices/service/business"
-	"github.com/antinvestor/service-profile/apps/devices/service/caching"
-	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
-	"github.com/antinvestor/service-profile/apps/devices/service/queue"
-	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
@@ -22,6 +15,14 @@ import (
 	"github.com/pitabwire/frame/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
+
+	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
+	"github.com/antinvestor/service-profile/apps/devices/service/authz"
+	"github.com/antinvestor/service-profile/apps/devices/service/business"
+	"github.com/antinvestor/service-profile/apps/devices/service/caching"
+	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
+	"github.com/antinvestor/service-profile/apps/devices/service/queue"
+	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 )
 
 func main() {
