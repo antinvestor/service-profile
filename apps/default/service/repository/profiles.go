@@ -38,10 +38,10 @@ func (pr *profileRepository) GetTypeByUID(
 ) (*models.ProfileType, error) {
 	profileTypeUID := models.ProfileTypeIDMap[profileType]
 	profileTypeM := &models.ProfileType{}
-	// Use empty claims to bypass partition filtering — profile types are global seed data.
-	emptyClaims := &security.AuthenticationClaims{}
-	emptyCtx := emptyClaims.ClaimsToContext(ctx)
-	err := pr.Pool().DB(emptyCtx, true).First(profileTypeM, "uid = ?", profileTypeUID).Error
+	// Profile types are global seed data with NULL partition/tenant columns.
+	// Skip tenancy checks so the query isn't scoped to a specific partition.
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
+	err := pr.Pool().DB(unscopedCtx, true).First(profileTypeM, "uid = ?", profileTypeUID).Error
 	return profileTypeM, err
 }
 
