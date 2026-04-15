@@ -454,27 +454,21 @@ func (pb *profileBusiness) AddAddress(
 func (pb *profileBusiness) AddContact(
 	ctx context.Context,
 	request *profilev1.AddContactRequest) (*profilev1.ProfileObject, string, error) {
-	claims := security.ClaimsFromContext(ctx)
-	if claims == nil {
-		return nil, "", connect.NewError(connect.CodeInvalidArgument, errors.New("contact profile is invalid"))
+	profileID := request.GetId()
+	if profileID == "" {
+		return nil, "", connect.NewError(connect.CodeInvalidArgument, errors.New("profile id is required"))
 	}
 
-	subject, err := claims.GetSubject()
-	if err != nil {
-		return nil, "", connect.NewError(connect.CodeInvalidArgument, errors.New("contact profile is invalid"))
-	}
-	if request.GetId() != subject {
-		return nil, "", connect.NewError(connect.CodeInvalidArgument, errors.New("contact profile is invalid"))
-	}
-
-	profile, profileErr := pb.GetByID(ctx, subject)
+	// Authorization is handled by the handler layer (owner check + contact_manage permission).
+	// The business layer just performs the operation.
+	profile, profileErr := pb.GetByID(ctx, profileID)
 	if profileErr != nil {
 		return nil, "", profileErr
 	}
 
+	// Check if contact already exists on this profile
 	for _, contact := range profile.GetContacts() {
-		normalizedContact := request.GetContact()
-		if contact.GetDetail() == normalizedContact {
+		if contact.GetDetail() == request.GetContact() {
 			return profile, "", nil
 		}
 	}
@@ -486,9 +480,14 @@ func (pb *profileBusiness) AddContact(
 		request.GetContact(),
 		extrasMap.FromProtoStruct(request.GetExtras()),
 	)
-
 	if contactErr != nil {
 		return nil, "", contactErr
+	}
+
+	// Link the contact to the profile
+	_, linkErr := pb.contactBusiness.UpdateContact(ctx, resp.GetID(), profileID, nil)
+	if linkErr != nil {
+		return nil, "", linkErr
 	}
 
 	verificationID, verifyErr := pb.VerifyContact(ctx, resp.GetID(), "", "", 0)
@@ -496,7 +495,12 @@ func (pb *profileBusiness) AddContact(
 		return nil, "", verifyErr
 	}
 
-	return profile, verificationID, nil
+	// Return updated profile with the new contact included
+	updatedProfile, getErr := pb.GetByID(ctx, profileID)
+	if getErr != nil {
+		return nil, "", getErr
+	}
+	return updatedProfile, verificationID, nil
 }
 
 func (pb *profileBusiness) RemoveContact(

@@ -12,7 +12,6 @@ import (
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
-	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -833,17 +832,21 @@ func (pts *ProfileTestSuite) Test_profileBusiness_AddContact() {
 		ctx, svc := pts.CreateService(t, dep)
 		pb, _ := pts.getProfileBusiness(ctx, svc)
 
-		// Test without claims - should fail
-		addContactReq := &profilev1.AddContactRequest{
-			Id:      "test-profile-id",
+		// Test with empty profile ID - should fail
+		_, _, err := pb.AddContact(ctx, &profilev1.AddContactRequest{
 			Contact: "+256757546288",
-		}
+		})
+		require.Error(t, err, "AddContact should fail without profile ID")
 
-		_, _, err := pb.AddContact(ctx, addContactReq)
-		require.Error(t, err, "AddContact should fail without claims")
+		// Test with non-existent profile ID - should fail
+		_, _, err = pb.AddContact(ctx, &profilev1.AddContactRequest{
+			Id:      "nonexistent-profile-id",
+			Contact: "+256757546288",
+		})
+		require.Error(t, err, "AddContact should fail with non-existent profile")
 
 		// Create a profile first
-		properties := data.JSONMap{"au_name": "AddContact Claims Test"}
+		properties := data.JSONMap{"au_name": "AddContact Test"}
 		createReq := &profilev1.CreateRequest{
 			Type:       profilev1.ProfileType_PERSON,
 			Contact:    "addcontact@testing.com",
@@ -852,34 +855,18 @@ func (pts *ProfileTestSuite) Test_profileBusiness_AddContact() {
 		profile, err := pb.CreateProfile(ctx, createReq)
 		require.NoError(t, err)
 
-		// Test with claims - subject mismatch should fail
-		claims := security.ClaimsFromMap(map[string]string{
-			"sub": "wrong-id",
-		})
-		ctxWithClaims := claims.ClaimsToContext(ctx)
-
-		_, _, err = pb.AddContact(ctxWithClaims, &profilev1.AddContactRequest{
-			Id:      profile.GetId(),
-			Contact: "+256757546289",
-		})
-		require.Error(t, err, "AddContact should fail with mismatched subject")
-
-		// Test with claims - matching subject should succeed
-		claims = security.ClaimsFromMap(map[string]string{
-			"sub": profile.GetId(),
-		})
-		ctxWithClaims = claims.ClaimsToContext(ctx)
-
-		updatedProfile, verificationID, err := pb.AddContact(ctxWithClaims, &profilev1.AddContactRequest{
+		// Add a new contact to the profile (authorization is handled by the handler layer)
+		updatedProfile, verificationID, err := pb.AddContact(ctx, &profilev1.AddContactRequest{
 			Id:      profile.GetId(),
 			Contact: "+256757546289",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, updatedProfile)
 		require.NotEmpty(t, verificationID)
+		require.Len(t, updatedProfile.GetContacts(), 2, "profile should now have 2 contacts")
 
-		// Test adding same contact again - should return existing profile
-		updatedProfile2, verificationID2, err := pb.AddContact(ctxWithClaims, &profilev1.AddContactRequest{
+		// Test adding same contact again - should return existing profile without error
+		updatedProfile2, verificationID2, err := pb.AddContact(ctx, &profilev1.AddContactRequest{
 			Id:      profile.GetId(),
 			Contact: "addcontact@testing.com",
 		})
