@@ -34,31 +34,26 @@ The profile service is a shared platform service consumed by many services acros
 
 ### 2. Hybrid Append-Only Property Log
 
-#### 2.1 New Table: `property_entries`
+#### 2.1 New Model: `PropertyEntry`
 
-```sql
-CREATE TABLE property_entries (
-    id              VARCHAR(50) PRIMARY KEY,
-    created_at      TIMESTAMPTZ NOT NULL,
-    modified_at     TIMESTAMPTZ NOT NULL,
-    created_by      VARCHAR(50) NOT NULL,
-    modified_by     VARCHAR(50) NOT NULL,
-    version         BIGINT DEFAULT 0,
-    tenant_id       VARCHAR(50) NOT NULL,
-    partition_id    VARCHAR(50) NOT NULL,
-    access_id       VARCHAR(50) NOT NULL,
-    deleted_at      TIMESTAMPTZ,
+Table created via GORM auto-migration from the Go model:
 
-    profile_id      VARCHAR(50) NOT NULL,
-    key             VARCHAR(255) NOT NULL,
-    value           TEXT NOT NULL,
-    scoped          BOOLEAN NOT NULL DEFAULT FALSE
-);
-
-CREATE INDEX idx_property_entries_profile ON property_entries (profile_id, created_at DESC);
-CREATE INDEX idx_property_entries_profile_key ON property_entries (profile_id, key, created_at DESC);
-CREATE INDEX idx_property_entries_tenant ON property_entries (profile_id, tenant_id, scoped) WHERE scoped = TRUE;
+```go
+type PropertyEntry struct {
+    data.BaseModel
+    ProfileID string `gorm:"type:varchar(50);not null;index:idx_prop_profile,priority:1"`
+    Key       string `gorm:"type:varchar(255);not null;index:idx_prop_profile_key,priority:1"`
+    Value     string `gorm:"type:text;not null"`
+    Scoped    bool   `gorm:"not null;default:false;index:idx_prop_tenant_scoped"`
+}
 ```
+
+`data.BaseModel` provides `ID`, `CreatedAt`, `ModifiedAt`, `CreatedBy`, `ModifiedBy`, `Version`, `TenantID`, `PartitionID`, `AccessID`, `DeletedAt`.
+
+GORM will create appropriate indexes. Additional composite indexes added via migration:
+- `(profile_id, created_at DESC)` for current-state queries
+- `(profile_id, key, created_at DESC)` for key history queries
+- `(profile_id, tenant_id, scoped)` partial index where `scoped = true` for tenant property lookups
 
 - `scoped = false`: Global property. Visible to all callers. Included in `Profile.Properties` JSONB cache.
 - `scoped = true`: Tenant-private property. Visible only when caller's tenant matches `tenant_id`. Excluded from JSONB cache.
@@ -67,9 +62,9 @@ Entries are immutable once written. The latest entry per (profile_id, key, scope
 
 #### 2.2 Write Flow
 
-1. Caller invokes `UpdateProperties` or `UpdateTenantProperties`.
+1. Caller invokes `UpdateProperties` with a `scoped` flag indicating global or tenant-private.
 2. Authorization check: caller must have `profile_update` permission (ReBAC — profile owner, partition owner/admin, or authorized agent).
-3. For each key-value pair, append a row to `property_entries` with provenance (tenant_id, partition_id, access_id, created_by from claims).
+3. For each key-value pair, append a row to `property_entries` with provenance (tenant_id, partition_id, access_id, created_by from claims) and the `scoped` flag.
 4. For global properties (`scoped = false`): rebuild `Profile.Properties` JSONB cache from latest global entries per key. Save the profile.
 5. For tenant properties (`scoped = true`): no cache rebuild.
 
@@ -77,8 +72,8 @@ Entries are immutable once written. The latest entry per (profile_id, key, scope
 
 | Scenario | Behavior |
 |---|---|
-| `GetByID(profileID)` without tenant claims | Return `Profile.Properties` (global cache only) |
-| `GetByID(profileID)` with tenant claims | Return `Profile.Properties` merged with caller's tenant-scoped entries |
+| `GetByID(profileID)` | Return `Profile.Properties` (global cache only) |
+| `GetByPartition(profileID, partitionID)` | Return global properties + partition's tenant-scoped entries merged |
 | `GetPropertiesByTenant(profileID, tenantID)` | Return only properties written by that tenant (global + scoped) |
 | `GetPropertyHistory(profileID, key)` | Full change log for that key. Scoped entries filtered to caller's tenant. |
 
@@ -87,19 +82,22 @@ Entries are immutable once written. The latest entry per (profile_id, key, scope
 ```protobuf
 message ProfileObject {
     // ... existing fields ...
-    google.protobuf.Struct properties = 4;         // Global properties (existing)
-    google.protobuf.Struct tenant_properties = 10;  // Caller's tenant-scoped properties
+    google.protobuf.Struct properties = 4;  // Global properties (from JSONB cache)
 }
 
-message UpdatePropertiesRequest {
+// Existing UpdateRequest gains a scoped flag
+message UpdateRequest {
     string id = 1;
     google.protobuf.Struct properties = 2;
+    bool scoped = 3;  // false = global (default), true = tenant-private
 }
 
-message UpdateTenantPropertiesRequest {
+// New: get profile with partition-scoped properties merged in
+message GetByPartitionRequest {
     string id = 1;
-    google.protobuf.Struct properties = 2;
+    string partition_id = 2;
 }
+// Returns ProfileObject with properties = global + partition's scoped entries merged
 
 message PropertyHistoryRequest {
     string id = 1;
@@ -133,17 +131,22 @@ The `Profile.Properties` column is retained as the denormalized cache.
 
 ### 3. Multi-List Roster
 
-#### 3.1 Schema Change
+#### 3.1 Model Change
 
-Add `list_name` column to `rosters` table:
+Add `ListName` field to the existing `Roster` GORM model:
 
-```sql
-ALTER TABLE rosters ADD COLUMN list_name VARCHAR(255) NOT NULL DEFAULT 'default';
-
--- Replace existing unique index
-DROP INDEX IF EXISTS roster_composite_index;
-CREATE UNIQUE INDEX roster_composite_index ON rosters (profile_id, contact_id, list_name, tenant_id);
+```go
+type Roster struct {
+    data.BaseModel
+    ProfileID  string          `gorm:"type:varchar(50);uniqueIndex:roster_composite_index,priority:1"`
+    ContactID  string          `gorm:"type:varchar(50);uniqueIndex:roster_composite_index,priority:2"`
+    ListName   string          `gorm:"type:varchar(255);not null;default:'default';uniqueIndex:roster_composite_index,priority:3"`
+    Contact    Contact         `gorm:"foreignKey:ContactID"`
+    Properties data.JSONMap    `gorm:"type:JSONB"`
+}
 ```
+
+The unique index changes from `(profile_id, contact_id)` to `(profile_id, contact_id, list_name)`. GORM auto-migration handles the column addition. A SQL migration drops the old index and the new one is created by GORM. The tenant_id is already part of the tenancy scoping at query time, so it does not need to be in the unique index.
 
 #### 3.2 Behavior
 
