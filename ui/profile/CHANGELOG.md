@@ -1,3 +1,9 @@
+## 0.2.0
+
+- Bump antinvestor_ui_core dependency to ^0.2.0
+- Cross-tenant profile reads via SkipTenancyChecksOnClaims
+- Append-only property ledger support
+
 ## 0.1.1
 
 - Migrate providers from StateNotifier to Notifier (Riverpod 3.x compatibility)
