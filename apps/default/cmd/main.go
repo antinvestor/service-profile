@@ -222,9 +222,10 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 	contactBiz := business.NewContactBusiness(ctx, cfg, dek, evtsMan, contactRepo, verificationRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
+	propertyEntryRepo := repository.NewPropertyEntryRepository(ctx, dbPool, workMan)
 	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
 	addressBiz := business.NewAddressBusiness(ctx, addressRepo)
-	profileBiz := business.NewProfileBusiness(ctx, cfg, dek, evtsMan, contactBiz, addressBiz, profileRepo)
+	profileBiz := business.NewProfileBusiness(ctx, cfg, dek, evtsMan, contactBiz, addressBiz, profileRepo, propertyEntryRepo)
 
 	if err := business.SeedBootstrapContacts(ctx, profileBiz, contactBiz); err != nil {
 		log.WithError(err).Fatal("failed to seed bootstrap contacts — migration incomplete, check DEK env vars")

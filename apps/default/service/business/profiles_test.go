@@ -74,6 +74,7 @@ func (pts *ProfileTestSuite) getProfileBusiness(
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
+	propertyEntryRepo := repository.NewPropertyEntryRepository(ctx, dbPool, workMan)
 	return business.NewProfileBusiness(
 		ctx,
 		cfg,
@@ -82,6 +83,7 @@ func (pts *ProfileTestSuite) getProfileBusiness(
 		contactBusiness,
 		addressBusiness,
 		profileRepo,
+		propertyEntryRepo,
 	), verificationRepo
 }
 
@@ -949,5 +951,114 @@ func (pts *ProfileTestSuite) Test_profileBusiness_AddAddress() {
 		require.NoError(t, err)
 		require.NotNil(t, updatedProfile)
 		require.NotEmpty(t, updatedProfile.GetAddresses())
+	})
+}
+
+func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProperties_Global() {
+	t := pts.T()
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		tenantID := util.IDString()
+		partitionID := util.IDString()
+		ctx = pts.WithAuthClaims(ctx, tenantID, partitionID, util.IDString())
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		profile, err := pb.CreateProfile(ctx, &profilev1.CreateRequest{
+			Type:    profilev1.ProfileType_PERSON,
+			Contact: "props.global@testing.com",
+		})
+		require.NoError(t, err)
+
+		// Update global properties
+		globalProps := data.JSONMap{"name": "Updated Name", "org": "Acme"}
+		updateReq := &profilev1.UpdateRequest{
+			Id:         profile.GetId(),
+			Properties: globalProps.ToProtoStruct(),
+		}
+		updated, err := pb.UpdateProfile(ctx, updateReq)
+		require.NoError(t, err)
+		require.Equal(t, "Updated Name", updated.GetProperties().AsMap()["name"])
+		require.Equal(t, "Acme", updated.GetProperties().AsMap()["org"])
+
+		// Read from different tenant — should see global properties
+		ctxB := pts.WithAuthClaims(ctx, util.IDString(), util.IDString(), util.IDString())
+		pbB, _ := pts.getProfileBusiness(ctxB, svc)
+		got, err := pbB.GetByID(ctxB, profile.GetId())
+		require.NoError(t, err)
+		require.Equal(t, "Updated Name", got.GetProperties().AsMap()["name"])
+	})
+}
+
+func (pts *ProfileTestSuite) Test_profileBusiness_UpdateProperties_Scoped() {
+	t := pts.T()
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+
+		tenantA := util.IDString()
+		partitionA := util.IDString()
+		ctxA := pts.WithAuthClaims(ctx, tenantA, partitionA, util.IDString())
+		pb, _ := pts.getProfileBusiness(ctxA, svc)
+
+		profile, err := pb.CreateProfile(ctxA, &profilev1.CreateRequest{
+			Type:    profilev1.ProfileType_PERSON,
+			Contact: "props.scoped@testing.com",
+		})
+		require.NoError(t, err)
+
+		// Write scoped property using the business method directly
+		_, err = pb.UpdateProfileProperties(ctxA, profile.GetId(),
+			data.JSONMap{"credit_score": "750"}, true)
+		require.NoError(t, err)
+
+		// GetByID should NOT include scoped property
+		got, err := pb.GetByID(ctxA, profile.GetId())
+		require.NoError(t, err)
+		_, hasCreditScore := got.GetProperties().AsMap()["credit_score"]
+		require.False(t, hasCreditScore, "scoped property should not appear in GetByID")
+
+		// GetByIDAndPartition with same partition SHOULD include it
+		gotPartition, err := pb.GetByIDAndPartition(ctxA, profile.GetId(), partitionA)
+		require.NoError(t, err)
+		require.Equal(t, "750", gotPartition.GetProperties().AsMap()["credit_score"])
+
+		// GetByIDAndPartition with different partition should NOT include it
+		partitionB := util.IDString()
+		gotOther, err := pb.GetByIDAndPartition(ctxA, profile.GetId(), partitionB)
+		require.NoError(t, err)
+		_, hasCreditScore = gotOther.GetProperties().AsMap()["credit_score"]
+		require.False(t, hasCreditScore, "other partition should not see scoped property")
+	})
+}
+
+func (pts *ProfileTestSuite) Test_profileBusiness_GetPropertyHistory() {
+	t := pts.T()
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		tenantID := util.IDString()
+		partitionID := util.IDString()
+		ctx = pts.WithAuthClaims(ctx, tenantID, partitionID, util.IDString())
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		profile, err := pb.CreateProfile(ctx, &profilev1.CreateRequest{
+			Type:    profilev1.ProfileType_PERSON,
+			Contact: "props.history@testing.com",
+		})
+		require.NoError(t, err)
+
+		// Write multiple updates to the same key
+		_, err = pb.UpdateProfileProperties(ctx, profile.GetId(),
+			data.JSONMap{"name": "First"}, false)
+		require.NoError(t, err)
+
+		_, err = pb.UpdateProfileProperties(ctx, profile.GetId(),
+			data.JSONMap{"name": "Second"}, false)
+		require.NoError(t, err)
+
+		history, err := pb.GetPropertyHistory(ctx, profile.GetId(), "name", tenantID)
+		require.NoError(t, err)
+		require.GreaterOrEqual(t, len(history), 2, "should have at least 2 history entries")
+		// Most recent first
+		require.Equal(t, "Second", history[0].Value)
+		require.Equal(t, "First", history[1].Value)
 	})
 }

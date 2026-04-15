@@ -3,6 +3,7 @@ package business
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -26,6 +27,7 @@ var ErrContactNotFound = errors.New("contact not found")
 
 type ProfileBusiness interface {
 	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, error)
+	GetByIDAndPartition(ctx context.Context, profileID, partitionID string) (*profilev1.ProfileObject, error)
 	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, error)
 
 	SearchProfile(
@@ -36,6 +38,9 @@ type ProfileBusiness interface {
 	CreateProfile(ctx context.Context, request *profilev1.CreateRequest) (*profilev1.ProfileObject, error)
 
 	UpdateProfile(ctx context.Context, request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error)
+	UpdateProfileProperties(ctx context.Context, profileID string, properties data.JSONMap, scoped bool) (*profilev1.ProfileObject, error)
+
+	GetPropertyHistory(ctx context.Context, profileID, key, callerTenantID string) ([]*models.PropertyEntry, error)
 
 	MergeProfile(ctx context.Context, request *profilev1.MergeRequest) (*profilev1.ProfileObject, error)
 
@@ -66,14 +71,16 @@ type ProfileBusiness interface {
 func NewProfileBusiness(_ context.Context, cfg *config.ProfileConfig, dek *config.DEK,
 	eventsMan frevents.Manager,
 	contactBusiness ContactBusiness, addressBusiness AddressBusiness,
-	profileRepo repository.ProfileRepository) ProfileBusiness {
+	profileRepo repository.ProfileRepository,
+	propertyEntryRepo repository.PropertyEntryRepository) ProfileBusiness {
 	return &profileBusiness{
-		cfg:             cfg,
-		dek:             dek,
-		contactBusiness: contactBusiness,
-		addressBusiness: addressBusiness,
-		profileRepo:     profileRepo,
-		eventsMan:       eventsMan,
+		cfg:               cfg,
+		dek:               dek,
+		contactBusiness:   contactBusiness,
+		addressBusiness:   addressBusiness,
+		profileRepo:       profileRepo,
+		propertyEntryRepo: propertyEntryRepo,
+		eventsMan:         eventsMan,
 	}
 }
 
@@ -83,7 +90,8 @@ type profileBusiness struct {
 	contactBusiness ContactBusiness
 	addressBusiness AddressBusiness
 
-	profileRepo repository.ProfileRepository
+	profileRepo       repository.ProfileRepository
+	propertyEntryRepo repository.PropertyEntryRepository
 
 	eventsMan frevents.Manager
 }
@@ -229,21 +237,86 @@ func (pb *profileBusiness) MergeProfile(ctx context.Context,
 func (pb *profileBusiness) UpdateProfile(
 	ctx context.Context,
 	request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error) {
-	profile, err := pb.profileRepo.GetByID(ctx, request.GetId())
+	requestProperties := data.JSONMap{}
+	requestProperties = requestProperties.FromProtoStruct(request.GetProperties())
+	return pb.UpdateProfileProperties(ctx, request.GetId(), requestProperties, false)
+}
+
+func (pb *profileBusiness) UpdateProfileProperties(
+	ctx context.Context,
+	profileID string, properties data.JSONMap, scoped bool) (*profilev1.ProfileObject, error) {
+	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
 		return nil, err
 	}
 
-	requestProperties := data.JSONMap{}
-	requestProperties = requestProperties.FromProtoStruct(request.GetProperties())
-	profile.Properties = profile.Properties.Update(requestProperties)
+	// Append property entries to the ledger
+	var entries []*models.PropertyEntry
+	for key, value := range properties {
+		entry := &models.PropertyEntry{
+			ProfileID: profile.GetID(),
+			Key:       key,
+			Value:     fmt.Sprintf("%v", value),
+			Scoped:    scoped,
+		}
+		entries = append(entries, entry)
+	}
 
-	_, err = pb.profileRepo.Update(ctx, profile, "properties")
-	if err != nil {
-		return nil, err
+	if len(entries) > 0 {
+		if appendErr := pb.propertyEntryRepo.AppendEntries(ctx, entries); appendErr != nil {
+			return nil, data.ErrorConvertToAPI(appendErr)
+		}
+	}
+
+	// For global properties, rebuild the JSONB cache from latest entries
+	if !scoped {
+		latestEntries, latestErr := pb.propertyEntryRepo.LatestGlobalByProfile(ctx, profile.GetID())
+		if latestErr != nil {
+			return nil, data.ErrorConvertToAPI(latestErr)
+		}
+
+		newProps := data.JSONMap{}
+		for _, e := range latestEntries {
+			newProps[e.Key] = e.Value
+		}
+		profile.Properties = newProps
+
+		_, updateErr := pb.profileRepo.Update(ctx, profile, "properties")
+		if updateErr != nil {
+			return nil, data.ErrorConvertToAPI(updateErr)
+		}
 	}
 
 	return pb.ToAPI(ctx, profile)
+}
+
+func (pb *profileBusiness) GetByIDAndPartition(
+	ctx context.Context,
+	profileID, partitionID string) (*profilev1.ProfileObject, error) {
+	profileObj, err := pb.GetByID(ctx, profileID)
+	if err != nil {
+		return nil, err
+	}
+
+	scopedEntries, scopedErr := pb.propertyEntryRepo.LatestScopedByProfileAndPartition(ctx, profileID, partitionID)
+	if scopedErr != nil {
+		return nil, data.ErrorConvertToAPI(scopedErr)
+	}
+
+	if len(scopedEntries) > 0 {
+		merged := profileObj.GetProperties().AsMap()
+		for _, e := range scopedEntries {
+			merged[e.Key] = e.Value
+		}
+		mergedMap := data.JSONMap(merged)
+		profileObj.Properties = mergedMap.ToProtoStruct()
+	}
+
+	return profileObj, nil
+}
+
+func (pb *profileBusiness) GetPropertyHistory(ctx context.Context, profileID, key, callerTenantID string) ([]*models.PropertyEntry, error) {
+	return pb.propertyEntryRepo.HistoryByKey(ctx, profileID, key, callerTenantID)
 }
 
 // lookupContactByDetail attempts to find a contact by detail or ID.

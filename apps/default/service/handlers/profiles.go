@@ -64,6 +64,7 @@ func NewProfileServer(
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
+	propertyEntryRepo := repository.NewPropertyEntryRepository(ctx, dbPool, workMan)
 	profileBusiness := business.NewProfileBusiness(
 		ctx,
 		cfg,
@@ -72,6 +73,7 @@ func NewProfileServer(
 		contactBusiness,
 		addressBusiness,
 		profileRepo,
+		propertyEntryRepo,
 	)
 
 	rosterRepo := repository.NewRosterRepository(ctx, dbPool, workMan)

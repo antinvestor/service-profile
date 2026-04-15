@@ -68,6 +68,7 @@ func (ats *AddressTestSuite) getProfileBusiness(
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
+	propertyEntryRepo := repository.NewPropertyEntryRepository(ctx, dbPool, workMan)
 	return business.NewProfileBusiness(
 		ctx,
 		cfg,
@@ -76,6 +77,7 @@ func (ats *AddressTestSuite) getProfileBusiness(
 		contactBusiness,
 		addressBusiness,
 		profileRepo,
+		propertyEntryRepo,
 	), addressRepo
 }
 
