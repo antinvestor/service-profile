@@ -143,6 +143,7 @@ message RosterObject {
   ]; // Profile ID of the contact
   ContactObject contact = 3; // Contact information
   google.protobuf.Struct extra = 4; // Additional metadata
+  string name = 5; // List name (e.g., "friends", "colleagues")
 }
 
 // AddressObject represents a physical address with geocoding.
@@ -382,6 +383,7 @@ message SearchRosterRequest {
     (buf.validate.field).string.max_len = 250,
     (buf.validate.field).string.pattern = "[0-9a-z_-]{3,250}"
   ];
+  string name = 9; // Filter by list name; empty returns all lists
 }
 
 message SearchRosterResponse {
@@ -395,6 +397,7 @@ message RawContact {
 
 message AddRosterRequest {
   repeated RawContact data = 1;
+  string name = 2; // List name (e.g., "friends", "colleagues"); defaults to "default"
 }
 
 message AddRosterResponse {
@@ -407,6 +410,7 @@ message RemoveRosterRequest {
     (buf.validate.field).string.max_len = 40,
     (buf.validate.field).string.pattern = "[0-9a-z_-]{3,40}"
   ];
+  string name = 2; // List name for scoped removal
 }
 
 message RemoveRosterResponse {

@@ -139,12 +139,12 @@ func (c *Contact) ToAPI(dek *config.DEK, partial bool) (*profilev1.ContactObject
 type Roster struct {
 	data.BaseModel
 
-	ProfileID string `gorm:"type:varchar(50);uniqueIndex:roster_composite_index;index:profile_id"`
+	ProfileID string   `gorm:"type:varchar(50);uniqueIndex:roster_composite_index,priority:1;index:profile_id"`
+	ContactID string   `gorm:"type:varchar(50);uniqueIndex:roster_composite_index,priority:2"`
+	Name      string   `gorm:"type:varchar(255);not null;default:'default';uniqueIndex:roster_composite_index,priority:3"`
+	Contact   *Contact `gorm:"foreignKey:ContactID"`
 
-	ContactID string `gorm:"type:varchar(50);uniqueIndex:roster_composite_index;"`
-	Contact   *Contact
-
-	Properties data.JSONMap
+	Properties data.JSONMap `gorm:"type:JSONB"`
 }
 
 func (r *Roster) ToAPI(dek *config.DEK) (*profilev1.RosterObject, error) {
@@ -158,6 +158,7 @@ func (r *Roster) ToAPI(dek *config.DEK) (*profilev1.RosterObject, error) {
 		ProfileId: r.ProfileID,
 		Contact:   contactObj,
 		Extra:     r.Properties.ToProtoStruct(),
+		Name:      r.Name,
 	}, nil
 }
 

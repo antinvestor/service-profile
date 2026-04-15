@@ -12,10 +12,10 @@ buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20260328115053-8
 buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20260328115053-88b513b68855.2/go.mod h1:o6kpC6VgUSzCq+gsnsmjKbWXDOVwSzRG5G/ZwsiAJzY=
 buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260328115053-88b513b68855.1 h1:dow1vzqapHTtqbnY5ZTX0FgRGl4Xe3TVM0k1oHDlunI=
 buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260328115053-88b513b68855.1/go.mod h1:UB7Ak66iVAst5qnsoffFsmhZcpUyJYjlRcG+/0aLdHI=
-buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260415192318-ac8d2ce55a72.2 h1:9ThVdikQ6ugCl2c446NRs6Fyj2AjVPf5OANJRMf2Mn8=
-buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260415192318-ac8d2ce55a72.2/go.mod h1:EzgJTRvFEAYtsAfxlLA0P59b8lxdBUhcfHpHjYIYZM0=
-buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260415192318-ac8d2ce55a72.1 h1:O3eed92e0BAf3z184bmLFhf9jJvEjAA04iODxKDPRXo=
-buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260415192318-ac8d2ce55a72.1/go.mod h1:CazcFZHACLkOb4H506xWO1+owI2AZvDXfNN7dlMu5S4=
+buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260415192922-8f3792d8591a.2 h1:7g8OLa8yN6JUGejZSNFKMlimtANevytlsR0h02DkNqU=
+buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260415192922-8f3792d8591a.2/go.mod h1:1WGqS6LVMjemVq+qybbW3EscIBovkdCson4vrnwCdGE=
+buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260415192922-8f3792d8591a.1 h1:bTQJaJuCj1GhDsjj9FHnGPV8myb6Tk3fO+hGxwKQYVE=
+buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260415192922-8f3792d8591a.1/go.mod h1:CazcFZHACLkOb4H506xWO1+owI2AZvDXfNN7dlMu5S4=
 buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20260402103759-84a057273744.2 h1:fD0jtEmSE9X9o0Brd9hnrUvknauMdAKivzZS0woFyGo=
 buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20260402103759-84a057273744.2/go.mod h1:ok0J3GIzanZTp2J2U00ID47CsFUwdd4KCE8nB2ulvrM=
 buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260402103759-84a057273744.1 h1:8ZFdsHPu/hG9TAwGXbtOiyiFQJ/XCaJ+5RPdIY6zyIw=

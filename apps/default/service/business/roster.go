@@ -74,11 +74,16 @@ func (rb *rosterBusiness) Search(ctx context.Context,
 		orSearchFilter["rosters.searchable  @@ websearch_to_tsquery( 'english', ?) "] = request.GetQuery()
 	}
 
+	andFilters := map[string]any{"rosters.profile_id": profileID}
+	if request.GetName() != "" {
+		andFilters["rosters.name"] = request.GetName()
+	}
+
 	query := data.NewSearchQuery(
 
 		data.WithSearchLimit(int(request.GetCount())),
 		data.WithSearchOffset(int(request.GetPage())),
-		data.WithSearchFiltersAndByValue(map[string]any{"rosters.profile_id": profileID}),
+		data.WithSearchFiltersAndByValue(andFilters),
 		data.WithSearchFiltersOrByValue(orSearchFilter))
 
 	result, err := rb.rosterRepository.Search(ctx, query)
@@ -108,6 +113,11 @@ func (rb *rosterBusiness) CreateRoster(
 		return []*profilev1.RosterObject{}, nil
 	}
 
+	name := request.GetName()
+	if name == "" {
+		name = "default"
+	}
+
 	// Pre-allocate result slice for better memory efficiency
 	rosterObjectList := make([]*profilev1.RosterObject, 0, len(newRosterList))
 
@@ -122,7 +132,7 @@ func (rb *rosterBusiness) CreateRoster(
 		}
 
 		batch := newRosterList[i:end]
-		batchResults, batchErr := rb.processRosterBatch(ctx, profileID, batch)
+		batchResults, batchErr := rb.processRosterBatch(ctx, profileID, name, batch)
 		if batchErr != nil {
 			return nil, batchErr
 		}
@@ -137,6 +147,7 @@ func (rb *rosterBusiness) CreateRoster(
 func (rb *rosterBusiness) processRosterBatch(
 	ctx context.Context,
 	profileID string,
+	name string,
 	batch []*profilev1.RawContact,
 ) ([]*profilev1.RosterObject, error) {
 	// Step 1: Deduplicate contacts
@@ -157,15 +168,15 @@ func (rb *rosterBusiness) processRosterBatch(
 	allContacts := rb.createUnifiedContactMap(existingContactMap, newContactsMap)
 	contactDetails := rb.buildContactDetails(batch, allContacts)
 
-	// Step 5: Get existing rosters
-	existingRosters, err := rb.rosterRepository.GetByContactIDsAndProfileID(ctx, contactDetails, profileID)
+	// Step 5: Get existing rosters for this name
+	existingRosters, err := rb.rosterRepository.GetByContactIDsAndProfileIDAndName(ctx, contactDetails, profileID, name)
 	if err != nil {
 		return nil, data.ErrorConvertToAPI(err)
 	}
 	existingRosterMap := rb.createRosterLookupMap(existingRosters)
 
 	// Step 6: Create missing rosters
-	rostersToCreate := rb.findRostersToCreate(batch, allContacts, existingRosterMap, profileID)
+	rostersToCreate := rb.findRostersToCreate(batch, allContacts, existingRosterMap, profileID, name)
 	if len(rostersToCreate) > 0 {
 		if createErr := rb.batchCreateRosters(ctx, rostersToCreate); createErr != nil {
 			return nil, createErr
@@ -260,6 +271,7 @@ func (rb *rosterBusiness) findRostersToCreate(
 	allContacts map[string]*models.Contact,
 	existingRosterMap map[string]*models.Roster,
 	profileID string,
+	name string,
 ) []*models.Roster {
 	rostersToCreate := make([]*models.Roster, 0, len(batch))
 	processedContacts := make(map[string]bool, len(batch))
@@ -283,6 +295,7 @@ func (rb *rosterBusiness) findRostersToCreate(
 			roster := &models.Roster{
 				ProfileID:  profileID,
 				ContactID:  contact.GetID(),
+				Name:       name,
 				Contact:    contact,
 				Properties: rosterExtras.FromProtoStruct(rawCtc.GetExtras()),
 			}

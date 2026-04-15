@@ -141,7 +141,7 @@ func (rts *RosterTestSuite) createRoster(
 
 	ctx = claims.ClaimsToContext(ctx)
 
-	rosterList, err := rb.CreateRoster(ctx, &profilev1.AddRosterRequest{Data: requestData})
+	rosterList, err := rb.CreateRoster(ctx, &profilev1.AddRosterRequest{Data: requestData, Name: "default"})
 	if err != nil {
 		return nil, err
 	}
@@ -451,5 +451,119 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 				require.Len(t, rosterList, tt.resultCount, "Roster count mismatch")
 			})
 		}
+	})
+}
+
+func (rts *RosterTestSuite) TestRosterBusiness_MultiList() {
+	t := rts.T()
+
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := rts.CreateService(t, dep)
+		rb := rts.getRosterBusiness(ctx, svc)
+
+		profileID := "multiListProfile1"
+		claims := security.ClaimsFromMap(map[string]string{
+			"sub":          profileID,
+			"tenant_id":    "tenantx",
+			"partition_id": "party",
+		})
+		ctxWithClaims := claims.ClaimsToContext(ctx)
+
+		// Add contacts to "friends" list
+		friendsReq := &profilev1.AddRosterRequest{
+			Name: "friends",
+			Data: []*profilev1.RawContact{
+				{Contact: "friend1@multi.com"},
+				{Contact: "friend2@multi.com"},
+			},
+		}
+		friends, err := rb.CreateRoster(ctxWithClaims, friendsReq)
+		require.NoError(t, err)
+		require.Len(t, friends, 2, "Should create 2 friends")
+		for _, f := range friends {
+			require.Equal(t, "friends", f.GetName(), "Name should be 'friends'")
+		}
+
+		// Add same contact plus a new one to "colleagues" list
+		colleaguesReq := &profilev1.AddRosterRequest{
+			Name: "colleagues",
+			Data: []*profilev1.RawContact{
+				{Contact: "friend1@multi.com"},
+				{Contact: "colleague1@multi.com"},
+			},
+		}
+		colleagues, err := rb.CreateRoster(ctxWithClaims, colleaguesReq)
+		require.NoError(t, err)
+		require.Len(t, colleagues, 2, "Should create 2 colleagues")
+		for _, c := range colleagues {
+			require.Equal(t, "colleagues", c.GetName(), "Name should be 'colleagues'")
+		}
+
+		// Search all lists (name empty) - should return 4 rosters total
+		jobResult, err := rb.Search(ctxWithClaims, &profilev1.SearchRosterRequest{})
+		require.NoError(t, err)
+
+		var allRosters []*models.Roster
+		for result := range jobResult.ResultChan() {
+			if result == nil || result.IsError() {
+				break
+			}
+			allRosters = append(allRosters, result.Item()...)
+		}
+		require.Len(t, allRosters, 4, "Should have 4 total roster entries across both lists")
+
+		// Search only "friends" list
+		jobResult, err = rb.Search(ctxWithClaims, &profilev1.SearchRosterRequest{Name: "friends"})
+		require.NoError(t, err)
+
+		var friendRosters []*models.Roster
+		for result := range jobResult.ResultChan() {
+			if result == nil || result.IsError() {
+				break
+			}
+			friendRosters = append(friendRosters, result.Item()...)
+		}
+		require.Len(t, friendRosters, 2, "Should have 2 roster entries in friends list")
+
+		// Search only "colleagues" list
+		jobResult, err = rb.Search(ctxWithClaims, &profilev1.SearchRosterRequest{Name: "colleagues"})
+		require.NoError(t, err)
+
+		var colleagueRosters []*models.Roster
+		for result := range jobResult.ResultChan() {
+			if result == nil || result.IsError() {
+				break
+			}
+			colleagueRosters = append(colleagueRosters, result.Item()...)
+		}
+		require.Len(t, colleagueRosters, 2, "Should have 2 roster entries in colleagues list")
+	})
+}
+
+func (rts *RosterTestSuite) TestRosterBusiness_MultiList_DefaultName() {
+	t := rts.T()
+
+	rts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := rts.CreateService(t, dep)
+		rb := rts.getRosterBusiness(ctx, svc)
+
+		profileID := "defaultNameProfile1"
+		claims := security.ClaimsFromMap(map[string]string{
+			"sub":          profileID,
+			"tenant_id":    "tenantx",
+			"partition_id": "party",
+		})
+		ctxWithClaims := claims.ClaimsToContext(ctx)
+
+		// Add without specifying name - should default to "default"
+		req := &profilev1.AddRosterRequest{
+			Data: []*profilev1.RawContact{
+				{Contact: "noname@test.com"},
+			},
+		}
+		result, err := rb.CreateRoster(ctxWithClaims, req)
+		require.NoError(t, err)
+		require.Len(t, result, 1)
+		require.Equal(t, "default", result[0].GetName(), "Empty name should default to 'default'")
 	})
 }

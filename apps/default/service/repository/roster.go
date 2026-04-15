@@ -22,7 +22,7 @@ func NewRosterRepository(ctx context.Context, dbPool pool.Pool, workMan workerpo
 	)
 
 	baseRepo.ExtendFieldsAllowed("rosters.profile_id", "rosters.searchable",
-		"contacts.look_up_token")
+		"rosters.name", "contacts.look_up_token")
 
 	rosterRepo := rosterRepository{
 		BaseRepository: baseRepo,
@@ -92,6 +92,33 @@ func (rr *rosterRepository) GetByContactIDsAndProfileID(
 	err := rr.Pool().DB(ctx, true).
 		Preload(clause.Associations).
 		Where("profile_id = ? AND contact_id IN ?", profileID, contactIDs).
+		Find(&rosterList).
+		Error
+	return rosterList, err
+}
+
+func (rr *rosterRepository) GetByContactAndProfileIDAndName(
+	ctx context.Context,
+	profileID, contactID, name string,
+) (*models.Roster, error) {
+	roster := &models.Roster{}
+	err := rr.Pool().DB(ctx, true).
+		Preload(clause.Associations).
+		Where("profile_id = ? AND contact_id = ? AND name = ?", profileID, contactID, name).
+		First(roster).
+		Error
+	return roster, err
+}
+
+func (rr *rosterRepository) GetByContactIDsAndProfileIDAndName(
+	ctx context.Context,
+	contactIDs []string,
+	profileID, name string,
+) ([]*models.Roster, error) {
+	rosterList := make([]*models.Roster, 0, len(contactIDs))
+	err := rr.Pool().DB(ctx, true).
+		Preload(clause.Associations).
+		Where("profile_id = ? AND contact_id IN ? AND name = ?", profileID, contactIDs, name).
 		Find(&rosterList).
 		Error
 	return rosterList, err

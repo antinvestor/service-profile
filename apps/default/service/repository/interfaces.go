@@ -37,6 +37,8 @@ type RosterRepository interface {
 	datastore.BaseRepository[*models.Roster]
 	GetByContactAndProfileID(ctx context.Context, profileID, contactID string) (*models.Roster, error)
 	GetByContactIDsAndProfileID(ctx context.Context, contactIDs []string, profileID string) ([]*models.Roster, error)
+	GetByContactAndProfileIDAndName(ctx context.Context, profileID, contactID, name string) (*models.Roster, error)
+	GetByContactIDsAndProfileIDAndName(ctx context.Context, contactIDs []string, profileID, name string) ([]*models.Roster, error)
 	Search(ctx context.Context, query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.Roster], error)
 }
 
