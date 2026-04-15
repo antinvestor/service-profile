@@ -11,6 +11,7 @@ import (
 	profilepb "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
 	apis "github.com/antinvestor/common"
+	"github.com/antinvestor/common/audit"
 	"github.com/antinvestor/common/connection"
 	"github.com/antinvestor/common/permissions"
 	"github.com/pitabwire/frame"
@@ -259,11 +260,30 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
 	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
 
+	// Audit interceptor — sends entries to audit service if configured.
+	profileCfg, _ := svc.Config().(*aconfig.ProfileConfig)
+	var auditInterceptor connect.Interceptor
+	if profileCfg != nil && profileCfg.AuditServiceURI != "" {
+		auditCli, auditErr := connection.NewServiceClient(ctx, profileCfg, apis.ServiceTarget{
+			Endpoint:  profileCfg.AuditServiceURI,
+			Audiences: []string{"service_audit"},
+		}, audit.NewConnectClient)
+		if auditErr != nil {
+			util.Log(ctx).WithError(auditErr).Warn("audit client not available — audit entries will only be logged")
+			auditInterceptor = audit.NewInterceptor("service_profile", nil)
+		} else {
+			auditInterceptor = audit.NewInterceptor("service_profile", auditCli)
+		}
+	} else {
+		auditInterceptor = audit.NewInterceptor("service_profile", nil)
+	}
+
 	defaultInterceptorList, err := connectInterceptors.DefaultList(
 		ctx,
 		authenticator,
 		tenancyAccessInterceptor,
 		functionAccessInterceptor,
+		auditInterceptor,
 	)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")

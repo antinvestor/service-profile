@@ -22,7 +22,7 @@ require (
 	github.com/google/gnostic v0.7.1
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.94.0
+	github.com/pitabwire/frame v1.94.1
 	github.com/pitabwire/util v0.8.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.42.0
@@ -37,6 +37,8 @@ require (
 )
 
 require (
+	buf.build/gen/go/antinvestor/audit/connectrpc/go v1.19.1-20260407152515-18e28354ce96.2 // indirect
+	buf.build/gen/go/antinvestor/audit/protocolbuffers/go v1.36.11-20260407152515-18e28354ce96.1 // indirect
 	buf.build/gen/go/gnostic/gnostic/protocolbuffers/go v1.36.11-20230414000709-087bc8072ce4.1 // indirect
 	buf.build/go/protovalidate v1.1.3 // indirect
 	cel.dev/expr v0.25.1 // indirect
@@ -58,6 +60,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.56.0 // indirect
 	github.com/MicahParks/keyfunc v1.9.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
+	github.com/antinvestor/common/audit v0.0.0-20260415105004-773581107f14 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/caarlos0/env/v11 v11.4.0 // indirect

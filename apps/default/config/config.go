@@ -29,4 +29,6 @@ type ProfileConfig struct {
 	VerificationPinExpiryTimeInSec int `envDefault:"86400" env:"VERIFICATION_PIN_EXPIRY_TIME_IN_SEC"`
 
 	MessageTemplateContactVerification string `envDefault:"template.profilev1.contact.verification" env:"MESSAGE_TEMPLATE_CONTACT_VERIFICATION"`
+
+	AuditServiceURI string `envDefault:"" env:"AUDIT_SERVICE_URI"`
 }
