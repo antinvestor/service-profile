@@ -38,7 +38,10 @@ func (pr *profileRepository) GetTypeByUID(
 ) (*models.ProfileType, error) {
 	profileTypeUID := models.ProfileTypeIDMap[profileType]
 	profileTypeM := &models.ProfileType{}
-	err := pr.Pool().DB(ctx, true).First(profileTypeM, "uid = ?", profileTypeUID).Error
+	// Use empty claims to bypass partition filtering — profile types are global seed data.
+	emptyClaims := &security.AuthenticationClaims{}
+	emptyCtx := emptyClaims.ClaimsToContext(ctx)
+	err := pr.Pool().DB(emptyCtx, true).First(profileTypeM, "uid = ?", profileTypeUID).Error
 	return profileTypeM, err
 }
 
