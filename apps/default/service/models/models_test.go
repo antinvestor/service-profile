@@ -18,9 +18,9 @@ func TestProfileTypeIDToEnum(t *testing.T) {
 		typeID   uint
 		expected profilev1.ProfileType
 	}{
-		{"Person type", models.ProfileTypePersonID, profilev1.ProfileType_PERSON},
-		{"Bot type", models.ProfileTypeBotID, profilev1.ProfileType_BOT},
-		{"Institution type", models.ProfileTypeInstitutionID, profilev1.ProfileType_INSTITUTION},
+		{"Person type", uint(profilev1.ProfileType_PERSON.Number()), profilev1.ProfileType_PERSON},
+		{"Bot type", uint(profilev1.ProfileType_BOT.Number()), profilev1.ProfileType_BOT},
+		{"Institution type", uint(profilev1.ProfileType_INSTITUTION.Number()), profilev1.ProfileType_INSTITUTION},
 		{"Unknown type defaults to Person", 999, profilev1.ProfileType_PERSON},
 		{"Zero type defaults to Person", 0, profilev1.ProfileType_PERSON},
 	}
@@ -287,9 +287,9 @@ func TestRelationship_ToAPI(t *testing.T) {
 
 func TestProfileTypeIDMap(t *testing.T) {
 	// Verify the map contains expected entries
-	require.Equal(t, models.ProfileTypePersonID, models.ProfileTypeIDMap[profilev1.ProfileType_PERSON])
-	require.Equal(t, models.ProfileTypeBotID, models.ProfileTypeIDMap[profilev1.ProfileType_BOT])
-	require.Equal(t, models.ProfileTypeInstitutionID, models.ProfileTypeIDMap[profilev1.ProfileType_INSTITUTION])
+	require.Equal(t, uint(profilev1.ProfileType_PERSON.Number()), models.ProfileTypeIDMap[profilev1.ProfileType_PERSON])
+	require.Equal(t, uint(profilev1.ProfileType_BOT.Number()), models.ProfileTypeIDMap[profilev1.ProfileType_BOT])
+	require.Equal(t, uint(profilev1.ProfileType_INSTITUTION.Number()), models.ProfileTypeIDMap[profilev1.ProfileType_INSTITUTION])
 }
 
 func TestRelationshipTypeIDMap(t *testing.T) {

@@ -151,7 +151,7 @@ func (pb *profileBusiness) GetByContact(
 	if contact.ProfileID == "" {
 		profileObject := profilev1.ProfileObject{}
 
-		profileObject.Type = models.ProfileTypeIDToEnum(models.ProfileTypePersonID)
+		profileObject.Type = profilev1.ProfileType_PERSON
 		props := data.JSONMap{}
 		profileObject.Properties = props.ToProtoStruct()
 		contactObj, toAPIErr := contact.ToAPI(pb.dek, true)

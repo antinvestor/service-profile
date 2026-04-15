@@ -14,25 +14,20 @@ import (
 
 // Profile type and relationship type constants.
 const (
-	// Profile type IDs — must match the uid column in the profile_types table.
-	// These correspond to the proto enum values: PERSON=0, INSTITUTION=1, BOT=2.
-	ProfileTypePersonID      uint = 0
-	ProfileTypeInstitutionID uint = 1
-	ProfileTypeBotID         uint = 2
-
 	// Relationship type IDs.
 	RelationshipTypeMemberID      uint = 1
 	RelationshipTypeAffiliatedID  uint = 2
 	RelationshipTypeBlackListedID uint = 3
 )
 
-// ProfileTypeIDMap maps profile types to their respective IDs.
+// ProfileTypeIDMap maps proto profile types to their database uid values.
+// The uid column in profile_types matches the proto enum number.
 //
 //nolint:gochecknoglobals // This is a mapping table that needs to be global
 var ProfileTypeIDMap = map[profilev1.ProfileType]uint{
-	profilev1.ProfileType_PERSON:      ProfileTypePersonID,
-	profilev1.ProfileType_BOT:         ProfileTypeBotID,
-	profilev1.ProfileType_INSTITUTION: ProfileTypeInstitutionID,
+	profilev1.ProfileType_PERSON:      uint(profilev1.ProfileType_PERSON.Number()),
+	profilev1.ProfileType_BOT:         uint(profilev1.ProfileType_BOT.Number()),
+	profilev1.ProfileType_INSTITUTION: uint(profilev1.ProfileType_INSTITUTION.Number()),
 }
 
 // RelationshipTypeIDMap maps relationship types to their respective IDs.
