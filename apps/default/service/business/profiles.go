@@ -255,7 +255,14 @@ func (pb *profileBusiness) lookupContactByDetail(
 	_, contactTypeErr := ContactTypeFromDetail(ctx, contactDetail)
 	if contactTypeErr != nil {
 		// Not a valid contact format, try lookup by ID
-		return pb.contactBusiness.GetByID(ctx, contactDetail)
+		contact, err := pb.contactBusiness.GetByID(ctx, contactDetail)
+		if err != nil {
+			if frame.ErrorIsNotFound(err) {
+				return nil, ErrContactNotFound
+			}
+			return nil, err
+		}
+		return contact, nil
 	}
 
 	// Valid contact format, lookup by detail
