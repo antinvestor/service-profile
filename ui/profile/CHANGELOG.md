@@ -1,3 +1,7 @@
+## 0.2.1
+
+- Add missing image_picker dependency for ProfileResolver
+
 ## 0.2.0
 
 - Bump antinvestor_ui_core dependency to ^0.2.0
