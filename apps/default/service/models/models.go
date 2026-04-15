@@ -63,6 +63,17 @@ type Profile struct {
 	ProfileType   ProfileType
 }
 
+// PropertyEntry is an append-only ledger of property changes on a profile.
+// The latest entry per (profile_id, key) determines the current value.
+// Scoped entries are tenant-private and excluded from the JSONB cache.
+type PropertyEntry struct {
+	data.BaseModel
+	ProfileID string `gorm:"type:varchar(50);not null;index:idx_prop_profile,priority:1"`
+	Key       string `gorm:"type:varchar(255);not null;index:idx_prop_profile_key,priority:1"`
+	Value     string `gorm:"type:text;not null"`
+	Scoped    bool   `gorm:"not null;default:false;index:idx_prop_tenant_scoped"`
+}
+
 type Contact struct {
 	data.BaseModel
 
