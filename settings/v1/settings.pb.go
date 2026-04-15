@@ -543,7 +543,7 @@ const file_settings_v1_settings_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\v2\x14.settings.v1.SettingR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value\"=\n" +
 	"\vSetResponse\x12.\n" +
-	"\x04data\x18\x01 \x01(\v2\x1a.settings.v1.SettingObjectR\x04data2\xab\v\n" +
+	"\x04data\x18\x01 \x01(\v2\x1a.settings.v1.SettingObjectR\x04data2\xaa\v\n" +
 	"\x0fSettingsService\x12\xb7\x02\n" +
 	"\x03Get\x12\x17.settings.v1.GetRequest\x1a\x18.settings.v1.GetResponse\"\xfc\x01\xbaG\xe3\x01\n" +
 	"\bSettings\x12\x13Get a setting value\x1a\xb5\x01Retrieves a single setting value by its hierarchical key. The service returns the most specific matching setting based on the key hierarchy (instance-level > object-level > global).*\n" +
@@ -558,8 +558,8 @@ const file_settings_v1_settings_proto_rawDesc = "" +
 	"\x03Set\x12\x17.settings.v1.SetRequest\x1a\x18.settings.v1.SetResponse\"\xe6\x01\xbaG\xce\x01\n" +
 	"\bSettings\x12\x1aCreate or update a setting\x1a\x99\x01Creates or updates a setting value. If the setting exists, it is updated with the new value and timestamp. If it doesn't exist, a new setting is created.*\n" +
 	"setSetting\x82\xb5\x18\x10\n" +
-	"\x0esetting_manage\x1a\xd1\x01\x82\xb5\x18\xcc\x01\n" +
-	"\x10service_settings\x12\fsetting_view\x12\x0esetting_manage\x1a \b\x01\x12\fsetting_view\x12\x0esetting_manage\x1a \b\x02\x12\fsetting_view\x12\x0esetting_manage\x1a\x10\b\x03\x12\fsetting_view\x1a\x10\b\x04\x12\fsetting_view\x1a\x10\b\x05\x12\fsetting_view\x1a \b\x06\x12\fsetting_view\x12\x0esetting_manageB\xac\x06\xbaG\xfc\x04\x12\xd0\x04\n" +
+	"\x0esetting_manage\x1a\xd0\x01\x82\xb5\x18\xcb\x01\n" +
+	"\x0fservice_setting\x12\fsetting_view\x12\x0esetting_manage\x1a \b\x01\x12\fsetting_view\x12\x0esetting_manage\x1a \b\x02\x12\fsetting_view\x12\x0esetting_manage\x1a\x10\b\x03\x12\fsetting_view\x1a\x10\b\x04\x12\fsetting_view\x1a\x10\b\x05\x12\fsetting_view\x1a \b\x06\x12\fsetting_view\x12\x0esetting_manageB\xac\x06\xbaG\xfc\x04\x12\xd0\x04\n" +
 	"\x10Settings Service\x12\x8d\x03The Settings Service provides hierarchical configuration management for applications and services. It supports multi-level scoping (global, object-level, instance-level), localization, and module-specific settings. Settings can be organized by object type, object ID, language, and module, enabling flexible configuration management for multi-tenant applications with internationalization support.\"Y\n" +
 	"\x10Ant Investor Ltd\x12/https://github.com/antinvestor/service-settings\x1a\x14info@antinvestor.com*I\n" +
 	"\x0eApache License\x127https://github.com/antinvestor/apis/blob/master/LICENSE2\x06v1.0.0*':%\n" +

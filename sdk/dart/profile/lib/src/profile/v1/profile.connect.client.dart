@@ -333,4 +333,40 @@ extension type ProfileServiceClient (connect.Transport _transport) {
       onTrailer: onTrailer,
     );
   }
+
+  /// GetByIDAndPartition retrieves a profile with partition-scoped properties merged in.
+  Future<profilev1profile.GetByIDAndPartitionResponse> getByIDAndPartition(
+    profilev1profile.GetByIDAndPartitionRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.ProfileService.getByIDAndPartition,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  /// PropertyHistory returns the change history for a specific property key on a profile.
+  Future<profilev1profile.PropertyHistoryResponse> propertyHistory(
+    profilev1profile.PropertyHistoryRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.ProfileService.propertyHistory,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
 }

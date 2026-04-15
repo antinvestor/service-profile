@@ -17,6 +17,7 @@ import 'package:protobuf/protobuf.dart' as $pb;
 
 import '../../common/v1/common.pbenum.dart' as $10;
 import '../../google/protobuf/struct.pb.dart' as $6;
+import '../../google/protobuf/timestamp.pb.dart' as $2;
 import 'profile.pbenum.dart';
 
 export 'profile.pbenum.dart';
@@ -1284,6 +1285,7 @@ class UpdateRequest extends $pb.GeneratedMessage {
     $core.String? id,
     $6.Struct? properties,
     $10.STATE? state,
+    $core.bool? scoped,
   }) {
     final $result = create();
     if (id != null) {
@@ -1295,6 +1297,9 @@ class UpdateRequest extends $pb.GeneratedMessage {
     if (state != null) {
       $result.state = state;
     }
+    if (scoped != null) {
+      $result.scoped = scoped;
+    }
     return $result;
   }
   UpdateRequest._() : super();
@@ -1305,6 +1310,7 @@ class UpdateRequest extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOM<$6.Struct>(2, _omitFieldNames ? '' : 'properties', subBuilder: $6.Struct.create)
     ..e<$10.STATE>(3, _omitFieldNames ? '' : 'state', $pb.PbFieldType.OE, defaultOrMaker: $10.STATE.CREATED, valueOf: $10.STATE.valueOf, enumValues: $10.STATE.values)
+    ..aOB(4, _omitFieldNames ? '' : 'scoped')
     ..hasRequiredFields = false
   ;
 
@@ -1357,6 +1363,15 @@ class UpdateRequest extends $pb.GeneratedMessage {
   $core.bool hasState() => $_has(2);
   @$pb.TagNumber(3)
   void clearState() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.bool get scoped => $_getBF(3);
+  @$pb.TagNumber(4)
+  set scoped($core.bool v) { $_setBool(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasScoped() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearScoped() => clearField(4);
 }
 
 class UpdateResponse extends $pb.GeneratedMessage {
@@ -2760,6 +2775,352 @@ class GetByContactResponse extends $pb.GeneratedMessage {
   ProfileObject ensureData() => $_ensure(0);
 }
 
+class GetByIDAndPartitionRequest extends $pb.GeneratedMessage {
+  factory GetByIDAndPartitionRequest({
+    $core.String? id,
+    $core.String? partitionId,
+  }) {
+    final $result = create();
+    if (id != null) {
+      $result.id = id;
+    }
+    if (partitionId != null) {
+      $result.partitionId = partitionId;
+    }
+    return $result;
+  }
+  GetByIDAndPartitionRequest._() : super();
+  factory GetByIDAndPartitionRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetByIDAndPartitionRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetByIDAndPartitionRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'partitionId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetByIDAndPartitionRequest clone() => GetByIDAndPartitionRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetByIDAndPartitionRequest copyWith(void Function(GetByIDAndPartitionRequest) updates) => super.copyWith((message) => updates(message as GetByIDAndPartitionRequest)) as GetByIDAndPartitionRequest;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetByIDAndPartitionRequest create() => GetByIDAndPartitionRequest._();
+  GetByIDAndPartitionRequest createEmptyInstance() => create();
+  static $pb.PbList<GetByIDAndPartitionRequest> createRepeated() => $pb.PbList<GetByIDAndPartitionRequest>();
+  @$core.pragma('dart2js:noInline')
+  static GetByIDAndPartitionRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetByIDAndPartitionRequest>(create);
+  static GetByIDAndPartitionRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get partitionId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set partitionId($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasPartitionId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPartitionId() => clearField(2);
+}
+
+class GetByIDAndPartitionResponse extends $pb.GeneratedMessage {
+  factory GetByIDAndPartitionResponse({
+    ProfileObject? data,
+  }) {
+    final $result = create();
+    if (data != null) {
+      $result.data = data;
+    }
+    return $result;
+  }
+  GetByIDAndPartitionResponse._() : super();
+  factory GetByIDAndPartitionResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetByIDAndPartitionResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetByIDAndPartitionResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..aOM<ProfileObject>(1, _omitFieldNames ? '' : 'data', subBuilder: ProfileObject.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetByIDAndPartitionResponse clone() => GetByIDAndPartitionResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetByIDAndPartitionResponse copyWith(void Function(GetByIDAndPartitionResponse) updates) => super.copyWith((message) => updates(message as GetByIDAndPartitionResponse)) as GetByIDAndPartitionResponse;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetByIDAndPartitionResponse create() => GetByIDAndPartitionResponse._();
+  GetByIDAndPartitionResponse createEmptyInstance() => create();
+  static $pb.PbList<GetByIDAndPartitionResponse> createRepeated() => $pb.PbList<GetByIDAndPartitionResponse>();
+  @$core.pragma('dart2js:noInline')
+  static GetByIDAndPartitionResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetByIDAndPartitionResponse>(create);
+  static GetByIDAndPartitionResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ProfileObject get data => $_getN(0);
+  @$pb.TagNumber(1)
+  set data(ProfileObject v) { setField(1, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasData() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearData() => clearField(1);
+  @$pb.TagNumber(1)
+  ProfileObject ensureData() => $_ensure(0);
+}
+
+class PropertyHistoryRequest extends $pb.GeneratedMessage {
+  factory PropertyHistoryRequest({
+    $core.String? id,
+    $core.String? key,
+  }) {
+    final $result = create();
+    if (id != null) {
+      $result.id = id;
+    }
+    if (key != null) {
+      $result.key = key;
+    }
+    return $result;
+  }
+  PropertyHistoryRequest._() : super();
+  factory PropertyHistoryRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PropertyHistoryRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PropertyHistoryRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'key')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  PropertyHistoryRequest clone() => PropertyHistoryRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PropertyHistoryRequest copyWith(void Function(PropertyHistoryRequest) updates) => super.copyWith((message) => updates(message as PropertyHistoryRequest)) as PropertyHistoryRequest;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PropertyHistoryRequest create() => PropertyHistoryRequest._();
+  PropertyHistoryRequest createEmptyInstance() => create();
+  static $pb.PbList<PropertyHistoryRequest> createRepeated() => $pb.PbList<PropertyHistoryRequest>();
+  @$core.pragma('dart2js:noInline')
+  static PropertyHistoryRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PropertyHistoryRequest>(create);
+  static PropertyHistoryRequest? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get id => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set id($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasId() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get key => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set key($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasKey() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearKey() => clearField(2);
+}
+
+class PropertyEntryObject extends $pb.GeneratedMessage {
+  factory PropertyEntryObject({
+    $core.String? key,
+    $core.String? value,
+    $core.String? tenantId,
+    $core.String? createdBy,
+    $2.Timestamp? createdAt,
+    $core.bool? scoped,
+  }) {
+    final $result = create();
+    if (key != null) {
+      $result.key = key;
+    }
+    if (value != null) {
+      $result.value = value;
+    }
+    if (tenantId != null) {
+      $result.tenantId = tenantId;
+    }
+    if (createdBy != null) {
+      $result.createdBy = createdBy;
+    }
+    if (createdAt != null) {
+      $result.createdAt = createdAt;
+    }
+    if (scoped != null) {
+      $result.scoped = scoped;
+    }
+    return $result;
+  }
+  PropertyEntryObject._() : super();
+  factory PropertyEntryObject.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PropertyEntryObject.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PropertyEntryObject', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'key')
+    ..aOS(2, _omitFieldNames ? '' : 'value')
+    ..aOS(3, _omitFieldNames ? '' : 'tenantId')
+    ..aOS(4, _omitFieldNames ? '' : 'createdBy')
+    ..aOM<$2.Timestamp>(5, _omitFieldNames ? '' : 'createdAt', subBuilder: $2.Timestamp.create)
+    ..aOB(6, _omitFieldNames ? '' : 'scoped')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  PropertyEntryObject clone() => PropertyEntryObject()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PropertyEntryObject copyWith(void Function(PropertyEntryObject) updates) => super.copyWith((message) => updates(message as PropertyEntryObject)) as PropertyEntryObject;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PropertyEntryObject create() => PropertyEntryObject._();
+  PropertyEntryObject createEmptyInstance() => create();
+  static $pb.PbList<PropertyEntryObject> createRepeated() => $pb.PbList<PropertyEntryObject>();
+  @$core.pragma('dart2js:noInline')
+  static PropertyEntryObject getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PropertyEntryObject>(create);
+  static PropertyEntryObject? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get key => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set key($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasKey() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearKey() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get value => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set value($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasValue() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearValue() => clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get tenantId => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set tenantId($core.String v) { $_setString(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasTenantId() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTenantId() => clearField(3);
+
+  @$pb.TagNumber(4)
+  $core.String get createdBy => $_getSZ(3);
+  @$pb.TagNumber(4)
+  set createdBy($core.String v) { $_setString(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasCreatedBy() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearCreatedBy() => clearField(4);
+
+  @$pb.TagNumber(5)
+  $2.Timestamp get createdAt => $_getN(4);
+  @$pb.TagNumber(5)
+  set createdAt($2.Timestamp v) { setField(5, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasCreatedAt() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearCreatedAt() => clearField(5);
+  @$pb.TagNumber(5)
+  $2.Timestamp ensureCreatedAt() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  $core.bool get scoped => $_getBF(5);
+  @$pb.TagNumber(6)
+  set scoped($core.bool v) { $_setBool(5, v); }
+  @$pb.TagNumber(6)
+  $core.bool hasScoped() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearScoped() => clearField(6);
+}
+
+class PropertyHistoryResponse extends $pb.GeneratedMessage {
+  factory PropertyHistoryResponse({
+    $core.Iterable<PropertyEntryObject>? entries,
+  }) {
+    final $result = create();
+    if (entries != null) {
+      $result.entries.addAll(entries);
+    }
+    return $result;
+  }
+  PropertyHistoryResponse._() : super();
+  factory PropertyHistoryResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory PropertyHistoryResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'PropertyHistoryResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..pc<PropertyEntryObject>(1, _omitFieldNames ? '' : 'entries', $pb.PbFieldType.PM, subBuilder: PropertyEntryObject.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  PropertyHistoryResponse clone() => PropertyHistoryResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  PropertyHistoryResponse copyWith(void Function(PropertyHistoryResponse) updates) => super.copyWith((message) => updates(message as PropertyHistoryResponse)) as PropertyHistoryResponse;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static PropertyHistoryResponse create() => PropertyHistoryResponse._();
+  PropertyHistoryResponse createEmptyInstance() => create();
+  static $pb.PbList<PropertyHistoryResponse> createRepeated() => $pb.PbList<PropertyHistoryResponse>();
+  @$core.pragma('dart2js:noInline')
+  static PropertyHistoryResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<PropertyHistoryResponse>(create);
+  static PropertyHistoryResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<PropertyEntryObject> get entries => $_getList(0);
+}
+
 /// Request message to list all profiles related to the supplied profile id
 class ListRelationshipRequest extends $pb.GeneratedMessage {
   factory ListRelationshipRequest({
@@ -3282,6 +3643,12 @@ class ProfileServiceApi {
   ;
   $async.Future<ListRelationshipResponse> listRelationship($pb.ClientContext? ctx, ListRelationshipRequest request) =>
     _client.invoke<ListRelationshipResponse>(ctx, 'ProfileService', 'ListRelationship', request, ListRelationshipResponse())
+  ;
+  $async.Future<GetByIDAndPartitionResponse> getByIDAndPartition($pb.ClientContext? ctx, GetByIDAndPartitionRequest request) =>
+    _client.invoke<GetByIDAndPartitionResponse>(ctx, 'ProfileService', 'GetByIDAndPartition', request, GetByIDAndPartitionResponse())
+  ;
+  $async.Future<PropertyHistoryResponse> propertyHistory($pb.ClientContext? ctx, PropertyHistoryRequest request) =>
+    _client.invoke<PropertyHistoryResponse>(ctx, 'ProfileService', 'PropertyHistory', request, PropertyHistoryResponse())
   ;
 }
 

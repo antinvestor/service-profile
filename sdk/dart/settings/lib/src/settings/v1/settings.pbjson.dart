@@ -213,9 +213,9 @@ final $typed_data.Uint8List settingsServiceDescriptor = $convert.base64Decode(
     'NyZWF0ZXMgb3IgdXBkYXRlcyBhIHNldHRpbmcgdmFsdWUuIElmIHRoZSBzZXR0aW5nIGV4aXN0'
     'cywgaXQgaXMgdXBkYXRlZCB3aXRoIHRoZSBuZXcgdmFsdWUgYW5kIHRpbWVzdGFtcC4gSWYgaX'
     'QgZG9lc24ndCBleGlzdCwgYSBuZXcgc2V0dGluZyBpcyBjcmVhdGVkLioKc2V0U2V0dGluZ4K1'
-    'GBAKDnNldHRpbmdfbWFuYWdlGtEBgrUYzAEKEHNlcnZpY2Vfc2V0dGluZ3MSDHNldHRpbmdfdm'
-    'lldxIOc2V0dGluZ19tYW5hZ2UaIAgBEgxzZXR0aW5nX3ZpZXcSDnNldHRpbmdfbWFuYWdlGiAI'
-    'AhIMc2V0dGluZ192aWV3Eg5zZXR0aW5nX21hbmFnZRoQCAMSDHNldHRpbmdfdmlldxoQCAQSDH'
-    'NldHRpbmdfdmlldxoQCAUSDHNldHRpbmdfdmlldxogCAYSDHNldHRpbmdfdmlldxIOc2V0dGlu'
-    'Z19tYW5hZ2U=');
+    'GBAKDnNldHRpbmdfbWFuYWdlGtABgrUYywEKD3NlcnZpY2Vfc2V0dGluZxIMc2V0dGluZ192aW'
+    'V3Eg5zZXR0aW5nX21hbmFnZRogCAESDHNldHRpbmdfdmlldxIOc2V0dGluZ19tYW5hZ2UaIAgC'
+    'EgxzZXR0aW5nX3ZpZXcSDnNldHRpbmdfbWFuYWdlGhAIAxIMc2V0dGluZ192aWV3GhAIBBIMc2'
+    'V0dGluZ192aWV3GhAIBRIMc2V0dGluZ192aWV3GiAIBhIMc2V0dGluZ192aWV3Eg5zZXR0aW5n'
+    'X21hbmFnZQ==');
 

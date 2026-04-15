@@ -15,6 +15,7 @@ import (
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/security/authorizer"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
@@ -208,6 +209,50 @@ func (ps *ProfileServer) Update(
 	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
 
 	return connect.NewResponse(&profilev1.UpdateResponse{Data: profileObj}), nil
+}
+
+func (ps *ProfileServer) GetByIDAndPartition(
+	ctx context.Context,
+	request *connect.Request[profilev1.GetByIDAndPartitionRequest],
+) (*connect.Response[profilev1.GetByIDAndPartitionResponse], error) {
+	profileObj, err := ps.profileBusiness.GetByIDAndPartition(ctx, request.Msg.GetId(), request.Msg.GetPartitionId())
+	if err != nil {
+		return nil, errorutil.CleanErr(err)
+	}
+
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+
+	return connect.NewResponse(&profilev1.GetByIDAndPartitionResponse{Data: profileObj}), nil
+}
+
+func (ps *ProfileServer) PropertyHistory(
+	ctx context.Context,
+	request *connect.Request[profilev1.PropertyHistoryRequest],
+) (*connect.Response[profilev1.PropertyHistoryResponse], error) {
+	claims := security.ClaimsFromContext(ctx)
+	callerTenantID := ""
+	if claims != nil {
+		callerTenantID = claims.GetTenantID()
+	}
+
+	entries, err := ps.profileBusiness.GetPropertyHistory(ctx, request.Msg.GetId(), request.Msg.GetKey(), callerTenantID)
+	if err != nil {
+		return nil, errorutil.CleanErr(err)
+	}
+
+	var protoEntries []*profilev1.PropertyEntryObject
+	for _, e := range entries {
+		protoEntries = append(protoEntries, &profilev1.PropertyEntryObject{
+			Key:       e.Key,
+			Value:     e.Value,
+			TenantId:  e.TenantID,
+			CreatedBy: e.CreatedBy,
+			CreatedAt: timestamppb.New(e.CreatedAt),
+			Scoped:    e.Scoped,
+		})
+	}
+
+	return connect.NewResponse(&profilev1.PropertyHistoryResponse{Entries: protoEntries}), nil
 }
 
 // AddAddress Adds a new address based on the request.

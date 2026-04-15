@@ -10,14 +10,15 @@ require (
 	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260330075109-66b653b8bb2a.1
 	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.1-20260328115053-88b513b68855.2
 	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260328115053-88b513b68855.1
-	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260330075109-319b4e3fd9dd.2
-	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260330075109-319b4e3fd9dd.1
+	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.19.1-20260415192318-ac8d2ce55a72.2
+	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260415192318-ac8d2ce55a72.1
 	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.19.1-20260402103759-84a057273744.2
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260402103759-84a057273744.1
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.19.0
 	github.com/antinvestor/common v1.4.4
+	github.com/antinvestor/common/audit v0.0.0-20260415115730-2099d7d1879f
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/gnostic v0.7.1
 	github.com/jackc/pgx/v5 v5.9.1
@@ -60,7 +61,6 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.56.0 // indirect
 	github.com/MicahParks/keyfunc v1.9.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/antinvestor/common/audit v0.0.0-20260415115730-2099d7d1879f // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/caarlos0/env/v11 v11.4.0 // indirect

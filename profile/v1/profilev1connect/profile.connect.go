@@ -96,6 +96,12 @@ const (
 	// ProfileServiceListRelationshipProcedure is the fully-qualified name of the ProfileService's
 	// ListRelationship RPC.
 	ProfileServiceListRelationshipProcedure = "/profile.v1.ProfileService/ListRelationship"
+	// ProfileServiceGetByIDAndPartitionProcedure is the fully-qualified name of the ProfileService's
+	// GetByIDAndPartition RPC.
+	ProfileServiceGetByIDAndPartitionProcedure = "/profile.v1.ProfileService/GetByIDAndPartition"
+	// ProfileServicePropertyHistoryProcedure is the fully-qualified name of the ProfileService's
+	// PropertyHistory RPC.
+	ProfileServicePropertyHistoryProcedure = "/profile.v1.ProfileService/PropertyHistory"
 )
 
 // ProfileServiceClient is a client for the profile.v1.ProfileService service.
@@ -136,6 +142,10 @@ type ProfileServiceClient interface {
 	DeleteRelationship(context.Context, *connect.Request[v1.DeleteRelationshipRequest]) (*connect.Response[v1.DeleteRelationshipResponse], error)
 	// ListRelationship lists all relationships for a profile.
 	ListRelationship(context.Context, *connect.Request[v1.ListRelationshipRequest]) (*connect.ServerStreamForClient[v1.ListRelationshipResponse], error)
+	// GetByIDAndPartition retrieves a profile with partition-scoped properties merged in.
+	GetByIDAndPartition(context.Context, *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error)
+	// PropertyHistory returns the change history for a specific property key on a profile.
+	PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error)
 }
 
 // NewProfileServiceClient constructs a client for the profile.v1.ProfileService service. By
@@ -262,6 +272,20 @@ func NewProfileServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 			connect.WithClientOptions(opts...),
 		),
+		getByIDAndPartition: connect.NewClient[v1.GetByIDAndPartitionRequest, v1.GetByIDAndPartitionResponse](
+			httpClient,
+			baseURL+ProfileServiceGetByIDAndPartitionProcedure,
+			connect.WithSchema(profileServiceMethods.ByName("GetByIDAndPartition")),
+			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+			connect.WithClientOptions(opts...),
+		),
+		propertyHistory: connect.NewClient[v1.PropertyHistoryRequest, v1.PropertyHistoryResponse](
+			httpClient,
+			baseURL+ProfileServicePropertyHistoryProcedure,
+			connect.WithSchema(profileServiceMethods.ByName("PropertyHistory")),
+			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -285,6 +309,8 @@ type profileServiceClient struct {
 	addRelationship           *connect.Client[v1.AddRelationshipRequest, v1.AddRelationshipResponse]
 	deleteRelationship        *connect.Client[v1.DeleteRelationshipRequest, v1.DeleteRelationshipResponse]
 	listRelationship          *connect.Client[v1.ListRelationshipRequest, v1.ListRelationshipResponse]
+	getByIDAndPartition       *connect.Client[v1.GetByIDAndPartitionRequest, v1.GetByIDAndPartitionResponse]
+	propertyHistory           *connect.Client[v1.PropertyHistoryRequest, v1.PropertyHistoryResponse]
 }
 
 // GetById calls profile.v1.ProfileService.GetById.
@@ -377,6 +403,16 @@ func (c *profileServiceClient) ListRelationship(ctx context.Context, req *connec
 	return c.listRelationship.CallServerStream(ctx, req)
 }
 
+// GetByIDAndPartition calls profile.v1.ProfileService.GetByIDAndPartition.
+func (c *profileServiceClient) GetByIDAndPartition(ctx context.Context, req *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error) {
+	return c.getByIDAndPartition.CallUnary(ctx, req)
+}
+
+// PropertyHistory calls profile.v1.ProfileService.PropertyHistory.
+func (c *profileServiceClient) PropertyHistory(ctx context.Context, req *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error) {
+	return c.propertyHistory.CallUnary(ctx, req)
+}
+
 // ProfileServiceHandler is an implementation of the profile.v1.ProfileService service.
 type ProfileServiceHandler interface {
 	// GetById retrieves a profile by its unique ID.
@@ -415,6 +451,10 @@ type ProfileServiceHandler interface {
 	DeleteRelationship(context.Context, *connect.Request[v1.DeleteRelationshipRequest]) (*connect.Response[v1.DeleteRelationshipResponse], error)
 	// ListRelationship lists all relationships for a profile.
 	ListRelationship(context.Context, *connect.Request[v1.ListRelationshipRequest], *connect.ServerStream[v1.ListRelationshipResponse]) error
+	// GetByIDAndPartition retrieves a profile with partition-scoped properties merged in.
+	GetByIDAndPartition(context.Context, *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error)
+	// PropertyHistory returns the change history for a specific property key on a profile.
+	PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error)
 }
 
 // NewProfileServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -537,6 +577,20 @@ func NewProfileServiceHandler(svc ProfileServiceHandler, opts ...connect.Handler
 		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 		connect.WithHandlerOptions(opts...),
 	)
+	profileServiceGetByIDAndPartitionHandler := connect.NewUnaryHandler(
+		ProfileServiceGetByIDAndPartitionProcedure,
+		svc.GetByIDAndPartition,
+		connect.WithSchema(profileServiceMethods.ByName("GetByIDAndPartition")),
+		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+		connect.WithHandlerOptions(opts...),
+	)
+	profileServicePropertyHistoryHandler := connect.NewUnaryHandler(
+		ProfileServicePropertyHistoryProcedure,
+		svc.PropertyHistory,
+		connect.WithSchema(profileServiceMethods.ByName("PropertyHistory")),
+		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/profile.v1.ProfileService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ProfileServiceGetByIdProcedure:
@@ -575,6 +629,10 @@ func NewProfileServiceHandler(svc ProfileServiceHandler, opts ...connect.Handler
 			profileServiceDeleteRelationshipHandler.ServeHTTP(w, r)
 		case ProfileServiceListRelationshipProcedure:
 			profileServiceListRelationshipHandler.ServeHTTP(w, r)
+		case ProfileServiceGetByIDAndPartitionProcedure:
+			profileServiceGetByIDAndPartitionHandler.ServeHTTP(w, r)
+		case ProfileServicePropertyHistoryProcedure:
+			profileServicePropertyHistoryHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -654,4 +712,12 @@ func (UnimplementedProfileServiceHandler) DeleteRelationship(context.Context, *c
 
 func (UnimplementedProfileServiceHandler) ListRelationship(context.Context, *connect.Request[v1.ListRelationshipRequest], *connect.ServerStream[v1.ListRelationshipResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.ListRelationship is not implemented"))
+}
+
+func (UnimplementedProfileServiceHandler) GetByIDAndPartition(context.Context, *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.GetByIDAndPartition is not implemented"))
+}
+
+func (UnimplementedProfileServiceHandler) PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.PropertyHistory is not implemented"))
 }

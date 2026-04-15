@@ -14,6 +14,7 @@ import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
 import '../../google/protobuf/struct.pbjson.dart' as $6;
+import '../../google/protobuf/timestamp.pbjson.dart' as $2;
 
 @$core.Deprecated('Use contactTypeDescriptor instead')
 const ContactType$json = {
@@ -325,6 +326,7 @@ const UpdateRequest$json = {
     {'1': 'id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'id'},
     {'1': 'properties', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'properties'},
     {'1': 'state', '3': 3, '4': 1, '5': 14, '6': '.common.v1.STATE', '10': 'state'},
+    {'1': 'scoped', '3': 4, '4': 1, '5': 8, '10': 'scoped'},
   ],
 };
 
@@ -332,7 +334,8 @@ const UpdateRequest$json = {
 final $typed_data.Uint8List updateRequestDescriptor = $convert.base64Decode(
     'Cg1VcGRhdGVSZXF1ZXN0EisKAmlkGAEgASgJQhu6SBhyFhADGCgyEFswLTlhLXpfLV17Myw0MH'
     '1SAmlkEjcKCnByb3BlcnRpZXMYAiABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0Ugpwcm9w'
-    'ZXJ0aWVzEiYKBXN0YXRlGAMgASgOMhAuY29tbW9uLnYxLlNUQVRFUgVzdGF0ZQ==');
+    'ZXJ0aWVzEiYKBXN0YXRlGAMgASgOMhAuY29tbW9uLnYxLlNUQVRFUgVzdGF0ZRIWCgZzY29wZW'
+    'QYBCABKAhSBnNjb3BlZA==');
 
 @$core.Deprecated('Use updateResponseDescriptor instead')
 const UpdateResponse$json = {
@@ -649,6 +652,80 @@ final $typed_data.Uint8List getByContactResponseDescriptor = $convert.base64Deco
     'ChRHZXRCeUNvbnRhY3RSZXNwb25zZRItCgRkYXRhGAEgASgLMhkucHJvZmlsZS52MS5Qcm9maW'
     'xlT2JqZWN0UgRkYXRh');
 
+@$core.Deprecated('Use getByIDAndPartitionRequestDescriptor instead')
+const GetByIDAndPartitionRequest$json = {
+  '1': 'GetByIDAndPartitionRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'partition_id', '3': 2, '4': 1, '5': 9, '10': 'partitionId'},
+  ],
+};
+
+/// Descriptor for `GetByIDAndPartitionRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getByIDAndPartitionRequestDescriptor = $convert.base64Decode(
+    'ChpHZXRCeUlEQW5kUGFydGl0aW9uUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQSIQoMcGFydGl0aW'
+    '9uX2lkGAIgASgJUgtwYXJ0aXRpb25JZA==');
+
+@$core.Deprecated('Use getByIDAndPartitionResponseDescriptor instead')
+const GetByIDAndPartitionResponse$json = {
+  '1': 'GetByIDAndPartitionResponse',
+  '2': [
+    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.profile.v1.ProfileObject', '10': 'data'},
+  ],
+};
+
+/// Descriptor for `GetByIDAndPartitionResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List getByIDAndPartitionResponseDescriptor = $convert.base64Decode(
+    'ChtHZXRCeUlEQW5kUGFydGl0aW9uUmVzcG9uc2USLQoEZGF0YRgBIAEoCzIZLnByb2ZpbGUudj'
+    'EuUHJvZmlsZU9iamVjdFIEZGF0YQ==');
+
+@$core.Deprecated('Use propertyHistoryRequestDescriptor instead')
+const PropertyHistoryRequest$json = {
+  '1': 'PropertyHistoryRequest',
+  '2': [
+    {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
+    {'1': 'key', '3': 2, '4': 1, '5': 9, '10': 'key'},
+  ],
+};
+
+/// Descriptor for `PropertyHistoryRequest`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List propertyHistoryRequestDescriptor = $convert.base64Decode(
+    'ChZQcm9wZXJ0eUhpc3RvcnlSZXF1ZXN0Eg4KAmlkGAEgASgJUgJpZBIQCgNrZXkYAiABKAlSA2'
+    'tleQ==');
+
+@$core.Deprecated('Use propertyEntryObjectDescriptor instead')
+const PropertyEntryObject$json = {
+  '1': 'PropertyEntryObject',
+  '2': [
+    {'1': 'key', '3': 1, '4': 1, '5': 9, '10': 'key'},
+    {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
+    {'1': 'tenant_id', '3': 3, '4': 1, '5': 9, '10': 'tenantId'},
+    {'1': 'created_by', '3': 4, '4': 1, '5': 9, '10': 'createdBy'},
+    {'1': 'created_at', '3': 5, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'createdAt'},
+    {'1': 'scoped', '3': 6, '4': 1, '5': 8, '10': 'scoped'},
+  ],
+};
+
+/// Descriptor for `PropertyEntryObject`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List propertyEntryObjectDescriptor = $convert.base64Decode(
+    'ChNQcm9wZXJ0eUVudHJ5T2JqZWN0EhAKA2tleRgBIAEoCVIDa2V5EhQKBXZhbHVlGAIgASgJUg'
+    'V2YWx1ZRIbCgl0ZW5hbnRfaWQYAyABKAlSCHRlbmFudElkEh0KCmNyZWF0ZWRfYnkYBCABKAlS'
+    'CWNyZWF0ZWRCeRI5CgpjcmVhdGVkX2F0GAUgASgLMhouZ29vZ2xlLnByb3RvYnVmLlRpbWVzdG'
+    'FtcFIJY3JlYXRlZEF0EhYKBnNjb3BlZBgGIAEoCFIGc2NvcGVk');
+
+@$core.Deprecated('Use propertyHistoryResponseDescriptor instead')
+const PropertyHistoryResponse$json = {
+  '1': 'PropertyHistoryResponse',
+  '2': [
+    {'1': 'entries', '3': 1, '4': 3, '5': 11, '6': '.profile.v1.PropertyEntryObject', '10': 'entries'},
+  ],
+};
+
+/// Descriptor for `PropertyHistoryResponse`. Decode as a `google.protobuf.DescriptorProto`.
+final $typed_data.Uint8List propertyHistoryResponseDescriptor = $convert.base64Decode(
+    'ChdQcm9wZXJ0eUhpc3RvcnlSZXNwb25zZRI5CgdlbnRyaWVzGAEgAygLMh8ucHJvZmlsZS52MS'
+    '5Qcm9wZXJ0eUVudHJ5T2JqZWN0UgdlbnRyaWVz');
+
 @$core.Deprecated('Use listRelationshipRequestDescriptor instead')
 const ListRelationshipRequest$json = {
   '1': 'ListRelationshipRequest',
@@ -800,6 +877,18 @@ const $core.Map<$core.String, $core.dynamic> ProfileServiceBase$json = {
       '4': {'34': 1},
       '6': true,
     },
+    {
+      '1': 'GetByIDAndPartition',
+      '2': '.profile.v1.GetByIDAndPartitionRequest',
+      '3': '.profile.v1.GetByIDAndPartitionResponse',
+      '4': {'34': 1},
+    },
+    {
+      '1': 'PropertyHistory',
+      '2': '.profile.v1.PropertyHistoryRequest',
+      '3': '.profile.v1.PropertyHistoryResponse',
+      '4': {'34': 1},
+    },
   ],
   '3': {},
 };
@@ -853,6 +942,12 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> ProfileSer
   '.profile.v1.DeleteRelationshipResponse': DeleteRelationshipResponse$json,
   '.profile.v1.ListRelationshipRequest': ListRelationshipRequest$json,
   '.profile.v1.ListRelationshipResponse': ListRelationshipResponse$json,
+  '.profile.v1.GetByIDAndPartitionRequest': GetByIDAndPartitionRequest$json,
+  '.profile.v1.GetByIDAndPartitionResponse': GetByIDAndPartitionResponse$json,
+  '.profile.v1.PropertyHistoryRequest': PropertyHistoryRequest$json,
+  '.profile.v1.PropertyHistoryResponse': PropertyHistoryResponse$json,
+  '.profile.v1.PropertyEntryObject': PropertyEntryObject$json,
+  '.google.protobuf.Timestamp': $2.Timestamp$json,
 };
 
 /// Descriptor for `ProfileService`. Decode as a `google.protobuf.ServiceDescriptorProto`.
@@ -945,21 +1040,32 @@ final $typed_data.Uint8List profileServiceDescriptor = $convert.base64Decode(
     'hpcHMSEkxpc3QgcmVsYXRpb25zaGlwcxqLAUxpc3RzIGFsbCByZWxhdGlvbnNoaXBzIGZvciBh'
     'IHByb2ZpbGUgd2l0aCBvcHRpb25hbCBmaWx0ZXJpbmcgYnkgdHlwZSBhbmQgcmVsYXRlZCBwcm'
     '9maWxlcy4gU3VwcG9ydHMgcGFnaW5hdGlvbiBhbmQgcmVsYXRpb25zaGlwIGludmVyc2lvbi4q'
-    'EWxpc3RSZWxhdGlvbnNoaXBzgrUYEwoRcmVsYXRpb25zaGlwX3ZpZXcwARruBoK1GOkGCg9zZX'
-    'J2aWNlX3Byb2ZpbGUSDHByb2ZpbGVfdmlldxIOcHJvZmlsZV9jcmVhdGUSDnByb2ZpbGVfdXBk'
-    'YXRlEg1wcm9maWxlX21lcmdlEg5jb250YWN0X21hbmFnZRILcm9zdGVyX3ZpZXcSDXJvc3Rlcl'
-    '9tYW5hZ2USDmFkZHJlc3NfbWFuYWdlEhFyZWxhdGlvbnNoaXBfdmlldxITcmVsYXRpb25zaGlw'
-    'X21hbmFnZRqjAQgBEgxwcm9maWxlX3ZpZXcSDnByb2ZpbGVfY3JlYXRlEg5wcm9maWxlX3VwZG'
-    'F0ZRINcHJvZmlsZV9tZXJnZRIOY29udGFjdF9tYW5hZ2USC3Jvc3Rlcl92aWV3Eg1yb3N0ZXJf'
-    'bWFuYWdlEg5hZGRyZXNzX21hbmFnZRIRcmVsYXRpb25zaGlwX3ZpZXcSE3JlbGF0aW9uc2hpcF'
-    '9tYW5hZ2UaowEIAhIMcHJvZmlsZV92aWV3Eg5wcm9maWxlX2NyZWF0ZRIOcHJvZmlsZV91cGRh'
-    'dGUSDXByb2ZpbGVfbWVyZ2USDmNvbnRhY3RfbWFuYWdlEgtyb3N0ZXJfdmlldxINcm9zdGVyX2'
-    '1hbmFnZRIOYWRkcmVzc19tYW5hZ2USEXJlbGF0aW9uc2hpcF92aWV3EhNyZWxhdGlvbnNoaXBf'
-    'bWFuYWdlGl8IAxIMcHJvZmlsZV92aWV3Eg5wcm9maWxlX3VwZGF0ZRIOY29udGFjdF9tYW5hZ2'
-    'USC3Jvc3Rlcl92aWV3Eg1yb3N0ZXJfbWFuYWdlEhFyZWxhdGlvbnNoaXBfdmlldxowCAQSDHBy'
-    'b2ZpbGVfdmlldxILcm9zdGVyX3ZpZXcSEXJlbGF0aW9uc2hpcF92aWV3GjAIBRIMcHJvZmlsZV'
-    '92aWV3Egtyb3N0ZXJfdmlldxIRcmVsYXRpb25zaGlwX3ZpZXcaowEIBhIMcHJvZmlsZV92aWV3'
-    'Eg5wcm9maWxlX2NyZWF0ZRIOcHJvZmlsZV91cGRhdGUSDXByb2ZpbGVfbWVyZ2USDmNvbnRhY3'
-    'RfbWFuYWdlEgtyb3N0ZXJfdmlldxINcm9zdGVyX21hbmFnZRIOYWRkcmVzc19tYW5hZ2USEXJl'
-    'bGF0aW9uc2hpcF92aWV3EhNyZWxhdGlvbnNoaXBfbWFuYWdl');
+    'EWxpc3RSZWxhdGlvbnNoaXBzgrUYEwoRcmVsYXRpb25zaGlwX3ZpZXcwARKjAgoTR2V0QnlJRE'
+    'FuZFBhcnRpdGlvbhImLnByb2ZpbGUudjEuR2V0QnlJREFuZFBhcnRpdGlvblJlcXVlc3QaJy5w'
+    'cm9maWxlLnYxLkdldEJ5SURBbmRQYXJ0aXRpb25SZXNwb25zZSK6AZACAbpHoQEKCFByb2ZpbG'
+    'VzEh9HZXQgcHJvZmlsZSBieSBJRCBhbmQgcGFydGl0aW9uGlhSZXRyaWV2ZXMgYSBwcm9maWxl'
+    'IGJ5IElEIHdpdGggdGVuYW50LXNjb3BlZCBwcm9wZXJ0aWVzIG1lcmdlZCBpbnRvIHRoZSBiYX'
+    'NlIHByb3BlcnRpZXMuKhpnZXRQcm9maWxlQnlJREFuZFBhcnRpdGlvboK1GA4KDHByb2ZpbGVf'
+    'dmlldxKaAgoPUHJvcGVydHlIaXN0b3J5EiIucHJvZmlsZS52MS5Qcm9wZXJ0eUhpc3RvcnlSZX'
+    'F1ZXN0GiMucHJvZmlsZS52MS5Qcm9wZXJ0eUhpc3RvcnlSZXNwb25zZSK9AZACAbpHpAEKCFBy'
+    'b2ZpbGVzEhtHZXQgcHJvcGVydHkgY2hhbmdlIGhpc3RvcnkaalJldHVybnMgdGhlIGNoYW5nZS'
+    'BoaXN0b3J5IGZvciBhIHNwZWNpZmljIHByb3BlcnR5IGtleSBvbiBhIHByb2ZpbGUsIGZpbHRl'
+    'cmVkIGJ5IGNhbGxlciB0ZW5hbnQgdmlzaWJpbGl0eS4qD3Byb3BlcnR5SGlzdG9yeYK1GA4KDH'
+    'Byb2ZpbGVfdmlldxruBoK1GOkGCg9zZXJ2aWNlX3Byb2ZpbGUSDHByb2ZpbGVfdmlldxIOcHJv'
+    'ZmlsZV9jcmVhdGUSDnByb2ZpbGVfdXBkYXRlEg1wcm9maWxlX21lcmdlEg5jb250YWN0X21hbm'
+    'FnZRILcm9zdGVyX3ZpZXcSDXJvc3Rlcl9tYW5hZ2USDmFkZHJlc3NfbWFuYWdlEhFyZWxhdGlv'
+    'bnNoaXBfdmlldxITcmVsYXRpb25zaGlwX21hbmFnZRqjAQgBEgxwcm9maWxlX3ZpZXcSDnByb2'
+    'ZpbGVfY3JlYXRlEg5wcm9maWxlX3VwZGF0ZRINcHJvZmlsZV9tZXJnZRIOY29udGFjdF9tYW5h'
+    'Z2USC3Jvc3Rlcl92aWV3Eg1yb3N0ZXJfbWFuYWdlEg5hZGRyZXNzX21hbmFnZRIRcmVsYXRpb2'
+    '5zaGlwX3ZpZXcSE3JlbGF0aW9uc2hpcF9tYW5hZ2UaowEIAhIMcHJvZmlsZV92aWV3Eg5wcm9m'
+    'aWxlX2NyZWF0ZRIOcHJvZmlsZV91cGRhdGUSDXByb2ZpbGVfbWVyZ2USDmNvbnRhY3RfbWFuYW'
+    'dlEgtyb3N0ZXJfdmlldxINcm9zdGVyX21hbmFnZRIOYWRkcmVzc19tYW5hZ2USEXJlbGF0aW9u'
+    'c2hpcF92aWV3EhNyZWxhdGlvbnNoaXBfbWFuYWdlGl8IAxIMcHJvZmlsZV92aWV3Eg5wcm9maW'
+    'xlX3VwZGF0ZRIOY29udGFjdF9tYW5hZ2USC3Jvc3Rlcl92aWV3Eg1yb3N0ZXJfbWFuYWdlEhFy'
+    'ZWxhdGlvbnNoaXBfdmlldxowCAQSDHByb2ZpbGVfdmlldxILcm9zdGVyX3ZpZXcSEXJlbGF0aW'
+    '9uc2hpcF92aWV3GjAIBRIMcHJvZmlsZV92aWV3Egtyb3N0ZXJfdmlldxIRcmVsYXRpb25zaGlw'
+    'X3ZpZXcaowEIBhIMcHJvZmlsZV92aWV3Eg5wcm9maWxlX2NyZWF0ZRIOcHJvZmlsZV91cGRhdG'
+    'USDXByb2ZpbGVfbWVyZ2USDmNvbnRhY3RfbWFuYWdlEgtyb3N0ZXJfdmlldxINcm9zdGVyX21h'
+    'bmFnZRIOYWRkcmVzc19tYW5hZ2USEXJlbGF0aW9uc2hpcF92aWV3EhNyZWxhdGlvbnNoaXBfbW'
+    'FuYWdl');
 

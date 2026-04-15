@@ -239,7 +239,7 @@ func (pb *profileBusiness) UpdateProfile(
 	request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error) {
 	requestProperties := data.JSONMap{}
 	requestProperties = requestProperties.FromProtoStruct(request.GetProperties())
-	return pb.UpdateProfileProperties(ctx, request.GetId(), requestProperties, false)
+	return pb.UpdateProfileProperties(ctx, request.GetId(), requestProperties, request.GetScoped())
 }
 
 func (pb *profileBusiness) UpdateProfileProperties(

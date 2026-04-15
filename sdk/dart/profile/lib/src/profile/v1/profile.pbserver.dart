@@ -39,6 +39,8 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
   $async.Future<$12.AddRelationshipResponse> addRelationship($pb.ServerContext ctx, $12.AddRelationshipRequest request);
   $async.Future<$12.DeleteRelationshipResponse> deleteRelationship($pb.ServerContext ctx, $12.DeleteRelationshipRequest request);
   $async.Future<$12.ListRelationshipResponse> listRelationship($pb.ServerContext ctx, $12.ListRelationshipRequest request);
+  $async.Future<$12.GetByIDAndPartitionResponse> getByIDAndPartition($pb.ServerContext ctx, $12.GetByIDAndPartitionRequest request);
+  $async.Future<$12.PropertyHistoryResponse> propertyHistory($pb.ServerContext ctx, $12.PropertyHistoryRequest request);
 
   $pb.GeneratedMessage createRequest($core.String methodName) {
     switch (methodName) {
@@ -60,6 +62,8 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
       case 'AddRelationship': return $12.AddRelationshipRequest();
       case 'DeleteRelationship': return $12.DeleteRelationshipRequest();
       case 'ListRelationship': return $12.ListRelationshipRequest();
+      case 'GetByIDAndPartition': return $12.GetByIDAndPartitionRequest();
+      case 'PropertyHistory': return $12.PropertyHistoryRequest();
       default: throw $core.ArgumentError('Unknown method: $methodName');
     }
   }
@@ -84,6 +88,8 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
       case 'AddRelationship': return this.addRelationship(ctx, request as $12.AddRelationshipRequest);
       case 'DeleteRelationship': return this.deleteRelationship(ctx, request as $12.DeleteRelationshipRequest);
       case 'ListRelationship': return this.listRelationship(ctx, request as $12.ListRelationshipRequest);
+      case 'GetByIDAndPartition': return this.getByIDAndPartition(ctx, request as $12.GetByIDAndPartitionRequest);
+      case 'PropertyHistory': return this.propertyHistory(ctx, request as $12.PropertyHistoryRequest);
       default: throw $core.ArgumentError('Unknown method: $methodName');
     }
   }

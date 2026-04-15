@@ -160,4 +160,22 @@ abstract final class ProfileService {
     profilev1profile.ListRelationshipResponse.new,
     idempotency: connect.Idempotency.noSideEffects,
   );
+
+  /// GetByIDAndPartition retrieves a profile with partition-scoped properties merged in.
+  static const getByIDAndPartition = connect.Spec(
+    '/$name/GetByIDAndPartition',
+    connect.StreamType.unary,
+    profilev1profile.GetByIDAndPartitionRequest.new,
+    profilev1profile.GetByIDAndPartitionResponse.new,
+    idempotency: connect.Idempotency.noSideEffects,
+  );
+
+  /// PropertyHistory returns the change history for a specific property key on a profile.
+  static const propertyHistory = connect.Spec(
+    '/$name/PropertyHistory',
+    connect.StreamType.unary,
+    profilev1profile.PropertyHistoryRequest.new,
+    profilev1profile.PropertyHistoryResponse.new,
+    idempotency: connect.Idempotency.noSideEffects,
+  );
 }
