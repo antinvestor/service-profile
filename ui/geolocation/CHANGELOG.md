@@ -1,3 +1,7 @@
+## 0.2.1
+
+- Export AreaPickerField widget
+
 ## 0.2.0
 
 - Bump antinvestor_ui_core dependency to ^0.2.0

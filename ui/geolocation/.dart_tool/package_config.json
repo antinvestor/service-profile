@@ -27,7 +27,7 @@
     },
     {
       "name": "antinvestor_ui_core",
-      "rootUri": "file:///home/j/.pub-cache/hosted/pub.dev/antinvestor_ui_core-0.1.0",
+      "rootUri": "file:///home/j/.pub-cache/hosted/pub.dev/antinvestor_ui_core-0.2.0",
       "packageUri": "lib/",
       "languageVersion": "3.11"
     },
@@ -309,7 +309,7 @@
     },
     {
       "name": "google_fonts",
-      "rootUri": "file:///home/j/.pub-cache/hosted/pub.dev/google_fonts-6.3.3",
+      "rootUri": "file:///home/j/.pub-cache/hosted/pub.dev/google_fonts-8.0.2",
       "packageUri": "lib/",
       "languageVersion": "3.9"
     },
