@@ -24,6 +24,7 @@ export 'src/widgets/roster_contact_tile.dart';
 export 'src/widgets/profile_badge_by_id.dart';
 export 'src/widgets/profile_search_select.dart';
 export 'src/widgets/profile_inline_manager.dart';
+export 'src/widgets/profile_resolver.dart';
 
 // Providers
 export 'src/providers/profile_transport_provider.dart';
