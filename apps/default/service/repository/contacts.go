@@ -7,6 +7,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -43,8 +44,10 @@ func (cr *contactRepository) VerificationAttemptSave(ctx context.Context, attemp
 }
 
 func (cr *contactRepository) GetByProfileID(ctx context.Context, profileID string) ([]*models.Contact, error) {
+	// Contacts are looked up cross-tenant (e.g. building profile API responses).
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
 	contactList := make([]*models.Contact, 0)
-	err := cr.Pool().DB(ctx, true).Where("profile_id = ?", profileID).Find(&contactList).Error
+	err := cr.Pool().DB(unscopedCtx, true).Where("profile_id = ?", profileID).Find(&contactList).Error
 	return contactList, err
 }
 
@@ -52,10 +55,13 @@ func (cr *contactRepository) GetByLookupToken(
 	ctx context.Context,
 	lookupTokenList ...[]byte,
 ) ([]*models.Contact, error) {
+	// Contact lookups by token are cross-tenant (the same contact detail
+	// should resolve regardless of the caller's tenant).
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
 	var contactList []*models.Contact
 
 	if err := cr.Pool().
-		DB(ctx, true).
+		DB(unscopedCtx, true).
 		Where(" look_up_token IN ?", lookupTokenList).
 		Find(&contactList).
 		Error; err != nil {

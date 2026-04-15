@@ -13,6 +13,7 @@ import (
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -126,6 +127,134 @@ func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile() {
 				}
 			})
 		}
+	})
+}
+
+// Test_profileBusiness_CreateProfile_WithTenantContext verifies that profile creation
+// works when the context carries real tenant/partition claims, as it does in production.
+// This catches tenancy scoping issues where global seed data (profile_types) or
+// cross-tenant lookups (GetByID) fail because GORM adds WHERE tenant_id/partition_id
+// filters from the claims context.
+func (pts *ProfileTestSuite) Test_profileBusiness_CreateProfile_WithTenantContext() {
+	t := pts.T()
+
+	requestProp, _ := structpb.NewStruct(data.JSONMap{
+		"au_name": "Tenant Context Tester",
+	})
+
+	testcases := []struct {
+		name    string
+		request *profilev1.CreateRequest
+	}{
+		{
+			name: "Create person profile",
+			request: &profilev1.CreateRequest{
+				Type:       profilev1.ProfileType_PERSON,
+				Contact:    "tenant.person@testing.com",
+				Properties: requestProp,
+			},
+		},
+		{
+			name: "Create institution profile",
+			request: &profilev1.CreateRequest{
+				Type:       profilev1.ProfileType_INSTITUTION,
+				Contact:    "tenant.org@testing.com",
+				Properties: requestProp,
+			},
+		},
+		{
+			name: "Create bot profile",
+			request: &profilev1.CreateRequest{
+				Type:       profilev1.ProfileType_BOT,
+				Contact:    "tenant.bot@testing.com",
+				Properties: requestProp,
+			},
+		},
+	}
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+
+		tenantID := util.IDString()
+		partitionID := util.IDString()
+		callerProfileID := util.IDString()
+		ctx = pts.WithAuthClaims(ctx, tenantID, partitionID, callerProfileID)
+
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		for _, tt := range testcases {
+			t.Run(tt.name, func(t *testing.T) {
+				got, err := pb.CreateProfile(ctx, tt.request)
+				require.NoError(t, err, "CreateProfile should succeed with tenant-scoped claims")
+				require.Len(t, got.GetContacts(), 1, "created profile should have one contact")
+				require.Equal(t, tt.request.GetProperties().AsMap(), got.GetProperties().AsMap())
+			})
+		}
+	})
+}
+
+// Test_profileBusiness_GetByID_WithTenantContext verifies that GetByID works
+// cross-tenant — a profile created under one tenant can be retrieved from
+// a context with different (or no) tenant claims.
+func (pts *ProfileTestSuite) Test_profileBusiness_GetByID_WithTenantContext() {
+	t := pts.T()
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+
+		// Create profile under tenant A
+		tenantA := util.IDString()
+		partitionA := util.IDString()
+		ctxA := pts.WithAuthClaims(ctx, tenantA, partitionA, util.IDString())
+
+		pb, _ := pts.getProfileBusiness(ctxA, svc)
+		created, err := pb.CreateProfile(ctxA, &profilev1.CreateRequest{
+			Type:    profilev1.ProfileType_PERSON,
+			Contact: "crosslookup@testing.com",
+		})
+		require.NoError(t, err)
+
+		// Read it back from tenant B context
+		tenantB := util.IDString()
+		partitionB := util.IDString()
+		ctxB := pts.WithAuthClaims(ctx, tenantB, partitionB, util.IDString())
+
+		pbB, _ := pts.getProfileBusiness(ctxB, svc)
+		got, err := pbB.GetByID(ctxB, created.GetId())
+		require.NoError(t, err, "GetByID should work cross-tenant")
+		require.Equal(t, created.GetId(), got.GetId())
+	})
+}
+
+// Test_profileBusiness_GetByContact_WithTenantContext verifies that contact
+// lookups work cross-tenant.
+func (pts *ProfileTestSuite) Test_profileBusiness_GetByContact_WithTenantContext() {
+	t := pts.T()
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+
+		// Create profile under tenant A
+		tenantA := util.IDString()
+		partitionA := util.IDString()
+		ctxA := pts.WithAuthClaims(ctx, tenantA, partitionA, util.IDString())
+
+		pb, _ := pts.getProfileBusiness(ctxA, svc)
+		created, err := pb.CreateProfile(ctxA, &profilev1.CreateRequest{
+			Type:    profilev1.ProfileType_INSTITUTION,
+			Contact: "crosscontact@testing.com",
+		})
+		require.NoError(t, err)
+
+		// Look up by contact from tenant B context
+		tenantB := util.IDString()
+		partitionB := util.IDString()
+		ctxB := pts.WithAuthClaims(ctx, tenantB, partitionB, util.IDString())
+
+		pbB, _ := pts.getProfileBusiness(ctxB, svc)
+		got, err := pbB.GetByContact(ctxB, "crosscontact@testing.com")
+		require.NoError(t, err, "GetByContact should work cross-tenant")
+		require.Equal(t, created.GetId(), got.GetId())
 	})
 }
 

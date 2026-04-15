@@ -281,8 +281,6 @@ func (pb *profileBusiness) lookupContactByDetail(
 func (pb *profileBusiness) CreateProfile(
 	ctx context.Context,
 	request *profilev1.CreateRequest) (*profilev1.ProfileObject, error) {
-	log := util.Log(ctx).With("method", "CreateProfile")
-
 	contactDetail := strings.TrimSpace(request.GetContact())
 
 	if contactDetail == "" {
@@ -295,59 +293,40 @@ func (pb *profileBusiness) CreateProfile(
 
 	contact, lookupErr := pb.lookupContactByDetail(ctx, contactDetail)
 	if lookupErr != nil && !errors.Is(lookupErr, ErrContactNotFound) {
-		log.Warn("step1_contact_lookup failed", "error", lookupErr)
 		return nil, lookupErr
 	}
 
 	if contact != nil && contact.ProfileID != "" {
-		log.Info("step1_found_existing", "profile_id", contact.ProfileID)
-		result, err := pb.GetByID(ctx, contact.ProfileID)
-		if err != nil {
-			log.Warn("step1_get_existing failed", "error", err, "profile_id", contact.ProfileID)
-		}
-		return result, err
+		return pb.GetByID(ctx, contact.ProfileID)
 	}
 
-	log.Info("step2_type_lookup", "type", request.GetType().String())
-	var pt *models.ProfileType
 	pt, repoErr := pb.profileRepo.GetTypeByUID(ctx, request.GetType())
 	if repoErr != nil {
-		log.Warn("step2_type_lookup failed", "error", repoErr)
 		return nil, data.ErrorConvertToAPI(repoErr)
 	}
-	log.Info("step2_type_found", "type_id", pt.ID, "type_uid", pt.UID)
 
 	p.ProfileType = *pt
 	p.ProfileTypeID = pt.ID
 
 	createErr := pb.profileRepo.Create(ctx, &p)
 	if createErr != nil {
-		log.Warn("step3_profile_create failed", "error", createErr)
 		return nil, data.ErrorConvertToAPI(createErr)
 	}
-	log.Info("step3_profile_created", "profile_id", p.GetID())
 
 	var err error
 	if contact == nil {
 		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, data.JSONMap{})
 		if err != nil {
-			log.Warn("step4_contact_create failed", "error", err)
 			return nil, err
 		}
 	}
 
 	contact, err = pb.contactBusiness.UpdateContact(ctx, contact.GetID(), p.GetID(), nil)
 	if err != nil {
-		log.Warn("step5_contact_update failed", "error", err)
 		return nil, err
 	}
 
-	log.Info("step6_final_get", "profile_id", contact.ProfileID)
-	result, err := pb.GetByID(ctx, contact.ProfileID)
-	if err != nil {
-		log.Warn("step6_final_get failed", "error", err, "profile_id", contact.ProfileID)
-	}
-	return result, err
+	return pb.GetByID(ctx, contact.ProfileID)
 }
 
 // func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params data.JSONMap) error {

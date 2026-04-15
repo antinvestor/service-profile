@@ -28,7 +28,10 @@ func NewProfileRepository(ctx context.Context, dbPool pool.Pool, workMan workerp
 
 func (pr *profileRepository) GetTypeByID(ctx context.Context, profileTypeID string) (*models.ProfileType, error) {
 	profileType := &models.ProfileType{}
-	err := pr.Pool().DB(ctx, true).First(profileType, "id = ?", profileTypeID).Error
+	// Profile types are global seed data with NULL partition/tenant columns.
+	// Skip tenancy checks so the query isn't scoped to a specific partition.
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
+	err := pr.Pool().DB(unscopedCtx, true).First(profileType, "id = ?", profileTypeID).Error
 	return profileType, err
 }
 
@@ -46,11 +49,11 @@ func (pr *profileRepository) GetTypeByUID(
 }
 
 func (pr *profileRepository) GetByID(ctx context.Context, id string) (*models.Profile, error) {
-	emptyClaims := &security.AuthenticationClaims{}
-	emptyCtx := emptyClaims.ClaimsToContext(ctx)
-
+	// Profiles are accessed cross-tenant (e.g. reading back a just-created profile,
+	// or looking up profiles by contact across tenants). Skip tenancy scoping.
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
 	profile := &models.Profile{}
-	err := pr.Pool().DB(emptyCtx, true).Preload(clause.Associations).First(profile, "id = ?", id).Error
+	err := pr.Pool().DB(unscopedCtx, true).Preload(clause.Associations).First(profile, "id = ?", id).Error
 	return profile, err
 }
 
