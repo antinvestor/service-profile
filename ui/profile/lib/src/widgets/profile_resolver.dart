@@ -131,13 +131,20 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
         });
         widget.onProfileResolved(result);
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
           _foundProfile = null;
           _searched = true;
           _searching = false;
         });
+        // Show error details so the user knows what happened
+        final msg = e.toString();
+        if (msg.contains('unauthenticated') || msg.contains('permission')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Auth error — please sign out and sign back in. ($msg)')),
+          );
+        }
       }
     }
   }
