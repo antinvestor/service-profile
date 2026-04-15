@@ -73,7 +73,7 @@ Entries are immutable once written. The latest entry per (profile_id, key, scope
 | Scenario | Behavior |
 |---|---|
 | `GetByID(profileID)` | Return `Profile.Properties` (global cache only) |
-| `GetByPartition(profileID, partitionID)` | Return global properties + partition's tenant-scoped entries merged |
+| `GetByIDAndPartition(profileID, partitionID)` | Return global properties + partition's tenant-scoped entries merged |
 | `GetPropertiesByTenant(profileID, tenantID)` | Return only properties written by that tenant (global + scoped) |
 | `GetPropertyHistory(profileID, key)` | Full change log for that key. Scoped entries filtered to caller's tenant. |
 
@@ -93,7 +93,7 @@ message UpdateRequest {
 }
 
 // New: get profile with partition-scoped properties merged in
-message GetByPartitionRequest {
+message GetByIDAndPartitionRequest {
     string id = 1;
     string partition_id = 2;
 }
