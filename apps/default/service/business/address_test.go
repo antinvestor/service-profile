@@ -9,6 +9,7 @@ import (
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
@@ -190,5 +191,57 @@ func (ats *AddressTestSuite) Test_addressBusiness_GetByProfile() {
 		if len(addresses) == 0 {
 			t.Errorf(" GetByProfile failed with %+v", err)
 		}
+	})
+}
+
+// Test_addressBusiness_GetByProfile_WithTenantContext verifies that addresses
+// linked to a profile under one tenant are visible from a different tenant context.
+// Addresses are cross-tenant identity data.
+func (ats *AddressTestSuite) Test_addressBusiness_GetByProfile_WithTenantContext() {
+	t := ats.T()
+
+	ats.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := ats.CreateService(t, dep)
+
+		// Create profile under tenant A
+		tenantA := util.IDString()
+		partitionA := util.IDString()
+		ctxA := ats.WithAuthClaims(ctx, tenantA, partitionA, util.IDString())
+
+		profileBusiness, addressRepo := ats.getProfileBusiness(ctxA, svc)
+
+		testProfiles, err := ats.CreateTestProfiles(ctxA, profileBusiness, []string{"addr.tenant@testing.com"})
+		require.NoError(t, err, "CreateTestProfiles should succeed under tenant A")
+
+		profile := testProfiles[0]
+
+		// Add an address under tenant A context
+		addBuss := business.NewAddressBusiness(ctxA, addressRepo)
+
+		adObj := &profilev1.AddressObject{
+			Name:    "Cross-tenant address",
+			Area:    "Town",
+			Country: "KEN",
+		}
+
+		add, err := addBuss.CreateAddress(ctxA, adObj)
+		require.NoError(t, err, "CreateAddress should succeed under tenant A")
+
+		err = addBuss.LinkAddressToProfile(ctxA, profile.GetId(), "Test Link", add)
+		require.NoError(t, err, "LinkAddressToProfile should succeed under tenant A")
+
+		// Switch to tenant B context and read addresses
+		tenantB := util.IDString()
+		partitionB := util.IDString()
+		ctxB := ats.WithAuthClaims(ctx, tenantB, partitionB, util.IDString())
+
+		// Re-create business with tenant B context repos
+		_, addressRepoB := ats.getProfileBusiness(ctxB, svc)
+		addBussB := business.NewAddressBusiness(ctxB, addressRepoB)
+
+		addresses, err := addBussB.GetByProfile(ctxB, profile.GetId())
+		require.NoError(t, err, "GetByProfile should work cross-tenant")
+		require.NotEmpty(t, addresses, "addresses should be visible from tenant B")
+		require.Equal(t, add.GetId(), addresses[0].AddressID, "address ID should match")
 	})
 }

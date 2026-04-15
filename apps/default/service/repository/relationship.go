@@ -6,6 +6,7 @@ import (
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"github.com/pitabwire/frame/datastore"
 	"github.com/pitabwire/frame/datastore/pool"
+	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/workerpool"
 	"gorm.io/gorm/clause"
 
@@ -70,8 +71,10 @@ func (ar *relationshipRepository) RelationshipTypeByID(
 	ctx context.Context,
 	profileTypeID string,
 ) (*models.RelationshipType, error) {
+	// Relationship types are global seed data. Skip tenancy scoping.
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
 	relationshipType := &models.RelationshipType{}
-	err := ar.Pool().DB(ctx, true).First(relationshipType, "id = ?", profileTypeID).Error
+	err := ar.Pool().DB(unscopedCtx, true).First(relationshipType, "id = ?", profileTypeID).Error
 	return relationshipType, err
 }
 
@@ -79,8 +82,10 @@ func (ar *relationshipRepository) RelationshipType(
 	ctx context.Context,
 	profileType profilev1.RelationshipType,
 ) (*models.RelationshipType, error) {
+	// Relationship types are global seed data. Skip tenancy scoping.
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
 	relationshipTypeUID := models.RelationshipTypeIDMap[profileType]
 	relationshipTypeM := &models.RelationshipType{}
-	err := ar.Pool().DB(ctx, true).First(relationshipTypeM, "uid = ?", relationshipTypeUID).Error
+	err := ar.Pool().DB(unscopedCtx, true).First(relationshipTypeM, "uid = ?", relationshipTypeUID).Error
 	return relationshipTypeM, err
 }
