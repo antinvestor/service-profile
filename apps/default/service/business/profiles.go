@@ -138,7 +138,7 @@ func (pb *profileBusiness) GetByContact(
 		}
 
 		if len(contactList) == 0 {
-			return nil, errors.New("contact not found")
+			return nil, connect.NewError(connect.CodeNotFound, ErrContactNotFound)
 		}
 		contact = contactList[0]
 	} else {
