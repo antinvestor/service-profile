@@ -133,20 +133,20 @@ The `Profile.Properties` column is retained as the denormalized cache.
 
 #### 3.1 Model Change
 
-Add `ListName` field to the existing `Roster` GORM model:
+Add `Name` field to the existing `Roster` GORM model:
 
 ```go
 type Roster struct {
     data.BaseModel
     ProfileID  string          `gorm:"type:varchar(50);uniqueIndex:roster_composite_index,priority:1"`
     ContactID  string          `gorm:"type:varchar(50);uniqueIndex:roster_composite_index,priority:2"`
-    ListName   string          `gorm:"type:varchar(255);not null;default:'default';uniqueIndex:roster_composite_index,priority:3"`
+    Name   string          `gorm:"type:varchar(255);not null;default:'default';uniqueIndex:roster_composite_index,priority:3"`
     Contact    Contact         `gorm:"foreignKey:ContactID"`
     Properties data.JSONMap    `gorm:"type:JSONB"`
 }
 ```
 
-The unique index changes from `(profile_id, contact_id)` to `(profile_id, contact_id, list_name)`. GORM auto-migration handles the column addition. A SQL migration drops the old index and the new one is created by GORM. The tenant_id is already part of the tenancy scoping at query time, so it does not need to be in the unique index.
+The unique index changes from `(profile_id, contact_id)` to `(profile_id, contact_id, name)`. GORM auto-migration handles the column addition. A SQL migration drops the old index and the new one is created by GORM. The tenant_id is already part of the tenancy scoping at query time, so it does not need to be in the unique index.
 
 #### 3.2 Behavior
 
@@ -160,18 +160,18 @@ The unique index changes from `(profile_id, contact_id)` to `(profile_id, contac
 ```protobuf
 message RosterEntry {
     // ... existing fields ...
-    string list_name = 6;
+    string name = 6;
 }
 
 message ProcessRosterBatchRequest {
     string profile_id = 1;
-    string list_name = 2;       // Required, e.g., "friends"
+    string name = 2;       // Required, e.g., "friends"
     repeated RosterItem items = 3;
 }
 
 message SearchRosterRequest {
     string profile_id = 1;
-    string list_name = 2;       // Empty = all lists for this tenant
+    string name = 2;       // Empty = all lists for this tenant
     int32 count = 3;
     int32 page = 4;
 }
@@ -179,13 +179,13 @@ message SearchRosterRequest {
 message RemoveRosterRequest {
     string profile_id = 1;
     string contact_id = 2;
-    string list_name = 3;       // Required
+    string name = 3;       // Required
 }
 ```
 
 #### 3.4 Migration
 
-Existing roster entries get `list_name = 'default'`.
+Existing roster entries get `name = 'default'`.
 
 ### 4. Authorization
 
