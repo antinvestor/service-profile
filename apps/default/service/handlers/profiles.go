@@ -9,6 +9,7 @@ import (
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
+	auditlib "github.com/antinvestor/common/audit"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/data"
 	"github.com/pitabwire/frame/datastore"
@@ -175,10 +176,13 @@ func (ps *ProfileServer) Create(
 	request *connect.Request[profilev1.CreateRequest],
 ) (*connect.Response[profilev1.CreateResponse], error) {
 	profileObj, err := ps.profileBusiness.CreateProfile(ctx, request.Msg)
-
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
+
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, profileObj.GetId())
+	auditlib.WithDetail(ctx, "profile_type", request.Msg.GetType().String())
+	auditlib.WithDetail(ctx, "contact", request.Msg.GetContact())
 
 	return connect.NewResponse(&profilev1.CreateResponse{Data: profileObj}), nil
 }
@@ -195,10 +199,11 @@ func (ps *ProfileServer) Update(
 	}
 
 	profileObj, err := ps.profileBusiness.UpdateProfile(ctx, request.Msg)
-
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
+
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
 
 	return connect.NewResponse(&profilev1.UpdateResponse{Data: profileObj}), nil
 }
@@ -218,6 +223,15 @@ func (ps *ProfileServer) AddAddress(ctx context.Context,
 		return nil, errorutil.CleanErr(err)
 	}
 
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+	auditlib.WithRelation(ctx, auditlib.Relation{
+		ParentType: auditlib.ResourceProfile,
+		ParentID:   request.Msg.GetId(),
+		ChildType:  auditlib.ResourceAddress,
+		ChildID:    "", // address ID not returned in this response
+		Action:     auditlib.RelationAdded,
+	})
+
 	return connect.NewResponse(&profilev1.AddAddressResponse{Data: profileObj}), nil
 }
 
@@ -233,10 +247,18 @@ func (ps *ProfileServer) AddContact(
 	}
 
 	profileObj, verificationID, err := ps.profileBusiness.AddContact(ctx, request.Msg)
-
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
+
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+	auditlib.WithRelation(ctx, auditlib.Relation{
+		ParentType: auditlib.ResourceProfile,
+		ParentID:   request.Msg.GetId(),
+		ChildType:  auditlib.ResourceContact,
+		ChildID:    request.Msg.GetContact(),
+		Action:     auditlib.RelationAdded,
+	})
 
 	return connect.NewResponse(&profilev1.AddContactResponse{Data: profileObj, VerificationId: verificationID}), nil
 }
@@ -345,10 +367,13 @@ func (ps *ProfileServer) RemoveContact(
 	}
 
 	profileObj, err := ps.profileBusiness.RemoveContact(ctx, request.Msg)
-
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
+
+	auditlib.WithResource(ctx, auditlib.ResourceContact, request.Msg.GetId())
+	auditlib.WithAction(ctx, auditlib.ActionRemove)
+
 	return connect.NewResponse(&profilev1.RemoveContactResponse{Data: profileObj}), nil
 }
 
@@ -442,10 +467,19 @@ func (ps *ProfileServer) AddRelationship(
 	}
 
 	relationshipObj, err := ps.relationshipBusiness.CreateRelationship(ctx, request.Msg)
-
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
+
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+	auditlib.WithRelation(ctx, auditlib.Relation{
+		ParentType: auditlib.ResourceProfile,
+		ParentID:   request.Msg.GetId(),
+		ChildType:  auditlib.ResourceRelationship,
+		ChildID:    relationshipObj.GetId(),
+		Action:     auditlib.RelationAdded,
+	})
+	auditlib.WithDetail(ctx, "relationship_type", request.Msg.GetType().String())
 
 	return connect.NewResponse(
 		&profilev1.AddRelationshipResponse{Data: relationshipObj}), nil
