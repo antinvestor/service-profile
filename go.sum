@@ -92,6 +92,8 @@ github.com/antinvestor/common/audit v0.0.0-20260415111435-63a97b8efaed h1:2Qk2/P
 github.com/antinvestor/common/audit v0.0.0-20260415111435-63a97b8efaed/go.mod h1:8KuPphmOXkPFJmlM6y3KOdFwZdB0LmJyZnx/yKjhQwg=
 github.com/antinvestor/common/audit v0.0.0-20260415112018-9b01234792b8 h1:d4ADDvSWxclFdkUAOG24OuGvcWsomkwwWGWFzhrRTZE=
 github.com/antinvestor/common/audit v0.0.0-20260415112018-9b01234792b8/go.mod h1:8KuPphmOXkPFJmlM6y3KOdFwZdB0LmJyZnx/yKjhQwg=
+github.com/antinvestor/common/audit v0.0.0-20260415115730-2099d7d1879f h1:5VJ6xQZRVkiAIUEJkVlAQXR6za15UpyV5TTKBc8stbA=
+github.com/antinvestor/common/audit v0.0.0-20260415115730-2099d7d1879f/go.mod h1:8KuPphmOXkPFJmlM6y3KOdFwZdB0LmJyZnx/yKjhQwg=
 github.com/antithesishq/antithesis-sdk-go v0.6.0-default-no-op h1:kpBdlEPbRvff0mDD1gk7o9BhI16b9p5yYAXRlidpqJE=
 github.com/antithesishq/antithesis-sdk-go v0.6.0-default-no-op/go.mod h1:IUpT2DPAKh6i/YhSbt6Gl3v2yvUZjmKncl7U91fup7E=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=
