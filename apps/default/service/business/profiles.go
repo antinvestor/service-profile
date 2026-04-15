@@ -281,6 +281,8 @@ func (pb *profileBusiness) lookupContactByDetail(
 func (pb *profileBusiness) CreateProfile(
 	ctx context.Context,
 	request *profilev1.CreateRequest) (*profilev1.ProfileObject, error) {
+	log := util.Log(ctx).With("method", "CreateProfile")
+
 	contactDetail := strings.TrimSpace(request.GetContact())
 
 	if contactDetail == "" {
@@ -293,16 +295,19 @@ func (pb *profileBusiness) CreateProfile(
 
 	contact, lookupErr := pb.lookupContactByDetail(ctx, contactDetail)
 	if lookupErr != nil && !errors.Is(lookupErr, ErrContactNotFound) {
+		log.Warn("contact lookup failed", "error", lookupErr, "contact", contactDetail)
 		return nil, lookupErr
 	}
 
 	if contact != nil && contact.ProfileID != "" {
+		log.Info("found existing contact with profile", "contact_id", contact.GetID(), "profile_id", contact.ProfileID)
 		return pb.GetByID(ctx, contact.ProfileID)
 	}
 
 	var pt *models.ProfileType
 	pt, repoErr := pb.profileRepo.GetTypeByUID(ctx, request.GetType())
 	if repoErr != nil {
+		log.Warn("profile type lookup failed", "error", repoErr, "type", request.GetType().String())
 		return nil, data.ErrorConvertToAPI(repoErr)
 	}
 
@@ -311,19 +316,24 @@ func (pb *profileBusiness) CreateProfile(
 
 	createErr := pb.profileRepo.Create(ctx, &p)
 	if createErr != nil {
+		log.Warn("profile create failed", "error", createErr)
 		return nil, data.ErrorConvertToAPI(createErr)
 	}
+
+	log.Info("profile created", "profile_id", p.GetID())
 
 	var err error
 	if contact == nil {
 		contact, err = pb.contactBusiness.CreateContact(ctx, contactDetail, data.JSONMap{})
 		if err != nil {
+			log.Warn("contact create failed", "error", err, "contact", contactDetail)
 			return nil, err
 		}
 	}
 
 	contact, err = pb.contactBusiness.UpdateContact(ctx, contact.GetID(), p.GetID(), nil)
 	if err != nil {
+		log.Warn("contact update failed", "error", err, "contact_id", contact.GetID(), "profile_id", p.GetID())
 		return nil, err
 	}
 
