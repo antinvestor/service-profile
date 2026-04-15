@@ -58,6 +58,14 @@ type AddressRepository interface {
 	CountryGetByName(ctx context.Context, name string) (*models.Country, error)
 }
 
+type PropertyEntryRepository interface {
+	datastore.BaseRepository[*models.PropertyEntry]
+	AppendEntries(ctx context.Context, entries []*models.PropertyEntry) error
+	LatestGlobalByProfile(ctx context.Context, profileID string) ([]*models.PropertyEntry, error)
+	LatestScopedByProfileAndPartition(ctx context.Context, profileID, partitionID string) ([]*models.PropertyEntry, error)
+	HistoryByKey(ctx context.Context, profileID, key, callerTenantID string) ([]*models.PropertyEntry, error)
+}
+
 type RelationshipRepository interface {
 	datastore.BaseRepository[*models.Relationship]
 	List(ctx context.Context,
