@@ -14,10 +14,11 @@ import (
 
 // Profile type and relationship type constants.
 const (
-	// Profile type IDs.
-	ProfileTypePersonID      uint = 1
+	// Profile type IDs — must match the uid column in the profile_types table.
+	// These correspond to the proto enum values: PERSON=0, INSTITUTION=1, BOT=2.
+	ProfileTypePersonID      uint = 0
+	ProfileTypeInstitutionID uint = 1
 	ProfileTypeBotID         uint = 2
-	ProfileTypeInstitutionID uint = 3
 
 	// Relationship type IDs.
 	RelationshipTypeMemberID      uint = 1
