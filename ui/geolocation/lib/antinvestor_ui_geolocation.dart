@@ -16,6 +16,7 @@ export 'src/widgets/route_assignment_chip.dart';
 export 'src/widgets/nearby_card.dart';
 export 'src/widgets/location_display.dart';
 export 'src/widgets/area_badge.dart';
+export 'src/widgets/area_picker_field.dart';
 
 // Screens
 export 'src/screens/area_list_screen.dart';
