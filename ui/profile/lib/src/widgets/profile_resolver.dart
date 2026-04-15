@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../providers/profile_providers.dart';
+import '../providers/profile_transport_provider.dart';
 
 /// Reusable profile resolution widget.
 ///
@@ -117,10 +118,14 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
     setState(() {
       _searching = true;
       _searched = false;
+      _foundProfile = null;
     });
     try {
-      final result =
-          await ref.read(profileByContactProvider(contact).future);
+      // Force a fresh lookup (don't use cached provider state).
+      final client = ref.read(profileServiceClientProvider);
+      final request = profile.GetByContactRequest()..contact = contact;
+      final response = await client.getByContact(request);
+      final result = response.data;
       if (mounted) {
         setState(() {
           _foundProfile = result;
@@ -138,13 +143,6 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
           _searched = true;
           _searching = false;
         });
-        // Show error details so the user knows what happened
-        final msg = e.toString();
-        if (msg.contains('unauthenticated') || msg.contains('permission')) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Auth error — please sign out and sign back in. ($msg)')),
-          );
-        }
       }
     }
   }
