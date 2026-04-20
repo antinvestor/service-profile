@@ -313,9 +313,8 @@ func (r *Route) ToAPI() *RouteAPI {
 	}
 	api.DeviationThresholdM = r.DeviationThresholdM
 	if r.DeviationConsecutiveCount != nil {
-		value := int32(
-			*r.DeviationConsecutiveCount,
-		) //nolint:gosec // bounded by business validation
+		//nolint:gosec // bounded by business validation
+		value := int32(*r.DeviationConsecutiveCount)
 		api.DeviationConsecutiveCount = &value
 	}
 	if r.DeviationCooldownSec != nil {
