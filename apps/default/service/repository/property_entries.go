@@ -76,7 +76,10 @@ func (r *propertyEntryRepository) HistoryByKey(
 	err := r.Pool().DB(unscopedCtx, true).
 		Where("profile_id = ? AND key = ? AND (scoped = FALSE OR tenant_id = ?) AND deleted_at IS NULL",
 			profileID, key, callerTenantID).
-		Order("created_at DESC").
+		// id is an xid, so it breaks created_at ties (xid second-resolution
+		// timestamp means two entries written in the same second share
+		// created_at but remain sortable by id).
+		Order("created_at DESC, id DESC").
 		Find(&entries).Error
 	return entries, err
 }
