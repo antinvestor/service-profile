@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS location_points (
     deleted_at TIMESTAMPTZ,
     subject_id VARCHAR(40) NOT NULL,
     device_id VARCHAR(80) NOT NULL,
-    ts TIMESTAMPTZ NOT NULL,
+    true_created_at TIMESTAMPTZ NOT NULL,
     ingested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
@@ -44,11 +44,11 @@ DROP TABLE IF EXISTS location_points_partitioned CASCADE;
 CREATE INDEX IF NOT EXISTS idx_location_points_geom
     ON location_points USING GIST (geom);
 
-CREATE INDEX IF NOT EXISTS idx_lp_subject_ts_desc
-    ON location_points (subject_id, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_lp_subject_true_created_at_desc
+    ON location_points (subject_id, true_created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_lp_device_ts_desc
-    ON location_points (device_id, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_lp_device_true_created_at_desc
+    ON location_points (device_id, true_created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_lp_ingested_at
     ON location_points (ingested_at);

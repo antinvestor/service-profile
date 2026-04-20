@@ -40,8 +40,8 @@ func (r *locationPointRepository) GetTrack(
 	var points []*models.LocationPoint
 
 	db := r.Pool().DB(ctx, true)
-	query := db.Where("subject_id = ? AND ts >= ? AND ts <= ?", subjectID, from, to).
-		Order("ts DESC")
+	query := db.Where("subject_id = ? AND true_created_at >= ? AND true_created_at <= ?", subjectID, from, to).
+		Order("true_created_at DESC")
 
 	if limit > 0 {
 		query = query.Limit(limit)

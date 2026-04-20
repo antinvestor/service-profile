@@ -86,13 +86,13 @@ func TestProtoConversionsAndToAPI(t *testing.T) {
 	require.Equal(t, geolocationv1.GeoEventType_GEO_EVENT_TYPE_DWELL, ToProtoGeoEventType(GeoEventTypeDwell))
 
 	lp := &LocationPoint{
-		SubjectID: "subject-1",
-		DeviceID:  "device-1",
-		TS:        time.Now(),
-		Latitude:  1.2,
-		Longitude: 2.3,
-		Accuracy:  4,
-		Source:    LocationSourceNetwork,
+		SubjectID:     "subject-1",
+		DeviceID:      "device-1",
+		TrueCreatedAt: time.Now(),
+		Latitude:      1.2,
+		Longitude:     2.3,
+		Accuracy:      4,
+		Source:        LocationSourceNetwork,
 	}
 	lp.ID = "lp-1"
 	api := lp.ToAPI()
@@ -113,10 +113,10 @@ func TestProtoConversionsAndToAPI(t *testing.T) {
 	require.Equal(t, geolocationv1.AreaType_AREA_TYPE_FENCE, areaAPI.GetAreaType())
 
 	event := &GeoEvent{
-		SubjectID: "subject-1",
-		AreaID:    "area-1",
-		EventType: GeoEventTypeEnter,
-		TS:        time.Now(),
+		SubjectID:     "subject-1",
+		AreaID:        "area-1",
+		EventType:     GeoEventTypeEnter,
+		TrueCreatedAt: time.Now(),
 	}
 	event.ID = "event-1"
 	eventAPI := event.ToAPI()

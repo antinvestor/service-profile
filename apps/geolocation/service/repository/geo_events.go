@@ -84,7 +84,7 @@ func hasDwellEventQuery(
 	query := db.Model(&models.GeoEvent{}).
 		Where("subject_id = ? AND area_id = ? AND event_type = ?", subjectID, areaID, models.GeoEventTypeDwell)
 	if from != nil {
-		query = query.Where("ts >= ?", *from)
+		query = query.Where("true_created_at >= ?", *from)
 	}
 
 	var count int64
@@ -107,7 +107,7 @@ func (r *geoEventRepository) queryEvents(
 	db := r.Pool().DB(ctx, true)
 	query := db.Where(fmt.Sprintf("%s = ?", filterCol), filterVal)
 	query = applyTimeRange(query, from, to)
-	query = query.Order("ts DESC")
+	query = query.Order("true_created_at DESC")
 
 	if limit > 0 {
 		query = query.Limit(limit)
@@ -126,10 +126,10 @@ func (r *geoEventRepository) queryEvents(
 // applyTimeRange adds optional from/to time filters to a GORM query.
 func applyTimeRange(query *gorm.DB, from, to *time.Time) *gorm.DB {
 	if from != nil {
-		query = query.Where("ts >= ?", *from)
+		query = query.Where("true_created_at >= ?", *from)
 	}
 	if to != nil {
-		query = query.Where("ts <= ?", *to)
+		query = query.Where("true_created_at <= ?", *to)
 	}
 	return query
 }

@@ -102,7 +102,7 @@ func (b *catchupBusiness) RunCatchup(ctx context.Context) error {
 			Latitude:  point.Latitude,
 			Longitude: point.Longitude,
 			Accuracy:  point.Accuracy,
-			Timestamp: point.TS.UnixMilli(),
+			Timestamp: point.TrueCreatedAt.UnixMilli(),
 		}
 
 		if emitErr := b.eventsMan.Emit(ctx, LocationPointIngestedEventName, event); emitErr != nil {

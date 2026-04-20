@@ -6,9 +6,11 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/antinvestor/common/permissions"
+	"github.com/antinvestor/common/timescale"
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
@@ -19,6 +21,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/events"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/handlers"
+	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
 	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/geolocation/v1"
@@ -58,6 +61,9 @@ func main() { //nolint:funlen // wiring function
 
 	// Initialize repositories.
 	dbPool := dbManager.GetPool(ctx, datastore.DefaultPoolName)
+
+	// Register hypertables (no-op WARN if timescaledb extension is absent).
+	ensureHypertables(ctx, dbPool)
 	workMan, evtsMan := svc.WorkManager(), svc.EventsManager()
 
 	pointRepo := repository.NewLocationPointRepository(ctx, dbPool, workMan)
@@ -149,6 +155,15 @@ func main() { //nolint:funlen // wiring function
 
 	if runErr := svc.Run(ctx, ""); runErr != nil {
 		log.WithError(runErr).Fatal("could not run server")
+	}
+}
+
+// ensureHypertables registers TimescaleDB hypertables idempotently.
+// Errors are logged as warnings so the service continues when TimescaleDB
+// is not yet available.
+func ensureHypertables(ctx context.Context, dbPool pool.Pool) {
+	if tsErr := timescale.Ensure(ctx, dbPool.DB(ctx, false), models.Hypertables()); tsErr != nil {
+		util.Log(ctx).WithError(tsErr).Warn("timescale hypertable setup skipped — will retry after cluster migration")
 	}
 }
 

@@ -126,7 +126,7 @@ func (b *retentionBusiness) RunRetention(ctx context.Context) error { //nolint:g
 	// Delete expired geo events.
 	if b.cfg.GeoEventRetentionDays > 0 {
 		cutoff := time.Now().AddDate(0, 0, -b.cfg.GeoEventRetentionDays)
-		deleted, err := b.deleteExpired(ctx, "geo_events", "ts", cutoff)
+		deleted, err := b.deleteExpired(ctx, "geo_events", "true_created_at", cutoff)
 		if err != nil {
 			return fmt.Errorf("retain geo_events: %w", err)
 		}

@@ -8,8 +8,8 @@ WHERE device_id IS NULL OR device_id = '';
 ALTER TABLE IF EXISTS location_points
     ALTER COLUMN device_id SET NOT NULL;
 
-CREATE INDEX IF NOT EXISTS idx_lp_device_ts_desc
-    ON location_points (device_id, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_lp_device_true_created_at_desc
+    ON location_points (device_id, true_created_at DESC);
 
 ALTER TABLE IF EXISTS latest_positions
     ADD COLUMN IF NOT EXISTS device_id VARCHAR(80);
@@ -22,12 +22,12 @@ FROM (
         partition_id,
         subject_id,
         device_id,
-        ts
+        true_created_at
     FROM location_points
     WHERE deleted_at IS NULL
       AND device_id IS NOT NULL
       AND device_id <> ''
-    ORDER BY tenant_id, partition_id, subject_id, ts DESC, modified_at DESC
+    ORDER BY tenant_id, partition_id, subject_id, true_created_at DESC, modified_at DESC
 ) AS source_points
 WHERE lp.subject_id = source_points.subject_id
   AND COALESCE(lp.tenant_id, '') = COALESCE(source_points.tenant_id, '')

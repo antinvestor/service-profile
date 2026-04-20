@@ -101,7 +101,7 @@ func (s *RepositorySuite) TestLocationPointAndLatestPositionRepositories() {
 			{
 				SubjectID:       "subject-1",
 				DeviceID:        "device-subject-1-a",
-				TS:              now.Add(-2 * time.Minute),
+				TrueCreatedAt:   now.Add(-2 * time.Minute),
 				IngestedAt:      now.Add(-2 * time.Minute),
 				Latitude:        0.3500,
 				Longitude:       32.5800,
@@ -112,7 +112,7 @@ func (s *RepositorySuite) TestLocationPointAndLatestPositionRepositories() {
 			{
 				SubjectID:       "subject-1",
 				DeviceID:        "device-subject-1-b",
-				TS:              now.Add(-time.Minute),
+				TrueCreatedAt:   now.Add(-time.Minute),
 				IngestedAt:      now.Add(-time.Minute),
 				Latitude:        0.3502,
 				Longitude:       32.5802,
@@ -123,7 +123,7 @@ func (s *RepositorySuite) TestLocationPointAndLatestPositionRepositories() {
 			{
 				SubjectID:       "subject-2",
 				DeviceID:        "device-subject-2-a",
-				TS:              now,
+				TrueCreatedAt:   now,
 				IngestedAt:      now,
 				Latitude:        0.3503,
 				Longitude:       32.5803,
@@ -259,12 +259,12 @@ func (s *RepositorySuite) TestAreaGeoEventAndGeofenceStateRepositories() {
 		require.Len(t, byQuery, 1)
 
 		event := &models.GeoEvent{
-			SubjectID:  "subject-area",
-			AreaID:     area.GetID(),
-			EventType:  models.GeoEventTypeDwell,
-			TS:         time.Now().UTC(),
-			Confidence: 0.95,
-			PointID:    "point-1",
+			SubjectID:     "subject-area",
+			AreaID:        area.GetID(),
+			EventType:     models.GeoEventTypeDwell,
+			TrueCreatedAt: time.Now().UTC(),
+			Confidence:    0.95,
+			PointID:       "point-1",
 		}
 		event.GenID(ctx)
 
@@ -280,7 +280,7 @@ func (s *RepositorySuite) TestAreaGeoEventAndGeofenceStateRepositories() {
 		require.NoError(t, err)
 		require.Len(t, eventsByArea, 1)
 
-		from := event.TS.Add(-time.Minute)
+		from := event.TrueCreatedAt.Add(-time.Minute)
 		hasDwell, err := stack.GeoEventRepo.HasDwellEvent(ctx, "subject-area", area.GetID(), &from)
 		require.NoError(t, err)
 		require.True(t, hasDwell)

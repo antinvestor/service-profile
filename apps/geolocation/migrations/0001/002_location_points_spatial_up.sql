@@ -23,8 +23,8 @@ CREATE INDEX IF NOT EXISTS idx_location_points_geom
     ON location_points USING GIST (geom);
 
 -- Composite index for time-series queries by subject.
-CREATE INDEX IF NOT EXISTS idx_lp_subject_ts_desc
-    ON location_points (subject_id, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_lp_subject_true_created_at_desc
+    ON location_points (subject_id, true_created_at DESC);
 
 -- Index for ingestion time queries (used by data retention).
 CREATE INDEX IF NOT EXISTS idx_lp_ingested_at

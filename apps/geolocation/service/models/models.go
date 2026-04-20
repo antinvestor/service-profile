@@ -97,9 +97,9 @@ const (
 type LocationPoint struct {
 	data.BaseModel
 
-	SubjectID       string                       `gorm:"type:varchar(40);not null;index:idx_lp_subject_ts"`
-	DeviceID        string                       `gorm:"type:varchar(80);not null;index:idx_lp_device_ts"`
-	TS              time.Time                    `gorm:"type:timestamptz;not null;index:idx_lp_subject_ts,sort:desc;column:ts"`
+	SubjectID       string                       `gorm:"type:varchar(40);not null;index:idx_lp_subject_true_created_at"`
+	DeviceID        string                       `gorm:"type:varchar(80);not null;index:idx_lp_device_true_created_at"`
+	TrueCreatedAt   time.Time                    `gorm:"type:timestamptz;not null;index:idx_lp_subject_true_created_at,sort:desc;column:true_created_at"`
 	IngestedAt      time.Time                    `gorm:"type:timestamptz;not null;default:now()"`
 	Latitude        float64                      `gorm:"type:double precision;not null"`
 	Longitude       float64                      `gorm:"type:double precision;not null"`
@@ -125,7 +125,7 @@ func (lp *LocationPoint) ToAPI() *LocationPointAPI {
 		Id:        lp.GetID(),
 		SubjectId: lp.SubjectID,
 		DeviceId:  lp.DeviceID,
-		Timestamp: timestamppb.New(lp.TS),
+		Timestamp: timestamppb.New(lp.TrueCreatedAt),
 		Latitude:  lp.Latitude,
 		Longitude: lp.Longitude,
 		Accuracy:  lp.Accuracy,
@@ -197,13 +197,13 @@ func (a *Area) ToAPI() *AreaAPI {
 type GeoEvent struct {
 	data.BaseModel
 
-	SubjectID  string       `gorm:"type:varchar(40);not null;index:idx_ge_subject_ts"`
-	AreaID     string       `gorm:"type:varchar(40);not null;index:idx_ge_area_ts"`
-	EventType  GeoEventType `gorm:"type:smallint;not null"`
-	TS         time.Time    `gorm:"type:timestamptz;not null;index:idx_ge_subject_ts,sort:desc;index:idx_ge_area_ts,sort:desc;column:ts"`
-	Confidence float64      `gorm:"type:double precision;not null;default:1.0"`
-	PointID    string       `gorm:"type:varchar(40)"`
-	Extras     data.JSONMap `gorm:"serializer:json;type:jsonb;default:'{}'"`
+	SubjectID     string       `gorm:"type:varchar(40);not null;index:idx_ge_subject_true_created_at"`
+	AreaID        string       `gorm:"type:varchar(40);not null;index:idx_ge_area_true_created_at"`
+	EventType     GeoEventType `gorm:"type:smallint;not null"`
+	TrueCreatedAt time.Time    `gorm:"type:timestamptz;not null;index:idx_ge_subject_true_created_at,sort:desc;index:idx_ge_area_true_created_at,sort:desc;column:true_created_at"`
+	Confidence    float64      `gorm:"type:double precision;not null;default:1.0"`
+	PointID       string       `gorm:"type:varchar(40)"`
+	Extras        data.JSONMap `gorm:"serializer:json;type:jsonb;default:'{}'"`
 }
 
 func (*GeoEvent) TableName() string {
@@ -216,7 +216,7 @@ func (ge *GeoEvent) ToAPI() *GeoEventAPI {
 		SubjectId:  ge.SubjectID,
 		AreaId:     ge.AreaID,
 		EventType:  ToProtoGeoEventType(ge.EventType),
-		Timestamp:  timestamppb.New(ge.TS),
+		Timestamp:  timestamppb.New(ge.TrueCreatedAt),
 		Confidence: ge.Confidence,
 		PointId:    ge.PointID,
 		Extra:      jsonMapToStruct(ge.Extras),

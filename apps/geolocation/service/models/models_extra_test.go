@@ -105,17 +105,17 @@ func TestModelConversionsAndHelpers(t *testing.T) {
 	require.Equal(t, "b", jsonMapToStruct(data.JSONMap{"a": "b"}).GetFields()["a"].GetStringValue())
 
 	point := &LocationPoint{
-		SubjectID: "subject-1",
-		DeviceID:  "device-1",
-		TS:        now,
-		Latitude:  1.1,
-		Longitude: 2.2,
-		Altitude:  &altitude,
-		Accuracy:  3.3,
-		Speed:     &speed,
-		Bearing:   &bearing,
-		Source:    LocationSourceManual,
-		Extras:    data.JSONMap{"mode": "manual"},
+		SubjectID:     "subject-1",
+		DeviceID:      "device-1",
+		TrueCreatedAt: now,
+		Latitude:      1.1,
+		Longitude:     2.2,
+		Altitude:      &altitude,
+		Accuracy:      3.3,
+		Speed:         &speed,
+		Bearing:       &bearing,
+		Source:        LocationSourceManual,
+		Extras:        data.JSONMap{"mode": "manual"},
 	}
 	point.ID = "point-1"
 	point.CreatedAt = now

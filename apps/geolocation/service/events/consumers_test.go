@@ -129,7 +129,7 @@ func (s *EventsSuite) pointEvent(point *models.LocationPoint) *models.LocationPo
 		Latitude:  point.Latitude,
 		Longitude: point.Longitude,
 		Accuracy:  point.Accuracy,
-		Timestamp: point.TS.UnixMilli(),
+		Timestamp: point.TrueCreatedAt.UnixMilli(),
 	}
 }
 
@@ -151,7 +151,7 @@ func (s *EventsSuite) TestLocationPointConsumerSuccessAndFailure() {
 		point := &models.LocationPoint{
 			SubjectID:       "subject-1",
 			DeviceID:        "device-subject-1",
-			TS:              time.Now().UTC(),
+			TrueCreatedAt:   time.Now().UTC(),
 			IngestedAt:      time.Now().UTC(),
 			Latitude:        0.35,
 			Longitude:       32.59,
@@ -202,7 +202,7 @@ func (s *EventsSuite) TestLocationPointConsumerSuccessAndFailure() {
 		badPoint := &models.LocationPoint{
 			SubjectID:       "subject-bad",
 			DeviceID:        "device-subject-bad",
-			TS:              time.Now().UTC(),
+			TrueCreatedAt:   time.Now().UTC(),
 			IngestedAt:      time.Now().UTC(),
 			Latitude:        0.35,
 			Longitude:       32.59,

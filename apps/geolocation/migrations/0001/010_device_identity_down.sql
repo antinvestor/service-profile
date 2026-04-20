@@ -1,4 +1,4 @@
-DROP INDEX IF EXISTS idx_lp_device_ts_desc;
+DROP INDEX IF EXISTS idx_lp_device_true_created_at_desc;
 
 ALTER TABLE IF EXISTS latest_positions
     DROP COLUMN IF EXISTS device_id;

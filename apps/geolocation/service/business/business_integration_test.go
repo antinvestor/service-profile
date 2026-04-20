@@ -154,7 +154,7 @@ func (s *BusinessSuite) makePointEvent(
 		Latitude:  point.Latitude,
 		Longitude: point.Longitude,
 		Accuracy:  point.Accuracy,
-		Timestamp: point.TS.UnixMilli(),
+		Timestamp: point.TrueCreatedAt.UnixMilli(),
 	}
 }
 
@@ -333,9 +333,9 @@ func (s *BusinessSuite) TestIngestionGeofenceTrackAndProximityFlow() {
 		require.Len(t, pending, 5)
 		slices.SortFunc(pending, func(left, right *models.LocationPoint) int {
 			switch {
-			case left.TS.Before(right.TS):
+			case left.TrueCreatedAt.Before(right.TrueCreatedAt):
 				return -1
-			case left.TS.After(right.TS):
+			case left.TrueCreatedAt.After(right.TrueCreatedAt):
 				return 1
 			default:
 				return 0
@@ -499,7 +499,7 @@ func (s *BusinessSuite) TestRouteDeviationCatchupRetentionAndValidation() {
 		oldPoint := &models.LocationPoint{
 			SubjectID:       "subject-old",
 			DeviceID:        "device-subject-old",
-			TS:              oldTime,
+			TrueCreatedAt:   oldTime,
 			IngestedAt:      oldTime,
 			Latitude:        0.30,
 			Longitude:       32.50,
@@ -522,10 +522,10 @@ func (s *BusinessSuite) TestRouteDeviationCatchupRetentionAndValidation() {
 		require.NoError(t, stack.LatestPositionRepo.Upsert(ctx, oldLatest))
 
 		oldEvent := &models.GeoEvent{
-			SubjectID: "subject-old",
-			AreaID:    "area-old",
-			EventType: models.GeoEventTypeEnter,
-			TS:        oldTime,
+			SubjectID:     "subject-old",
+			AreaID:        "area-old",
+			EventType:     models.GeoEventTypeEnter,
+			TrueCreatedAt: oldTime,
 		}
 		oldEvent.GenID(ctx)
 		require.NoError(t, stack.GeoEventRepo.Create(ctx, oldEvent))

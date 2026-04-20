@@ -116,7 +116,7 @@ func (b *ingestionBusiness) IngestBatch(
 	// Event emission failures are non-fatal; the detection engine can catch up from the database.
 	for i, point := range validPoints {
 		pt := validInputs[i]
-		ts := point.TS
+		ts := point.TrueCreatedAt
 
 		ingestedEvent := &models.LocationPointIngestedEvent{
 			PointID: point.GetID(),
@@ -172,7 +172,7 @@ func buildLocationPoint(
 	point := &models.LocationPoint{
 		SubjectID:       subjectID,
 		DeviceID:        pt.GetDeviceId(),
-		TS:              ts,
+		TrueCreatedAt:   ts,
 		IngestedAt:      now,
 		Latitude:        pt.Latitude,
 		Longitude:       pt.Longitude,

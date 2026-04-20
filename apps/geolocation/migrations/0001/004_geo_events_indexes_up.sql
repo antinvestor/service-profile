@@ -2,19 +2,19 @@
 -- The table is defined by GORM auto-migrate; these are supplemental spatial/temporal indexes.
 
 -- Composite index for querying events by subject within a time range.
-CREATE INDEX IF NOT EXISTS idx_geo_events_subject_ts
-    ON geo_events (subject_id, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_geo_events_subject_true_created_at
+    ON geo_events (subject_id, true_created_at DESC);
 
 -- Composite index for querying events by area within a time range.
-CREATE INDEX IF NOT EXISTS idx_geo_events_area_ts
-    ON geo_events (area_id, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_geo_events_area_true_created_at
+    ON geo_events (area_id, true_created_at DESC);
 
 -- Index for event type filtering.
 CREATE INDEX IF NOT EXISTS idx_geo_events_type
     ON geo_events (event_type);
 
--- Partial index for HasDwellEvent check: (subject_id, area_id, ts) WHERE event_type = DWELL(2).
+-- Partial index for HasDwellEvent check: (subject_id, area_id, true_created_at) WHERE event_type = DWELL(2).
 -- Supports the geofence engine's dedup check for dwell events.
 CREATE INDEX IF NOT EXISTS idx_geo_events_dwell_dedup
-    ON geo_events (subject_id, area_id, ts DESC)
+    ON geo_events (subject_id, area_id, true_created_at DESC)
     WHERE event_type = 2;

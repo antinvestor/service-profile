@@ -17,7 +17,7 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260415201107-50325440f8f2.1
 	connectrpc.com/connect v1.19.1
 	firebase.google.com/go/v4 v4.19.0
-	github.com/antinvestor/common v1.4.4
+	github.com/antinvestor/common v1.4.5-0.20260420095807-503acb7eca75
 	github.com/antinvestor/common/audit v0.0.0-20260415115730-2099d7d1879f
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/gnostic v0.7.1

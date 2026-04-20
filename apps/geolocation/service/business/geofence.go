@@ -302,12 +302,12 @@ func (b *geofenceBusiness) handleEnter(
 	log := util.Log(ctx)
 
 	geoEvent := &models.GeoEvent{
-		SubjectID:  event.SubjectID,
-		AreaID:     area.GetID(),
-		EventType:  models.GeoEventTypeEnter,
-		TS:         pointTS,
-		Confidence: confidence,
-		PointID:    event.PointID,
+		SubjectID:     event.SubjectID,
+		AreaID:        area.GetID(),
+		EventType:     models.GeoEventTypeEnter,
+		TrueCreatedAt: pointTS,
+		Confidence:    confidence,
+		PointID:       event.PointID,
 	}
 	geoEvent.GenID(ctx)
 
@@ -352,12 +352,12 @@ func (b *geofenceBusiness) handleExit(
 	log := util.Log(ctx)
 
 	geoEvent := &models.GeoEvent{
-		SubjectID:  event.SubjectID,
-		AreaID:     area.GetID(),
-		EventType:  models.GeoEventTypeExit,
-		TS:         pointTS,
-		Confidence: confidence,
-		PointID:    event.PointID,
+		SubjectID:     event.SubjectID,
+		AreaID:        area.GetID(),
+		EventType:     models.GeoEventTypeExit,
+		TrueCreatedAt: pointTS,
+		Confidence:    confidence,
+		PointID:       event.PointID,
 	}
 	geoEvent.GenID(ctx)
 
@@ -421,12 +421,12 @@ func (b *geofenceBusiness) checkDwell(
 	log := util.Log(ctx)
 
 	geoEvent := &models.GeoEvent{
-		SubjectID:  event.SubjectID,
-		AreaID:     area.GetID(),
-		EventType:  models.GeoEventTypeDwell,
-		TS:         pointTS,
-		Confidence: confidence,
-		PointID:    event.PointID,
+		SubjectID:     event.SubjectID,
+		AreaID:        area.GetID(),
+		EventType:     models.GeoEventTypeDwell,
+		TrueCreatedAt: pointTS,
+		Confidence:    confidence,
+		PointID:       event.PointID,
 	}
 	geoEvent.GenID(ctx)
 
@@ -478,7 +478,7 @@ func (b *geofenceBusiness) emitGeoEvent(ctx context.Context, geoEvent *models.Ge
 		SubjectID:  geoEvent.SubjectID,
 		AreaID:     geoEvent.AreaID,
 		EventType:  geoEvent.EventType,
-		Timestamp:  geoEvent.TS.UnixMilli(),
+		Timestamp:  geoEvent.TrueCreatedAt.UnixMilli(),
 		Confidence: geoEvent.Confidence,
 	}
 

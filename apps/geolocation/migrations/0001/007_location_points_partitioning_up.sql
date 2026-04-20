@@ -1,4 +1,4 @@
--- Partition location_points by ts (timestamp) using PostgreSQL declarative range partitioning.
+-- Partition location_points by true_created_at (timestamp) using PostgreSQL declarative range partitioning.
 -- This allows efficient pruning of old data and keeps per-partition index sizes manageable.
 --
 -- Strategy: monthly partitions. The application (or a cron job) is responsible for creating
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS location_points (
     deleted_at TIMESTAMPTZ,
     subject_id VARCHAR(40) NOT NULL,
     device_id VARCHAR(80) NOT NULL,
-    ts TIMESTAMPTZ NOT NULL,
+    true_created_at TIMESTAMPTZ NOT NULL,
     ingested_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     latitude DOUBLE PRECISION NOT NULL,
     longitude DOUBLE PRECISION NOT NULL,
@@ -48,8 +48,8 @@ CREATE TABLE IF NOT EXISTS location_points (
     processed_at TIMESTAMPTZ,
     processing_error TEXT NOT NULL DEFAULT '',
     geom geometry(Point, 4326),
-    PRIMARY KEY (id, ts)
-) PARTITION BY RANGE (ts);
+    PRIMARY KEY (id, true_created_at)
+) PARTITION BY RANGE (true_created_at);
 
 -- Step 3: Create a DEFAULT partition for safety (catches rows outside defined ranges).
 CREATE TABLE IF NOT EXISTS location_points_default
@@ -91,11 +91,11 @@ DROP TABLE IF EXISTS location_points_old;
 CREATE INDEX IF NOT EXISTS idx_location_points_geom
     ON location_points USING GIST (geom);
 
-CREATE INDEX IF NOT EXISTS idx_lp_subject_ts_desc
-    ON location_points (subject_id, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_lp_subject_true_created_at_desc
+    ON location_points (subject_id, true_created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_lp_device_ts_desc
-    ON location_points (device_id, ts DESC);
+CREATE INDEX IF NOT EXISTS idx_lp_device_true_created_at_desc
+    ON location_points (device_id, true_created_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_lp_ingested_at
     ON location_points (ingested_at);
