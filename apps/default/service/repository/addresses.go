@@ -19,7 +19,11 @@ type addressRepository struct {
 	datastore.BaseRepository[*models.Address]
 }
 
-func NewAddressRepository(ctx context.Context, dbPool pool.Pool, workMan workerpool.Manager) AddressRepository {
+func NewAddressRepository(
+	ctx context.Context,
+	dbPool pool.Pool,
+	workMan workerpool.Manager,
+) AddressRepository {
 	repo := addressRepository{
 		BaseRepository: datastore.NewBaseRepository[*models.Address](
 			ctx, dbPool, workMan, func() *models.Address { return &models.Address{} },
@@ -28,7 +32,10 @@ func NewAddressRepository(ctx context.Context, dbPool pool.Pool, workMan workerp
 	return &repo
 }
 
-func (ar *addressRepository) SaveLink(ctx context.Context, profileAddress *models.ProfileAddress) error {
+func (ar *addressRepository) SaveLink(
+	ctx context.Context,
+	profileAddress *models.ProfileAddress,
+) error {
 	return ar.Pool().DB(ctx, false).Save(profileAddress).Error
 }
 
@@ -56,15 +63,26 @@ func (ar *addressRepository) GetByNameAdminUnitAndCountry(
 	return address, err
 }
 
-func (ar *addressRepository) GetByProfileID(ctx context.Context, id string) ([]*models.ProfileAddress, error) {
+func (ar *addressRepository) GetByProfileID(
+	ctx context.Context,
+	id string,
+) ([]*models.ProfileAddress, error) {
 	// Address-profile links are cross-tenant identity data. Skip tenancy scoping.
 	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
 	var addressList []*models.ProfileAddress
-	err := ar.Pool().DB(unscopedCtx, true).Preload(clause.Associations).Where("profile_id = ?", id).Find(&addressList).Error
+	err := ar.Pool().
+		DB(unscopedCtx, true).
+		Preload(clause.Associations).
+		Where("profile_id = ?", id).
+		Find(&addressList).
+		Error
 	return addressList, err
 }
 
-func (ar *addressRepository) CountryGetByISO3(ctx context.Context, countryISO3 string) (*models.Country, error) {
+func (ar *addressRepository) CountryGetByISO3(
+	ctx context.Context,
+	countryISO3 string,
+) (*models.Country, error) {
 	// Countries are global seed data. Skip tenancy scoping.
 	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
 	country := &models.Country{}
@@ -72,9 +90,15 @@ func (ar *addressRepository) CountryGetByISO3(ctx context.Context, countryISO3 s
 	return country, err
 }
 
-func (ar *addressRepository) CountryGetByAny(ctx context.Context, c string) (*models.Country, error) {
+func (ar *addressRepository) CountryGetByAny(
+	ctx context.Context,
+	c string,
+) (*models.Country, error) {
 	if c == "" {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("specified country does not exist"))
+		return nil, connect.NewError(
+			connect.CodeNotFound,
+			errors.New("specified country does not exist"),
+		)
 	}
 
 	// Countries are global seed data. Skip tenancy scoping.
@@ -89,10 +113,17 @@ func (ar *addressRepository) CountryGetByAny(ctx context.Context, c string) (*mo
 	return country, err
 }
 
-func (ar *addressRepository) CountryGetByName(ctx context.Context, name string) (*models.Country, error) {
+func (ar *addressRepository) CountryGetByName(
+	ctx context.Context,
+	name string,
+) (*models.Country, error) {
 	// Countries are global seed data. Skip tenancy scoping.
 	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
 	country := &models.Country{}
-	err := ar.Pool().DB(unscopedCtx, true).Where("name = ilike", strings.ToUpper(name)).First(country).Error
+	err := ar.Pool().
+		DB(unscopedCtx, true).
+		Where("name = ilike", strings.ToUpper(name)).
+		First(country).
+		Error
 	return country, err
 }

@@ -112,7 +112,7 @@ type LocationPoint struct {
 	ProcessingState LocationPointProcessingState `gorm:"type:smallint;not null;default:0;index:idx_lp_processing_state"`
 	ProcessedAt     *time.Time                   `gorm:"type:timestamptz"`
 	ProcessingError string                       `gorm:"type:text;not null;default:''"`
-	Geom            *string                      `gorm:"type:geometry(Point,4326);column:geom"                                 json:"-"`
+	Geom            *string                      `gorm:"type:geometry(Point,4326);column:geom"                                                           json:"-"`
 }
 
 func (*LocationPoint) TableName() string {
@@ -313,7 +313,8 @@ func (r *Route) ToAPI() *RouteAPI {
 	}
 	api.DeviationThresholdM = r.DeviationThresholdM
 	if r.DeviationConsecutiveCount != nil {
-		value := int32(*r.DeviationConsecutiveCount) //nolint:gosec // bounded by business validation
+		//nolint:gosec // bounded by business validation
+		value := int32(*r.DeviationConsecutiveCount)
 		api.DeviationConsecutiveCount = &value
 	}
 	if r.DeviationCooldownSec != nil {

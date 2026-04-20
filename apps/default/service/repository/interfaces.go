@@ -13,10 +13,16 @@ import (
 
 type ProfileRepository interface {
 	datastore.BaseRepository[*models.Profile]
-	Search(ctx context.Context, query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.Profile], error)
+	Search(
+		ctx context.Context,
+		query *data.SearchQuery,
+	) (workerpool.JobResultPipe[[]*models.Profile], error)
 
 	GetTypeByID(ctx context.Context, profileTypeID string) (*models.ProfileType, error)
-	GetTypeByUID(ctx context.Context, profileType profilev1.ProfileType) (*models.ProfileType, error)
+	GetTypeByUID(
+		ctx context.Context,
+		profileType profilev1.ProfileType,
+	) (*models.ProfileType, error)
 }
 
 type ContactRepository interface {
@@ -35,11 +41,28 @@ type VerificationRepository interface {
 
 type RosterRepository interface {
 	datastore.BaseRepository[*models.Roster]
-	GetByContactAndProfileID(ctx context.Context, profileID, contactID string) (*models.Roster, error)
-	GetByContactIDsAndProfileID(ctx context.Context, contactIDs []string, profileID string) ([]*models.Roster, error)
-	GetByContactAndProfileIDAndName(ctx context.Context, profileID, contactID, name string) (*models.Roster, error)
-	GetByContactIDsAndProfileIDAndName(ctx context.Context, contactIDs []string, profileID, name string) ([]*models.Roster, error)
-	Search(ctx context.Context, query *data.SearchQuery) (workerpool.JobResultPipe[[]*models.Roster], error)
+	GetByContactAndProfileID(
+		ctx context.Context,
+		profileID, contactID string,
+	) (*models.Roster, error)
+	GetByContactIDsAndProfileID(
+		ctx context.Context,
+		contactIDs []string,
+		profileID string,
+	) ([]*models.Roster, error)
+	GetByContactAndProfileIDAndName(
+		ctx context.Context,
+		profileID, contactID, name string,
+	) (*models.Roster, error)
+	GetByContactIDsAndProfileIDAndName(
+		ctx context.Context,
+		contactIDs []string,
+		profileID, name string,
+	) ([]*models.Roster, error)
+	Search(
+		ctx context.Context,
+		query *data.SearchQuery,
+	) (workerpool.JobResultPipe[[]*models.Roster], error)
 }
 
 type AddressRepository interface {
@@ -64,8 +87,14 @@ type PropertyEntryRepository interface {
 	datastore.BaseRepository[*models.PropertyEntry]
 	AppendEntries(ctx context.Context, entries []*models.PropertyEntry) error
 	LatestGlobalByProfile(ctx context.Context, profileID string) ([]*models.PropertyEntry, error)
-	LatestScopedByProfileAndPartition(ctx context.Context, profileID, partitionID string) ([]*models.PropertyEntry, error)
-	HistoryByKey(ctx context.Context, profileID, key, callerTenantID string) ([]*models.PropertyEntry, error)
+	LatestScopedByProfileAndPartition(
+		ctx context.Context,
+		profileID, partitionID string,
+	) ([]*models.PropertyEntry, error)
+	HistoryByKey(
+		ctx context.Context,
+		profileID, key, callerTenantID string,
+	) ([]*models.PropertyEntry, error)
 }
 
 type RelationshipRepository interface {
@@ -76,6 +105,12 @@ type RelationshipRepository interface {
 		lastRelationshipID string, count int,
 	) ([]*models.Relationship, error)
 
-	RelationshipType(ctx context.Context, relationshipType profilev1.RelationshipType) (*models.RelationshipType, error)
-	RelationshipTypeByID(ctx context.Context, relationshipTypeID string) (*models.RelationshipType, error)
+	RelationshipType(
+		ctx context.Context,
+		relationshipType profilev1.RelationshipType,
+	) (*models.RelationshipType, error)
+	RelationshipTypeByID(
+		ctx context.Context,
+		relationshipTypeID string,
+	) (*models.RelationshipType, error)
 }

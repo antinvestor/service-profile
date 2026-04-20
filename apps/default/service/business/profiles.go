@@ -27,7 +27,10 @@ var ErrContactNotFound = errors.New("contact not found")
 
 type ProfileBusiness interface {
 	GetByID(ctx context.Context, profileID string) (*profilev1.ProfileObject, error)
-	GetByIDAndPartition(ctx context.Context, profileID, partitionID string) (*profilev1.ProfileObject, error)
+	GetByIDAndPartition(
+		ctx context.Context,
+		profileID, partitionID string,
+	) (*profilev1.ProfileObject, error)
 	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, error)
 
 	SearchProfile(
@@ -35,16 +38,36 @@ type ProfileBusiness interface {
 		request *profilev1.SearchRequest,
 	) (workerpool.JobResultPipe[[]*models.Profile], error)
 
-	CreateProfile(ctx context.Context, request *profilev1.CreateRequest) (*profilev1.ProfileObject, error)
+	CreateProfile(
+		ctx context.Context,
+		request *profilev1.CreateRequest,
+	) (*profilev1.ProfileObject, error)
 
-	UpdateProfile(ctx context.Context, request *profilev1.UpdateRequest) (*profilev1.ProfileObject, error)
-	UpdateProfileProperties(ctx context.Context, profileID string, properties data.JSONMap, scoped bool) (*profilev1.ProfileObject, error)
+	UpdateProfile(
+		ctx context.Context,
+		request *profilev1.UpdateRequest,
+	) (*profilev1.ProfileObject, error)
+	UpdateProfileProperties(
+		ctx context.Context,
+		profileID string,
+		properties data.JSONMap,
+		scoped bool,
+	) (*profilev1.ProfileObject, error)
 
-	GetPropertyHistory(ctx context.Context, profileID, key, callerTenantID string) ([]*models.PropertyEntry, error)
+	GetPropertyHistory(
+		ctx context.Context,
+		profileID, key, callerTenantID string,
+	) ([]*models.PropertyEntry, error)
 
-	MergeProfile(ctx context.Context, request *profilev1.MergeRequest) (*profilev1.ProfileObject, error)
+	MergeProfile(
+		ctx context.Context,
+		request *profilev1.MergeRequest,
+	) (*profilev1.ProfileObject, error)
 
-	AddAddress(ctx context.Context, address *profilev1.AddAddressRequest) (*profilev1.ProfileObject, error)
+	AddAddress(
+		ctx context.Context,
+		address *profilev1.AddAddressRequest,
+	) (*profilev1.ProfileObject, error)
 
 	AddContact(
 		ctx context.Context,
@@ -64,7 +87,11 @@ type ProfileBusiness interface {
 		verificationID, code string,
 		expiryDuration time.Duration,
 	) (string, error)
-	CheckVerification(ctx context.Context, verificationID string, code, ipAddress string) (int, bool, error)
+	CheckVerification(
+		ctx context.Context,
+		verificationID string,
+		code, ipAddress string,
+	) (int, bool, error)
 	ToAPI(ctx context.Context, profile *models.Profile) (*profilev1.ProfileObject, error)
 }
 
@@ -298,7 +325,11 @@ func (pb *profileBusiness) GetByIDAndPartition(
 		return nil, err
 	}
 
-	scopedEntries, scopedErr := pb.propertyEntryRepo.LatestScopedByProfileAndPartition(ctx, profileID, partitionID)
+	scopedEntries, scopedErr := pb.propertyEntryRepo.LatestScopedByProfileAndPartition(
+		ctx,
+		profileID,
+		partitionID,
+	)
 	if scopedErr != nil {
 		return nil, data.ErrorConvertToAPI(scopedErr)
 	}
@@ -315,7 +346,10 @@ func (pb *profileBusiness) GetByIDAndPartition(
 	return profileObj, nil
 }
 
-func (pb *profileBusiness) GetPropertyHistory(ctx context.Context, profileID, key, callerTenantID string) ([]*models.PropertyEntry, error) {
+func (pb *profileBusiness) GetPropertyHistory(
+	ctx context.Context,
+	profileID, key, callerTenantID string,
+) ([]*models.PropertyEntry, error) {
 	return pb.propertyEntryRepo.HistoryByKey(ctx, profileID, key, callerTenantID)
 }
 
@@ -357,7 +391,10 @@ func (pb *profileBusiness) CreateProfile(
 	contactDetail := strings.TrimSpace(request.GetContact())
 
 	if contactDetail == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("contact details are invalid"))
+		return nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			errors.New("contact details are invalid"),
+		)
 	}
 
 	p := models.Profile{}
@@ -456,7 +493,10 @@ func (pb *profileBusiness) AddContact(
 	request *profilev1.AddContactRequest) (*profilev1.ProfileObject, string, error) {
 	profileID := request.GetId()
 	if profileID == "" {
-		return nil, "", connect.NewError(connect.CodeInvalidArgument, errors.New("profile id is required"))
+		return nil, "", connect.NewError(
+			connect.CodeInvalidArgument,
+			errors.New("profile id is required"),
+		)
 	}
 
 	// Authorization is handled by the handler layer (owner check + contact_manage permission).
@@ -535,7 +575,13 @@ func (pb *profileBusiness) VerifyContact(
 		return "", err
 	}
 
-	verification, err := pb.contactBusiness.VerifyContact(ctx, contact, verificationID, code, expiryDuration)
+	verification, err := pb.contactBusiness.VerifyContact(
+		ctx,
+		contact,
+		verificationID,
+		code,
+		expiryDuration,
+	)
 	if err != nil {
 		return "", err
 	}

@@ -454,6 +454,7 @@ func (rts *RosterTestSuite) TestRosterBusiness_Search() {
 	})
 }
 
+//nolint:gocognit // multi-scenario integration test; splitting hurts readability
 func (rts *RosterTestSuite) TestRosterBusiness_MultiList() {
 	t := rts.T()
 
