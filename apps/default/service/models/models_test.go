@@ -20,7 +20,11 @@ func TestProfileTypeIDToEnum(t *testing.T) {
 	}{
 		{"Person type", uint(profilev1.ProfileType_PERSON.Number()), profilev1.ProfileType_PERSON},
 		{"Bot type", uint(profilev1.ProfileType_BOT.Number()), profilev1.ProfileType_BOT},
-		{"Institution type", uint(profilev1.ProfileType_INSTITUTION.Number()), profilev1.ProfileType_INSTITUTION},
+		{
+			"Institution type",
+			uint(profilev1.ProfileType_INSTITUTION.Number()),
+			profilev1.ProfileType_INSTITUTION,
+		},
 		{"Unknown type defaults to Person", 999, profilev1.ProfileType_PERSON},
 		{"Zero type defaults to Person", 0, profilev1.ProfileType_PERSON},
 	}
@@ -40,8 +44,16 @@ func TestRelationshipTypeIDToEnum(t *testing.T) {
 		expected profilev1.RelationshipType
 	}{
 		{"Member type", models.RelationshipTypeMemberID, profilev1.RelationshipType_MEMBER},
-		{"Affiliated type", models.RelationshipTypeAffiliatedID, profilev1.RelationshipType_AFFILIATED},
-		{"Blacklisted type", models.RelationshipTypeBlackListedID, profilev1.RelationshipType_BLACK_LISTED},
+		{
+			"Affiliated type",
+			models.RelationshipTypeAffiliatedID,
+			profilev1.RelationshipType_AFFILIATED,
+		},
+		{
+			"Blacklisted type",
+			models.RelationshipTypeBlackListedID,
+			profilev1.RelationshipType_BLACK_LISTED,
+		},
 		{"Unknown type defaults to Member", 999, profilev1.RelationshipType_MEMBER},
 		{"Zero type defaults to Member", 0, profilev1.RelationshipType_MEMBER},
 	}
@@ -287,14 +299,30 @@ func TestRelationship_ToAPI(t *testing.T) {
 
 func TestProfileTypeIDMap(t *testing.T) {
 	// Verify the map contains expected entries
-	require.Equal(t, uint(profilev1.ProfileType_PERSON.Number()), models.ProfileTypeIDMap[profilev1.ProfileType_PERSON])
-	require.Equal(t, uint(profilev1.ProfileType_BOT.Number()), models.ProfileTypeIDMap[profilev1.ProfileType_BOT])
-	require.Equal(t, uint(profilev1.ProfileType_INSTITUTION.Number()), models.ProfileTypeIDMap[profilev1.ProfileType_INSTITUTION])
+	require.Equal(
+		t,
+		uint(profilev1.ProfileType_PERSON.Number()),
+		models.ProfileTypeIDMap[profilev1.ProfileType_PERSON],
+	)
+	require.Equal(
+		t,
+		uint(profilev1.ProfileType_BOT.Number()),
+		models.ProfileTypeIDMap[profilev1.ProfileType_BOT],
+	)
+	require.Equal(
+		t,
+		uint(profilev1.ProfileType_INSTITUTION.Number()),
+		models.ProfileTypeIDMap[profilev1.ProfileType_INSTITUTION],
+	)
 }
 
 func TestRelationshipTypeIDMap(t *testing.T) {
 	// Verify the map contains expected entries
-	require.Equal(t, models.RelationshipTypeMemberID, models.RelationshipTypeIDMap[profilev1.RelationshipType_MEMBER])
+	require.Equal(
+		t,
+		models.RelationshipTypeMemberID,
+		models.RelationshipTypeIDMap[profilev1.RelationshipType_MEMBER],
+	)
 	require.Equal(
 		t,
 		models.RelationshipTypeAffiliatedID,

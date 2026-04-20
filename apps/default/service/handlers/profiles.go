@@ -59,7 +59,14 @@ func NewProfileServer(
 	contactRepo := repository.NewContactRepository(ctx, dbPool, workMan)
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 
-	contactBusiness := business.NewContactBusiness(ctx, cfg, dek, evtsMan, contactRepo, verificationRepo)
+	contactBusiness := business.NewContactBusiness(
+		ctx,
+		cfg,
+		dek,
+		evtsMan,
+		contactRepo,
+		verificationRepo,
+	)
 
 	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
 	addressBusiness := business.NewAddressBusiness(ctx, addressRepo)
@@ -154,7 +161,9 @@ func (ps *ProfileServer) Search(ctx context.Context,
 			if err1 != nil {
 				return errorutil.CleanErr(err1)
 			}
-			sErr := stream.Send(&profilev1.SearchResponse{Data: []*profilev1.ProfileObject{profileObject}})
+			sErr := stream.Send(
+				&profilev1.SearchResponse{Data: []*profilev1.ProfileObject{profileObject}},
+			)
 			if sErr != nil {
 				return errorutil.CleanErr(sErr)
 			}
@@ -215,7 +224,11 @@ func (ps *ProfileServer) GetByIDAndPartition(
 	ctx context.Context,
 	request *connect.Request[profilev1.GetByIDAndPartitionRequest],
 ) (*connect.Response[profilev1.GetByIDAndPartitionResponse], error) {
-	profileObj, err := ps.profileBusiness.GetByIDAndPartition(ctx, request.Msg.GetId(), request.Msg.GetPartitionId())
+	profileObj, err := ps.profileBusiness.GetByIDAndPartition(
+		ctx,
+		request.Msg.GetId(),
+		request.Msg.GetPartitionId(),
+	)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
@@ -235,7 +248,12 @@ func (ps *ProfileServer) PropertyHistory(
 		callerTenantID = claims.GetTenantID()
 	}
 
-	entries, err := ps.profileBusiness.GetPropertyHistory(ctx, request.Msg.GetId(), request.Msg.GetKey(), callerTenantID)
+	entries, err := ps.profileBusiness.GetPropertyHistory(
+		ctx,
+		request.Msg.GetId(),
+		request.Msg.GetKey(),
+		callerTenantID,
+	)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
@@ -256,8 +274,10 @@ func (ps *ProfileServer) PropertyHistory(
 }
 
 // AddAddress Adds a new address based on the request.
-func (ps *ProfileServer) AddAddress(ctx context.Context,
-	request *connect.Request[profilev1.AddAddressRequest]) (*connect.Response[profilev1.AddAddressResponse], error) {
+func (ps *ProfileServer) AddAddress(
+	ctx context.Context,
+	request *connect.Request[profilev1.AddAddressRequest],
+) (*connect.Response[profilev1.AddAddressResponse], error) {
 	claims := security.ClaimsFromContext(ctx)
 	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
 		if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
@@ -307,7 +327,9 @@ func (ps *ProfileServer) AddContact(
 		Action:     auditlib.RelationAdded,
 	})
 
-	return connect.NewResponse(&profilev1.AddContactResponse{Data: profileObj, VerificationId: verificationID}), nil
+	return connect.NewResponse(
+		&profilev1.AddContactResponse{Data: profileObj, VerificationId: verificationID},
+	), nil
 }
 
 func (ps *ProfileServer) CreateContact(
@@ -475,7 +497,8 @@ func (ps *ProfileServer) SearchRoster(
 
 func (ps *ProfileServer) AddRoster(
 	ctx context.Context,
-	request *connect.Request[profilev1.AddRosterRequest]) (*connect.Response[profilev1.AddRosterResponse], error) {
+	request *connect.Request[profilev1.AddRosterRequest],
+) (*connect.Response[profilev1.AddRosterResponse], error) {
 	roster, err := ps.rosterBusiness.CreateRoster(ctx, request.Msg)
 
 	if err != nil {

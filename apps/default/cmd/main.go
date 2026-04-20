@@ -225,10 +225,20 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 	propertyEntryRepo := repository.NewPropertyEntryRepository(ctx, dbPool, workMan)
 	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
 	addressBiz := business.NewAddressBusiness(ctx, addressRepo)
-	profileBiz := business.NewProfileBusiness(ctx, cfg, dek, evtsMan, contactBiz, addressBiz, profileRepo, propertyEntryRepo)
+	profileBiz := business.NewProfileBusiness(
+		ctx,
+		cfg,
+		dek,
+		evtsMan,
+		contactBiz,
+		addressBiz,
+		profileRepo,
+		propertyEntryRepo,
+	)
 
 	if err := business.SeedBootstrapContacts(ctx, profileBiz, contactBiz); err != nil {
-		log.WithError(err).Fatal("failed to seed bootstrap contacts — migration incomplete, check DEK env vars")
+		log.WithError(err).
+			Fatal("failed to seed bootstrap contacts — migration incomplete, check DEK env vars")
 	}
 }
 
@@ -241,7 +251,9 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 
 	auth := securityMan.GetAuthorizer(ctx)
 	tenancyAccessChecker := authorizer.NewTenancyAccessChecker(auth, authz.NamespaceTenancyAccess)
-	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(tenancyAccessChecker)
+	tenancyAccessInterceptor := connectInterceptors.NewTenancyAccessInterceptor(
+		tenancyAccessChecker,
+	)
 
 	// Build procedure map from proto annotations and exclude self-bypass RPCs.
 	sd := profilepb.File_profile_v1_profile_proto.Services().ByName("ProfileService")
@@ -259,7 +271,10 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	delete(procMap, "/profile.v1.ProfileService/ListRelationships")
 
 	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
-	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
+	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(
+		functionChecker,
+		procMap,
+	)
 
 	// Audit interceptor — sends entries to audit service if configured.
 	profileCfg, _ := svc.Config().(*aconfig.ProfileConfig)
@@ -270,7 +285,9 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 			Audiences: []string{"service_audit"},
 		}, audit.NewConnectClient)
 		if auditErr != nil {
-			util.Log(ctx).WithError(auditErr).Warn("audit client not available — audit entries will only be logged")
+			util.Log(ctx).
+				WithError(auditErr).
+				Warn("audit client not available — audit entries will only be logged")
 			auditInterceptor = audit.NewInterceptor("service_profile", nil)
 		} else {
 			auditInterceptor = audit.NewInterceptor("service_profile", auditCli)
@@ -295,7 +312,10 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	_, serverHandler := profilev1connect.NewProfileServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))
 
-	publicRestHandler := securityhttp.AuthenticationMiddleware(implementation.NewSecureRouterV1(), authenticator)
+	publicRestHandler := securityhttp.AuthenticationMiddleware(
+		implementation.NewSecureRouterV1(),
+		authenticator,
+	)
 
 	mux := http.NewServeMux()
 	mux.Handle("/", serverHandler)
