@@ -28,3 +28,26 @@ vendor/
 # Shared Makefile cache
 .tmp/
 WORK_STATE.md
+
+# Generated cross-package dart proto stubs (own-package code is committed,
+# cross-package code is regenerated locally and should not be tracked).
+sdk/dart/device/lib/src/geolocation/
+sdk/dart/device/lib/src/ocr/
+sdk/dart/device/lib/src/profile/
+sdk/dart/device/lib/src/settings/
+sdk/dart/geolocation/lib/src/device/
+sdk/dart/geolocation/lib/src/ocr/
+sdk/dart/geolocation/lib/src/profile/
+sdk/dart/geolocation/lib/src/settings/
+sdk/dart/ocr/lib/src/device/
+sdk/dart/ocr/lib/src/geolocation/
+sdk/dart/ocr/lib/src/profile/
+sdk/dart/ocr/lib/src/settings/
+sdk/dart/profile/lib/src/device/
+sdk/dart/profile/lib/src/geolocation/
+sdk/dart/profile/lib/src/ocr/
+sdk/dart/profile/lib/src/settings/
+sdk/dart/settings/lib/src/device/
+sdk/dart/settings/lib/src/geolocation/
+sdk/dart/settings/lib/src/ocr/
+sdk/dart/settings/lib/src/profile/
