@@ -14,16 +14,16 @@ import 'dart:core' as $core;
 
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../../google/protobuf/empty.pb.dart' as $8;
-import '../../google/protobuf/struct.pb.dart' as $6;
-import '../../google/protobuf/timestamp.pb.dart' as $2;
+import '../../google/protobuf/empty.pb.dart' as $2;
+import '../../google/protobuf/struct.pb.dart' as $1;
+import '../../google/protobuf/timestamp.pb.dart' as $0;
 import 'geolocation.pbenum.dart';
 
 export 'geolocation.pbenum.dart';
 
 class LocationPointInput extends $pb.GeneratedMessage {
   factory LocationPointInput({
-    $2.Timestamp? timestamp,
+    $0.Timestamp? timestamp,
     $core.double? latitude,
     $core.double? longitude,
     $core.double? altitude,
@@ -31,7 +31,7 @@ class LocationPointInput extends $pb.GeneratedMessage {
     $core.double? speed,
     $core.double? bearing,
     LocationSource? source,
-    $6.Struct? extra,
+    $1.Struct? extra,
     $core.String? deviceId,
   }) {
     final $result = create();
@@ -72,7 +72,7 @@ class LocationPointInput extends $pb.GeneratedMessage {
   factory LocationPointInput.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LocationPointInput', package: const $pb.PackageName(_omitMessageNames ? '' : 'geolocation.v1'), createEmptyInstance: create)
-    ..aOM<$2.Timestamp>(1, _omitFieldNames ? '' : 'timestamp', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(1, _omitFieldNames ? '' : 'timestamp', subBuilder: $0.Timestamp.create)
     ..a<$core.double>(2, _omitFieldNames ? '' : 'latitude', $pb.PbFieldType.OD)
     ..a<$core.double>(3, _omitFieldNames ? '' : 'longitude', $pb.PbFieldType.OD)
     ..a<$core.double>(4, _omitFieldNames ? '' : 'altitude', $pb.PbFieldType.OD)
@@ -80,7 +80,7 @@ class LocationPointInput extends $pb.GeneratedMessage {
     ..a<$core.double>(6, _omitFieldNames ? '' : 'speed', $pb.PbFieldType.OD)
     ..a<$core.double>(7, _omitFieldNames ? '' : 'bearing', $pb.PbFieldType.OD)
     ..e<LocationSource>(8, _omitFieldNames ? '' : 'source', $pb.PbFieldType.OE, defaultOrMaker: LocationSource.LOCATION_SOURCE_UNSPECIFIED, valueOf: LocationSource.valueOf, enumValues: LocationSource.values)
-    ..aOM<$6.Struct>(9, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
+    ..aOM<$1.Struct>(9, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
     ..aOS(10, _omitFieldNames ? '' : 'deviceId')
     ..hasRequiredFields = false
   ;
@@ -107,15 +107,15 @@ class LocationPointInput extends $pb.GeneratedMessage {
   static LocationPointInput? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $2.Timestamp get timestamp => $_getN(0);
+  $0.Timestamp get timestamp => $_getN(0);
   @$pb.TagNumber(1)
-  set timestamp($2.Timestamp v) { setField(1, v); }
+  set timestamp($0.Timestamp v) { setField(1, v); }
   @$pb.TagNumber(1)
   $core.bool hasTimestamp() => $_has(0);
   @$pb.TagNumber(1)
   void clearTimestamp() => clearField(1);
   @$pb.TagNumber(1)
-  $2.Timestamp ensureTimestamp() => $_ensure(0);
+  $0.Timestamp ensureTimestamp() => $_ensure(0);
 
   @$pb.TagNumber(2)
   $core.double get latitude => $_getN(1);
@@ -181,15 +181,15 @@ class LocationPointInput extends $pb.GeneratedMessage {
   void clearSource() => clearField(8);
 
   @$pb.TagNumber(9)
-  $6.Struct get extra => $_getN(8);
+  $1.Struct get extra => $_getN(8);
   @$pb.TagNumber(9)
-  set extra($6.Struct v) { setField(9, v); }
+  set extra($1.Struct v) { setField(9, v); }
   @$pb.TagNumber(9)
   $core.bool hasExtra() => $_has(8);
   @$pb.TagNumber(9)
   void clearExtra() => clearField(9);
   @$pb.TagNumber(9)
-  $6.Struct ensureExtra() => $_ensure(8);
+  $1.Struct ensureExtra() => $_ensure(8);
 
   @$pb.TagNumber(10)
   $core.String get deviceId => $_getSZ(9);
@@ -205,7 +205,7 @@ class LocationPointObject extends $pb.GeneratedMessage {
   factory LocationPointObject({
     $core.String? id,
     $core.String? subjectId,
-    $2.Timestamp? timestamp,
+    $0.Timestamp? timestamp,
     $core.double? latitude,
     $core.double? longitude,
     $core.double? altitude,
@@ -213,8 +213,8 @@ class LocationPointObject extends $pb.GeneratedMessage {
     $core.double? speed,
     $core.double? bearing,
     LocationSource? source,
-    $6.Struct? extra,
-    $2.Timestamp? createdAt,
+    $1.Struct? extra,
+    $0.Timestamp? createdAt,
     $core.String? deviceId,
   }) {
     final $result = create();
@@ -266,7 +266,7 @@ class LocationPointObject extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'LocationPointObject', package: const $pb.PackageName(_omitMessageNames ? '' : 'geolocation.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOS(2, _omitFieldNames ? '' : 'subjectId')
-    ..aOM<$2.Timestamp>(3, _omitFieldNames ? '' : 'timestamp', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(3, _omitFieldNames ? '' : 'timestamp', subBuilder: $0.Timestamp.create)
     ..a<$core.double>(4, _omitFieldNames ? '' : 'latitude', $pb.PbFieldType.OD)
     ..a<$core.double>(5, _omitFieldNames ? '' : 'longitude', $pb.PbFieldType.OD)
     ..a<$core.double>(6, _omitFieldNames ? '' : 'altitude', $pb.PbFieldType.OD)
@@ -274,8 +274,8 @@ class LocationPointObject extends $pb.GeneratedMessage {
     ..a<$core.double>(8, _omitFieldNames ? '' : 'speed', $pb.PbFieldType.OD)
     ..a<$core.double>(9, _omitFieldNames ? '' : 'bearing', $pb.PbFieldType.OD)
     ..e<LocationSource>(10, _omitFieldNames ? '' : 'source', $pb.PbFieldType.OE, defaultOrMaker: LocationSource.LOCATION_SOURCE_UNSPECIFIED, valueOf: LocationSource.valueOf, enumValues: LocationSource.values)
-    ..aOM<$6.Struct>(11, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
-    ..aOM<$2.Timestamp>(12, _omitFieldNames ? '' : 'createdAt', subBuilder: $2.Timestamp.create)
+    ..aOM<$1.Struct>(11, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
+    ..aOM<$0.Timestamp>(12, _omitFieldNames ? '' : 'createdAt', subBuilder: $0.Timestamp.create)
     ..aOS(13, _omitFieldNames ? '' : 'deviceId')
     ..hasRequiredFields = false
   ;
@@ -320,15 +320,15 @@ class LocationPointObject extends $pb.GeneratedMessage {
   void clearSubjectId() => clearField(2);
 
   @$pb.TagNumber(3)
-  $2.Timestamp get timestamp => $_getN(2);
+  $0.Timestamp get timestamp => $_getN(2);
   @$pb.TagNumber(3)
-  set timestamp($2.Timestamp v) { setField(3, v); }
+  set timestamp($0.Timestamp v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasTimestamp() => $_has(2);
   @$pb.TagNumber(3)
   void clearTimestamp() => clearField(3);
   @$pb.TagNumber(3)
-  $2.Timestamp ensureTimestamp() => $_ensure(2);
+  $0.Timestamp ensureTimestamp() => $_ensure(2);
 
   @$pb.TagNumber(4)
   $core.double get latitude => $_getN(3);
@@ -394,26 +394,26 @@ class LocationPointObject extends $pb.GeneratedMessage {
   void clearSource() => clearField(10);
 
   @$pb.TagNumber(11)
-  $6.Struct get extra => $_getN(10);
+  $1.Struct get extra => $_getN(10);
   @$pb.TagNumber(11)
-  set extra($6.Struct v) { setField(11, v); }
+  set extra($1.Struct v) { setField(11, v); }
   @$pb.TagNumber(11)
   $core.bool hasExtra() => $_has(10);
   @$pb.TagNumber(11)
   void clearExtra() => clearField(11);
   @$pb.TagNumber(11)
-  $6.Struct ensureExtra() => $_ensure(10);
+  $1.Struct ensureExtra() => $_ensure(10);
 
   @$pb.TagNumber(12)
-  $2.Timestamp get createdAt => $_getN(11);
+  $0.Timestamp get createdAt => $_getN(11);
   @$pb.TagNumber(12)
-  set createdAt($2.Timestamp v) { setField(12, v); }
+  set createdAt($0.Timestamp v) { setField(12, v); }
   @$pb.TagNumber(12)
   $core.bool hasCreatedAt() => $_has(11);
   @$pb.TagNumber(12)
   void clearCreatedAt() => clearField(12);
   @$pb.TagNumber(12)
-  $2.Timestamp ensureCreatedAt() => $_ensure(11);
+  $0.Timestamp ensureCreatedAt() => $_ensure(11);
 
   @$pb.TagNumber(13)
   $core.String get deviceId => $_getSZ(12);
@@ -436,8 +436,8 @@ class AreaObject extends $pb.GeneratedMessage {
     $core.double? areaM2,
     $core.double? perimeterM,
     $core.int? state,
-    $6.Struct? extra,
-    $2.Timestamp? createdAt,
+    $1.Struct? extra,
+    $0.Timestamp? createdAt,
   }) {
     final $result = create();
     if (id != null) {
@@ -489,8 +489,8 @@ class AreaObject extends $pb.GeneratedMessage {
     ..a<$core.double>(7, _omitFieldNames ? '' : 'areaM2', $pb.PbFieldType.OD)
     ..a<$core.double>(8, _omitFieldNames ? '' : 'perimeterM', $pb.PbFieldType.OD)
     ..a<$core.int>(9, _omitFieldNames ? '' : 'state', $pb.PbFieldType.O3)
-    ..aOM<$6.Struct>(10, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
-    ..aOM<$2.Timestamp>(11, _omitFieldNames ? '' : 'createdAt', subBuilder: $2.Timestamp.create)
+    ..aOM<$1.Struct>(10, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
+    ..aOM<$0.Timestamp>(11, _omitFieldNames ? '' : 'createdAt', subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false
   ;
 
@@ -597,26 +597,26 @@ class AreaObject extends $pb.GeneratedMessage {
   void clearState() => clearField(9);
 
   @$pb.TagNumber(10)
-  $6.Struct get extra => $_getN(9);
+  $1.Struct get extra => $_getN(9);
   @$pb.TagNumber(10)
-  set extra($6.Struct v) { setField(10, v); }
+  set extra($1.Struct v) { setField(10, v); }
   @$pb.TagNumber(10)
   $core.bool hasExtra() => $_has(9);
   @$pb.TagNumber(10)
   void clearExtra() => clearField(10);
   @$pb.TagNumber(10)
-  $6.Struct ensureExtra() => $_ensure(9);
+  $1.Struct ensureExtra() => $_ensure(9);
 
   @$pb.TagNumber(11)
-  $2.Timestamp get createdAt => $_getN(10);
+  $0.Timestamp get createdAt => $_getN(10);
   @$pb.TagNumber(11)
-  set createdAt($2.Timestamp v) { setField(11, v); }
+  set createdAt($0.Timestamp v) { setField(11, v); }
   @$pb.TagNumber(11)
   $core.bool hasCreatedAt() => $_has(10);
   @$pb.TagNumber(11)
   void clearCreatedAt() => clearField(11);
   @$pb.TagNumber(11)
-  $2.Timestamp ensureCreatedAt() => $_ensure(10);
+  $0.Timestamp ensureCreatedAt() => $_ensure(10);
 }
 
 class GeoEventObject extends $pb.GeneratedMessage {
@@ -625,10 +625,10 @@ class GeoEventObject extends $pb.GeneratedMessage {
     $core.String? subjectId,
     $core.String? areaId,
     GeoEventType? eventType,
-    $2.Timestamp? timestamp,
+    $0.Timestamp? timestamp,
     $core.double? confidence,
     $core.String? pointId,
-    $6.Struct? extra,
+    $1.Struct? extra,
   }) {
     final $result = create();
     if (id != null) {
@@ -666,10 +666,10 @@ class GeoEventObject extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'subjectId')
     ..aOS(3, _omitFieldNames ? '' : 'areaId')
     ..e<GeoEventType>(4, _omitFieldNames ? '' : 'eventType', $pb.PbFieldType.OE, defaultOrMaker: GeoEventType.GEO_EVENT_TYPE_UNSPECIFIED, valueOf: GeoEventType.valueOf, enumValues: GeoEventType.values)
-    ..aOM<$2.Timestamp>(5, _omitFieldNames ? '' : 'timestamp', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(5, _omitFieldNames ? '' : 'timestamp', subBuilder: $0.Timestamp.create)
     ..a<$core.double>(6, _omitFieldNames ? '' : 'confidence', $pb.PbFieldType.OD)
     ..aOS(7, _omitFieldNames ? '' : 'pointId')
-    ..aOM<$6.Struct>(8, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
+    ..aOM<$1.Struct>(8, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
     ..hasRequiredFields = false
   ;
 
@@ -731,15 +731,15 @@ class GeoEventObject extends $pb.GeneratedMessage {
   void clearEventType() => clearField(4);
 
   @$pb.TagNumber(5)
-  $2.Timestamp get timestamp => $_getN(4);
+  $0.Timestamp get timestamp => $_getN(4);
   @$pb.TagNumber(5)
-  set timestamp($2.Timestamp v) { setField(5, v); }
+  set timestamp($0.Timestamp v) { setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasTimestamp() => $_has(4);
   @$pb.TagNumber(5)
   void clearTimestamp() => clearField(5);
   @$pb.TagNumber(5)
-  $2.Timestamp ensureTimestamp() => $_ensure(4);
+  $0.Timestamp ensureTimestamp() => $_ensure(4);
 
   @$pb.TagNumber(6)
   $core.double get confidence => $_getN(5);
@@ -760,21 +760,21 @@ class GeoEventObject extends $pb.GeneratedMessage {
   void clearPointId() => clearField(7);
 
   @$pb.TagNumber(8)
-  $6.Struct get extra => $_getN(7);
+  $1.Struct get extra => $_getN(7);
   @$pb.TagNumber(8)
-  set extra($6.Struct v) { setField(8, v); }
+  set extra($1.Struct v) { setField(8, v); }
   @$pb.TagNumber(8)
   $core.bool hasExtra() => $_has(7);
   @$pb.TagNumber(8)
   void clearExtra() => clearField(8);
   @$pb.TagNumber(8)
-  $6.Struct ensureExtra() => $_ensure(7);
+  $1.Struct ensureExtra() => $_ensure(7);
 }
 
 class AreaSubjectObject extends $pb.GeneratedMessage {
   factory AreaSubjectObject({
     $core.String? subjectId,
-    $2.Timestamp? enterTimestamp,
+    $0.Timestamp? enterTimestamp,
   }) {
     final $result = create();
     if (subjectId != null) {
@@ -791,7 +791,7 @@ class AreaSubjectObject extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AreaSubjectObject', package: const $pb.PackageName(_omitMessageNames ? '' : 'geolocation.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'subjectId')
-    ..aOM<$2.Timestamp>(2, _omitFieldNames ? '' : 'enterTimestamp', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(2, _omitFieldNames ? '' : 'enterTimestamp', subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false
   ;
 
@@ -826,22 +826,22 @@ class AreaSubjectObject extends $pb.GeneratedMessage {
   void clearSubjectId() => clearField(1);
 
   @$pb.TagNumber(2)
-  $2.Timestamp get enterTimestamp => $_getN(1);
+  $0.Timestamp get enterTimestamp => $_getN(1);
   @$pb.TagNumber(2)
-  set enterTimestamp($2.Timestamp v) { setField(2, v); }
+  set enterTimestamp($0.Timestamp v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasEnterTimestamp() => $_has(1);
   @$pb.TagNumber(2)
   void clearEnterTimestamp() => clearField(2);
   @$pb.TagNumber(2)
-  $2.Timestamp ensureEnterTimestamp() => $_ensure(1);
+  $0.Timestamp ensureEnterTimestamp() => $_ensure(1);
 }
 
 class NearbySubjectObject extends $pb.GeneratedMessage {
   factory NearbySubjectObject({
     $core.String? subjectId,
     $core.double? distanceMeters,
-    $2.Timestamp? lastSeen,
+    $0.Timestamp? lastSeen,
   }) {
     final $result = create();
     if (subjectId != null) {
@@ -862,7 +862,7 @@ class NearbySubjectObject extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'NearbySubjectObject', package: const $pb.PackageName(_omitMessageNames ? '' : 'geolocation.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'subjectId')
     ..a<$core.double>(2, _omitFieldNames ? '' : 'distanceMeters', $pb.PbFieldType.OD)
-    ..aOM<$2.Timestamp>(3, _omitFieldNames ? '' : 'lastSeen', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(3, _omitFieldNames ? '' : 'lastSeen', subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false
   ;
 
@@ -906,15 +906,15 @@ class NearbySubjectObject extends $pb.GeneratedMessage {
   void clearDistanceMeters() => clearField(2);
 
   @$pb.TagNumber(3)
-  $2.Timestamp get lastSeen => $_getN(2);
+  $0.Timestamp get lastSeen => $_getN(2);
   @$pb.TagNumber(3)
-  set lastSeen($2.Timestamp v) { setField(3, v); }
+  set lastSeen($0.Timestamp v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasLastSeen() => $_has(2);
   @$pb.TagNumber(3)
   void clearLastSeen() => clearField(3);
   @$pb.TagNumber(3)
-  $2.Timestamp ensureLastSeen() => $_ensure(2);
+  $0.Timestamp ensureLastSeen() => $_ensure(2);
 }
 
 class NearbyAreaObject extends $pb.GeneratedMessage {
@@ -1021,8 +1021,8 @@ class RouteObject extends $pb.GeneratedMessage {
     $core.double? deviationThresholdM,
     $core.int? deviationConsecutiveCount,
     $core.int? deviationCooldownSec,
-    $6.Struct? extra,
-    $2.Timestamp? createdAt,
+    $1.Struct? extra,
+    $0.Timestamp? createdAt,
   }) {
     final $result = create();
     if (id != null) {
@@ -1078,8 +1078,8 @@ class RouteObject extends $pb.GeneratedMessage {
     ..a<$core.double>(8, _omitFieldNames ? '' : 'deviationThresholdM', $pb.PbFieldType.OD)
     ..a<$core.int>(9, _omitFieldNames ? '' : 'deviationConsecutiveCount', $pb.PbFieldType.O3)
     ..a<$core.int>(10, _omitFieldNames ? '' : 'deviationCooldownSec', $pb.PbFieldType.O3)
-    ..aOM<$6.Struct>(11, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
-    ..aOM<$2.Timestamp>(12, _omitFieldNames ? '' : 'createdAt', subBuilder: $2.Timestamp.create)
+    ..aOM<$1.Struct>(11, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
+    ..aOM<$0.Timestamp>(12, _omitFieldNames ? '' : 'createdAt', subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false
   ;
 
@@ -1195,26 +1195,26 @@ class RouteObject extends $pb.GeneratedMessage {
   void clearDeviationCooldownSec() => clearField(10);
 
   @$pb.TagNumber(11)
-  $6.Struct get extra => $_getN(10);
+  $1.Struct get extra => $_getN(10);
   @$pb.TagNumber(11)
-  set extra($6.Struct v) { setField(11, v); }
+  set extra($1.Struct v) { setField(11, v); }
   @$pb.TagNumber(11)
   $core.bool hasExtra() => $_has(10);
   @$pb.TagNumber(11)
   void clearExtra() => clearField(11);
   @$pb.TagNumber(11)
-  $6.Struct ensureExtra() => $_ensure(10);
+  $1.Struct ensureExtra() => $_ensure(10);
 
   @$pb.TagNumber(12)
-  $2.Timestamp get createdAt => $_getN(11);
+  $0.Timestamp get createdAt => $_getN(11);
   @$pb.TagNumber(12)
-  set createdAt($2.Timestamp v) { setField(12, v); }
+  set createdAt($0.Timestamp v) { setField(12, v); }
   @$pb.TagNumber(12)
   $core.bool hasCreatedAt() => $_has(11);
   @$pb.TagNumber(12)
   void clearCreatedAt() => clearField(12);
   @$pb.TagNumber(12)
-  $2.Timestamp ensureCreatedAt() => $_ensure(11);
+  $0.Timestamp ensureCreatedAt() => $_ensure(11);
 }
 
 class RouteAssignmentObject extends $pb.GeneratedMessage {
@@ -1222,11 +1222,11 @@ class RouteAssignmentObject extends $pb.GeneratedMessage {
     $core.String? id,
     $core.String? subjectId,
     $core.String? routeId,
-    $2.Timestamp? validFrom,
-    $2.Timestamp? validUntil,
+    $0.Timestamp? validFrom,
+    $0.Timestamp? validUntil,
     $core.int? state,
-    $6.Struct? extra,
-    $2.Timestamp? createdAt,
+    $1.Struct? extra,
+    $0.Timestamp? createdAt,
   }) {
     final $result = create();
     if (id != null) {
@@ -1263,11 +1263,11 @@ class RouteAssignmentObject extends $pb.GeneratedMessage {
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOS(2, _omitFieldNames ? '' : 'subjectId')
     ..aOS(3, _omitFieldNames ? '' : 'routeId')
-    ..aOM<$2.Timestamp>(4, _omitFieldNames ? '' : 'validFrom', subBuilder: $2.Timestamp.create)
-    ..aOM<$2.Timestamp>(5, _omitFieldNames ? '' : 'validUntil', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(4, _omitFieldNames ? '' : 'validFrom', subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(5, _omitFieldNames ? '' : 'validUntil', subBuilder: $0.Timestamp.create)
     ..a<$core.int>(6, _omitFieldNames ? '' : 'state', $pb.PbFieldType.O3)
-    ..aOM<$6.Struct>(7, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
-    ..aOM<$2.Timestamp>(8, _omitFieldNames ? '' : 'createdAt', subBuilder: $2.Timestamp.create)
+    ..aOM<$1.Struct>(7, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
+    ..aOM<$0.Timestamp>(8, _omitFieldNames ? '' : 'createdAt', subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false
   ;
 
@@ -1320,26 +1320,26 @@ class RouteAssignmentObject extends $pb.GeneratedMessage {
   void clearRouteId() => clearField(3);
 
   @$pb.TagNumber(4)
-  $2.Timestamp get validFrom => $_getN(3);
+  $0.Timestamp get validFrom => $_getN(3);
   @$pb.TagNumber(4)
-  set validFrom($2.Timestamp v) { setField(4, v); }
+  set validFrom($0.Timestamp v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasValidFrom() => $_has(3);
   @$pb.TagNumber(4)
   void clearValidFrom() => clearField(4);
   @$pb.TagNumber(4)
-  $2.Timestamp ensureValidFrom() => $_ensure(3);
+  $0.Timestamp ensureValidFrom() => $_ensure(3);
 
   @$pb.TagNumber(5)
-  $2.Timestamp get validUntil => $_getN(4);
+  $0.Timestamp get validUntil => $_getN(4);
   @$pb.TagNumber(5)
-  set validUntil($2.Timestamp v) { setField(5, v); }
+  set validUntil($0.Timestamp v) { setField(5, v); }
   @$pb.TagNumber(5)
   $core.bool hasValidUntil() => $_has(4);
   @$pb.TagNumber(5)
   void clearValidUntil() => clearField(5);
   @$pb.TagNumber(5)
-  $2.Timestamp ensureValidUntil() => $_ensure(4);
+  $0.Timestamp ensureValidUntil() => $_ensure(4);
 
   @$pb.TagNumber(6)
   $core.int get state => $_getIZ(5);
@@ -1351,26 +1351,26 @@ class RouteAssignmentObject extends $pb.GeneratedMessage {
   void clearState() => clearField(6);
 
   @$pb.TagNumber(7)
-  $6.Struct get extra => $_getN(6);
+  $1.Struct get extra => $_getN(6);
   @$pb.TagNumber(7)
-  set extra($6.Struct v) { setField(7, v); }
+  set extra($1.Struct v) { setField(7, v); }
   @$pb.TagNumber(7)
   $core.bool hasExtra() => $_has(6);
   @$pb.TagNumber(7)
   void clearExtra() => clearField(7);
   @$pb.TagNumber(7)
-  $6.Struct ensureExtra() => $_ensure(6);
+  $1.Struct ensureExtra() => $_ensure(6);
 
   @$pb.TagNumber(8)
-  $2.Timestamp get createdAt => $_getN(7);
+  $0.Timestamp get createdAt => $_getN(7);
   @$pb.TagNumber(8)
-  set createdAt($2.Timestamp v) { setField(8, v); }
+  set createdAt($0.Timestamp v) { setField(8, v); }
   @$pb.TagNumber(8)
   $core.bool hasCreatedAt() => $_has(7);
   @$pb.TagNumber(8)
   void clearCreatedAt() => clearField(8);
   @$pb.TagNumber(8)
-  $2.Timestamp ensureCreatedAt() => $_ensure(7);
+  $0.Timestamp ensureCreatedAt() => $_ensure(7);
 }
 
 class RouteDeviationEventObject extends $pb.GeneratedMessage {
@@ -1382,8 +1382,8 @@ class RouteDeviationEventObject extends $pb.GeneratedMessage {
     $core.double? distanceMeters,
     $core.double? latitude,
     $core.double? longitude,
-    $2.Timestamp? timestamp,
-    $6.Struct? extra,
+    $0.Timestamp? timestamp,
+    $1.Struct? extra,
   }) {
     final $result = create();
     if (id != null) {
@@ -1427,8 +1427,8 @@ class RouteDeviationEventObject extends $pb.GeneratedMessage {
     ..a<$core.double>(5, _omitFieldNames ? '' : 'distanceMeters', $pb.PbFieldType.OD)
     ..a<$core.double>(6, _omitFieldNames ? '' : 'latitude', $pb.PbFieldType.OD)
     ..a<$core.double>(7, _omitFieldNames ? '' : 'longitude', $pb.PbFieldType.OD)
-    ..aOM<$2.Timestamp>(8, _omitFieldNames ? '' : 'timestamp', subBuilder: $2.Timestamp.create)
-    ..aOM<$6.Struct>(9, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
+    ..aOM<$0.Timestamp>(8, _omitFieldNames ? '' : 'timestamp', subBuilder: $0.Timestamp.create)
+    ..aOM<$1.Struct>(9, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
     ..hasRequiredFields = false
   ;
 
@@ -1517,26 +1517,26 @@ class RouteDeviationEventObject extends $pb.GeneratedMessage {
   void clearLongitude() => clearField(7);
 
   @$pb.TagNumber(8)
-  $2.Timestamp get timestamp => $_getN(7);
+  $0.Timestamp get timestamp => $_getN(7);
   @$pb.TagNumber(8)
-  set timestamp($2.Timestamp v) { setField(8, v); }
+  set timestamp($0.Timestamp v) { setField(8, v); }
   @$pb.TagNumber(8)
   $core.bool hasTimestamp() => $_has(7);
   @$pb.TagNumber(8)
   void clearTimestamp() => clearField(8);
   @$pb.TagNumber(8)
-  $2.Timestamp ensureTimestamp() => $_ensure(7);
+  $0.Timestamp ensureTimestamp() => $_ensure(7);
 
   @$pb.TagNumber(9)
-  $6.Struct get extra => $_getN(8);
+  $1.Struct get extra => $_getN(8);
   @$pb.TagNumber(9)
-  set extra($6.Struct v) { setField(9, v); }
+  set extra($1.Struct v) { setField(9, v); }
   @$pb.TagNumber(9)
   $core.bool hasExtra() => $_has(8);
   @$pb.TagNumber(9)
   void clearExtra() => clearField(9);
   @$pb.TagNumber(9)
-  $6.Struct ensureExtra() => $_ensure(8);
+  $1.Struct ensureExtra() => $_ensure(8);
 }
 
 class IngestLocationsRequest extends $pb.GeneratedMessage {
@@ -1874,7 +1874,7 @@ class UpdateAreaRequest extends $pb.GeneratedMessage {
     $core.String? description,
     AreaType? areaType,
     $core.String? geometry,
-    $6.Struct? extra,
+    $1.Struct? extra,
   }) {
     final $result = create();
     if (id != null) {
@@ -1907,7 +1907,7 @@ class UpdateAreaRequest extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'description')
     ..e<AreaType>(4, _omitFieldNames ? '' : 'areaType', $pb.PbFieldType.OE, defaultOrMaker: AreaType.AREA_TYPE_UNSPECIFIED, valueOf: AreaType.valueOf, enumValues: AreaType.values)
     ..aOS(5, _omitFieldNames ? '' : 'geometry')
-    ..aOM<$6.Struct>(6, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
+    ..aOM<$1.Struct>(6, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
     ..hasRequiredFields = false
   ;
 
@@ -1978,15 +1978,15 @@ class UpdateAreaRequest extends $pb.GeneratedMessage {
   void clearGeometry() => clearField(5);
 
   @$pb.TagNumber(6)
-  $6.Struct get extra => $_getN(5);
+  $1.Struct get extra => $_getN(5);
   @$pb.TagNumber(6)
-  set extra($6.Struct v) { setField(6, v); }
+  set extra($1.Struct v) { setField(6, v); }
   @$pb.TagNumber(6)
   $core.bool hasExtra() => $_has(5);
   @$pb.TagNumber(6)
   void clearExtra() => clearField(6);
   @$pb.TagNumber(6)
-  $6.Struct ensureExtra() => $_ensure(5);
+  $1.Struct ensureExtra() => $_ensure(5);
 }
 
 class UpdateAreaResponse extends $pb.GeneratedMessage {
@@ -2428,7 +2428,7 @@ class UpdateRouteRequest extends $pb.GeneratedMessage {
     $core.double? deviationThresholdM,
     $core.int? deviationConsecutiveCount,
     $core.int? deviationCooldownSec,
-    $6.Struct? extra,
+    $1.Struct? extra,
   }) {
     final $result = create();
     if (id != null) {
@@ -2469,7 +2469,7 @@ class UpdateRouteRequest extends $pb.GeneratedMessage {
     ..a<$core.double>(5, _omitFieldNames ? '' : 'deviationThresholdM', $pb.PbFieldType.OD)
     ..a<$core.int>(6, _omitFieldNames ? '' : 'deviationConsecutiveCount', $pb.PbFieldType.O3)
     ..a<$core.int>(7, _omitFieldNames ? '' : 'deviationCooldownSec', $pb.PbFieldType.O3)
-    ..aOM<$6.Struct>(8, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
+    ..aOM<$1.Struct>(8, _omitFieldNames ? '' : 'extra', subBuilder: $1.Struct.create)
     ..hasRequiredFields = false
   ;
 
@@ -2558,15 +2558,15 @@ class UpdateRouteRequest extends $pb.GeneratedMessage {
   void clearDeviationCooldownSec() => clearField(7);
 
   @$pb.TagNumber(8)
-  $6.Struct get extra => $_getN(7);
+  $1.Struct get extra => $_getN(7);
   @$pb.TagNumber(8)
-  set extra($6.Struct v) { setField(8, v); }
+  set extra($1.Struct v) { setField(8, v); }
   @$pb.TagNumber(8)
   $core.bool hasExtra() => $_has(7);
   @$pb.TagNumber(8)
   void clearExtra() => clearField(8);
   @$pb.TagNumber(8)
-  $6.Struct ensureExtra() => $_ensure(7);
+  $1.Struct ensureExtra() => $_ensure(7);
 }
 
 class UpdateRouteResponse extends $pb.GeneratedMessage {
@@ -2783,8 +2783,8 @@ class AssignRouteRequest extends $pb.GeneratedMessage {
   factory AssignRouteRequest({
     $core.String? subjectId,
     $core.String? routeId,
-    $2.Timestamp? validFrom,
-    $2.Timestamp? validUntil,
+    $0.Timestamp? validFrom,
+    $0.Timestamp? validUntil,
   }) {
     final $result = create();
     if (subjectId != null) {
@@ -2808,8 +2808,8 @@ class AssignRouteRequest extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AssignRouteRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'geolocation.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'subjectId')
     ..aOS(2, _omitFieldNames ? '' : 'routeId')
-    ..aOM<$2.Timestamp>(3, _omitFieldNames ? '' : 'validFrom', subBuilder: $2.Timestamp.create)
-    ..aOM<$2.Timestamp>(4, _omitFieldNames ? '' : 'validUntil', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(3, _omitFieldNames ? '' : 'validFrom', subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(4, _omitFieldNames ? '' : 'validUntil', subBuilder: $0.Timestamp.create)
     ..hasRequiredFields = false
   ;
 
@@ -2853,26 +2853,26 @@ class AssignRouteRequest extends $pb.GeneratedMessage {
   void clearRouteId() => clearField(2);
 
   @$pb.TagNumber(3)
-  $2.Timestamp get validFrom => $_getN(2);
+  $0.Timestamp get validFrom => $_getN(2);
   @$pb.TagNumber(3)
-  set validFrom($2.Timestamp v) { setField(3, v); }
+  set validFrom($0.Timestamp v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasValidFrom() => $_has(2);
   @$pb.TagNumber(3)
   void clearValidFrom() => clearField(3);
   @$pb.TagNumber(3)
-  $2.Timestamp ensureValidFrom() => $_ensure(2);
+  $0.Timestamp ensureValidFrom() => $_ensure(2);
 
   @$pb.TagNumber(4)
-  $2.Timestamp get validUntil => $_getN(3);
+  $0.Timestamp get validUntil => $_getN(3);
   @$pb.TagNumber(4)
-  set validUntil($2.Timestamp v) { setField(4, v); }
+  set validUntil($0.Timestamp v) { setField(4, v); }
   @$pb.TagNumber(4)
   $core.bool hasValidUntil() => $_has(3);
   @$pb.TagNumber(4)
   void clearValidUntil() => clearField(4);
   @$pb.TagNumber(4)
-  $2.Timestamp ensureValidUntil() => $_ensure(3);
+  $0.Timestamp ensureValidUntil() => $_ensure(3);
 }
 
 class AssignRouteResponse extends $pb.GeneratedMessage {
@@ -3074,8 +3074,8 @@ class GetSubjectRouteAssignmentsResponse extends $pb.GeneratedMessage {
 class GetTrackRequest extends $pb.GeneratedMessage {
   factory GetTrackRequest({
     $core.String? subjectId,
-    $2.Timestamp? from,
-    $2.Timestamp? to,
+    $0.Timestamp? from,
+    $0.Timestamp? to,
     $core.int? limit,
     $core.int? offset,
   }) {
@@ -3103,8 +3103,8 @@ class GetTrackRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetTrackRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'geolocation.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'subjectId')
-    ..aOM<$2.Timestamp>(2, _omitFieldNames ? '' : 'from', subBuilder: $2.Timestamp.create)
-    ..aOM<$2.Timestamp>(3, _omitFieldNames ? '' : 'to', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(2, _omitFieldNames ? '' : 'from', subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(3, _omitFieldNames ? '' : 'to', subBuilder: $0.Timestamp.create)
     ..a<$core.int>(4, _omitFieldNames ? '' : 'limit', $pb.PbFieldType.O3)
     ..a<$core.int>(5, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.O3)
     ..hasRequiredFields = false
@@ -3141,26 +3141,26 @@ class GetTrackRequest extends $pb.GeneratedMessage {
   void clearSubjectId() => clearField(1);
 
   @$pb.TagNumber(2)
-  $2.Timestamp get from => $_getN(1);
+  $0.Timestamp get from => $_getN(1);
   @$pb.TagNumber(2)
-  set from($2.Timestamp v) { setField(2, v); }
+  set from($0.Timestamp v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasFrom() => $_has(1);
   @$pb.TagNumber(2)
   void clearFrom() => clearField(2);
   @$pb.TagNumber(2)
-  $2.Timestamp ensureFrom() => $_ensure(1);
+  $0.Timestamp ensureFrom() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $2.Timestamp get to => $_getN(2);
+  $0.Timestamp get to => $_getN(2);
   @$pb.TagNumber(3)
-  set to($2.Timestamp v) { setField(3, v); }
+  set to($0.Timestamp v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasTo() => $_has(2);
   @$pb.TagNumber(3)
   void clearTo() => clearField(3);
   @$pb.TagNumber(3)
-  $2.Timestamp ensureTo() => $_ensure(2);
+  $0.Timestamp ensureTo() => $_ensure(2);
 
   @$pb.TagNumber(4)
   $core.int get limit => $_getIZ(3);
@@ -3228,8 +3228,8 @@ class GetTrackResponse extends $pb.GeneratedMessage {
 class GetSubjectEventsRequest extends $pb.GeneratedMessage {
   factory GetSubjectEventsRequest({
     $core.String? subjectId,
-    $2.Timestamp? from,
-    $2.Timestamp? to,
+    $0.Timestamp? from,
+    $0.Timestamp? to,
     $core.int? limit,
     $core.int? offset,
   }) {
@@ -3257,8 +3257,8 @@ class GetSubjectEventsRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetSubjectEventsRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'geolocation.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'subjectId')
-    ..aOM<$2.Timestamp>(2, _omitFieldNames ? '' : 'from', subBuilder: $2.Timestamp.create)
-    ..aOM<$2.Timestamp>(3, _omitFieldNames ? '' : 'to', subBuilder: $2.Timestamp.create)
+    ..aOM<$0.Timestamp>(2, _omitFieldNames ? '' : 'from', subBuilder: $0.Timestamp.create)
+    ..aOM<$0.Timestamp>(3, _omitFieldNames ? '' : 'to', subBuilder: $0.Timestamp.create)
     ..a<$core.int>(4, _omitFieldNames ? '' : 'limit', $pb.PbFieldType.O3)
     ..a<$core.int>(5, _omitFieldNames ? '' : 'offset', $pb.PbFieldType.O3)
     ..hasRequiredFields = false
@@ -3295,26 +3295,26 @@ class GetSubjectEventsRequest extends $pb.GeneratedMessage {
   void clearSubjectId() => clearField(1);
 
   @$pb.TagNumber(2)
-  $2.Timestamp get from => $_getN(1);
+  $0.Timestamp get from => $_getN(1);
   @$pb.TagNumber(2)
-  set from($2.Timestamp v) { setField(2, v); }
+  set from($0.Timestamp v) { setField(2, v); }
   @$pb.TagNumber(2)
   $core.bool hasFrom() => $_has(1);
   @$pb.TagNumber(2)
   void clearFrom() => clearField(2);
   @$pb.TagNumber(2)
-  $2.Timestamp ensureFrom() => $_ensure(1);
+  $0.Timestamp ensureFrom() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $2.Timestamp get to => $_getN(2);
+  $0.Timestamp get to => $_getN(2);
   @$pb.TagNumber(3)
-  set to($2.Timestamp v) { setField(3, v); }
+  set to($0.Timestamp v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasTo() => $_has(2);
   @$pb.TagNumber(3)
   void clearTo() => clearField(3);
   @$pb.TagNumber(3)
-  $2.Timestamp ensureTo() => $_ensure(2);
+  $0.Timestamp ensureTo() => $_ensure(2);
 
   @$pb.TagNumber(4)
   $core.int get limit => $_getIZ(3);
@@ -3747,8 +3747,8 @@ class GeolocationServiceApi {
   $async.Future<UpdateAreaResponse> updateArea($pb.ClientContext? ctx, UpdateAreaRequest request) =>
     _client.invoke<UpdateAreaResponse>(ctx, 'GeolocationService', 'UpdateArea', request, UpdateAreaResponse())
   ;
-  $async.Future<$8.Empty> deleteArea($pb.ClientContext? ctx, DeleteAreaRequest request) =>
-    _client.invoke<$8.Empty>(ctx, 'GeolocationService', 'DeleteArea', request, $8.Empty())
+  $async.Future<$2.Empty> deleteArea($pb.ClientContext? ctx, DeleteAreaRequest request) =>
+    _client.invoke<$2.Empty>(ctx, 'GeolocationService', 'DeleteArea', request, $2.Empty())
   ;
   $async.Future<SearchAreasResponse> searchAreas($pb.ClientContext? ctx, SearchAreasRequest request) =>
     _client.invoke<SearchAreasResponse>(ctx, 'GeolocationService', 'SearchAreas', request, SearchAreasResponse())
@@ -3762,8 +3762,8 @@ class GeolocationServiceApi {
   $async.Future<UpdateRouteResponse> updateRoute($pb.ClientContext? ctx, UpdateRouteRequest request) =>
     _client.invoke<UpdateRouteResponse>(ctx, 'GeolocationService', 'UpdateRoute', request, UpdateRouteResponse())
   ;
-  $async.Future<$8.Empty> deleteRoute($pb.ClientContext? ctx, DeleteRouteRequest request) =>
-    _client.invoke<$8.Empty>(ctx, 'GeolocationService', 'DeleteRoute', request, $8.Empty())
+  $async.Future<$2.Empty> deleteRoute($pb.ClientContext? ctx, DeleteRouteRequest request) =>
+    _client.invoke<$2.Empty>(ctx, 'GeolocationService', 'DeleteRoute', request, $2.Empty())
   ;
   $async.Future<SearchRoutesResponse> searchRoutes($pb.ClientContext? ctx, SearchRoutesRequest request) =>
     _client.invoke<SearchRoutesResponse>(ctx, 'GeolocationService', 'SearchRoutes', request, SearchRoutesResponse())
@@ -3771,8 +3771,8 @@ class GeolocationServiceApi {
   $async.Future<AssignRouteResponse> assignRoute($pb.ClientContext? ctx, AssignRouteRequest request) =>
     _client.invoke<AssignRouteResponse>(ctx, 'GeolocationService', 'AssignRoute', request, AssignRouteResponse())
   ;
-  $async.Future<$8.Empty> unassignRoute($pb.ClientContext? ctx, UnassignRouteRequest request) =>
-    _client.invoke<$8.Empty>(ctx, 'GeolocationService', 'UnassignRoute', request, $8.Empty())
+  $async.Future<$2.Empty> unassignRoute($pb.ClientContext? ctx, UnassignRouteRequest request) =>
+    _client.invoke<$2.Empty>(ctx, 'GeolocationService', 'UnassignRoute', request, $2.Empty())
   ;
   $async.Future<GetSubjectRouteAssignmentsResponse> getSubjectRouteAssignments($pb.ClientContext? ctx, GetSubjectRouteAssignmentsRequest request) =>
     _client.invoke<GetSubjectRouteAssignmentsResponse>(ctx, 'GeolocationService', 'GetSubjectRouteAssignments', request, GetSubjectRouteAssignmentsResponse())

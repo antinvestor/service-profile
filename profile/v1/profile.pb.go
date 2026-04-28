@@ -351,6 +351,7 @@ type RosterObject struct {
 	ProfileId     string                 `protobuf:"bytes,2,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"` // Profile ID of the contact
 	Contact       *ContactObject         `protobuf:"bytes,3,opt,name=contact,proto3" json:"contact,omitempty"`                      // Contact information
 	Extra         *structpb.Struct       `protobuf:"bytes,4,opt,name=extra,proto3" json:"extra,omitempty"`                          // Additional metadata
+	Name          string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`                            // List name (e.g., "friends", "colleagues")
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -411,6 +412,13 @@ func (x *RosterObject) GetExtra() *structpb.Struct {
 		return x.Extra
 	}
 	return nil
+}
+
+func (x *RosterObject) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
 }
 
 // AddressObject represents a physical address with geocoding.
@@ -1852,6 +1860,7 @@ type SearchRosterRequest struct {
 	Properties    []string               `protobuf:"bytes,6,rep,name=properties,proto3" json:"properties,omitempty"`
 	Extras        *structpb.Struct       `protobuf:"bytes,7,opt,name=extras,proto3" json:"extras,omitempty"`
 	ProfileId     string                 `protobuf:"bytes,8,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
+	Name          string                 `protobuf:"bytes,9,opt,name=name,proto3" json:"name,omitempty"` // Filter by list name; empty returns all lists
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1938,6 +1947,13 @@ func (x *SearchRosterRequest) GetExtras() *structpb.Struct {
 func (x *SearchRosterRequest) GetProfileId() string {
 	if x != nil {
 		return x.ProfileId
+	}
+	return ""
+}
+
+func (x *SearchRosterRequest) GetName() string {
+	if x != nil {
+		return x.Name
 	}
 	return ""
 }
@@ -2041,6 +2057,7 @@ func (x *RawContact) GetExtras() *structpb.Struct {
 type AddRosterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Data          []*RawContact          `protobuf:"bytes,1,rep,name=data,proto3" json:"data,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"` // List name (e.g., "friends", "colleagues"); defaults to "default"
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2080,6 +2097,13 @@ func (x *AddRosterRequest) GetData() []*RawContact {
 		return x.Data
 	}
 	return nil
+}
+
+func (x *AddRosterRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
 }
 
 type AddRosterResponse struct {
@@ -2129,6 +2153,7 @@ func (x *AddRosterResponse) GetData() []*RosterObject {
 type RemoveRosterRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"` // List name for scoped removal
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2166,6 +2191,13 @@ func (*RemoveRosterRequest) Descriptor() ([]byte, []int) {
 func (x *RemoveRosterRequest) GetId() string {
 	if x != nil {
 		return x.Id
+	}
+	return ""
+}
+
+func (x *RemoveRosterRequest) GetName() string {
+	if x != nil {
+		return x.Name
 	}
 	return ""
 }
@@ -3052,13 +3084,14 @@ const file_profile_v1_profile_proto_rawDesc = "" +
 	"\bverified\x18\x04 \x01(\bR\bverified\x12O\n" +
 	"\x13communication_level\x18\x05 \x01(\x0e2\x1e.profile.v1.CommunicationLevelR\x12communicationLevel\x12&\n" +
 	"\x05state\x18\x06 \x01(\x0e2\x10.common.v1.STATER\x05state\x12-\n" +
-	"\x05extra\x18\a \x01(\v2\x17.google.protobuf.StructR\x05extra\"\xdb\x01\n" +
+	"\x05extra\x18\a \x01(\v2\x17.google.protobuf.StructR\x05extra\"\xef\x01\n" +
 	"\fRosterObject\x12+\n" +
 	"\x02id\x18\x01 \x01(\tB\x1b\xbaH\x18r\x16\x10\x03\x18(2\x10[0-9a-z_-]{3,40}R\x02id\x12:\n" +
 	"\n" +
 	"profile_id\x18\x02 \x01(\tB\x1b\xbaH\x18r\x16\x10\x03\x18(2\x10[0-9a-z_-]{3,40}R\tprofileId\x123\n" +
 	"\acontact\x18\x03 \x01(\v2\x19.profile.v1.ContactObjectR\acontact\x12-\n" +
-	"\x05extra\x18\x04 \x01(\v2\x17.google.protobuf.StructR\x05extra\"\xc3\x02\n" +
+	"\x05extra\x18\x04 \x01(\v2\x17.google.protobuf.StructR\x05extra\x12\x12\n" +
+	"\x04name\x18\x05 \x01(\tR\x04name\"\xc3\x02\n" +
 	"\rAddressObject\x12+\n" +
 	"\x02id\x18\x01 \x01(\tB\x1b\xbaH\x18r\x16\x10\x03\x18(2\x10[0-9a-z_-]{3,40}R\x02id\x12\x1d\n" +
 	"\x04name\x18\x02 \x01(\tB\t\xbaH\x06r\x04\x10\x03\x18dR\x04name\x12\x18\n" +
@@ -3169,7 +3202,7 @@ const file_profile_v1_profile_proto_rawDesc = "" +
 	"\x14RemoveContactRequest\x12+\n" +
 	"\x02id\x18\x01 \x01(\tB\x1b\xbaH\x18r\x16\x10\x03\x18(2\x10[0-9a-z_-]{3,40}R\x02id\"F\n" +
 	"\x15RemoveContactResponse\x12-\n" +
-	"\x04data\x18\x01 \x01(\v2\x19.profile.v1.ProfileObjectR\x04data\"\xa1\x02\n" +
+	"\x04data\x18\x01 \x01(\v2\x19.profile.v1.ProfileObjectR\x04data\"\xb5\x02\n" +
 	"\x13SearchRosterRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12\x12\n" +
 	"\x04page\x18\x02 \x01(\x03R\x04page\x12\x14\n" +
@@ -3182,19 +3215,22 @@ const file_profile_v1_profile_proto_rawDesc = "" +
 	"properties\x12/\n" +
 	"\x06extras\x18\a \x01(\v2\x17.google.protobuf.StructR\x06extras\x12?\n" +
 	"\n" +
-	"profile_id\x18\b \x01(\tB \xbaH\x1d\xd8\x01\x01r\x18\x10\x03\x18\xfa\x012\x11[0-9a-z_-]{3,250}R\tprofileId\"D\n" +
+	"profile_id\x18\b \x01(\tB \xbaH\x1d\xd8\x01\x01r\x18\x10\x03\x18\xfa\x012\x11[0-9a-z_-]{3,250}R\tprofileId\x12\x12\n" +
+	"\x04name\x18\t \x01(\tR\x04name\"D\n" +
 	"\x14SearchRosterResponse\x12,\n" +
 	"\x04data\x18\x01 \x03(\v2\x18.profile.v1.RosterObjectR\x04data\"W\n" +
 	"\n" +
 	"RawContact\x12\x18\n" +
 	"\acontact\x18\x01 \x01(\tR\acontact\x12/\n" +
-	"\x06extras\x18\x02 \x01(\v2\x17.google.protobuf.StructR\x06extras\">\n" +
+	"\x06extras\x18\x02 \x01(\v2\x17.google.protobuf.StructR\x06extras\"R\n" +
 	"\x10AddRosterRequest\x12*\n" +
-	"\x04data\x18\x01 \x03(\v2\x16.profile.v1.RawContactR\x04data\"A\n" +
+	"\x04data\x18\x01 \x03(\v2\x16.profile.v1.RawContactR\x04data\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"A\n" +
 	"\x11AddRosterResponse\x12,\n" +
-	"\x04data\x18\x01 \x03(\v2\x18.profile.v1.RosterObjectR\x04data\"B\n" +
+	"\x04data\x18\x01 \x03(\v2\x18.profile.v1.RosterObjectR\x04data\"V\n" +
 	"\x13RemoveRosterRequest\x12+\n" +
-	"\x02id\x18\x01 \x01(\tB\x1b\xbaH\x18r\x16\x10\x03\x18(2\x10[0-9a-z_-]{3,40}R\x02id\"H\n" +
+	"\x02id\x18\x01 \x01(\tB\x1b\xbaH\x18r\x16\x10\x03\x18(2\x10[0-9a-z_-]{3,40}R\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\"H\n" +
 	"\x14RemoveRosterResponse\x120\n" +
 	"\x06roster\x18\x01 \x01(\v2\x18.profile.v1.RosterObjectR\x06roster\"u\n" +
 	"\x11AddAddressRequest\x12+\n" +

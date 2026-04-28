@@ -13,7 +13,7 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import '../../common/v1/common.pbjson.dart' as $10;
+import '../../common/v1/common.pbjson.dart' as $7;
 import '../../google/protobuf/struct.pbjson.dart' as $6;
 
 @$core.Deprecated('Use settingDescriptor instead')
@@ -178,8 +178,8 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> SettingsSe
   '.settings.v1.SettingObject': SettingObject$json,
   '.settings.v1.ListRequest': ListRequest$json,
   '.settings.v1.ListResponse': ListResponse$json,
-  '.common.v1.SearchRequest': $10.SearchRequest$json,
-  '.common.v1.PageCursor': $10.PageCursor$json,
+  '.common.v1.SearchRequest': $7.SearchRequest$json,
+  '.common.v1.PageCursor': $7.PageCursor$json,
   '.google.protobuf.Struct': $6.Struct$json,
   '.google.protobuf.Struct.FieldsEntry': $6.Struct_FieldsEntry$json,
   '.google.protobuf.Value': $6.Value$json,

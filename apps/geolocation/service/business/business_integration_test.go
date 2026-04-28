@@ -22,7 +22,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
 	geotests "github.com/antinvestor/service-profile/apps/geolocation/tests"
-	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/geolocation/v1"
+	geolocationv1 "github.com/antinvestor/service-profile/geolocation/v1"
 )
 
 const (

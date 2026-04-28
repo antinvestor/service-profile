@@ -13,7 +13,7 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import '../../common/v1/common.pbjson.dart' as $10;
+import '../../common/v1/common.pbjson.dart' as $7;
 import '../../google/protobuf/struct.pbjson.dart' as $6;
 
 @$core.Deprecated('Use oCRFileDescriptor instead')
@@ -106,7 +106,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> OCRService
   '.google.protobuf.ListValue': $6.ListValue$json,
   '.ocr.v1.RecognizeResponse': RecognizeResponse$json,
   '.ocr.v1.OCRFile': OCRFile$json,
-  '.common.v1.StatusRequest': $10.StatusRequest$json,
+  '.common.v1.StatusRequest': $7.StatusRequest$json,
   '.ocr.v1.StatusResponse': StatusResponse$json,
 };
 

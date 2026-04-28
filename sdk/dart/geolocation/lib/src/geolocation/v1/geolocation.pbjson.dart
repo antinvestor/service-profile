@@ -13,9 +13,9 @@ import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import '../../google/protobuf/empty.pbjson.dart' as $8;
-import '../../google/protobuf/struct.pbjson.dart' as $6;
-import '../../google/protobuf/timestamp.pbjson.dart' as $2;
+import '../../google/protobuf/empty.pbjson.dart' as $2;
+import '../../google/protobuf/struct.pbjson.dart' as $1;
+import '../../google/protobuf/timestamp.pbjson.dart' as $0;
 
 @$core.Deprecated('Use locationSourceDescriptor instead')
 const LocationSource$json = {
@@ -893,11 +893,11 @@ const $core.Map<$core.String, $core.dynamic> GeolocationServiceBase$json = {
 const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> GeolocationServiceBase$messageJson = {
   '.geolocation.v1.IngestLocationsRequest': IngestLocationsRequest$json,
   '.geolocation.v1.LocationPointInput': LocationPointInput$json,
-  '.google.protobuf.Timestamp': $2.Timestamp$json,
-  '.google.protobuf.Struct': $6.Struct$json,
-  '.google.protobuf.Struct.FieldsEntry': $6.Struct_FieldsEntry$json,
-  '.google.protobuf.Value': $6.Value$json,
-  '.google.protobuf.ListValue': $6.ListValue$json,
+  '.google.protobuf.Timestamp': $0.Timestamp$json,
+  '.google.protobuf.Struct': $1.Struct$json,
+  '.google.protobuf.Struct.FieldsEntry': $1.Struct_FieldsEntry$json,
+  '.google.protobuf.Value': $1.Value$json,
+  '.google.protobuf.ListValue': $1.ListValue$json,
   '.geolocation.v1.IngestLocationsResponse': IngestLocationsResponse$json,
   '.geolocation.v1.CreateAreaRequest': CreateAreaRequest$json,
   '.geolocation.v1.AreaObject': AreaObject$json,
@@ -907,7 +907,7 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> Geolocatio
   '.geolocation.v1.UpdateAreaRequest': UpdateAreaRequest$json,
   '.geolocation.v1.UpdateAreaResponse': UpdateAreaResponse$json,
   '.geolocation.v1.DeleteAreaRequest': DeleteAreaRequest$json,
-  '.google.protobuf.Empty': $8.Empty$json,
+  '.google.protobuf.Empty': $2.Empty$json,
   '.geolocation.v1.SearchAreasRequest': SearchAreasRequest$json,
   '.geolocation.v1.SearchAreasResponse': SearchAreasResponse$json,
   '.geolocation.v1.CreateRouteRequest': CreateRouteRequest$json,

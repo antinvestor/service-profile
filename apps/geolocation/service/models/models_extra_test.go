@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	geolocationv1 "github.com/antinvestor/service-profile/proto/geolocation/geolocation/v1"
+	geolocationv1 "github.com/antinvestor/service-profile/geolocation/v1"
 )
 
 func TestModelStringsAndTableNames(t *testing.T) {

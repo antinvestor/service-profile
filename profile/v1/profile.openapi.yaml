@@ -1238,6 +1238,10 @@ components:
           items:
             $ref: '#/components/schemas/profile.v1.RawContact'
           title: data
+        name:
+          type: string
+          title: name
+          description: List name (e.g., "friends", "colleagues"); defaults to "default"
       title: AddRosterRequest
       additionalProperties: false
     profile.v1.AddRosterResponse:
@@ -1832,6 +1836,10 @@ components:
           maxLength: 40
           minLength: 3
           pattern: '[0-9a-z_-]{3,40}'
+        name:
+          type: string
+          title: name
+          description: List name for scoped removal
       title: RemoveRosterRequest
       additionalProperties: false
     profile.v1.RemoveRosterResponse:
@@ -1867,6 +1875,10 @@ components:
           title: extra
           description: Additional metadata
           $ref: '#/components/schemas/google.protobuf.Struct'
+        name:
+          type: string
+          title: name
+          description: List name (e.g., "friends", "colleagues")
       title: RosterObject
       additionalProperties: false
       description: RosterObject represents a contact in a user's roster/contact list.
@@ -1948,6 +1960,10 @@ components:
           maxLength: 250
           minLength: 3
           pattern: '[0-9a-z_-]{3,250}'
+        name:
+          type: string
+          title: name
+          description: Filter by list name; empty returns all lists
       title: SearchRosterRequest
       additionalProperties: false
     profile.v1.SearchRosterResponse:

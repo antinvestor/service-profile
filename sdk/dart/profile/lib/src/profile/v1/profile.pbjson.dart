@@ -106,6 +106,7 @@ const RosterObject$json = {
     {'1': 'profile_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'profileId'},
     {'1': 'contact', '3': 3, '4': 1, '5': 11, '6': '.profile.v1.ContactObject', '10': 'contact'},
     {'1': 'extra', '3': 4, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
+    {'1': 'name', '3': 5, '4': 1, '5': 9, '10': 'name'},
   ],
 };
 
@@ -114,7 +115,8 @@ final $typed_data.Uint8List rosterObjectDescriptor = $convert.base64Decode(
     'CgxSb3N0ZXJPYmplY3QSKwoCaWQYASABKAlCG7pIGHIWEAMYKDIQWzAtOWEtel8tXXszLDQwfV'
     'ICaWQSOgoKcHJvZmlsZV9pZBgCIAEoCUIbukgYchYQAxgoMhBbMC05YS16Xy1dezMsNDB9Uglw'
     'cm9maWxlSWQSMwoHY29udGFjdBgDIAEoCzIZLnByb2ZpbGUudjEuQ29udGFjdE9iamVjdFIHY2'
-    '9udGFjdBItCgVleHRyYRgEIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3RSBWV4dHJh');
+    '9udGFjdBItCgVleHRyYRgEIAEoCzIXLmdvb2dsZS5wcm90b2J1Zi5TdHJ1Y3RSBWV4dHJhEhIK'
+    'BG5hbWUYBSABKAlSBG5hbWU=');
 
 @$core.Deprecated('Use addressObjectDescriptor instead')
 const AddressObject$json = {
@@ -508,6 +510,7 @@ const SearchRosterRequest$json = {
     {'1': 'properties', '3': 6, '4': 3, '5': 9, '10': 'properties'},
     {'1': 'extras', '3': 7, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
     {'1': 'profile_id', '3': 8, '4': 1, '5': 9, '8': {}, '10': 'profileId'},
+    {'1': 'name', '3': 9, '4': 1, '5': 9, '10': 'name'},
   ],
 };
 
@@ -518,7 +521,7 @@ final $typed_data.Uint8List searchRosterRequestDescriptor = $convert.base64Decod
     'dERhdGUSGQoIZW5kX2RhdGUYBSABKAlSB2VuZERhdGUSHgoKcHJvcGVydGllcxgGIAMoCVIKcH'
     'JvcGVydGllcxIvCgZleHRyYXMYByABKAsyFy5nb29nbGUucHJvdG9idWYuU3RydWN0UgZleHRy'
     'YXMSPwoKcHJvZmlsZV9pZBgIIAEoCUIgukgd2AEBchgQAxj6ATIRWzAtOWEtel8tXXszLDI1MH'
-    '1SCXByb2ZpbGVJZA==');
+    '1SCXByb2ZpbGVJZBISCgRuYW1lGAkgASgJUgRuYW1l');
 
 @$core.Deprecated('Use searchRosterResponseDescriptor instead')
 const SearchRosterResponse$json = {
@@ -552,13 +555,14 @@ const AddRosterRequest$json = {
   '1': 'AddRosterRequest',
   '2': [
     {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.profile.v1.RawContact', '10': 'data'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
   ],
 };
 
 /// Descriptor for `AddRosterRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List addRosterRequestDescriptor = $convert.base64Decode(
     'ChBBZGRSb3N0ZXJSZXF1ZXN0EioKBGRhdGEYASADKAsyFi5wcm9maWxlLnYxLlJhd0NvbnRhY3'
-    'RSBGRhdGE=');
+    'RSBGRhdGESEgoEbmFtZRgCIAEoCVIEbmFtZQ==');
 
 @$core.Deprecated('Use addRosterResponseDescriptor instead')
 const AddRosterResponse$json = {
@@ -578,13 +582,14 @@ const RemoveRosterRequest$json = {
   '1': 'RemoveRosterRequest',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'id'},
+    {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
   ],
 };
 
 /// Descriptor for `RemoveRosterRequest`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List removeRosterRequestDescriptor = $convert.base64Decode(
     'ChNSZW1vdmVSb3N0ZXJSZXF1ZXN0EisKAmlkGAEgASgJQhu6SBhyFhADGCgyEFswLTlhLXpfLV'
-    '17Myw0MH1SAmlk');
+    '17Myw0MH1SAmlkEhIKBG5hbWUYAiABKAlSBG5hbWU=');
 
 @$core.Deprecated('Use removeRosterResponseDescriptor instead')
 const RemoveRosterResponse$json = {

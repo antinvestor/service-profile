@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "antinvestor_api_settings",
-      "version": "0.1.0",
+      "version": "1.53.0",
       "dependencies": [
         "antinvestor_api_common",
         "connectrpc",

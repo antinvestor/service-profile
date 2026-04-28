@@ -15,7 +15,7 @@ import 'dart:core' as $core;
 import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:protobuf/protobuf.dart' as $pb;
 
-import '../../common/v1/common.pbenum.dart' as $10;
+import '../../common/v1/common.pbenum.dart' as $7;
 import '../../google/protobuf/struct.pb.dart' as $6;
 import '../../google/protobuf/timestamp.pb.dart' as $2;
 import 'profile.pbenum.dart';
@@ -30,7 +30,7 @@ class ContactObject extends $pb.GeneratedMessage {
     $core.String? detail,
     $core.bool? verified,
     CommunicationLevel? communicationLevel,
-    $10.STATE? state,
+    $7.STATE? state,
     $6.Struct? extra,
   }) {
     final $result = create();
@@ -67,7 +67,7 @@ class ContactObject extends $pb.GeneratedMessage {
     ..aOS(3, _omitFieldNames ? '' : 'detail')
     ..aOB(4, _omitFieldNames ? '' : 'verified')
     ..e<CommunicationLevel>(5, _omitFieldNames ? '' : 'communicationLevel', $pb.PbFieldType.OE, defaultOrMaker: CommunicationLevel.ALL, valueOf: CommunicationLevel.valueOf, enumValues: CommunicationLevel.values)
-    ..e<$10.STATE>(6, _omitFieldNames ? '' : 'state', $pb.PbFieldType.OE, defaultOrMaker: $10.STATE.CREATED, valueOf: $10.STATE.valueOf, enumValues: $10.STATE.values)
+    ..e<$7.STATE>(6, _omitFieldNames ? '' : 'state', $pb.PbFieldType.OE, defaultOrMaker: $7.STATE.CREATED, valueOf: $7.STATE.valueOf, enumValues: $7.STATE.values)
     ..aOM<$6.Struct>(7, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
     ..hasRequiredFields = false
   ;
@@ -139,9 +139,9 @@ class ContactObject extends $pb.GeneratedMessage {
   void clearCommunicationLevel() => clearField(5);
 
   @$pb.TagNumber(6)
-  $10.STATE get state => $_getN(5);
+  $7.STATE get state => $_getN(5);
   @$pb.TagNumber(6)
-  set state($10.STATE v) { setField(6, v); }
+  set state($7.STATE v) { setField(6, v); }
   @$pb.TagNumber(6)
   $core.bool hasState() => $_has(5);
   @$pb.TagNumber(6)
@@ -166,6 +166,7 @@ class RosterObject extends $pb.GeneratedMessage {
     $core.String? profileId,
     ContactObject? contact,
     $6.Struct? extra,
+    $core.String? name,
   }) {
     final $result = create();
     if (id != null) {
@@ -180,6 +181,9 @@ class RosterObject extends $pb.GeneratedMessage {
     if (extra != null) {
       $result.extra = extra;
     }
+    if (name != null) {
+      $result.name = name;
+    }
     return $result;
   }
   RosterObject._() : super();
@@ -191,6 +195,7 @@ class RosterObject extends $pb.GeneratedMessage {
     ..aOS(2, _omitFieldNames ? '' : 'profileId')
     ..aOM<ContactObject>(3, _omitFieldNames ? '' : 'contact', subBuilder: ContactObject.create)
     ..aOM<$6.Struct>(4, _omitFieldNames ? '' : 'extra', subBuilder: $6.Struct.create)
+    ..aOS(5, _omitFieldNames ? '' : 'name')
     ..hasRequiredFields = false
   ;
 
@@ -254,6 +259,15 @@ class RosterObject extends $pb.GeneratedMessage {
   void clearExtra() => clearField(4);
   @$pb.TagNumber(4)
   $6.Struct ensureExtra() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  $core.String get name => $_getSZ(4);
+  @$pb.TagNumber(5)
+  set name($core.String v) { $_setString(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasName() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearName() => clearField(5);
 }
 
 /// AddressObject represents a physical address with geocoding.
@@ -455,7 +469,7 @@ class ProfileObject extends $pb.GeneratedMessage {
     $6.Struct? properties,
     $core.Iterable<ContactObject>? contacts,
     $core.Iterable<AddressObject>? addresses,
-    $10.STATE? state,
+    $7.STATE? state,
   }) {
     final $result = create();
     if (id != null) {
@@ -488,7 +502,7 @@ class ProfileObject extends $pb.GeneratedMessage {
     ..aOM<$6.Struct>(3, _omitFieldNames ? '' : 'properties', subBuilder: $6.Struct.create)
     ..pc<ContactObject>(4, _omitFieldNames ? '' : 'contacts', $pb.PbFieldType.PM, subBuilder: ContactObject.create)
     ..pc<AddressObject>(5, _omitFieldNames ? '' : 'addresses', $pb.PbFieldType.PM, subBuilder: AddressObject.create)
-    ..e<$10.STATE>(6, _omitFieldNames ? '' : 'state', $pb.PbFieldType.OE, defaultOrMaker: $10.STATE.CREATED, valueOf: $10.STATE.valueOf, enumValues: $10.STATE.values)
+    ..e<$7.STATE>(6, _omitFieldNames ? '' : 'state', $pb.PbFieldType.OE, defaultOrMaker: $7.STATE.CREATED, valueOf: $7.STATE.valueOf, enumValues: $7.STATE.values)
     ..hasRequiredFields = false
   ;
 
@@ -549,9 +563,9 @@ class ProfileObject extends $pb.GeneratedMessage {
   $core.List<AddressObject> get addresses => $_getList(4);
 
   @$pb.TagNumber(6)
-  $10.STATE get state => $_getN(5);
+  $7.STATE get state => $_getN(5);
   @$pb.TagNumber(6)
-  set state($10.STATE v) { setField(6, v); }
+  set state($7.STATE v) { setField(6, v); }
   @$pb.TagNumber(6)
   $core.bool hasState() => $_has(5);
   @$pb.TagNumber(6)
@@ -1284,7 +1298,7 @@ class UpdateRequest extends $pb.GeneratedMessage {
   factory UpdateRequest({
     $core.String? id,
     $6.Struct? properties,
-    $10.STATE? state,
+    $7.STATE? state,
     $core.bool? scoped,
   }) {
     final $result = create();
@@ -1309,7 +1323,7 @@ class UpdateRequest extends $pb.GeneratedMessage {
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'UpdateRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
     ..aOM<$6.Struct>(2, _omitFieldNames ? '' : 'properties', subBuilder: $6.Struct.create)
-    ..e<$10.STATE>(3, _omitFieldNames ? '' : 'state', $pb.PbFieldType.OE, defaultOrMaker: $10.STATE.CREATED, valueOf: $10.STATE.valueOf, enumValues: $10.STATE.values)
+    ..e<$7.STATE>(3, _omitFieldNames ? '' : 'state', $pb.PbFieldType.OE, defaultOrMaker: $7.STATE.CREATED, valueOf: $7.STATE.valueOf, enumValues: $7.STATE.values)
     ..aOB(4, _omitFieldNames ? '' : 'scoped')
     ..hasRequiredFields = false
   ;
@@ -1356,9 +1370,9 @@ class UpdateRequest extends $pb.GeneratedMessage {
   $6.Struct ensureProperties() => $_ensure(1);
 
   @$pb.TagNumber(3)
-  $10.STATE get state => $_getN(2);
+  $7.STATE get state => $_getN(2);
   @$pb.TagNumber(3)
-  set state($10.STATE v) { setField(3, v); }
+  set state($7.STATE v) { setField(3, v); }
   @$pb.TagNumber(3)
   $core.bool hasState() => $_has(2);
   @$pb.TagNumber(3)
@@ -2119,6 +2133,7 @@ class SearchRosterRequest extends $pb.GeneratedMessage {
     $core.Iterable<$core.String>? properties,
     $6.Struct? extras,
     $core.String? profileId,
+    $core.String? name,
   }) {
     final $result = create();
     if (query != null) {
@@ -2145,6 +2160,9 @@ class SearchRosterRequest extends $pb.GeneratedMessage {
     if (profileId != null) {
       $result.profileId = profileId;
     }
+    if (name != null) {
+      $result.name = name;
+    }
     return $result;
   }
   SearchRosterRequest._() : super();
@@ -2160,6 +2178,7 @@ class SearchRosterRequest extends $pb.GeneratedMessage {
     ..pPS(6, _omitFieldNames ? '' : 'properties')
     ..aOM<$6.Struct>(7, _omitFieldNames ? '' : 'extras', subBuilder: $6.Struct.create)
     ..aOS(8, _omitFieldNames ? '' : 'profileId')
+    ..aOS(9, _omitFieldNames ? '' : 'name')
     ..hasRequiredFields = false
   ;
 
@@ -2251,6 +2270,15 @@ class SearchRosterRequest extends $pb.GeneratedMessage {
   $core.bool hasProfileId() => $_has(7);
   @$pb.TagNumber(8)
   void clearProfileId() => clearField(8);
+
+  @$pb.TagNumber(9)
+  $core.String get name => $_getSZ(8);
+  @$pb.TagNumber(9)
+  set name($core.String v) { $_setString(8, v); }
+  @$pb.TagNumber(9)
+  $core.bool hasName() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearName() => clearField(9);
 }
 
 class SearchRosterResponse extends $pb.GeneratedMessage {
@@ -2366,10 +2394,14 @@ class RawContact extends $pb.GeneratedMessage {
 class AddRosterRequest extends $pb.GeneratedMessage {
   factory AddRosterRequest({
     $core.Iterable<RawContact>? data,
+    $core.String? name,
   }) {
     final $result = create();
     if (data != null) {
       $result.data.addAll(data);
+    }
+    if (name != null) {
+      $result.name = name;
     }
     return $result;
   }
@@ -2379,6 +2411,7 @@ class AddRosterRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AddRosterRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
     ..pc<RawContact>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.PM, subBuilder: RawContact.create)
+    ..aOS(2, _omitFieldNames ? '' : 'name')
     ..hasRequiredFields = false
   ;
 
@@ -2405,6 +2438,15 @@ class AddRosterRequest extends $pb.GeneratedMessage {
 
   @$pb.TagNumber(1)
   $core.List<RawContact> get data => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => clearField(2);
 }
 
 class AddRosterResponse extends $pb.GeneratedMessage {
@@ -2454,10 +2496,14 @@ class AddRosterResponse extends $pb.GeneratedMessage {
 class RemoveRosterRequest extends $pb.GeneratedMessage {
   factory RemoveRosterRequest({
     $core.String? id,
+    $core.String? name,
   }) {
     final $result = create();
     if (id != null) {
       $result.id = id;
+    }
+    if (name != null) {
+      $result.name = name;
     }
     return $result;
   }
@@ -2467,6 +2513,7 @@ class RemoveRosterRequest extends $pb.GeneratedMessage {
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'RemoveRosterRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
     ..aOS(1, _omitFieldNames ? '' : 'id')
+    ..aOS(2, _omitFieldNames ? '' : 'name')
     ..hasRequiredFields = false
   ;
 
@@ -2499,6 +2546,15 @@ class RemoveRosterRequest extends $pb.GeneratedMessage {
   $core.bool hasId() => $_has(0);
   @$pb.TagNumber(1)
   void clearId() => clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => clearField(2);
 }
 
 class RemoveRosterResponse extends $pb.GeneratedMessage {
