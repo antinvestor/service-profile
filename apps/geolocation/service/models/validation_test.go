@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	geolocationv1 "github.com/antinvestor/service-profile/geolocation/v1"
+	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
 )
 
 func TestValidateLocationPoint(t *testing.T) {

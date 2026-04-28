@@ -15,10 +15,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"gorm.io/gorm"
 
+	"buf.build/gen/go/antinvestor/geolocation/connectrpc/go/geolocation/v1/geolocationv1connect"
+	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
-	geolocationv1 "github.com/antinvestor/service-profile/geolocation/v1"
-	"github.com/antinvestor/service-profile/geolocation/v1/geolocationv1connect"
 )
 
 type GeolocationServer struct {

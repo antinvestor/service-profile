@@ -6,7 +6,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pitabwire/frame/security"
 
-	geolocationv1 "github.com/antinvestor/service-profile/geolocation/v1"
+	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
 )
 
 type (

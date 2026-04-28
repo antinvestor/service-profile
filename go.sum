@@ -8,6 +8,10 @@ buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.2-20260415203305-cca9110
 buf.build/gen/go/antinvestor/device/connectrpc/go v1.19.2-20260415203305-cca911026890.1/go.mod h1:evuF72MwLbWC6r5P8/U7vBLP8zz2u4vCh0puS7ObGXc=
 buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260415203305-cca911026890.1 h1:7ok864wS24vSPpPEiVWyKdNRaaB9SKz9ledIyjOMm2A=
 buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260415203305-cca911026890.1/go.mod h1:e9hdu32L4r2skmY1+0x7dVFmBjqGi9ApBo+m5f6Jl5U=
+buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.19.2-20260415203305-344fe598b185.1 h1:yermiUUZ4gEsGhfMyLm4aDfR+wW7zuHKTgjswt4S2xk=
+buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.19.2-20260415203305-344fe598b185.1/go.mod h1:Ib/7GiR76OzvuKmGGXNAZUq4pKfab5X/DpzoIlYBVqM=
+buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.11-20260415203305-344fe598b185.1 h1:rtwkhbum3xYGevS1xaqx+6cns8QXsgKki3UMpqU8UEQ=
+buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.11-20260415203305-344fe598b185.1/go.mod h1:+G4Us16XFvPjjw622dVgi+HiVdj0QqdahGCYf+m74Qc=
 buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.2-20260420185629-7892d788a2b9.1 h1:q5zZP4DMyuuIoXV9YxwdwMQ7JXUjZxYvwfEcDr9vgtE=
 buf.build/gen/go/antinvestor/notification/connectrpc/go v1.19.2-20260420185629-7892d788a2b9.1/go.mod h1:WY8MMarb72+XGEpCKtLPHWDRX1cVSuIGxYMsfa1mnKc=
 buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260420185629-7892d788a2b9.1 h1:PF5UfCz9KoJ5F9w/I5NQ0gVKpEO7y3bv0YbYlTMndlA=

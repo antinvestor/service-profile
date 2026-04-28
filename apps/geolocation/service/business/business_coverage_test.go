@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
 	geobusiness "github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
-	geolocationv1 "github.com/antinvestor/service-profile/geolocation/v1"
 )
 
 func (s *BusinessSuite) TestLookupsSchedulersAndEdgeCases() {

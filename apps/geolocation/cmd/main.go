@@ -16,6 +16,8 @@ import (
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
 	"github.com/pitabwire/util"
 
+	"buf.build/gen/go/antinvestor/geolocation/connectrpc/go/geolocation/v1/geolocationv1connect"
+	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/authz"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
@@ -24,8 +26,6 @@ import (
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
-	geolocationv1 "github.com/antinvestor/service-profile/geolocation/v1"
-	"github.com/antinvestor/service-profile/geolocation/v1/geolocationv1connect"
 )
 
 func main() { //nolint:funlen // wiring function

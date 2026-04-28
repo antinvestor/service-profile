@@ -16,13 +16,13 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
+	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
 	geobusiness "github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	geoevents "github.com/antinvestor/service-profile/apps/geolocation/service/events"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
 	geotests "github.com/antinvestor/service-profile/apps/geolocation/tests"
-	geolocationv1 "github.com/antinvestor/service-profile/geolocation/v1"
 )
 
 const (
