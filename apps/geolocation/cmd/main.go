@@ -131,7 +131,7 @@ func main() { //nolint:funlen // wiring function
 	rl := handlers.NewRateLimitMiddleware(cfg.RateLimitConfig())
 	defer rl.Stop()
 
-	connectHandler := setupConnectServer(ctx, sm, functionChecker, geoServer)
+	connectHandler := setupConnectServer(ctx, sm, dbPool, functionChecker, geoServer)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", geoServer.HealthCheck)
@@ -170,6 +170,7 @@ func ensureHypertables(ctx context.Context, dbPool pool.Pool) {
 func setupConnectServer(
 	ctx context.Context,
 	sm security.Manager,
+	dbPool pool.Pool,
 	functionChecker *authorizer.FunctionChecker,
 	implementation *handlers.GeolocationServer,
 ) http.Handler {
@@ -192,11 +193,20 @@ func setupConnectServer(
 
 	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
 
+	// TenancyTxInterceptor opens a request-scoped transaction after auth
+	// has populated the claims, publishes app.tenant_id + app.partition_id
+	// from the claims via set_config, and binds the transaction to the
+	// request context. Repository code then calls pool.DB(ctx, _) and gets
+	// the bound tx transparently; tenancy is enforced by Row-Level Security
+	// at the database layer.
+	tenancyTxInterceptor := connectInterceptors.NewTenancyTxInterceptor(dbPool)
+
 	defaultInterceptorList, err := connectInterceptors.DefaultList(
 		ctx,
 		authenticator,
 		tenancyAccessInterceptor,
 		functionAccessInterceptor,
+		tenancyTxInterceptor,
 	)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
