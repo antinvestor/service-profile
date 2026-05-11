@@ -11,6 +11,7 @@ import (
 	"github.com/pitabwire/frame"
 	"github.com/pitabwire/frame/config"
 	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/datastore/pool"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
@@ -119,7 +120,7 @@ func initServiceComponents(
 
 	implementation := handlers.NewDeviceServer(ctx, functionChecker, deviceBusiness, presenceBusiness, keyBusiness,
 		notifyBusiness, turnBiz, cacheSvc, cfg.TURNTTL, cfg.RateLimitTURNPerMinute)
-	connectHandler := setupConnectServer(ctx, securityMan, functionChecker, implementation)
+	connectHandler := setupConnectServer(ctx, securityMan, dbPool, functionChecker, implementation)
 
 	analysisHandler := queue.NewDeviceAnalysisQueueHandler(
 		httpClientMan, deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
@@ -137,6 +138,7 @@ func initServiceComponents(
 func setupConnectServer(
 	ctx context.Context,
 	securityMan security.Manager,
+	dbPool pool.Pool,
 	functionChecker *authorizer.FunctionChecker,
 	implementation *handlers.DevicesServer,
 ) http.Handler {
@@ -156,11 +158,20 @@ func setupConnectServer(
 
 	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
 
+	// TenancyTxInterceptor opens a request-scoped transaction after auth
+	// has populated the claims, publishes app.tenant_id + app.partition_id
+	// from the claims via set_config, and binds the transaction to the
+	// request context. Repository code then calls pool.DB(ctx, _) and gets
+	// the bound tx transparently; tenancy is enforced by Row-Level Security
+	// at the database layer.
+	tenancyTxInterceptor := connectInterceptors.NewTenancyTxInterceptor(dbPool)
+
 	defaultInterceptorList, err := connectInterceptors.DefaultList(
 		ctx,
 		authenticator,
 		tenancyAccessInterceptor,
 		functionAccessInterceptor,
+		tenancyTxInterceptor,
 	)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
