@@ -88,7 +88,6 @@ func handleDatabaseMigration(
 // setupConnectServer initializes and configures the gRPC server.
 func setupConnectServer(ctx context.Context, svc *frame.Service) http.Handler {
 	securityMan := svc.SecurityManager()
-	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
 	authenticator := securityMan.GetAuthenticator(ctx)
 
@@ -103,20 +102,11 @@ func setupConnectServer(ctx context.Context, svc *frame.Service) http.Handler {
 	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
 	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(functionChecker, procMap)
 
-	// TenancyTxInterceptor opens a request-scoped transaction after auth
-	// has populated the claims, publishes app.tenant_id + app.partition_id
-	// from the claims via set_config, and binds the transaction to the
-	// request context. Repository code then calls pool.DB(ctx, _) and gets
-	// the bound tx transparently; tenancy is enforced by Row-Level Security
-	// at the database layer.
-	tenancyTxInterceptor := connectInterceptors.NewTenancyTxInterceptor(dbPool)
-
 	defaultInterceptorList, err := connectInterceptors.DefaultList(
 		ctx,
 		authenticator,
 		tenancyAccessInterceptor,
 		functionAccessInterceptor,
-		tenancyTxInterceptor,
 	)
 	if err != nil {
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
