@@ -159,6 +159,13 @@ linters:
       # The maximal code complexity to report.
       # Default: 10
       max-complexity: 30
+
+    goconst:
+      # Raise the default threshold so SQL column names and event-type
+      # strings that legitimately recur don't get flagged. Real
+      # cross-cutting strings (URL paths, header keys) cross this bar.
+      min-len: 3
+      min-occurrences: 10
       # The maximal average package complexity.
       # If it's higher than 0.0 (float) the check is enabled.
       # Default: 0.0
@@ -450,3 +457,23 @@ linters:
           - gosec
           - noctx
           - wrapcheck
+      # Test support files (BaseTestSuite, testcontainers, fixtures) live
+      # under tests/ but don't end in _test.go. They share the same
+      # tolerance as _test.go for repeated string literals etc.
+      - path: '/tests/'
+        linters:
+          - bodyclose
+          - dupl
+          - errcheck
+          - funlen
+          - goconst
+          - gosec
+          - noctx
+          - wrapcheck
+      # Repository upsert helpers use raw SQL column names that
+      # legitimately repeat across DoUpdates/conflict-column maps. They're
+      # tightly bound to the schema and pulling them into constants buys
+      # no clarity here.
+      - path: 'service/repository/'
+        linters:
+          - goconst

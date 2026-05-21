@@ -19,6 +19,7 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
+
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	geoevents "github.com/antinvestor/service-profile/apps/geolocation/service/events"

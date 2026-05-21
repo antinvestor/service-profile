@@ -18,6 +18,7 @@ import (
 
 	"buf.build/gen/go/antinvestor/geolocation/connectrpc/go/geolocation/v1/geolocationv1connect"
 	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
+
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/authz"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
@@ -170,7 +171,7 @@ func ensureHypertables(ctx context.Context, dbPool pool.Pool) {
 func setupConnectServer(
 	ctx context.Context,
 	sm security.Manager,
-	dbPool pool.Pool,
+	_ pool.Pool,
 	functionChecker *authorizer.FunctionChecker,
 	implementation *handlers.GeolocationServer,
 ) http.Handler {

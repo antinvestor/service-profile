@@ -138,7 +138,7 @@ func initServiceComponents(
 func setupConnectServer(
 	ctx context.Context,
 	securityMan security.Manager,
-	dbPool pool.Pool,
+	_ pool.Pool,
 	functionChecker *authorizer.FunctionChecker,
 	implementation *handlers.DevicesServer,
 ) http.Handler {

@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
+
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
