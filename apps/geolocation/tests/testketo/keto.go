@@ -48,7 +48,7 @@ class tenancy_access implements Namespace {
   }
 }
 
-class service_profile implements Namespace {
+class service_geolocation implements Namespace {
   related: {
     owner: profile_user[]
     admin: profile_user[]
@@ -57,20 +57,20 @@ class service_profile implements Namespace {
     member: profile_user[]
     service: (profile_user | tenancy_access)[]
 
-    granted_profile_view: (profile_user | service_profile)[]
-    granted_profile_create: (profile_user | service_profile)[]
-    granted_profile_update: (profile_user | service_profile)[]
-    granted_profile_merge: (profile_user | service_profile)[]
-    granted_contact_manage: (profile_user | service_profile)[]
-    granted_roster_manage: (profile_user | service_profile)[]
-    granted_relationship_manage: (profile_user | service_profile)[]
-    granted_devices_manage: (profile_user | service_profile)[]
-    granted_devices_view: (profile_user | service_profile)[]
-    granted_geolocation_manage: (profile_user | service_profile)[]
-    granted_geolocation_view: (profile_user | service_profile)[]
-    granted_location_ingest: (profile_user | service_profile)[]
-    granted_settings_manage: (profile_user | service_profile)[]
-    granted_settings_view: (profile_user | service_profile)[]
+    granted_profile_view: (profile_user | service_geolocation)[]
+    granted_profile_create: (profile_user | service_geolocation)[]
+    granted_profile_update: (profile_user | service_geolocation)[]
+    granted_profile_merge: (profile_user | service_geolocation)[]
+    granted_contact_manage: (profile_user | service_geolocation)[]
+    granted_roster_manage: (profile_user | service_geolocation)[]
+    granted_relationship_manage: (profile_user | service_geolocation)[]
+    granted_devices_manage: (profile_user | service_geolocation)[]
+    granted_devices_view: (profile_user | service_geolocation)[]
+    granted_geolocation_manage: (profile_user | service_geolocation)[]
+    granted_geolocation_view: (profile_user | service_geolocation)[]
+    granted_location_ingest: (profile_user | service_geolocation)[]
+    granted_settings_manage: (profile_user | service_geolocation)[]
+    granted_settings_view: (profile_user | service_geolocation)[]
   }
 
   permits = {

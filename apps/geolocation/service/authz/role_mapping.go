@@ -3,7 +3,7 @@ package authz
 import "github.com/pitabwire/frame/security"
 
 const (
-	NamespaceProfile       = "service_profile"
+	NamespaceGeolocation   = "service_geolocation"
 	NamespaceTenancyAccess = "tenancy_access"
 	NamespaceProfileUser   = "profile_user"
 )
@@ -77,7 +77,7 @@ func BuildServiceAccessTuple(tenancyPath, profileID string) security.RelationTup
 // role directly, so explicit granted_* tuples per permission are redundant.
 func BuildServiceInheritanceTuples(tenancyPath string) []security.RelationTuple {
 	return []security.RelationTuple{{
-		Object:   security.ObjectRef{Namespace: NamespaceProfile, ID: tenancyPath},
+		Object:   security.ObjectRef{Namespace: NamespaceGeolocation, ID: tenancyPath},
 		Relation: RoleService,
 		Subject: security.SubjectRef{
 			Namespace: NamespaceTenancyAccess,

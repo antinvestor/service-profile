@@ -30,6 +30,6 @@ func TestTupleBuilders(t *testing.T) {
 
 	inheritance := BuildServiceInheritanceTuples("tenant/partition")
 	require.Len(t, inheritance, 1)
-	require.Equal(t, NamespaceProfile, inheritance[0].Object.Namespace)
+	require.Equal(t, NamespaceGeolocation, inheritance[0].Object.Namespace)
 	require.Equal(t, RoleService, inheritance[0].Relation)
 }

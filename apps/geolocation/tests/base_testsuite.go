@@ -183,7 +183,7 @@ func (bs *GeolocationBaseTestSuite) SeedTenantAccess(
 	bs.Require().NoError(err, "failed to seed tenant access")
 }
 
-// SeedTenantRole writes functional permission tuples in the service_profile
+// SeedTenantRole writes functional permission tuples in the service_geolocation
 // namespace for the given role.
 func (bs *GeolocationBaseTestSuite) SeedTenantRole(
 	ctx context.Context,
@@ -204,13 +204,13 @@ func (bs *GeolocationBaseTestSuite) SeedTenantRole(
 	tuples := make([]security.RelationTuple, 0, 1+len(permissions))
 
 	tuples = append(tuples, security.RelationTuple{
-		Object:   security.ObjectRef{Namespace: "service_profile", ID: tenancyPath},
+		Object:   security.ObjectRef{Namespace: "service_geolocation", ID: tenancyPath},
 		Relation: role,
 		Subject:  security.SubjectRef{Namespace: "profile_user", ID: profileID},
 	})
 	for _, perm := range permissions {
 		tuples = append(tuples, security.RelationTuple{
-			Object:   security.ObjectRef{Namespace: "service_profile", ID: tenancyPath},
+			Object:   security.ObjectRef{Namespace: "service_geolocation", ID: tenancyPath},
 			Relation: "granted_" + perm,
 			Subject:  security.SubjectRef{Namespace: "profile_user", ID: profileID},
 		})
