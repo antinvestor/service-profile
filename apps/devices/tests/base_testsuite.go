@@ -183,7 +183,7 @@ func (bs *DeviceBaseTestSuite) CreateService(
 
 	// Wire real Keto authoriser via SecurityManager
 	sm := svc.SecurityManager()
-	bs.FunctionChecker = authorizer.NewFunctionChecker(sm.GetAuthorizer(ctx), "service_profile")
+	bs.FunctionChecker = authorizer.NewFunctionChecker(sm.GetAuthorizer(ctx), "service_device")
 
 	depsBuilder := BuildRepos(ctx, svc)
 
@@ -239,7 +239,7 @@ func (bs *DeviceBaseTestSuite) SeedTenantAccess(
 	bs.Require().NoError(err, "failed to seed tenant access")
 }
 
-// SeedTenantRole writes functional permission tuples in the service_profile
+// SeedTenantRole writes functional permission tuples in the service_device
 // namespace for the given role.
 func (bs *DeviceBaseTestSuite) SeedTenantRole(
 	ctx context.Context,
@@ -253,13 +253,13 @@ func (bs *DeviceBaseTestSuite) SeedTenantRole(
 	tuples := make([]security.RelationTuple, 0, 1+len(permissions))
 
 	tuples = append(tuples, security.RelationTuple{
-		Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
+		Object:   security.ObjectRef{Namespace: authz.NamespaceDevice, ID: tenancyPath},
 		Relation: role,
 		Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
 	})
 	for _, perm := range permissions {
 		tuples = append(tuples, security.RelationTuple{
-			Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
+			Object:   security.ObjectRef{Namespace: authz.NamespaceDevice, ID: tenancyPath},
 			Relation: authz.GrantedRelation(perm),
 			Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
 		})
