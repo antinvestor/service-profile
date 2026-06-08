@@ -105,7 +105,7 @@ func newHandlerStack(ctx context.Context, svc *frame.Service) *handlerStack {
 	return &handlerStack{
 		GeoServer: handlers.NewGeolocationServer(
 			svc,
-			authorizer.NewFunctionChecker(svc.SecurityManager().GetAuthorizer(ctx), "service_profile"),
+			authorizer.NewFunctionChecker(svc.SecurityManager().GetAuthorizer(ctx), "service_geolocation"),
 			ingestionBiz,
 			areaBiz,
 			routeBiz,

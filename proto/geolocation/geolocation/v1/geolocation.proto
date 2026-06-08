@@ -324,7 +324,7 @@ message GetNearbyAreasResponse {
 
 service GeolocationService {
   option (common.v1.service_permissions) = {
-    namespace: "service_profile"
+    namespace: "service_geolocation"
     permissions: [
       "location_ingest",
       "area_view",

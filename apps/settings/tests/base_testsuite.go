@@ -153,7 +153,7 @@ func (bs *SettingsBaseTestSuite) SeedTenantAccess(
 	bs.Require().NoError(err, "failed to seed tenant access")
 }
 
-// SeedTenantRole writes functional permission tuples in the service_profile
+// SeedTenantRole writes functional permission tuples in the service_setting
 // namespace for the given role.
 func (bs *SettingsBaseTestSuite) SeedTenantRole(
 	ctx context.Context,
@@ -167,13 +167,13 @@ func (bs *SettingsBaseTestSuite) SeedTenantRole(
 	tuples := make([]security.RelationTuple, 0, 1+len(permissions))
 
 	tuples = append(tuples, security.RelationTuple{
-		Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
+		Object:   security.ObjectRef{Namespace: authz.NamespaceSetting, ID: tenancyPath},
 		Relation: role,
 		Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
 	})
 	for _, perm := range permissions {
 		tuples = append(tuples, security.RelationTuple{
-			Object:   security.ObjectRef{Namespace: authz.NamespaceProfile, ID: tenancyPath},
+			Object:   security.ObjectRef{Namespace: authz.NamespaceSetting, ID: tenancyPath},
 			Relation: authz.GrantedRelation(perm),
 			Subject:  security.SubjectRef{Namespace: authz.NamespaceProfileUser, ID: profileID},
 		})

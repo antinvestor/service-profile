@@ -3314,7 +3314,7 @@ const file_geolocation_v1_geolocation_proto_rawDesc = "" +
 	"\x17RouteDeviationEventType\x12*\n" +
 	"&ROUTE_DEVIATION_EVENT_TYPE_UNSPECIFIED\x10\x00\x12'\n" +
 	"#ROUTE_DEVIATION_EVENT_TYPE_DEVIATED\x10\x01\x12,\n" +
-	"(ROUTE_DEVIATION_EVENT_TYPE_BACK_ON_ROUTE\x10\x022\xef\x14\n" +
+	"(ROUTE_DEVIATION_EVENT_TYPE_BACK_ON_ROUTE\x10\x022\xf3\x14\n" +
 	"\x12GeolocationService\x12y\n" +
 	"\x0fIngestLocations\x12&.geolocation.v1.IngestLocationsRequest\x1a'.geolocation.v1.IngestLocationsResponse\"\x15\x82\xb5\x18\x11\n" +
 	"\x0flocation_ingest\x12f\n" +
@@ -3361,8 +3361,8 @@ const file_geolocation_v1_geolocation_proto_rawDesc = "" +
 	"\x11GetNearbySubjects\x12(.geolocation.v1.GetNearbySubjectsRequest\x1a).geolocation.v1.GetNearbySubjectsResponse\"\x11\x82\xb5\x18\r\n" +
 	"\vnearby_view\x12r\n" +
 	"\x0eGetNearbyAreas\x12%.geolocation.v1.GetNearbyAreasRequest\x1a&.geolocation.v1.GetNearbyAreasResponse\"\x11\x82\xb5\x18\r\n" +
-	"\vnearby_view\x1a\xbf\x04\x82\xb5\x18\xba\x04\n" +
-	"\x0fservice_profile\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
+	"\vnearby_view\x1a\xc3\x04\x82\xb5\x18\xbe\x04\n" +
+	"\x13service_geolocation\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
 	"route_view\x12\froute_manage\x12\n" +
 	"track_view\x12\vnearby_view\x1a^\b\x01\x12\x0flocation_ingest\x12\tarea_view\x12\varea_manage\x12\n" +
 	"route_view\x12\froute_manage\x12\n" +
