@@ -19,6 +19,7 @@ import (
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/frametests/rlstest"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/security/authorizer"
 	"github.com/pitabwire/util"
@@ -30,6 +31,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/apps/default/tests/testketo"
+	"github.com/antinvestor/service-profile/internal/rlsadmin"
 )
 
 const PostgresqlDBImage = "postgres:latest"
@@ -122,10 +124,19 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	cfg.AuthorizationServiceReadURI = bs.ketoReadURI
 	cfg.AuthorizationServiceWriteURI = bs.ketoWriteURI
 
+	// The postgres testcontainer user is a superuser which bypasses RLS,
+	// so application queries are dropped to an unprivileged role to
+	// actually exercise the tenancy-isolation policies installed during
+	// migration.
+	require.NoError(t, rlstest.CreateRole(ctx, testDS.String()))
+	rlsProv := rlstest.New()
+
 	ctx, svc := frame.NewServiceWithContext(t.Context(), frame.WithName("profile tests"),
 		frame.WithConfig(&cfg),
+		frame.WithTenancyProvider(rlsProv),
 		frame.WithDatastore(pool.WithTraceConfig(&cfg)),
 		frametests.WithNoopDriver())
+	t.Cleanup(func() { svc.Stop(ctx) })
 
 	// Wire real Keto authoriser via SecurityManager
 	sm := svc.SecurityManager()
@@ -160,6 +171,10 @@ func (bs *ProfileBaseTestSuite) CreateService(
 
 	err = repository.Migrate(ctx, svc.DatastoreManager(), "../../migrations/0001")
 	require.NoError(t, err)
+
+	require.NoError(t, rlstest.GrantAll(ctx, testDS.String()))
+	require.NoError(t, rlsadmin.GrantOwnership(ctx, testDS.String()))
+	rlsProv.Enable()
 
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)

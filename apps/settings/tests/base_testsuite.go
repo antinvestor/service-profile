@@ -12,6 +12,7 @@ import (
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/frametests/rlstest"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/settings/service/events"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
 	"github.com/antinvestor/service-profile/apps/settings/tests/testketo"
+	"github.com/antinvestor/service-profile/internal/rlsadmin"
 )
 
 const (
@@ -101,10 +103,18 @@ func (bs *SettingsBaseTestSuite) CreateService(
 	cfg.AuthorizationServiceReadURI = bs.ketoReadURI
 	cfg.AuthorizationServiceWriteURI = bs.ketoWriteURI
 
+	// Drop application queries to an unprivileged role so Postgres RLS
+	// is actually enforced (the testcontainer user is a superuser which
+	// bypasses FORCE ROW LEVEL SECURITY).
+	require.NoError(t, rlstest.CreateRole(ctx, testDS.String()))
+	rlsProv := rlstest.New()
+
 	ctx, svc := frame.NewServiceWithContext(t.Context(), frame.WithName("settings tests"),
 		frame.WithConfig(&cfg),
+		frame.WithTenancyProvider(rlsProv),
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())
+	t.Cleanup(func() { svc.Stop(ctx) })
 
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
@@ -116,6 +126,10 @@ func (bs *SettingsBaseTestSuite) CreateService(
 
 	err = repository.Migrate(ctx, svc.DatastoreManager(), "../../migrations/0001")
 	require.NoError(t, err)
+
+	require.NoError(t, rlstest.GrantAll(ctx, testDS.String()))
+	require.NoError(t, rlsadmin.GrantOwnership(ctx, testDS.String()))
+	rlsProv.Enable()
 
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)

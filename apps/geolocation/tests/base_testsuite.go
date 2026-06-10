@@ -13,6 +13,7 @@ import (
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/frametests/rlstest"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
@@ -20,6 +21,7 @@ import (
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 	"github.com/antinvestor/service-profile/apps/geolocation/tests/testketo"
+	"github.com/antinvestor/service-profile/internal/rlsadmin"
 )
 
 const (
@@ -105,10 +107,18 @@ func (bs *GeolocationBaseTestSuite) CreateService(
 	cfg.AuthorizationServiceReadURI = bs.ketoReadURI
 	cfg.AuthorizationServiceWriteURI = bs.ketoWriteURI
 
+	// Drop application queries to an unprivileged role so Postgres RLS
+	// is actually enforced (the testcontainer user is a superuser which
+	// bypasses FORCE ROW LEVEL SECURITY).
+	require.NoError(t, rlstest.CreateRole(ctx, testDS.String()))
+	rlsProv := rlstest.New()
+
 	ctx, svc := frame.NewServiceWithContext(t.Context(), frame.WithName("geolocation tests"),
 		frame.WithConfig(&cfg),
+		frame.WithTenancyProvider(rlsProv),
 		frame.WithDatastore(),
 		frametests.WithNoopDriver())
+	t.Cleanup(func() { svc.Stop(ctx) })
 
 	require.NoError(t, enablePostGIS(ctx, testDS.String()))
 
@@ -128,6 +138,10 @@ func (bs *GeolocationBaseTestSuite) CreateService(
 		&models.RouteDeviationState{},
 	)
 	require.NoError(t, err)
+
+	require.NoError(t, rlstest.GrantAll(ctx, testDS.String()))
+	require.NoError(t, rlsadmin.GrantOwnership(ctx, testDS.String()))
+	rlsProv.Enable()
 
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)
