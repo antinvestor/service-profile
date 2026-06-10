@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "antinvestor_ui_settings",
-      "version": "0.1.0",
+      "version": "0.1.2",
       "dependencies": [
         "antinvestor_api_common",
         "antinvestor_api_settings",
@@ -175,7 +175,7 @@
     },
     {
       "name": "antinvestor_ui_core",
-      "version": "0.1.0",
+      "version": "0.5.0",
       "dependencies": [
         "antinvestor_api_common",
         "connectivity_plus",
@@ -261,7 +261,7 @@
     },
     {
       "name": "meta",
-      "version": "1.17.0",
+      "version": "1.18.0",
       "dependencies": []
     },
     {
@@ -593,7 +593,7 @@
     },
     {
       "name": "test_api",
-      "version": "0.7.10",
+      "version": "0.7.11",
       "dependencies": [
         "async",
         "boolean_selector",
@@ -667,7 +667,7 @@
     },
     {
       "name": "google_fonts",
-      "version": "6.3.3",
+      "version": "8.1.0",
       "dependencies": [
         "crypto",
         "flutter",
@@ -865,7 +865,7 @@
     },
     {
       "name": "test",
-      "version": "1.30.0",
+      "version": "1.31.0",
       "dependencies": [
         "analyzer",
         "async",
@@ -1065,7 +1065,7 @@
     },
     {
       "name": "test_core",
-      "version": "0.6.16",
+      "version": "0.6.17",
       "dependencies": [
         "analyzer",
         "args",

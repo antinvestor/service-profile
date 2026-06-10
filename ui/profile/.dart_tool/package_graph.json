@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "antinvestor_ui_profile",
-      "version": "0.2.1",
+      "version": "0.2.5",
       "dependencies": [
         "antinvestor_api_common",
         "antinvestor_api_profile",
@@ -23,6 +23,7 @@
         "build_runner",
         "flutter_lints",
         "flutter_test",
+        "http",
         "riverpod_generator"
       ]
     },
@@ -79,6 +80,16 @@
         "watcher",
         "web_socket_channel",
         "yaml"
+      ]
+    },
+    {
+      "name": "http",
+      "version": "1.6.0",
+      "dependencies": [
+        "async",
+        "http_parser",
+        "meta",
+        "web"
       ]
     },
     {
@@ -196,7 +207,7 @@
     },
     {
       "name": "antinvestor_ui_core",
-      "version": "0.2.0",
+      "version": "0.5.0",
       "dependencies": [
         "antinvestor_api_common",
         "connectivity_plus",
@@ -282,7 +293,7 @@
     },
     {
       "name": "meta",
-      "version": "1.17.0",
+      "version": "1.18.0",
       "dependencies": []
     },
     {
@@ -554,6 +565,21 @@
       "dependencies": []
     },
     {
+      "name": "web",
+      "version": "1.1.1",
+      "dependencies": []
+    },
+    {
+      "name": "http_parser",
+      "version": "4.1.2",
+      "dependencies": [
+        "collection",
+        "source_span",
+        "string_scanner",
+        "typed_data"
+      ]
+    },
+    {
       "name": "lints",
       "version": "6.1.0",
       "dependencies": []
@@ -614,7 +640,7 @@
     },
     {
       "name": "test_api",
-      "version": "0.7.10",
+      "version": "0.7.11",
       "dependencies": [
         "async",
         "boolean_selector",
@@ -732,26 +758,11 @@
       ]
     },
     {
-      "name": "web",
-      "version": "1.1.1",
-      "dependencies": []
-    },
-    {
       "name": "logger",
       "version": "2.7.0",
       "dependencies": [
         "clock",
         "meta"
-      ]
-    },
-    {
-      "name": "http",
-      "version": "1.6.0",
-      "dependencies": [
-        "async",
-        "http_parser",
-        "meta",
-        "web"
       ]
     },
     {
@@ -897,16 +908,6 @@
       ]
     },
     {
-      "name": "http_parser",
-      "version": "4.1.2",
-      "dependencies": [
-        "collection",
-        "source_span",
-        "string_scanner",
-        "typed_data"
-      ]
-    },
-    {
       "name": "file",
       "version": "7.0.1",
       "dependencies": [
@@ -949,7 +950,7 @@
     },
     {
       "name": "test",
-      "version": "1.30.0",
+      "version": "1.31.0",
       "dependencies": [
         "analyzer",
         "async",
@@ -1208,7 +1209,7 @@
     },
     {
       "name": "test_core",
-      "version": "0.6.16",
+      "version": "0.6.17",
       "dependencies": [
         "analyzer",
         "args",
