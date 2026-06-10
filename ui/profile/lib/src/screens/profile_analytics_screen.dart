@@ -2,6 +2,7 @@ import 'package:antinvestor_api_profile/antinvestor_api_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../analytics/profile_activity_section.dart';
 import '../providers/profile_providers.dart';
 
 /// Profile service dashboard with KPI cards showing profile statistics.
@@ -16,20 +17,22 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
     final profiles =
         asyncProfiles.whenOrNull(data: (d) => d) ?? <ProfileObject>[];
     final totalCount = profiles.length;
-    final personCount =
-        profiles.where((p) => p.type == ProfileType.PERSON).length;
-    final institutionCount =
-        profiles.where((p) => p.type == ProfileType.INSTITUTION).length;
-    final botCount =
-        profiles.where((p) => p.type == ProfileType.BOT).length;
-    final activeCount =
-        profiles.where((p) => p.state == STATE.ACTIVE).length;
-    final totalContacts =
-        profiles.fold<int>(0, (sum, p) => sum + p.contacts.length);
+    final personCount = profiles
+        .where((p) => p.type == ProfileType.PERSON)
+        .length;
+    final institutionCount = profiles
+        .where((p) => p.type == ProfileType.INSTITUTION)
+        .length;
+    final botCount = profiles.where((p) => p.type == ProfileType.BOT).length;
+    final activeCount = profiles.where((p) => p.state == STATE.ACTIVE).length;
+    final totalContacts = profiles.fold<int>(
+      0,
+      (sum, p) => sum + p.contacts.length,
+    );
     final verifiedContacts = profiles.fold<int>(
-        0,
-        (sum, p) =>
-            sum + p.contacts.where((c) => c.verified).length);
+      0,
+      (sum, p) => sum + p.contacts.where((c) => c.verified).length,
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -39,19 +42,28 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
           // Header
           Row(
             children: [
-              Icon(Icons.analytics_outlined,
-                  size: 28, color: theme.colorScheme.primary),
+              Icon(
+                Icons.analytics_outlined,
+                size: 28,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Profile Service',
-                        style: theme.textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w600)),
-                    Text('Service analytics and overview',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant)),
+                    Text(
+                      'Profile Service',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      'Service analytics and overview',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -71,8 +83,8 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
               final crossAxisCount = constraints.maxWidth > 900
                   ? 4
                   : constraints.maxWidth > 600
-                      ? 3
-                      : 2;
+                  ? 3
+                  : 2;
               return Wrap(
                 spacing: 16,
                 runSpacing: 16,
@@ -82,8 +94,8 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
                     value: '$totalCount',
                     icon: Icons.people_outlined,
                     color: theme.colorScheme.primary,
-                    width: (constraints.maxWidth -
-                            (crossAxisCount - 1) * 16) /
+                    width:
+                        (constraints.maxWidth - (crossAxisCount - 1) * 16) /
                         crossAxisCount,
                   ),
                   _KpiCard(
@@ -91,8 +103,8 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
                     value: '$personCount',
                     icon: Icons.person_outlined,
                     color: Colors.blue,
-                    width: (constraints.maxWidth -
-                            (crossAxisCount - 1) * 16) /
+                    width:
+                        (constraints.maxWidth - (crossAxisCount - 1) * 16) /
                         crossAxisCount,
                   ),
                   _KpiCard(
@@ -100,8 +112,8 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
                     value: '$institutionCount',
                     icon: Icons.business_outlined,
                     color: Colors.green,
-                    width: (constraints.maxWidth -
-                            (crossAxisCount - 1) * 16) /
+                    width:
+                        (constraints.maxWidth - (crossAxisCount - 1) * 16) /
                         crossAxisCount,
                   ),
                   _KpiCard(
@@ -109,8 +121,8 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
                     value: '$botCount',
                     icon: Icons.smart_toy_outlined,
                     color: Colors.orange,
-                    width: (constraints.maxWidth -
-                            (crossAxisCount - 1) * 16) /
+                    width:
+                        (constraints.maxWidth - (crossAxisCount - 1) * 16) /
                         crossAxisCount,
                   ),
                   _KpiCard(
@@ -118,8 +130,8 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
                     value: '$activeCount',
                     icon: Icons.check_circle_outline,
                     color: Colors.teal,
-                    width: (constraints.maxWidth -
-                            (crossAxisCount - 1) * 16) /
+                    width:
+                        (constraints.maxWidth - (crossAxisCount - 1) * 16) /
                         crossAxisCount,
                   ),
                   _KpiCard(
@@ -127,8 +139,8 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
                     value: '$totalContacts',
                     icon: Icons.contact_phone_outlined,
                     color: Colors.indigo,
-                    width: (constraints.maxWidth -
-                            (crossAxisCount - 1) * 16) /
+                    width:
+                        (constraints.maxWidth - (crossAxisCount - 1) * 16) /
                         crossAxisCount,
                   ),
                   _KpiCard(
@@ -136,8 +148,8 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
                     value: '$verifiedContacts',
                     icon: Icons.verified_outlined,
                     color: Colors.purple,
-                    width: (constraints.maxWidth -
-                            (crossAxisCount - 1) * 16) /
+                    width:
+                        (constraints.maxWidth - (crossAxisCount - 1) * 16) /
                         crossAxisCount,
                   ),
                 ],
@@ -146,43 +158,9 @@ class ProfileAnalyticsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 32),
 
-          // Recent events (placeholder)
-          Text('Recent Events',
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              border:
-                  Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child: Column(
-              children: [
-                _EventTile(
-                  title: 'New profile registered',
-                  timeAgo: '5 mins ago',
-                  icon: Icons.person_add_outlined,
-                  color: Colors.green,
-                ),
-                const Divider(height: 1),
-                _EventTile(
-                  title: 'Contact verification completed',
-                  timeAgo: '20 mins ago',
-                  icon: Icons.verified_outlined,
-                  color: Colors.blue,
-                ),
-                const Divider(height: 1),
-                _EventTile(
-                  title: 'Profile merge executed',
-                  timeAgo: '1 hour ago',
-                  icon: Icons.merge_outlined,
-                  color: Colors.orange,
-                ),
-              ],
-            ),
-          ),
+          // Gate-backed devices/geolocation activity from the Thesa
+          // analytics API. Entity counts above stay on the profile API.
+          const ProfileActivitySection(),
         ],
       ),
     );
@@ -252,41 +230,6 @@ class _KpiCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _EventTile extends StatelessWidget {
-  const _EventTile({
-    required this.title,
-    required this.timeAgo,
-    required this.icon,
-    required this.color,
-  });
-
-  final String title;
-  final String timeAgo;
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: color.withAlpha(25),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Icon(icon, size: 18, color: color),
-      ),
-      title: Text(title,
-          style: theme.textTheme.bodyMedium
-              ?.copyWith(fontWeight: FontWeight.w500)),
-      trailing: Text(timeAgo,
-          style: theme.textTheme.bodySmall
-              ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
     );
   }
 }

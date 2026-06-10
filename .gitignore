@@ -29,3 +29,6 @@ vendor/
 .tmp/
 WORK_STATE.md
 
+
+# Local-only pub dependency overrides (unpublished ui_core)
+pubspec_overrides.yaml
