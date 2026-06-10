@@ -6,64 +6,74 @@ import (
 
 	"github.com/pitabwire/frame/telemetry"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 )
 
 const pkgName = "service_geolocation"
 
 // Metrics holds pre-allocated OTel instruments for the geolocation service.
-// Instruments are created once at startup and reused for every measurement.
+// Instruments are created once at startup through the BusinessMetrics
+// factory, so every measurement is transparently tenant-scoped
+// (tenant_id/partition_id derived from the context's security claims).
 type Metrics struct {
 	tracer telemetry.Tracer
 
 	// Ingestion metrics.
-	ingestBatchLatency metric.Float64Histogram
-	ingestAccepted     metric.Int64Counter
-	ingestRejected     metric.Int64Counter
+	ingestBatchLatency telemetry.Histogram
+	ingestAccepted     telemetry.Counter
+	ingestRejected     telemetry.Counter
 
 	// Geofence metrics.
-	geofenceEvalLatency metric.Float64Histogram
-	geofenceTransitions metric.Int64Counter
+	geofenceEvalLatency telemetry.Histogram
+	geofenceTransitions telemetry.Counter
 
 	// Route deviation metrics.
-	routeDeviationEvalLatency metric.Float64Histogram
-	routeDeviationTransitions metric.Int64Counter
+	routeDeviationEvalLatency telemetry.Histogram
+	routeDeviationTransitions telemetry.Counter
 
 	// Proximity metrics.
-	proximityQueryLatency metric.Float64Histogram
+	proximityQueryLatency telemetry.Histogram
 }
 
 // NewMetrics creates and registers all OTel instruments for the geolocation service.
 func NewMetrics() *Metrics {
 	t := telemetry.NewTracer(pkgName)
+	bm := telemetry.NewBusinessMetrics(pkgName)
 
 	return &Metrics{
-		tracer:             t,
-		ingestBatchLatency: telemetry.LatencyMeasure(pkgName + "/ingestion"),
-		ingestAccepted: telemetry.DimensionlessMeasure(
-			pkgName,
-			"/ingestion/accepted",
+		tracer: t,
+		ingestBatchLatency: bm.Histogram(
+			pkgName+"/ingestion/latency",
+			"Latency distribution of batch ingestions",
+		),
+		ingestAccepted: bm.Counter(
+			pkgName+"/ingestion/accepted",
 			"Number of accepted location points",
 		),
-		ingestRejected: telemetry.DimensionlessMeasure(
-			pkgName,
-			"/ingestion/rejected",
+		ingestRejected: bm.Counter(
+			pkgName+"/ingestion/rejected",
 			"Number of rejected location points",
 		),
-		geofenceEvalLatency: telemetry.LatencyMeasure(pkgName + "/geofence"),
-		geofenceTransitions: telemetry.DimensionlessMeasure(
-			pkgName,
-			"/geofence/transitions",
+		geofenceEvalLatency: bm.Histogram(
+			pkgName+"/geofence/latency",
+			"Latency distribution of geofence evaluations",
+		),
+		geofenceTransitions: bm.Counter(
+			pkgName+"/geofence/transitions",
 			"Number of geofence state transitions",
 		),
-		routeDeviationEvalLatency: telemetry.LatencyMeasure(pkgName + "/route_deviation"),
-		routeDeviationTransitions: telemetry.DimensionlessMeasure(
-			pkgName,
-			"/route_deviation/transitions",
+		routeDeviationEvalLatency: bm.Histogram(
+			pkgName+"/route_deviation/latency",
+			"Latency distribution of route deviation evaluations",
+		),
+		routeDeviationTransitions: bm.Counter(
+			pkgName+"/route_deviation/transitions",
 			"Number of route deviation state transitions",
 		),
-		proximityQueryLatency: telemetry.LatencyMeasure(pkgName + "/proximity"),
+		proximityQueryLatency: bm.Histogram(
+			pkgName+"/proximity/latency",
+			"Latency distribution of proximity queries",
+		),
 	}
 }
 
@@ -99,9 +109,7 @@ func (m *Metrics) RecordGeofenceEval(ctx context.Context, elapsed time.Duration)
 
 // RecordGeofenceTransition records a geofence state transition (enter/exit/dwell).
 func (m *Metrics) RecordGeofenceTransition(ctx context.Context, eventType string) {
-	m.geofenceTransitions.Add(ctx, 1,
-		metric.WithAttributes(attribute.String("event_type", eventType)),
-	)
+	m.geofenceTransitions.Add(ctx, 1, attribute.String("event_type", eventType))
 }
 
 // RecordRouteDeviationEval records metrics for a route deviation evaluation.
@@ -111,9 +119,7 @@ func (m *Metrics) RecordRouteDeviationEval(ctx context.Context, elapsed time.Dur
 
 // RecordRouteDeviationTransition records a route deviation state transition.
 func (m *Metrics) RecordRouteDeviationTransition(ctx context.Context, eventType string) {
-	m.routeDeviationTransitions.Add(ctx, 1,
-		metric.WithAttributes(attribute.String("event_type", eventType)),
-	)
+	m.routeDeviationTransitions.Add(ctx, 1, attribute.String("event_type", eventType))
 }
 
 // RecordProximityQuery records metrics for a proximity query.
@@ -123,6 +129,6 @@ func (m *Metrics) RecordProximityQuery(
 	resultCount int,
 ) {
 	m.proximityQueryLatency.Record(ctx, float64(elapsed.Milliseconds()),
-		metric.WithAttributes(attribute.Int("result_count", resultCount)),
+		attribute.Int("result_count", resultCount),
 	)
 }
