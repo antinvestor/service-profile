@@ -8,10 +8,10 @@ buf.build/gen/go/antinvestor/device/connectrpc/go v1.20.0-20260511135702-7f6c3cf
 buf.build/gen/go/antinvestor/device/connectrpc/go v1.20.0-20260511135702-7f6c3cf72171.1/go.mod h1:QEX26/qcndV5uD/zB8O687d8ktXN3iLq3iUzEd3JOlc=
 buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260511135702-7f6c3cf72171.1 h1:0RBrl+4F6prI6s0v+vkUMCDK/s7lbIJOjrjn/dLM5kQ=
 buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260511135702-7f6c3cf72171.1/go.mod h1:VePA43rcicCRVOYea7PRbLKQIVfWr26TmTApoVcnKl0=
-buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.20.0-20260511135702-c644c74b7b9a.1 h1:dx51ijFxJkxqoN34WZ+jnoTI7q08zYJiJDxr6+KL8Jg=
-buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.20.0-20260511135702-c644c74b7b9a.1/go.mod h1:Y7VoQv7fk2LIkjz0QFnKaCaRaptzgEhPpPhEkc+YgK0=
-buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.11-20260511135702-c644c74b7b9a.1 h1:zJZr/YKiPqi4ZhSg0UUpRK5fWQGk7ymTLl9h5hKBAGY=
-buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.11-20260511135702-c644c74b7b9a.1/go.mod h1:zhgU14zHzrcRhdVdZJ/RLgZMLe6Xrb6VIHgRM34WrlA=
+buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.20.0-20260608193017-9eca582ae046.1 h1:GjSLV98nl4gRvNqEmm3La/sfEnHOGmb32RkXz2srIZU=
+buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.20.0-20260608193017-9eca582ae046.1/go.mod h1:fXvT8yHZ0ScYRkkDQEM4SDJWXeIu2U4Y7OVoI+GYnrM=
+buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.11-20260608193017-9eca582ae046.1 h1:dV/WTxNdJRbA+fmtMfIjMq2iPHjI4XOnCZJDzSEp/Io=
+buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.11-20260608193017-9eca582ae046.1/go.mod h1:zhgU14zHzrcRhdVdZJ/RLgZMLe6Xrb6VIHgRM34WrlA=
 buf.build/gen/go/antinvestor/notification/connectrpc/go v1.20.0-20260511135618-9b1ea0d95bd7.1 h1:qHTdnNNfkdq8NacyArvXMk4lNi2SqXCKa3r6dbGT/Fw=
 buf.build/gen/go/antinvestor/notification/connectrpc/go v1.20.0-20260511135618-9b1ea0d95bd7.1/go.mod h1:zkskJD98ZrHoqOV0XK/GqrGlwULJVNVOHrCsOHeXK4A=
 buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.11-20260511135618-9b1ea0d95bd7.1 h1:NcWRgOtL2A09cThVXGGwRXJMFaHJmOLVF8yJHE+BpiI=
