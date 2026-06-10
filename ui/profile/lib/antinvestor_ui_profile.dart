@@ -1,3 +1,8 @@
+// Analytics
+export 'src/analytics/analytics_states.dart';
+export 'src/analytics/profile_activity_section.dart';
+export 'src/analytics/profile_analytics_spec.dart';
+
 // Routing
 export 'src/routing/profile_route_module.dart';
 
