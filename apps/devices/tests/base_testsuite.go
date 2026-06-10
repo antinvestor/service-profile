@@ -12,6 +12,7 @@ import (
 	"github.com/pitabwire/frame/frametests"
 	"github.com/pitabwire/frame/frametests/definition"
 	"github.com/pitabwire/frame/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/frametests/rlstest"
 	"github.com/pitabwire/frame/security"
 	"github.com/pitabwire/frame/security/authorizer"
 	"github.com/pitabwire/util"
@@ -24,6 +25,7 @@ import (
 	devQueue "github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/antinvestor/service-profile/apps/devices/tests/testketo"
+	"github.com/antinvestor/service-profile/internal/rlsadmin"
 )
 
 const (
@@ -171,8 +173,15 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	cfg.AuthorizationServiceReadURI = bs.ketoReadURI
 	cfg.AuthorizationServiceWriteURI = bs.ketoWriteURI
 
+	// Drop application queries to an unprivileged role so Postgres RLS
+	// is actually enforced (the testcontainer user is a superuser which
+	// bypasses FORCE ROW LEVEL SECURITY).
+	require.NoError(t, rlstest.CreateRole(ctx, testDS.String()))
+	rlsProv := rlstest.New()
+
 	ctx, svc := frame.NewServiceWithContext(ctx, frame.WithName("device tests"),
 		frame.WithConfig(&cfg),
+		frame.WithTenancyProvider(rlsProv),
 		frame.WithDatastore(),
 		frame.WithCacheManager(),
 		frame.WithInMemoryCache(aconfig.CacheNameDevices),
@@ -180,6 +189,7 @@ func (bs *DeviceBaseTestSuite) CreateService(
 		frame.WithInMemoryCache(aconfig.CacheNameGeoIP),
 		frame.WithInMemoryCache(aconfig.CacheNameRate),
 		frametests.WithNoopDriver())
+	t.Cleanup(func() { svc.Stop(ctx) })
 
 	// Wire real Keto authoriser via SecurityManager
 	sm := svc.SecurityManager()
@@ -202,6 +212,10 @@ func (bs *DeviceBaseTestSuite) CreateService(
 
 	err = repository.Migrate(ctx, svc.DatastoreManager(), "../../migrations/0001")
 	require.NoError(t, err)
+
+	require.NoError(t, rlstest.GrantAll(ctx, testDS.String()))
+	require.NoError(t, rlsadmin.GrantOwnership(ctx, testDS.String()))
+	rlsProv.Enable()
 
 	err = svc.Run(ctx, "")
 	require.NoError(t, err)
