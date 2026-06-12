@@ -234,10 +234,11 @@ func (b *areaBusiness) SearchAreas(
 	switch {
 	case ownerID != "":
 		areas, err = b.areaRepo.SearchByOwner(ctx, ownerID, limit)
-	case query != "":
-		areas, err = b.areaRepo.SearchByQuery(ctx, query, limit)
 	default:
-		return nil, errors.New("either query or owner_id is required for area search")
+		// An empty query lists all areas (admin console list view); a
+		// non-empty query filters by name/description. SearchByQuery with an
+		// empty term matches every row up to the limit.
+		areas, err = b.areaRepo.SearchByQuery(ctx, query, limit)
 	}
 
 	if err != nil {

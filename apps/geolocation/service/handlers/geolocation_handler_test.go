@@ -160,6 +160,14 @@ func (s *HandlerSuite) TestGeolocationServerFlow() {
 		require.NoError(t, err)
 		require.Len(t, searchedAreas.Msg.GetData(), 1)
 
+		// Empty filter lists all areas (admin console list view).
+		allAreas, err := server.SearchAreas(
+			ctx,
+			connect.NewRequest(&geolocationv1.SearchAreasRequest{Limit: 10}),
+		)
+		require.NoError(t, err)
+		require.Len(t, allAreas.Msg.GetData(), 1)
+
 		routeResp, err := server.CreateRoute(ctx, connect.NewRequest(&geolocationv1.CreateRouteRequest{
 			Data: &geolocationv1.RouteObject{
 				OwnerId: "owner-1", Name: "Handler Route",
@@ -186,6 +194,14 @@ func (s *HandlerSuite) TestGeolocationServerFlow() {
 		)
 		require.NoError(t, err)
 		require.Len(t, searchedRoutes.Msg.GetData(), 1)
+
+		// Empty filter lists all routes (admin console list view).
+		allRoutes, err := server.SearchRoutes(
+			ctx,
+			connect.NewRequest(&geolocationv1.SearchRoutesRequest{Limit: 10}),
+		)
+		require.NoError(t, err)
+		require.Len(t, allRoutes.Msg.GetData(), 1)
 
 		assignResp, err := server.AssignRoute(
 			ctx,
@@ -359,14 +375,6 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 				code: connect.CodeNotFound,
 			},
 			{
-				name: "search areas invalid",
-				run: func() error {
-					_, err := server.SearchAreas(ctx, connect.NewRequest(&geolocationv1.SearchAreasRequest{}))
-					return err
-				},
-				code: connect.CodeInvalidArgument,
-			},
-			{
 				name: "create invalid route",
 				run: func() error {
 					_, err := server.CreateRoute(ctx, connect.NewRequest(&geolocationv1.CreateRouteRequest{
@@ -409,14 +417,6 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 					return err
 				},
 				code: connect.CodeNotFound,
-			},
-			{
-				name: "search routes invalid",
-				run: func() error {
-					_, err := server.SearchRoutes(ctx, connect.NewRequest(&geolocationv1.SearchRoutesRequest{}))
-					return err
-				},
-				code: connect.CodeInvalidArgument,
 			},
 			{
 				name: "assign route missing ids",

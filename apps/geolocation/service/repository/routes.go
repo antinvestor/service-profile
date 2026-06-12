@@ -160,7 +160,11 @@ func (r *routeRepository) SearchByOwner(
 ) ([]*models.Route, error) {
 	var routes []*models.Route
 	db := r.Pool().DB(ctx, true)
-	query := db.Where("owner_id = ? AND deleted_at IS NULL", ownerID).Order("created_at DESC")
+	query := db.Where("deleted_at IS NULL").Order("created_at DESC")
+	// An empty owner_id lists all routes (admin console list view).
+	if ownerID != "" {
+		query = query.Where("owner_id = ?", ownerID)
+	}
 	if limit > 0 {
 		query = query.Limit(limit)
 	}

@@ -238,10 +238,9 @@ func (b *routeBusiness) SearchRoutes(
 	if limit <= 0 {
 		limit = defaultSearchLimit
 	}
-	if ownerID == "" {
-		return nil, errors.New("owner_id is required for route search")
-	}
 
+	// An empty owner_id lists all routes (admin console list view);
+	// a non-empty owner_id filters to that owner.
 	routes, err := b.routeRepo.SearchByOwner(ctx, ownerID, limit)
 	if err != nil {
 		return nil, fmt.Errorf("search routes: %w", err)
