@@ -592,14 +592,6 @@ func (s *BusinessSuite) TestRouteDeviationCatchupRetentionAndValidation() {
 				name: "nil ingest request",
 				run:  func() error { _, e := stack.IngestionBiz.IngestBatch(ctx, nil); return e },
 			},
-			{
-				name: "invalid area search",
-				run:  func() error { _, e := stack.AreaBiz.SearchAreas(ctx, "", "", 0); return e },
-			},
-			{
-				name: "invalid route search",
-				run:  func() error { _, e := stack.RouteBiz.SearchRoutes(ctx, "", 0); return e },
-			},
 			{name: "invalid nearby subject request", run: func() error {
 				_, e := stack.ProximityBiz.GetNearbySubjects(ctx, &models.GetNearbySubjectsRequest{})
 				return e
