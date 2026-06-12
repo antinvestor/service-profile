@@ -68,7 +68,10 @@ option (gnostic.openapi.v3.document) = {
 // Setting represents a hierarchical key for configuration lookup.
 // Supports multi-level scoping for flexible configuration management.
 message Setting {
-  string name = 1 [(buf.validate.field).string.min_len = 2]; // Setting name (e.g., "theme", "max_upload_size")
+  string name = 1 [
+    (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
+    (buf.validate.field).string.min_len = 2
+  ]; // Setting name (e.g., "theme", "max_upload_size"); empty in ListRequest keys to match all
   string object = 2 [
     (buf.validate.field).ignore = IGNORE_IF_ZERO_VALUE,
     (buf.validate.field).string.min_len = 2
