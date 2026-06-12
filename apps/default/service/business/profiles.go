@@ -436,7 +436,14 @@ func (pb *profileBusiness) CreateProfile(
 		return nil, err
 	}
 
-	return pb.GetByID(ctx, contact.ProfileID)
+	// Read the just-created profile back from the primary — the replica that
+	// GetByID uses lags the write (or cannot see the still-uncommitted row),
+	// which surfaced as "record not found" on every profile creation.
+	profile, getErr := pb.profileRepo.GetByIDFromPrimary(ctx, contact.ProfileID)
+	if getErr != nil {
+		return nil, data.ErrorConvertToAPI(getErr)
+	}
+	return pb.ToAPI(ctx, profile)
 }
 
 // func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params data.JSONMap) error {

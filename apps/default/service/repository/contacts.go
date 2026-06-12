@@ -51,6 +51,17 @@ func (cr *contactRepository) GetByProfileID(ctx context.Context, profileID strin
 	return contactList, err
 }
 
+// GetByIDFromPrimary reads from the primary connection so a contact created
+// moments earlier (e.g. linking it to a new profile during CreateProfile) is
+// visible. The replica-backed BaseRepository.GetByID can miss it under
+// replica lag / before the request transaction commits.
+func (cr *contactRepository) GetByIDFromPrimary(ctx context.Context, id string) (*models.Contact, error) {
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
+	contact := &models.Contact{}
+	err := cr.Pool().DB(unscopedCtx, false).First(contact, "id = ?", id).Error
+	return contact, err
+}
+
 func (cr *contactRepository) GetByLookupToken(
 	ctx context.Context,
 	lookupTokenList ...[]byte,

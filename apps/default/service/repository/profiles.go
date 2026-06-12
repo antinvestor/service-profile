@@ -57,6 +57,18 @@ func (pr *profileRepository) GetByID(ctx context.Context, id string) (*models.Pr
 	return profile, err
 }
 
+// GetByIDFromPrimary mirrors GetByID but reads from the primary (read-write)
+// connection. CreateProfile reads the profile back immediately after writing
+// it; the replica GetByID uses lags behind that write (or never sees the
+// still-uncommitted row inside the request), returning "record not found".
+// Reading the primary guarantees read-your-writes.
+func (pr *profileRepository) GetByIDFromPrimary(ctx context.Context, id string) (*models.Profile, error) {
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
+	profile := &models.Profile{}
+	err := pr.Pool().DB(unscopedCtx, false).Preload(clause.Associations).First(profile, "id = ?", id).Error
+	return profile, err
+}
+
 func (pr *profileRepository) Save(ctx context.Context, tenant *models.Profile) error {
 	return pr.Pool().DB(ctx, false).Save(tenant).Error
 }

@@ -156,7 +156,10 @@ func (cb *contactBusiness) UpdateContact(
 	profileID string,
 	extra data.JSONMap,
 ) (*models.Contact, error) {
-	contact, err := cb.contactRepository.GetByID(ctx, contactID)
+	// Read from the primary: UpdateContact is a read-modify-write, and during
+	// CreateProfile the contact was created moments earlier — a replica read
+	// can miss it (read-your-writes).
+	contact, err := cb.contactRepository.GetByIDFromPrimary(ctx, contactID)
 	if err != nil {
 		return nil, err
 	}

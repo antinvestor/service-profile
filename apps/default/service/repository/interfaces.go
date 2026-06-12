@@ -23,6 +23,11 @@ type ProfileRepository interface {
 		ctx context.Context,
 		profileType profilev1.ProfileType,
 	) (*models.ProfileType, error)
+
+	// GetByIDFromPrimary reads from the primary (read-write) connection so a
+	// just-created profile is visible (read-your-writes). The replica-backed
+	// GetByID can miss a row written moments earlier under replica lag.
+	GetByIDFromPrimary(ctx context.Context, id string) (*models.Profile, error)
 }
 
 type ContactRepository interface {
@@ -30,6 +35,10 @@ type ContactRepository interface {
 	GetByProfileID(ctx context.Context, profileID string) ([]*models.Contact, error)
 	GetByLookupToken(ctx context.Context, lookUpToken ...[]byte) ([]*models.Contact, error)
 	DelinkFromProfile(ctx context.Context, id, profileID string) (*models.Contact, error)
+
+	// GetByIDFromPrimary reads from the primary connection for
+	// read-your-writes (e.g. linking a just-created contact to a profile).
+	GetByIDFromPrimary(ctx context.Context, id string) (*models.Contact, error)
 }
 
 type VerificationRepository interface {
