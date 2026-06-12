@@ -431,19 +431,40 @@ func (pb *profileBusiness) CreateProfile(
 		}
 	}
 
-	contact, err = pb.contactBusiness.UpdateContact(ctx, contact.GetID(), p.GetID(), nil)
+	// Link the contact to the new profile in-memory and persist just the FK,
+	// then build the response from the objects we already hold. Both the
+	// profile and contact were written earlier in THIS request's
+	// transaction; any read-back (replica or primary) runs on a connection
+	// that cannot see those uncommitted rows, so it returned "record not
+	// found" and rolled the whole creation back. Avoiding read-backs lets
+	// the transaction commit.
+	contact, err = pb.contactBusiness.LinkToProfile(ctx, contact, p.GetID())
 	if err != nil {
 		return nil, err
 	}
 
-	// Read the just-created profile back from the primary — the replica that
-	// GetByID uses lags the write (or cannot see the still-uncommitted row),
-	// which surfaced as "record not found" on every profile creation.
-	profile, getErr := pb.profileRepo.GetByIDFromPrimary(ctx, contact.ProfileID)
-	if getErr != nil {
-		return nil, data.ErrorConvertToAPI(getErr)
+	return pb.profileFromCreated(&p, contact)
+}
+
+// profileFromCreated builds a ProfileObject from the just-created profile and
+// its contact without any further reads (see CreateProfile for why).
+func (pb *profileBusiness) profileFromCreated(
+	p *models.Profile,
+	contact *models.Contact,
+) (*profilev1.ProfileObject, error) {
+	obj := &profilev1.ProfileObject{
+		Id:         p.ID,
+		Type:       models.ProfileTypeIDToEnum(p.ProfileType.UID),
+		Properties: p.Properties.ToProtoStruct(),
 	}
-	return pb.ToAPI(ctx, profile)
+	if contact != nil {
+		contactObj, err := contact.ToAPI(pb.dek, true)
+		if err != nil {
+			return nil, err
+		}
+		obj.Contacts = []*profilev1.ContactObject{contactObj}
+	}
+	return obj, nil
 }
 
 // func (pb *profileBusiness) UpdateProperties(db *gorm.DB, params data.JSONMap) error {
