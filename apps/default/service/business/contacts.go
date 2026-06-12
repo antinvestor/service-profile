@@ -38,6 +38,7 @@ type ContactBusiness interface {
 		profileID string,
 		extra data.JSONMap,
 	) (*models.Contact, error)
+	LinkToProfile(ctx context.Context, contact *models.Contact, profileID string) (*models.Contact, error)
 	RemoveContact(ctx context.Context, contactID, profileID string) (*models.Contact, error)
 	VerifyContact(
 		ctx context.Context,
@@ -171,6 +172,22 @@ func (cb *contactBusiness) UpdateContact(
 
 	_, err = cb.contactRepository.Update(ctx, contact, "profile_id", "properties")
 	if err != nil {
+		return nil, err
+	}
+	return contact, nil
+}
+
+// LinkToProfile sets profile_id on an already-loaded contact and persists
+// just that column. Unlike UpdateContact it does NOT re-read the contact
+// first — used by CreateProfile, where the contact was created earlier in
+// the same request transaction and a read-back would not yet see it.
+func (cb *contactBusiness) LinkToProfile(
+	ctx context.Context,
+	contact *models.Contact,
+	profileID string,
+) (*models.Contact, error) {
+	contact.ProfileID = profileID
+	if _, err := cb.contactRepository.Update(ctx, contact, "profile_id"); err != nil {
 		return nil, err
 	}
 	return contact, nil
