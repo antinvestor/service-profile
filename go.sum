@@ -4,10 +4,10 @@ buf.build/gen/go/antinvestor/audit/protocolbuffers/go v1.36.11-20260510082436-4b
 buf.build/gen/go/antinvestor/audit/protocolbuffers/go v1.36.11-20260510082436-4bc1af8aa746.1/go.mod h1:54G08fZt9Jf+5iZ89K6Ddd4ntvb4NpZnvu2McuV2XT4=
 buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20260509050709-3f270876dbf3.1 h1:B8kYvDw/nWj5TLW9vrl95Q5jpD3sSsM/MZa9nViUc/I=
 buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.11-20260509050709-3f270876dbf3.1/go.mod h1:jRgXqWVsMsSV2ZDzo9s21a1fiAyyO68FibJVAGQzJoY=
-buf.build/gen/go/antinvestor/device/connectrpc/go v1.20.0-20260511135702-7f6c3cf72171.1 h1:eug0oJ4EYN0oNUpiTJiKFzDYSg3SHfSRU53lygWyeOs=
-buf.build/gen/go/antinvestor/device/connectrpc/go v1.20.0-20260511135702-7f6c3cf72171.1/go.mod h1:QEX26/qcndV5uD/zB8O687d8ktXN3iLq3iUzEd3JOlc=
-buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260511135702-7f6c3cf72171.1 h1:0RBrl+4F6prI6s0v+vkUMCDK/s7lbIJOjrjn/dLM5kQ=
-buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260511135702-7f6c3cf72171.1/go.mod h1:VePA43rcicCRVOYea7PRbLKQIVfWr26TmTApoVcnKl0=
+buf.build/gen/go/antinvestor/device/connectrpc/go v1.20.0-20260612021939-65b33130c488.1 h1:p2TCfVwdDiwsN60wjBnV/cqG85DRhcwIOE3B2i1w9lo=
+buf.build/gen/go/antinvestor/device/connectrpc/go v1.20.0-20260612021939-65b33130c488.1/go.mod h1:2I9pQOQdEP5U3GWljEkQBgtYsLd3wT4CEI9uCrQ7ojA=
+buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260612021939-65b33130c488.1 h1:pG6C/0ME6wK34a/4wX9bLLAIhlvnCXkeIo7maT5cqIA=
+buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.11-20260612021939-65b33130c488.1/go.mod h1:VePA43rcicCRVOYea7PRbLKQIVfWr26TmTApoVcnKl0=
 buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.20.0-20260608193017-9eca582ae046.1 h1:GjSLV98nl4gRvNqEmm3La/sfEnHOGmb32RkXz2srIZU=
 buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.20.0-20260608193017-9eca582ae046.1/go.mod h1:fXvT8yHZ0ScYRkkDQEM4SDJWXeIu2U4Y7OVoI+GYnrM=
 buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.11-20260608193017-9eca582ae046.1 h1:dV/WTxNdJRbA+fmtMfIjMq2iPHjI4XOnCZJDzSEp/Io=
@@ -20,12 +20,8 @@ buf.build/gen/go/antinvestor/profile/connectrpc/go v1.20.0-20260511135702-c54f3e
 buf.build/gen/go/antinvestor/profile/connectrpc/go v1.20.0-20260511135702-c54f3e4a0a91.1/go.mod h1:4O3+8topCByaHSEGxRusopbd6dRlDl3PzPxhYBhz39U=
 buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260511135702-c54f3e4a0a91.1 h1:wCWalJ4WuuVZtmN2CfCbrRP2Ww1BkpMhtLcPRSnzuF8=
 buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.11-20260511135702-c54f3e4a0a91.1/go.mod h1:Fst3GhuP6DjMU6ZkauzaPFx8m/rLvwo2fUpuhk5tb5w=
-buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.20.0-20260511135702-ef4900faa6be.1 h1:uECtlslfQ8sLeuFe8GNGopR0ukNh3AIr5/n2lnYhNPs=
-buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.20.0-20260511135702-ef4900faa6be.1/go.mod h1:UjbIeNmPvXv2YPqiQJUUWg+ySTI9SBl+RXjHSuYY5mM=
 buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.20.0-20260612020938-aeb5e31e6f4a.1 h1:GIM3yHeCEI/EieKBW8vbiavZBJum/nEqzjS59e3Png0=
 buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.20.0-20260612020938-aeb5e31e6f4a.1/go.mod h1:yh3o+ge0PpPp0Br2Tijg5h3PGRawOOOg3QxKnmQAANw=
-buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260511135702-ef4900faa6be.1 h1:oPbdLghteqVLacW6VCbiLf41xzrpmlCBTxxmjYk/3zk=
-buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260511135702-ef4900faa6be.1/go.mod h1:zkRCi1DLStznOaqUuvL4fvhVkP6oZSipSRrhHWnihbE=
 buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260612020938-aeb5e31e6f4a.1 h1:jOX0+ekMV4f8nvE7LO7FtiCL0hJXaCBFCYvXfSao1U8=
 buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.11-20260612020938-aeb5e31e6f4a.1/go.mod h1:ZWe+6mN8CC4x6AJBEpYfVGnLuHsKmKzt1o4I9ZOVyOg=
 buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260415201107-50325440f8f2.1 h1:s6hzCXtND/ICdGPTMGk7C+/BFlr2Jg5GyH0NKf4XGXg=
