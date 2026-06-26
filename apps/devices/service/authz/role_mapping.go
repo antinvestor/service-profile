@@ -9,8 +9,8 @@ const (
 )
 
 const (
-	PermissionDevicesManage = "devices_manage"
-	PermissionDevicesView   = "devices_view"
+	PermissionDevicesManage = "device_manage"
+	PermissionDevicesView   = "device_view"
 )
 
 const (

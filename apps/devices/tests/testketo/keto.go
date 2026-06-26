@@ -57,23 +57,23 @@ class service_device implements Namespace {
     member: profile_user[]
     service: (profile_user | tenancy_access)[]
 
-    granted_devices_manage: (profile_user | service_device)[]
-    granted_devices_view: (profile_user | service_device)[]
+    granted_device_manage: (profile_user | service_device)[]
+    granted_device_view: (profile_user | service_device)[]
   }
 
   permits = {
-    devices_manage: (ctx: Context): boolean =>
+    device_manage: (ctx: Context): boolean =>
       this.related.service.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.admin.includes(ctx.subject) ||
-      this.related.granted_devices_manage.includes(ctx.subject),
+      this.related.granted_device_manage.includes(ctx.subject),
 
-    devices_view: (ctx: Context): boolean =>
-      this.permits.devices_manage(ctx) ||
+    device_view: (ctx: Context): boolean =>
+      this.permits.device_manage(ctx) ||
       this.related.operator.includes(ctx.subject) ||
       this.related.viewer.includes(ctx.subject) ||
       this.related.member.includes(ctx.subject) ||
-      this.related.granted_devices_view.includes(ctx.subject),
+      this.related.granted_device_view.includes(ctx.subject),
   }
 }
 `

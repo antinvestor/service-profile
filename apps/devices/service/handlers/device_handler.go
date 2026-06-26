@@ -14,6 +14,7 @@ import (
 	"github.com/pitabwire/frame/security/authorizer"
 	"github.com/pitabwire/util"
 
+	"github.com/antinvestor/service-profile/apps/devices/service/authz"
 	"github.com/antinvestor/service-profile/apps/devices/service/business"
 	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	"github.com/antinvestor/service-profile/pkg/errorutil"
@@ -185,7 +186,7 @@ func (ds *DevicesServer) Link(
 ) (*connect.Response[devicev1.LinkResponse], error) {
 	claims := security.ClaimsFromContext(ctx)
 	if sub, _ := claims.GetSubject(); sub != req.Msg.GetProfileId() {
-		if err := ds.checker.Check(ctx, "devices_manage"); err != nil {
+		if err := ds.checker.Check(ctx, authz.PermissionDevicesManage); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
