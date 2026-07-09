@@ -7,9 +7,9 @@ import (
 	"slices"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/queue"
-	"github.com/pitabwire/frame/workerpool"
+	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v2/queue"
+	"github.com/pitabwire/frame/v2/workerpool"
 	"golang.org/x/sync/singleflight"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"

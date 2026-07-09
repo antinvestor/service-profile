@@ -1,6 +1,6 @@
 package config
 
-import "github.com/pitabwire/frame/config"
+import "github.com/pitabwire/frame/v2/config"
 
 // Cache name constants for the devices service.
 const (

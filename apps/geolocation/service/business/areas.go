@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"maps"
 
-	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/events"
+	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v2/events"
 	"github.com/pitabwire/util"
 	"gorm.io/gorm"
 

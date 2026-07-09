@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/pitabwire/frame/data"
-	frevents "github.com/pitabwire/frame/events"
-	"github.com/pitabwire/frame/queue"
+	"github.com/pitabwire/frame/v2/data"
+	frevents "github.com/pitabwire/frame/v2/events"
+	"github.com/pitabwire/frame/v2/queue"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/default/config"

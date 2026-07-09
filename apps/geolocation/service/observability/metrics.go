@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/pitabwire/frame/telemetry"
+	"github.com/pitabwire/frame/v2/telemetry"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 )

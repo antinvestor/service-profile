@@ -20,12 +20,13 @@ require (
 	connectrpc.com/connect v1.20.0
 	firebase.google.com/go/v4 v4.20.0
 	github.com/antinvestor/common v1.5.2
-	github.com/antinvestor/common/audit v0.0.0-20260427200632-833b5de926c7
+	github.com/antinvestor/common/audit v0.0.0-20260709203737-8d31a2fefc3a
+	github.com/antinvestor/common/v2 v2.0.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/gnostic v0.7.1
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame v1.98.5
+	github.com/pitabwire/frame/v2 v2.0.3
 	github.com/pitabwire/util v0.9.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.43.0

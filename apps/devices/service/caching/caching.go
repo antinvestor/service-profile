@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pitabwire/frame/cache"
+	"github.com/pitabwire/frame/v2/cache"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"

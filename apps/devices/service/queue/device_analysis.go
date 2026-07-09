@@ -8,9 +8,9 @@ import (
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"github.com/mssola/user_agent"
-	"github.com/pitabwire/frame/client"
-	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/queue"
+	"github.com/pitabwire/frame/v2/client"
+	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v2/queue"
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/encoding/protojson"
 

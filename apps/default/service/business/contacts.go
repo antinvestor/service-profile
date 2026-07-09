@@ -9,8 +9,8 @@ import (
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/data"
-	frevents "github.com/pitabwire/frame/events"
+	"github.com/pitabwire/frame/v2/data"
+	frevents "github.com/pitabwire/frame/v2/events"
 	"github.com/pitabwire/util"
 	"github.com/ttacon/libphonenumber"
 

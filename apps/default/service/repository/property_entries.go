@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 
-	"github.com/pitabwire/frame/datastore"
-	"github.com/pitabwire/frame/datastore/pool"
-	"github.com/pitabwire/frame/security"
-	"github.com/pitabwire/frame/workerpool"
+	"github.com/pitabwire/frame/v2/datastore"
+	"github.com/pitabwire/frame/v2/datastore/pool"
+	"github.com/pitabwire/frame/v2/security"
+	"github.com/pitabwire/frame/v2/workerpool"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 )

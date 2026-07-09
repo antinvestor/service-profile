@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/pitabwire/frame/security"
+	"github.com/pitabwire/frame/v2/security"
 
 	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
 )

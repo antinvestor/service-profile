@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pitabwire/frame/events"
+	"github.com/pitabwire/frame/v2/events"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
