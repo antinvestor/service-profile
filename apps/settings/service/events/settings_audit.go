@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/pitabwire/frame/data"
+	"github.com/pitabwire/frame/v2/data"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/models"

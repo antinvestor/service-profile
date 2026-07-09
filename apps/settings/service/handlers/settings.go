@@ -7,8 +7,8 @@ import (
 	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/settings/v1/settingsv1connect"
 	settingsv1 "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
 	"connectrpc.com/connect"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/datastore"
+	"github.com/pitabwire/frame/v2"
+	"github.com/pitabwire/frame/v2/datastore"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/business"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"

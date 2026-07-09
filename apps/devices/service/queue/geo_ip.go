@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/pitabwire/frame/client"
+	"github.com/pitabwire/frame/v2/client"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/caching"

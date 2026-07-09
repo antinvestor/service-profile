@@ -10,16 +10,17 @@ import (
 	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
 	profilepb "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"connectrpc.com/connect"
-	apis "github.com/antinvestor/common"
 	"github.com/antinvestor/common/audit"
-	"github.com/antinvestor/common/connection"
-	"github.com/antinvestor/common/permissions"
-	"github.com/pitabwire/frame"
-	"github.com/pitabwire/frame/config"
-	"github.com/pitabwire/frame/datastore"
-	"github.com/pitabwire/frame/security/authorizer"
-	connectInterceptors "github.com/pitabwire/frame/security/interceptors/connect"
-	securityhttp "github.com/pitabwire/frame/security/interceptors/httptor"
+	apis "github.com/antinvestor/common/v2"
+	"github.com/antinvestor/common/v2/connection"
+	"github.com/antinvestor/common/v2/permissions"
+	"github.com/antinvestor/common/v2/servicecatalog"
+	"github.com/pitabwire/frame/v2"
+	"github.com/pitabwire/frame/v2/config"
+	"github.com/pitabwire/frame/v2/datastore"
+	"github.com/pitabwire/frame/v2/security/authorizer"
+	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
+	securityhttp "github.com/pitabwire/frame/v2/security/interceptors/httptor"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
@@ -167,7 +168,7 @@ func setupNotificationClient(
 	return connection.NewServiceClient(ctx, &cfg, apis.ServiceTarget{
 		Endpoint:              cfg.NotificationSvcURI,
 		WorkloadAPITargetPath: cfg.NotificationServiceWorkloadAPITargetPath,
-		Audiences:             []string{"service_notification"},
+		ServiceID:             servicecatalog.ServiceNotification,
 	}, notificationv1connect.NewNotificationServiceClient)
 }
 
@@ -282,7 +283,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	if profileCfg != nil && profileCfg.AuditServiceURI != "" {
 		auditCli, auditErr := connection.NewServiceClient(ctx, profileCfg, apis.ServiceTarget{
 			Endpoint:  profileCfg.AuditServiceURI,
-			Audiences: []string{"service_audit"},
+			ServiceID: servicecatalog.ServiceAudit,
 		}, audit.NewConnectClient)
 		if auditErr != nil {
 			util.Log(ctx).

@@ -3,8 +3,8 @@ package business_test
 import (
 	"testing"
 
-	"github.com/pitabwire/frame/datastore"
-	"github.com/pitabwire/frame/frametests/definition"
+	"github.com/pitabwire/frame/v2/datastore"
+	"github.com/pitabwire/frame/v2/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 

@@ -3,10 +3,10 @@ package repository
 import (
 	"context"
 
-	"github.com/pitabwire/frame/data"
-	"github.com/pitabwire/frame/datastore"
-	"github.com/pitabwire/frame/datastore/pool"
-	"github.com/pitabwire/frame/workerpool"
+	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v2/datastore"
+	"github.com/pitabwire/frame/v2/datastore/pool"
+	"github.com/pitabwire/frame/v2/workerpool"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -51,7 +51,7 @@ func (rr *rosterRepository) Search(
 		// Query optimization: ensure proper index usage through query structure
 		// The JOIN and WHERE clauses are structured to utilize existing indexes
 
-		result, err := datastore.SearchFunc[*models.Roster](ctx, db, sq, rr.IsFieldAllowed)
+		result, err := data.SearchFunc[*models.Roster](ctx, db, sq, rr.IsFieldAllowed)
 		if err != nil {
 			return nil, err
 		}

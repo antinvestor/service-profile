@@ -7,7 +7,7 @@ import (
 	"math"
 	"time"
 
-	"github.com/pitabwire/frame/events"
+	"github.com/pitabwire/frame/v2/events"
 	"github.com/pitabwire/util"
 	"gorm.io/gorm"
 
