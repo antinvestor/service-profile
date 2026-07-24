@@ -54,6 +54,8 @@ require (
 	cloud.google.com/go/iam v1.12.0 // indirect
 	cloud.google.com/go/longrunning v1.2.0 // indirect
 	cloud.google.com/go/monitoring v1.30.0 // indirect
+	cloud.google.com/go/pubsub v1.50.2 // indirect
+	cloud.google.com/go/pubsub/v2 v2.5.1 // indirect
 	cloud.google.com/go/storage v1.63.1 // indirect
 	connectrpc.com/otelconnect v0.9.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
@@ -95,6 +97,7 @@ require (
 	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
+	github.com/google/wire v0.7.0 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.18 // indirect
 	github.com/googleapis/gax-go/v2 v2.23.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
