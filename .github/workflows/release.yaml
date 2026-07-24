@@ -30,7 +30,6 @@ jobs:
     secrets:
       buf_token: ${{ secrets.BUF_TOKEN }}
 
-  # --- identity project ---
   ship-identity-profile:
     needs: [docker]
     if: always() && (needs.docker.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.tag != ''))
@@ -48,7 +47,6 @@ jobs:
       workload_identity_provider: projects/721554040672/locations/global/workloadIdentityPools/github/providers/github-ship
       skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
 
-  # --- platform project (devices / settings / geolocation) ---
   ship-platform-devices:
     needs: [docker]
     if: always() && (needs.docker.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.tag != ''))
