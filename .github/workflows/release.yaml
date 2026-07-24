@@ -10,16 +10,9 @@ on:
         required: false
         default: ""
       skip_migrate:
-        description: Skip migrate job (emergency image-only)
+        description: Skip migrate jobs (emergency image-only)
         type: boolean
         default: false
-
-# Identity Cloud Run ship (public — not secrets)
-env:
-  CLOUD_RUN_PROJECT: stawi-identity
-  CLOUD_RUN_REGION: europe-west9
-  SHIP_SA: cloudrun-ship@stawi-identity.iam.gserviceaccount.com
-  WIF_PROVIDER: projects/721554040672/locations/global/workloadIdentityPools/github/providers/github-ship
 
 jobs:
   docker:
@@ -37,7 +30,8 @@ jobs:
     secrets:
       buf_token: ${{ secrets.BUF_TOKEN }}
 
-  ship:
+  # --- identity project ---
+  ship-identity-profile:
     needs: [docker]
     if: always() && (needs.docker.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.tag != ''))
     permissions:
@@ -52,4 +46,56 @@ jobs:
       region: europe-west9
       ship_service_account: cloudrun-ship@stawi-identity.iam.gserviceaccount.com
       workload_identity_provider: projects/721554040672/locations/global/workloadIdentityPools/github/providers/github-ship
+      skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
+
+  # --- platform project (devices / settings / geolocation) ---
+  ship-platform-devices:
+    needs: [docker]
+    if: always() && (needs.docker.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.tag != ''))
+    permissions:
+      contents: read
+      id-token: write
+    uses: antinvestor/common/.github/workflows/cloudrun-ship.yml@main
+    with:
+      image: ghcr.io/antinvestor/service-profile-devices:${{ inputs.tag != '' && inputs.tag || github.ref_name }}
+      service: platform-devices
+      migrate_job: platform-devices-migrate
+      project_id: stawi-platform
+      region: europe-west9
+      ship_service_account: cloudrun-ship@stawi-platform.iam.gserviceaccount.com
+      workload_identity_provider: projects/305282281906/locations/global/workloadIdentityPools/github/providers/github-ship
+      skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
+
+  ship-platform-settings:
+    needs: [docker]
+    if: always() && (needs.docker.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.tag != ''))
+    permissions:
+      contents: read
+      id-token: write
+    uses: antinvestor/common/.github/workflows/cloudrun-ship.yml@main
+    with:
+      image: ghcr.io/antinvestor/service-profile-settings:${{ inputs.tag != '' && inputs.tag || github.ref_name }}
+      service: platform-settings
+      migrate_job: platform-settings-migrate
+      project_id: stawi-platform
+      region: europe-west9
+      ship_service_account: cloudrun-ship@stawi-platform.iam.gserviceaccount.com
+      workload_identity_provider: projects/305282281906/locations/global/workloadIdentityPools/github/providers/github-ship
+      skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
+
+  ship-platform-geolocation:
+    needs: [docker]
+    if: always() && (needs.docker.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.tag != ''))
+    permissions:
+      contents: read
+      id-token: write
+    uses: antinvestor/common/.github/workflows/cloudrun-ship.yml@main
+    with:
+      image: ghcr.io/antinvestor/service-profile-geolocation:${{ inputs.tag != '' && inputs.tag || github.ref_name }}
+      service: platform-geolocation
+      migrate_job: platform-geolocation-migrate
+      project_id: stawi-platform
+      region: europe-west9
+      ship_service_account: cloudrun-ship@stawi-platform.iam.gserviceaccount.com
+      workload_identity_provider: projects/305282281906/locations/global/workloadIdentityPools/github/providers/github-ship
       skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
