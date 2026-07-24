@@ -1,12 +1,9 @@
 package main
 
 import (
-	// Register GCP Pub/Sub driver so EVENTS_QUEUE_URL=gcppubsub://… works.
-	// Frame only blank-imports mem + NATS by default.
 	"context"
 	_ "embed"
 	"encoding/base64"
-	_ "gocloud.dev/pubsub/gcppubsub"
 	"net/http"
 
 	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
