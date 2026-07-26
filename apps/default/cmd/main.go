@@ -21,6 +21,7 @@ import (
 	"github.com/pitabwire/frame/v2/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
 	securityhttp "github.com/pitabwire/frame/v2/security/interceptors/httptor"
+	"github.com/pitabwire/frame/v2/setup"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
@@ -64,13 +65,24 @@ func main() {
 		log.WithError(dekErr).Fatal("main -- Could not decode DEK encryption keys")
 	}
 
-	// Handle database migration if requested.
-	// The seed MUST run after migration to create encrypted contacts for
-	// bootstrap profiles. Without contacts, login creates duplicate profiles.
-	// The migration job must have DEK env vars configured:
+	// Setup plan: migrate + bootstrap seed. Permissions via setup step only.
+	// DEK env required on the setup/migrate Job:
 	//   DEK_ACTIVE_KEY_ID, DEK_AES256GCM_KEY, DEK_LOOKUP_TOKEN_HMACSHA256_KEY
-	if handleDatabaseMigration(ctx, dbManager, cfg) {
+	profileSD := profilepb.File_profile_v1_profile_proto.Services().ByName("ProfileService")
+	svc.Setup().RegisterFunc(setup.NameMigrate, func(ctx context.Context) error {
+		return repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath())
+	})
+	svc.Setup().RegisterFunc(setup.NameBootstrap, func(ctx context.Context) error {
 		seedDefaultData(ctx, svc, dek)
+		return nil
+	})
+
+	if frame.ShouldRunSetup(&cfg) {
+		svc.Init(ctx, frame.WithPermissionRegistration(profileSD))
+		if setupErr := svc.RunSetupForProcess(ctx, &cfg); setupErr != nil {
+			log.WithError(setupErr).Fatal("setup plan failed")
+		}
+		log.Info("setup plan complete — exiting")
 		return
 	}
 
@@ -82,9 +94,6 @@ func main() {
 
 	// Setup Connect server
 	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli)
-
-	// Register permission manifest for the profile service namespace.
-	profileSD := profilepb.File_profile_v1_profile_proto.Services().ByName("ProfileService")
 
 	// Setup HTTP handlers
 	serviceOptions := []frame.Option{
@@ -143,22 +152,6 @@ func main() {
 	if err != nil {
 		log.WithError(err).Fatal("could not run Server")
 	}
-}
-
-// handleDatabaseMigration performs database migration if configured to do so.
-func handleDatabaseMigration(
-	ctx context.Context,
-	dbManager datastore.Manager,
-	cfg aconfig.ProfileConfig,
-) bool {
-	if cfg.DoDatabaseMigrate() {
-		err := repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath())
-		if err != nil {
-			util.Log(ctx).WithError(err).Fatal("main -- Could not migrate successfully")
-		}
-		return true
-	}
-	return false
 }
 
 // setupNotificationClient creates and configures the notification client.

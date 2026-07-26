@@ -10,9 +10,9 @@ import (
 	"github.com/antinvestor/common/v2/permissions"
 	"github.com/pitabwire/frame/v2"
 	"github.com/pitabwire/frame/v2/config"
-	"github.com/pitabwire/frame/v2/datastore"
 	"github.com/pitabwire/frame/v2/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
+	"github.com/pitabwire/frame/v2/setup"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
@@ -43,16 +43,22 @@ func main() {
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
-	// Handle database migration if requested
-	if handleDatabaseMigration(ctx, svc.DatastoreManager(), &cfg) {
+	settingsSD := settingspb.File_settings_v1_settings_proto.Services().ByName("SettingsService")
+	svc.Setup().RegisterFunc(setup.NameMigrate, func(ctx context.Context) error {
+		return repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
+	})
+
+	if frame.ShouldRunSetup(&cfg) {
+		svc.Init(ctx, frame.WithPermissionRegistration(settingsSD))
+		if setupErr := svc.RunSetupForProcess(ctx, &cfg); setupErr != nil {
+			log.WithError(setupErr).Fatal("setup plan failed")
+		}
+		log.Info("setup plan complete — exiting")
 		return
 	}
 
 	// Setup Connect server
 	connectHandler := setupConnectServer(ctx, svc)
-
-	// Register permission manifest for the settings service namespace.
-	settingsSD := settingspb.File_settings_v1_settings_proto.Services().ByName("SettingsService")
 
 	// Setup HTTP handlers
 	serviceOptions := []frame.Option{
@@ -67,22 +73,6 @@ func main() {
 	if err != nil {
 		log.WithError(err).Fatal("could not run Server ")
 	}
-}
-
-// handleDatabaseMigration performs database migration if configured to do so.
-func handleDatabaseMigration(
-	ctx context.Context,
-	dbManager datastore.Manager,
-	cfg *aconfig.SettingsConfig,
-) bool {
-	if cfg.DoDatabaseMigrate() {
-		err := repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath())
-		if err != nil {
-			util.Log(ctx).WithError(err).Fatal("main -- Could not migrate successfully")
-		}
-		return true
-	}
-	return false
 }
 
 // setupConnectServer initializes and configures the gRPC server.
