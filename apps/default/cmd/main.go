@@ -23,6 +23,7 @@ import (
 	securityhttp "github.com/pitabwire/frame/v2/security/interceptors/httptor"
 	"github.com/pitabwire/frame/v2/setup"
 	"github.com/pitabwire/util"
+	"google.golang.org/protobuf/reflect/protoreflect"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/authz"
@@ -92,45 +93,51 @@ func main() {
 		log.WithError(nErr).Fatal("main -- Could not setup notification svc")
 	}
 
-	// Setup Connect server
-	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli)
+	svc.Init(ctx, runtimeServiceOptions(ctx, svc, &cfg, profileSD, dek, notificationCli)...)
 
-	// Setup HTTP handlers
-	serviceOptions := []frame.Option{
-		frame.WithHTTPHandler(connectHandler),
-		frame.WithPermissionRegistration(profileSD),
+	if runErr := svc.Run(ctx, ""); runErr != nil {
+		log.WithError(runErr).Fatal("could not run Server")
 	}
+}
 
-	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
-		cfg.QueueRelationshipConnectName,
-		cfg.QueueRelationshipConnectURI,
-	)
-	relationshipDisConnectQueuePublisher := frame.WithRegisterPublisher(
-		cfg.QueueRelationshipDisConnectName,
-		cfg.QueueRelationshipDisConnectURI,
-	)
+// runtimeServiceOptions wires HTTP, permission registration, publishers, and queue events.
+func runtimeServiceOptions(
+	ctx context.Context,
+	svc *frame.Service,
+	cfg *aconfig.ProfileConfig,
+	profileSD protoreflect.ServiceDescriptor,
+	dek *aconfig.DEK,
+	notificationCli notificationv1connect.NotificationServiceClient,
+) []frame.Option {
+	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli)
 
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
-
 	evtsMan := svc.EventsManager()
 	qMan := svc.QueueManager()
-
 	contactRepository := repository.NewContactRepository(ctx, dbPool, workMan)
 
-	// Register queue handlers
-	serviceOptions = append(serviceOptions,
-		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
+	return []frame.Option{
+		frame.WithHTTPHandler(connectHandler),
+		frame.WithPermissionRegistration(profileSD),
+		frame.WithRegisterPublisher(
+			cfg.QueueRelationshipConnectName,
+			cfg.QueueRelationshipConnectURI,
+		),
+		frame.WithRegisterPublisher(
+			cfg.QueueRelationshipDisConnectName,
+			cfg.QueueRelationshipDisConnectURI,
+		),
 		frame.WithRegisterEvents(
 			events.NewClientConnectedSetupQueue(
 				ctx,
-				&cfg,
+				cfg,
 				qMan,
 				evtsMan,
 				repository.NewRelationshipRepository(ctx, dbPool, workMan),
 			),
 			events.NewContactVerificationQueue(
-				&cfg,
+				cfg,
 				contactRepository,
 				repository.NewVerificationRepository(ctx, dbPool, workMan),
 				notificationCli,
@@ -140,17 +147,9 @@ func main() {
 				repository.NewVerificationRepository(ctx, dbPool, workMan),
 			),
 			events.NewContactKeyRotationQueue(
-				&cfg, dek, contactRepository,
+				cfg, dek, contactRepository,
 			),
-		))
-
-	// Initialize the service with all options
-	svc.Init(ctx, serviceOptions...)
-
-	// Start the service
-	err = svc.Run(ctx, "")
-	if err != nil {
-		log.WithError(err).Fatal("could not run Server")
+		),
 	}
 }
 
