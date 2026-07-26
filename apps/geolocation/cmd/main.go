@@ -14,6 +14,7 @@ import (
 	"github.com/pitabwire/frame/v2/security"
 	"github.com/pitabwire/frame/v2/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
+	"github.com/pitabwire/frame/v2/setup"
 	"github.com/pitabwire/util"
 
 	"buf.build/gen/go/antinvestor/geolocation/connectrpc/go/geolocation/v1/geolocationv1connect"
@@ -52,11 +53,17 @@ func main() { //nolint:funlen // wiring function
 
 	dbManager := svc.DatastoreManager()
 
-	// Handle database migration if requested.
-	if cfg.DoDatabaseMigrate() {
-		if mErr := repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath()); mErr != nil {
-			log.WithError(mErr).Fatal("could not migrate database")
+	sd := geolocationv1.File_geolocation_v1_geolocation_proto.Services().ByName("GeolocationService")
+	svc.Setup().RegisterFunc(setup.NameMigrate, func(ctx context.Context) error {
+		return repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath())
+	})
+
+	if frame.ShouldRunSetup(&cfg) {
+		svc.Init(ctx, frame.WithPermissionRegistration(sd))
+		if setupErr := svc.RunSetupForProcess(ctx, &cfg); setupErr != nil {
+			log.WithError(setupErr).Fatal("setup plan failed")
 		}
+		log.Info("setup plan complete — exiting")
 		return
 	}
 
@@ -120,7 +127,6 @@ func main() { //nolint:funlen // wiring function
 	sm := svc.SecurityManager()
 
 	auth := sm.GetAuthorizer(ctx)
-	sd := geolocationv1.File_geolocation_v1_geolocation_proto.Services().ByName("GeolocationService")
 	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
 
 	geoServer := handlers.NewGeolocationServer(

@@ -15,6 +15,7 @@ import (
 	"github.com/pitabwire/frame/v2/security"
 	"github.com/pitabwire/frame/v2/security/authorizer"
 	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
+	"github.com/pitabwire/frame/v2/setup"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/devices/config"
@@ -53,12 +54,17 @@ func main() {
 	defer svc.Stop(ctx)
 	log := svc.Log(ctx)
 
-	if cfg.DoDatabaseMigrate() {
-		err = repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
-		if err != nil {
-			log.WithError(err).Fatal("main -- Could not migrate successfully because : %+v", err)
-		}
+	sd := devicepb.File_device_v1_device_proto.Services().ByName("DeviceService")
+	svc.Setup().RegisterFunc(setup.NameMigrate, func(ctx context.Context) error {
+		return repository.Migrate(ctx, svc.DatastoreManager(), cfg.GetDatabaseMigrationPath())
+	})
 
+	if frame.ShouldRunSetup(&cfg) {
+		svc.Init(ctx, frame.WithPermissionRegistration(sd))
+		if setupErr := svc.RunSetupForProcess(ctx, &cfg); setupErr != nil {
+			log.WithError(setupErr).Fatal("setup plan failed")
+		}
+		log.Info("setup plan complete — exiting")
 		return
 	}
 
