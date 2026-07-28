@@ -42,7 +42,7 @@ jobs:
       service: identity-profile
       migrate_job: identity-profile-migrate
       project_id: stawi-identity
-      region: europe-west9
+      region: europe-west1
       ship_service_account: cloudrun-ship@stawi-identity.iam.gserviceaccount.com
       workload_identity_provider: projects/721554040672/locations/global/workloadIdentityPools/github/providers/github-ship
       skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
@@ -59,7 +59,7 @@ jobs:
       service: platform-devices
       migrate_job: platform-devices-migrate
       project_id: stawi-platform
-      region: europe-west9
+      region: europe-west1
       ship_service_account: cloudrun-ship@stawi-platform.iam.gserviceaccount.com
       workload_identity_provider: projects/305282281906/locations/global/workloadIdentityPools/github/providers/github-ship
       skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
@@ -76,7 +76,7 @@ jobs:
       service: platform-settings
       migrate_job: platform-settings-migrate
       project_id: stawi-platform
-      region: europe-west9
+      region: europe-west1
       ship_service_account: cloudrun-ship@stawi-platform.iam.gserviceaccount.com
       workload_identity_provider: projects/305282281906/locations/global/workloadIdentityPools/github/providers/github-ship
       skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
@@ -93,7 +93,7 @@ jobs:
       service: platform-geolocation
       migrate_job: platform-geolocation-migrate
       project_id: stawi-platform
-      region: europe-west9
+      region: europe-west1
       ship_service_account: cloudrun-ship@stawi-platform.iam.gserviceaccount.com
       workload_identity_provider: projects/305282281906/locations/global/workloadIdentityPools/github/providers/github-ship
       skip_migrate: ${{ github.event_name == 'workflow_dispatch' && inputs.skip_migrate == true }}
