@@ -1,6 +1,6 @@
 # Service-specific configuration
 SERVICE_NAME := profile
-APP_DIRS     := apps/default apps/devices apps/geolocation apps/settings
+APP_DIRS     := apps/default apps/devices apps/geolocation apps/settings apps/chatagent
 
 # Bootstrap: download shared Makefile.common if missing
 ifeq (,$(wildcard .tmp/Makefile.common))
