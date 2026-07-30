@@ -2,6 +2,7 @@ package notify_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
@@ -86,35 +87,37 @@ func (c *capturingNotificationClient) Send(
 	}
 	c.last = req.Msg
 	// nil stream is treated as success by deliverer (test mode).
-	return nil, nil
+	return nil, nil //nolint:nilnil // test stub: deliverer accepts nil stream
 }
 
 func (c *capturingNotificationClient) Release(context.Context, *connect.Request[notificationv1.ReleaseRequest]) (*connect.ServerStreamForClient[notificationv1.ReleaseResponse], error) {
-	return nil, nil
+	return nil, errUnused
 }
 func (c *capturingNotificationClient) Receive(context.Context, *connect.Request[notificationv1.ReceiveRequest]) (*connect.ServerStreamForClient[notificationv1.ReceiveResponse], error) {
-	return nil, nil
+	return nil, errUnused
 }
 func (c *capturingNotificationClient) Search(context.Context, *connect.Request[commonv1.SearchRequest]) (*connect.ServerStreamForClient[notificationv1.SearchResponse], error) {
-	return nil, nil
+	return nil, errUnused
 }
 func (c *capturingNotificationClient) Status(context.Context, *connect.Request[commonv1.StatusRequest]) (*connect.Response[commonv1.StatusResponse], error) {
-	return nil, nil
+	return nil, errUnused
 }
 func (c *capturingNotificationClient) StatusUpdate(context.Context, *connect.Request[commonv1.StatusUpdateRequest]) (*connect.Response[commonv1.StatusUpdateResponse], error) {
-	return nil, nil
+	return nil, errUnused
 }
 func (c *capturingNotificationClient) TemplateSearch(context.Context, *connect.Request[notificationv1.TemplateSearchRequest]) (*connect.ServerStreamForClient[notificationv1.TemplateSearchResponse], error) {
-	return nil, nil
+	return nil, errUnused
 }
 func (c *capturingNotificationClient) TemplateSave(context.Context, *connect.Request[notificationv1.TemplateSaveRequest]) (*connect.Response[notificationv1.TemplateSaveResponse], error) {
-	return nil, nil
+	return nil, errUnused
 }
+
+var errUnused = errors.New("unused in this test")
 
 func TestNotificationDeliverer_SendsRawBody(t *testing.T) {
 	t.Parallel()
-	cap := &capturingNotificationClient{}
-	d := notify.NewNotificationDeliverer(cap)
+	stub := &capturingNotificationClient{}
+	d := notify.NewNotificationDeliverer(stub)
 	delivered, err := d.Deliver(context.Background(), notify.Binding{
 		Channel:   chatagentv1.Channel_CHANNEL_SMS,
 		ContactID: "contact-sms",
@@ -123,9 +126,10 @@ func TestNotificationDeliverer_SendsRawBody(t *testing.T) {
 	}, "prof-1", "sess-9", "What role are you targeting?")
 	require.NoError(t, err)
 	require.True(t, delivered)
-	require.NotNil(t, cap.last)
-	require.Len(t, cap.last.Data, 1)
-	n := cap.last.Data[0]
+	require.NotNil(t, stub.last)
+	data := stub.last.GetData()
+	require.Len(t, data, 1)
+	n := data[0]
 	require.Equal(t, "sms", n.GetType())
 	require.Equal(t, "What role are you targeting?", n.GetData())
 	require.True(t, n.GetOutBound())
@@ -137,15 +141,15 @@ func TestNotificationDeliverer_SendsRawBody(t *testing.T) {
 
 func TestNotificationDeliverer_SkipsWeb(t *testing.T) {
 	t.Parallel()
-	cap := &capturingNotificationClient{}
-	d := notify.NewNotificationDeliverer(cap)
+	stub := &capturingNotificationClient{}
+	d := notify.NewNotificationDeliverer(stub)
 	delivered, err := d.Deliver(context.Background(), notify.Binding{
 		Channel:   chatagentv1.Channel_CHANNEL_WEB,
 		ContactID: "c",
 	}, "s", "sess", "hi")
 	require.NoError(t, err)
 	require.False(t, delivered)
-	require.Nil(t, cap.last)
+	require.Nil(t, stub.last)
 }
 
 func TestNoopDeliverer(t *testing.T) {

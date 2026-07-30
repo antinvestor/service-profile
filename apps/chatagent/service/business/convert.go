@@ -294,7 +294,7 @@ func channelBindingToJSONMap(b notify.Binding) data.JSONMap {
 }
 
 func channelBindingFromJSONMap(m data.JSONMap) notify.Binding {
-	if m == nil || len(m) == 0 {
+	if len(m) == 0 {
 		return notify.Binding{}
 	}
 	b := notify.Binding{
@@ -308,8 +308,8 @@ func channelBindingFromJSONMap(m data.JSONMap) notify.Binding {
 		SourceProfileID: stringField(m, "source_profile_id"),
 		RouteID:         stringField(m, "route_id"),
 	}
-	if raw, ok := m["template_payload"]; ok && raw != nil {
-		if mp, ok := raw.(map[string]any); ok {
+	if raw, hasPayload := m["template_payload"]; hasPayload && raw != nil {
+		if mp, isMap := raw.(map[string]any); isMap {
 			b.TemplatePayload = mp
 		}
 	}

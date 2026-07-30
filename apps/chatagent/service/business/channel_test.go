@@ -1,4 +1,4 @@
-package business
+package business //nolint:testpackage // tests access unexported channel binding helpers
 
 import (
 	"testing"

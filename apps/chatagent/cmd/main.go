@@ -100,10 +100,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, cfg *aconfig.Ch
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	notificationCli, nErr := setupNotificationClient(ctx, cfg)
-	if nErr != nil {
-		util.Log(ctx).WithError(nErr).Warn("chatagent: notification client unavailable; omnichannel delivery disabled")
-	}
+	notificationCli := setupNotificationClient(ctx, cfg)
 
 	implementation := handlers.NewChatAgentServer(ctx, svc, handlers.ServerDeps{
 		LLM: handlers.LLMConfig{
@@ -121,17 +118,22 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, cfg *aconfig.Ch
 }
 
 // setupNotificationClient creates the Notification service client for omnichannel reply delivery.
-// Returns nil when NOTIFICATION_SERVICE_URI is empty (web-only mode).
+// Returns nil when NOTIFICATION_SERVICE_URI is empty or client setup fails (web-only mode).
 func setupNotificationClient(
 	ctx context.Context,
 	cfg *aconfig.ChatAgentConfig,
-) (notificationv1connect.NotificationServiceClient, error) {
+) notificationv1connect.NotificationServiceClient {
 	if strings.TrimSpace(cfg.NotificationSvcURI) == "" {
-		return nil, nil
+		return nil
 	}
-	return connection.NewServiceClient(ctx, cfg, apis.ServiceTarget{
+	cli, err := connection.NewServiceClient(ctx, cfg, apis.ServiceTarget{
 		Endpoint:              cfg.NotificationSvcURI,
 		WorkloadAPITargetPath: cfg.NotificationServiceWorkloadAPITargetPath,
 		ServiceID:             servicecatalog.ServiceNotification,
 	}, notificationv1connect.NewNotificationServiceClient)
+	if err != nil {
+		util.Log(ctx).WithError(err).Warn("chatagent: notification client unavailable; omnichannel delivery disabled")
+		return nil
+	}
+	return cli
 }
