@@ -11,7 +11,6 @@ import (
 	"github.com/antinvestor/service-profile/apps/chatagent/service/business"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/engine"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/llm"
-	"github.com/antinvestor/service-profile/apps/chatagent/service/notify"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/repository"
 	chatagentv1 "github.com/antinvestor/service-profile/gen/go/chatagent/v1"
 	"github.com/antinvestor/service-profile/gen/go/chatagent/v1/chatagentv1connect"
@@ -32,12 +31,13 @@ type LLMConfig struct {
 }
 
 // ServerDeps optional dependencies for ChatAgentServer.
+// NotificationClient is the existing Notification service client (same pattern as profile app).
 type ServerDeps struct {
 	LLM                LLMConfig
 	NotificationClient notificationv1connect.NotificationServiceClient
 }
 
-// NewChatAgentServer builds the handler with repositories, optional LLM, and Notification delivery.
+// NewChatAgentServer builds the handler with repositories, optional LLM, and Notification client.
 func NewChatAgentServer(ctx context.Context, svc *frame.Service, deps ServerDeps) *ChatAgentServer {
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
@@ -52,13 +52,8 @@ func NewChatAgentServer(ctx context.Context, svc *frame.Service, deps ServerDeps
 		completer = llm.New(deps.LLM.BaseURL, deps.LLM.APIKey, deps.LLM.Model, httpClient)
 	}
 
-	var deliverer notify.Deliverer = notify.NoopDeliverer{}
-	if deps.NotificationClient != nil {
-		deliverer = notify.NewNotificationDeliverer(deps.NotificationClient)
-	}
-
 	return &ChatAgentServer{
-		biz: business.NewChatAgentBusiness(ctxRepo, sessRepo, msgRepo, completer, deliverer),
+		biz: business.NewChatAgentBusiness(ctxRepo, sessRepo, msgRepo, completer, deps.NotificationClient),
 	}
 }
 
@@ -139,11 +134,11 @@ func (s *ChatAgentServer) EndSession(
 	return connect.NewResponse(resp), nil
 }
 
-func (s *ChatAgentServer) IngestChannelMessage(
+func (s *ChatAgentServer) IngestMessage(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.IngestChannelMessageRequest],
-) (*connect.Response[chatagentv1.IngestChannelMessageResponse], error) {
-	resp, err := s.biz.IngestChannelMessage(ctx, req.Msg)
+	req *connect.Request[chatagentv1.IngestMessageRequest],
+) (*connect.Response[chatagentv1.IngestMessageResponse], error) {
+	resp, err := s.biz.IngestMessage(ctx, req.Msg)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}

@@ -22,6 +22,7 @@ package chatagent.v1;
 // prior turns, seed fields). Products only change the context — not the engine.
 
 import "buf/validate/validate.proto";
+import "common/v1/common.proto";
 import "common/v1/permissions.proto";
 import "gnostic/openapi/v3/annotations.proto";
 import "google/protobuf/struct.proto";
@@ -150,41 +151,30 @@ enum SessionStatus {
   SESSION_STATUS_ENDED = 3;
 }
 
-// Channel is the transport surface for a session.
-// The Turn engine is channel-agnostic; Notification service delivers non-web replies.
-enum Channel {
-  CHANNEL_UNSPECIFIED = 0; // treated as CHANNEL_WEB (RPC return path only)
-  CHANNEL_WEB = 1;
-  CHANNEL_SMS = 2;
-  CHANNEL_EMAIL = 3;
-  CHANNEL_PUSH = 4;
-  CHANNEL_IN_APP = 5;
-  CHANNEL_WHATSAPP = 6;
-  CHANNEL_USSD = 7;
-}
-
-// ChannelBinding attaches a session to a Notification delivery endpoint.
-// When channel is non-web and skip_delivery is false, assistant replies are
-// sent via Notification.Send (sms/email/push/in-app/whatsapp/ussd).
-message ChannelBinding {
-  Channel channel = 1;
-  // Recipient contact used by Notification (phone contact id, email contact id, device, …).
-  string contact_id = 2;
-  // Profile owning the contact (often same as subject_id).
-  string profile_id = 3;
-  string profile_type = 4; // default "Profile"
-  string language = 5; // ISO 639-1 for templated notifications
-  // When true, never deliver replies through Notification (RPC-only even for SMS).
-  bool skip_delivery = 6;
-  // Optional Notification template name. Empty → send reply as Notification.data (raw body).
-  string template = 7;
-  // Bot/system source identity on Notification.source.
-  string source_contact_id = 8;
-  string source_profile_id = 9;
-  // Extra template variables (session_id and reply are always injected).
-  google.protobuf.Struct template_payload = 10;
-  // Optional Notification route_id override.
-  string route_id = 11;
+// NotificationTarget is a thin binding to the existing Notification service.
+// Field meanings match notification.v1.Notification — ChatAgent does NOT invent
+// its own channel model. Outbound replies are sent via NotificationService.Send
+// using this target; empty type means RPC-only (web).
+//
+// See service-notification proto Notification and ContactLink (common.v1).
+message NotificationTarget {
+  // Same as notification.v1.Notification.type (e.g. "sms", "email", "push", "in-app").
+  // Empty → do not call Notification (reply returns on the ChatAgent RPC only).
+  string type = 1;
+  // Same as notification.v1.Notification.recipient.
+  common.v1.ContactLink recipient = 2;
+  // Same as notification.v1.Notification.source (optional bot/system identity).
+  common.v1.ContactLink source = 3;
+  // Same as notification.v1.Notification.language.
+  string language = 4;
+  // Same as notification.v1.Notification.template. Empty → raw body in Notification.data.
+  string template = 5;
+  // Merged into notification.v1.Notification.payload (reply + session_id always injected).
+  google.protobuf.Struct payload = 6;
+  // Same as notification.v1.Notification.route_id.
+  string route_id = 7;
+  // When true, never call Notification.Send even if type is set.
+  bool skip = 8;
 }
 
 // ChatSession is the durable conversation state.
@@ -201,8 +191,8 @@ message ChatSession {
   repeated string missing = 10;
   map<string, FieldStatus> field_status = 11;
   google.protobuf.Struct runtime = 12; // non-field evidence metadata
-  // Omnichannel binding; empty/web means replies only return on the RPC.
-  ChannelBinding channel = 13;
+  // Optional Notification.Send target for assistant replies (reuse Notification service).
+  NotificationTarget notification = 13;
 }
 
 // ── Context registry ──────────────────────────────────────────────────────
@@ -261,15 +251,15 @@ message CreateSessionRequest {
   google.protobuf.Struct runtime = 8;
   // When true, run an evaluation turn with no user message to extract from seed+documents.
   bool evaluate_evidence = 9;
-  // Bind this session to a channel for omnichannel delivery via Notification service.
-  ChannelBinding channel = 10;
+  // Optional Notification.Send target for assistant replies (same shape as Notification service).
+  NotificationTarget notification = 10;
 }
 
 message CreateSessionResponse {
   ChatSession session = 1;
-  // Assistant reply from optional evaluate_evidence (also delivered when channel bound).
+  // Assistant reply from optional evaluate_evidence (also sent via Notification when targeted).
   string reply = 2;
-  bool delivered = 3; // true when reply was queued on Notification
+  bool delivered = 3; // true when reply was queued via NotificationService.Send
 }
 
 message GetSessionRequest {
@@ -295,7 +285,7 @@ message TurnResponse {
   string reply = 2;
   // How fields were filled: llm | heuristic | llm+heuristic | evidence
   string source = 3;
-  // true when reply was queued on Notification for the session channel.
+  // true when reply was queued via NotificationService.Send for the session target.
   bool delivered = 4;
 }
 
@@ -308,17 +298,18 @@ message EndSessionResponse {
   ChatSession session = 1;
 }
 
-// IngestChannelMessage maps an inbound channel message (SMS/WhatsApp/email/…)
-// onto a Turn, then delivers the assistant reply back via Notification.
-// Use this from channel adapters / notification inbound routes so products
-// stay channel-agnostic: only context_key + binding change.
-message IngestChannelMessageRequest {
+// IngestMessage maps an inbound user message (typically from a Notification
+// inbound/integration path) onto a Turn, then replies via NotificationService.Send
+// using the same NotificationTarget. Prefer this from notification adapters so
+// products do not re-implement channel routing — Notification owns channels.
+message IngestMessageRequest {
   // Prefer session_id when the adapter already knows the conversation.
   string session_id = 1;
-  // Resolve active session by subject + context + channel contact when session_id empty.
+  // Resolve active session by subject + context + notification type/contact when session_id empty.
   string subject_id = 2;
   string context_key = 3;
-  ChannelBinding channel = 4 [(buf.validate.field).required = true];
+  // Delivery target for the reply (and lookup key for active sessions).
+  NotificationTarget notification = 4 [(buf.validate.field).required = true];
   string message = 5 [
     (buf.validate.field).string.min_len = 1,
     (buf.validate.field).string.max_len = 8000
@@ -331,7 +322,7 @@ message IngestChannelMessageRequest {
   bool evaluate_evidence = 10;
 }
 
-message IngestChannelMessageResponse {
+message IngestMessageResponse {
   ChatSession session = 1;
   string reply = 2;
   string source = 3;
@@ -442,13 +433,13 @@ service ChatAgentService {
     };
   }
 
-  // Ingest an inbound message from any Notification-backed channel and reply on the same channel.
-  rpc IngestChannelMessage(IngestChannelMessageRequest) returns (IngestChannelMessageResponse) {
+  // Ingest an inbound message and reply via NotificationService.Send using NotificationTarget.
+  rpc IngestMessage(IngestMessageRequest) returns (IngestMessageResponse) {
     option (common.v1.method_permissions) = {permissions: ["chat_agent_turn"]};
     option (gnostic.openapi.v3.operation) = {
-      operation_id: "ingestChannelMessage"
-      summary: "Ingest inbound SMS/WhatsApp/email/etc and run a turn with omnichannel reply"
-      description: "Resolves or creates a session from channel binding, runs Turn on the message, and delivers the assistant reply via Notification service when the channel is non-web."
+      operation_id: "ingestChatMessage"
+      summary: "Ingest inbound message and reply via Notification service"
+      description: "Resolves or creates a session from NotificationTarget, runs Turn, and queues the assistant reply with NotificationService.Send. Channel routing stays in the Notification service."
       tags: "ChatAgent"
     };
   }
