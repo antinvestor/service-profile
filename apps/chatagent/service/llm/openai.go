@@ -75,8 +75,8 @@ func (c *Completer) Complete(ctx context.Context, prompt string) (string, error)
 			} `json:"message"`
 		} `json:"choices"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return "", fmt.Errorf("llm: decode: %w", err)
+	if derr := json.NewDecoder(resp.Body).Decode(&out); derr != nil {
+		return "", fmt.Errorf("llm: decode: %w", derr)
 	}
 	if len(out.Choices) == 0 {
 		return "", fmt.Errorf("llm: empty choices")

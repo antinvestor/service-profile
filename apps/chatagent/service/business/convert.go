@@ -143,7 +143,7 @@ func fieldsToStruct(f engine.Fields) *structpb.Struct {
 		return st
 	}
 	var m map[string]any
-	if err := json.Unmarshal(b, &m); err != nil {
+	if uerr := json.Unmarshal(b, &m); uerr != nil {
 		st, _ := structpb.NewStruct(map[string]any{})
 		return st
 	}
@@ -245,7 +245,7 @@ func docsFromJSONMap(m data.JSONMap) []engine.Document {
 		return nil
 	}
 	var items []engine.Document
-	if err := json.Unmarshal(b, &items); err != nil {
+	if uerr := json.Unmarshal(b, &items); uerr != nil {
 		return nil
 	}
 	return items

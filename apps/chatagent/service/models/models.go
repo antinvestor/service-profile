@@ -86,8 +86,8 @@ func JSONMapFromStruct(v any) (data.JSONMap, error) {
 		return nil, err
 	}
 	var m data.JSONMap
-	if err := json.Unmarshal(b, &m); err != nil {
-		return nil, err
+	if uerr := json.Unmarshal(b, &m); uerr != nil {
+		return nil, uerr
 	}
 	if m == nil {
 		return data.JSONMap{}, nil

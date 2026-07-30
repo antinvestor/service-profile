@@ -86,16 +86,16 @@ func (r *messageRepository) ListBySession(ctx context.Context, sessionID string)
 }
 
 func (r *messageRepository) NextSeq(ctx context.Context, sessionID string) (int, error) {
-	var max *int
+	var maxSeq *int
 	err := r.Pool().DB(ctx, true).Model(&models.Message{}).
 		Select("MAX(seq)").
 		Where("session_id = ?", sessionID).
-		Scan(&max).Error
+		Scan(&maxSeq).Error
 	if err != nil {
 		return 0, err
 	}
-	if max == nil {
+	if maxSeq == nil {
 		return 1, nil
 	}
-	return *max + 1, nil
+	return *maxSeq + 1, nil
 }

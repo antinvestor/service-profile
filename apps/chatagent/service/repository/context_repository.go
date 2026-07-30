@@ -72,16 +72,16 @@ func (r *contextRepository) ListLatest(ctx context.Context) ([]*models.IntakeCon
 }
 
 func (r *contextRepository) NextVersion(ctx context.Context, contextKey string) (int, error) {
-	var max *int
+	var maxVer *int
 	err := r.Pool().DB(ctx, true).Model(&models.IntakeContext{}).
 		Select("MAX(version)").
 		Where("context_key = ?", contextKey).
-		Scan(&max).Error
+		Scan(&maxVer).Error
 	if err != nil {
 		return 0, err
 	}
-	if max == nil {
+	if maxVer == nil {
 		return 1, nil
 	}
-	return *max + 1, nil
+	return *maxVer + 1, nil
 }

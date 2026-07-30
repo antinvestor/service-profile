@@ -60,13 +60,13 @@ func TestApplyDocuments_FillsCapabilitiesFromCV(t *testing.T) {
 	fields := engine.ApplyDocuments(def, engine.Fields{}, []engine.Document{
 		{Name: "cv", Kind: "cv", Text: cv},
 	})
-	cap, _ := fields["capabilities"].(string)
-	require.Contains(t, cap, "Experience")
+	caps, _ := fields["capabilities"].(string)
+	require.Contains(t, caps, "Experience")
 	// also stores under kind/name keys
 	require.NotEmpty(t, fields["cv"])
 }
 
-// expose via test helper in same module - use merge through Turn instead
+// Prefer Evaluate path; merge is covered through Turn.
 func TestTurn_EvidenceFirstDoesNotAskForKnownCV(t *testing.T) {
 	t.Parallel()
 	def := placementLikeContext()
@@ -145,7 +145,7 @@ func TestMergeFields_DoesNotWipeWithEmpty(t *testing.T) {
 	base := engine.Fields{"target_job_title": "SRE", "salary_min": 50.0}
 	out := engine.MergeFields(base, engine.Fields{"target_job_title": "", "salary_min": nil, "job_types": []string{"Full-time"}})
 	require.Equal(t, "SRE", out["target_job_title"])
-	require.Equal(t, 50.0, out["salary_min"])
+	require.InDelta(t, 50.0, out["salary_min"], 0.001)
 	require.Equal(t, []string{"Full-time"}, out["job_types"])
 }
 

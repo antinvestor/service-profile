@@ -53,8 +53,8 @@ func assessOne(def FieldDef, fields Fields) FieldStatus {
 		}
 		return FieldStatus{OK: true, Value: truncate(s, 200)}
 	case FieldNumber:
-		n, ok := asFloat(v)
-		if !ok {
+		n, okNum := asFloat(v)
+		if !okNum {
 			return FieldStatus{OK: false, Reason: missingReason(def)}
 		}
 		return FieldStatus{OK: true, Value: fmt.Sprintf("%g", n)}
@@ -77,13 +77,13 @@ func assessOne(def FieldDef, fields Fields) FieldStatus {
 		}
 		return FieldStatus{OK: true, Value: strings.Join(list, ", ")}
 	case FieldBool:
-		b, ok := asBool(v)
-		if !ok {
+		b, okBool := asBool(v)
+		if !okBool {
 			return FieldStatus{OK: false, Reason: missingReason(def)}
 		}
 		return FieldStatus{OK: true, Value: fmt.Sprintf("%v", b)}
 	case FieldObject:
-		if m, ok := v.(map[string]any); ok && len(m) > 0 {
+		if m, okMap := v.(map[string]any); okMap && len(m) > 0 {
 			return FieldStatus{OK: true, Value: "(object)"}
 		}
 		return FieldStatus{OK: false, Reason: missingReason(def)}
@@ -120,6 +120,8 @@ func asString(v any) string {
 	switch t := v.(type) {
 	case string:
 		return t
+	case json.Number:
+		return t.String()
 	case fmt.Stringer:
 		return t.String()
 	case float64:
@@ -130,8 +132,6 @@ func asString(v any) string {
 		return fmt.Sprintf("%d", t)
 	case int64:
 		return fmt.Sprintf("%d", t)
-	case json.Number:
-		return t.String()
 	default:
 		b, err := json.Marshal(v)
 		if err != nil {
@@ -213,10 +213,10 @@ func nonEmptyStrings(in []string) []string {
 	return out
 }
 
-func truncate(s string, max int) string {
+func truncate(s string, maxLen int) string {
 	r := []rune(s)
-	if len(r) <= max {
+	if len(r) <= maxLen {
 		return s
 	}
-	return string(r[:max]) + "…"
+	return string(r[:maxLen]) + "…"
 }

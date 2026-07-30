@@ -56,8 +56,8 @@ func (b *chatAgentBusiness) UpsertContext(
 	req *chatagentv1.UpsertContextRequest,
 ) (*chatagentv1.UpsertContextResponse, error) {
 	def := protoToContextDef(req.GetDefinition())
-	if err := validateContextDef(def); err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	if vErr := validateContextDef(def); vErr != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, vErr)
 	}
 	ver, err := b.contexts.NextVersion(ctx, def.Key)
 	if err != nil {
@@ -74,8 +74,8 @@ func (b *chatAgentBusiness) UpsertContext(
 		DefinitionJSON: snap,
 		Active:         true,
 	}
-	if err := b.contexts.Create(ctx, row); err != nil {
-		return nil, fmt.Errorf("create context: %w", err)
+	if cErr := b.contexts.Create(ctx, row); cErr != nil {
+		return nil, fmt.Errorf("create context: %w", cErr)
 	}
 	return &chatagentv1.UpsertContextResponse{
 		Definition: contextDefToProto(def),
@@ -147,8 +147,8 @@ func (b *chatAgentBusiness) CreateSession(
 	if err != nil {
 		return nil, err
 	}
-	if err := validateContextDef(def); err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+	if vErr := validateContextDef(def); vErr != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, vErr)
 	}
 
 	snap, err := contextDefToJSONMap(def)
@@ -211,8 +211,8 @@ func (b *chatAgentBusiness) CreateSession(
 		}
 	}
 
-	if err := b.sessions.Create(ctx, sess); err != nil {
-		return nil, fmt.Errorf("create session: %w", err)
+	if sErr := b.sessions.Create(ctx, sess); sErr != nil {
+		return nil, fmt.Errorf("create session: %w", sErr)
 	}
 
 	// Persist seed transcript.
@@ -224,14 +224,14 @@ func (b *chatAgentBusiness) CreateSession(
 			Role:      m.Role,
 			Content:   m.Content,
 		}
-		if err := b.messages.Create(ctx, msg); err != nil {
-			util.Log(ctx).WithError(err).Warn("chatagent: seed message persist failed")
+		if mErr := b.messages.Create(ctx, msg); mErr != nil {
+			util.Log(ctx).WithError(mErr).Warn("chatagent: seed message persist failed")
 		}
 		seq++
 	}
 	sess.MessageCount = len(seedMsgs)
-	if _, err := b.sessions.Update(ctx, sess, "message_count", "fields", "ready", "status"); err != nil {
-		util.Log(ctx).WithError(err).Warn("chatagent: session message_count update failed")
+	if _, uErr := b.sessions.Update(ctx, sess, "message_count", "fields", "ready", "status"); uErr != nil {
+		util.Log(ctx).WithError(uErr).Warn("chatagent: session message_count update failed")
 	}
 
 	api, err := b.toAPISession(ctx, sess, def, fields, status, missing, seedMsgs)
@@ -304,8 +304,8 @@ func (b *chatAgentBusiness) Turn(
 			Role:      m.Role,
 			Content:   m.Content,
 		}
-		if err := b.messages.Create(ctx, row); err != nil {
-			return nil, fmt.Errorf("persist message: %w", err)
+		if mErr := b.messages.Create(ctx, row); mErr != nil {
+			return nil, fmt.Errorf("persist message: %w", mErr)
 		}
 		msgs = append(msgs, m)
 		seq++
@@ -319,9 +319,9 @@ func (b *chatAgentBusiness) Turn(
 	} else if sess.Status != models.SessionStatusEnded {
 		sess.Status = models.SessionStatusActive
 	}
-	if _, err := b.sessions.Update(ctx, sess,
-		"fields", "ready", "status", "message_count", "documents"); err != nil {
-		return nil, fmt.Errorf("update session: %w", err)
+	if _, uErr := b.sessions.Update(ctx, sess,
+		"fields", "ready", "status", "message_count", "documents"); uErr != nil {
+		return nil, fmt.Errorf("update session: %w", uErr)
 	}
 
 	api, err := b.toAPISession(ctx, sess, def, res.Fields, res.FieldStatus, res.Missing, msgs)
@@ -344,8 +344,8 @@ func (b *chatAgentBusiness) EndSession(
 		return nil, err
 	}
 	sess.Status = models.SessionStatusEnded
-	if _, err := b.sessions.Update(ctx, sess, "status"); err != nil {
-		return nil, fmt.Errorf("end session: %w", err)
+	if _, uErr := b.sessions.Update(ctx, sess, "status"); uErr != nil {
+		return nil, fmt.Errorf("end session: %w", uErr)
 	}
 	status, missing, _ := engine.Assess(def, fields)
 	api, err := b.toAPISession(ctx, sess, def, fields, status, missing, msgs)

@@ -214,10 +214,10 @@ func firstNonEmpty(vals ...string) string {
 	return ""
 }
 
-func truncateRunes(s string, max int) string {
+func truncateRunes(s string, maxLen int) string {
 	r := []rune(s)
-	if max <= 0 || len(r) <= max {
+	if maxLen <= 0 || len(r) <= maxLen {
 		return s
 	}
-	return string(r[:max])
+	return string(r[:maxLen])
 }
