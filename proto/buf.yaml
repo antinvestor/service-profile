@@ -10,6 +10,8 @@ modules:
     name: buf.build/antinvestor/ocr
   - path: geolocation
     name: buf.build/antinvestor/geolocation
+  - path: chatagent
+    name: buf.build/antinvestor/chatagent
 deps:
   - buf.build/antinvestor/common
   - buf.build/bufbuild/protovalidate

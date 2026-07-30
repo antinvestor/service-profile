@@ -1,0 +1,367 @@
+// Copyright 2023-2026 Ant Investor Ltd
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+syntax = "proto3";
+
+package chatagent.v1;
+
+// Chat Agent is a product-agnostic intake tool: given a context definition
+// (required fields + guidance), it collects missing information through
+// conversation while reusing evidence the user already provided (documents,
+// prior turns, seed fields). Products only change the context — not the engine.
+
+import "buf/validate/validate.proto";
+import "common/v1/permissions.proto";
+import "gnostic/openapi/v3/annotations.proto";
+import "google/protobuf/struct.proto";
+
+option go_package = "github.com/antinvestor/service-profile/gen/go/chatagent/v1;chatagentv1";
+option java_multiple_files = true;
+option java_package = "chatagentv1";
+option (gnostic.openapi.v3.document) = {
+  info: {
+    title: "Chat Agent Service"
+    version: "v1.0.0"
+    description: "Structured conversational data collection. Register a context (prompt + field schema), open a session with known evidence (CV text, prior answers), and run turns until required fields are ready."
+    contact: {
+      name: "Ant Investor Ltd"
+      url: "https://github.com/antinvestor/service-profile"
+      email: "info@antinvestor.com"
+    }
+    license: {
+      name: "Apache License"
+      url: "https://github.com/antinvestor/apis/blob/master/LICENSE"
+    }
+  }
+  components: {
+    security_schemes: {
+      additional_properties: [
+        {
+          name: "BearerAuth"
+          value: {
+            security_scheme: {
+              type: "http"
+              scheme: "bearer"
+              bearer_format: "JWT"
+            }
+          }
+        }
+      ]
+    }
+  }
+};
+
+// FieldType classifies values stored in the session field map.
+enum FieldType {
+  FIELD_TYPE_UNSPECIFIED = 0;
+  FIELD_TYPE_STRING = 1;
+  FIELD_TYPE_NUMBER = 2;
+  FIELD_TYPE_STRING_LIST = 3;
+  FIELD_TYPE_BOOL = 4;
+  FIELD_TYPE_OBJECT = 5;
+}
+
+// FieldDef describes one piece of information the agent should collect.
+message FieldDef {
+  string name = 1 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 128
+  ];
+  FieldType type = 2;
+  bool required = 3;
+  // Lower priority is collected first when multiple fields are missing.
+  int32 priority = 4;
+  string description = 5;
+  repeated string enum_values = 6;
+  // Minimum string length for readiness (e.g. CV / free-text capabilities).
+  int32 min_length = 7;
+  // Natural question when this field is the next gap.
+  string ask = 8;
+  // Short reason why the product needs this field (used in guided replies).
+  string why = 9;
+  // Hints for where evidence may already exist: "document", "conversation", "seed".
+  repeated string evidence_hints = 10;
+}
+
+// ReplyPolicy controls assistant wording after each turn.
+message ReplyPolicy {
+  int32 max_sentences = 1; // default 3
+  // When true (default), ask only for the single highest-priority missing field.
+  bool ask_one_missing_only = 2;
+  string complete_message = 3; // optional override when ready
+}
+
+// ContextDefinition is the only product-specific configuration for reuse.
+message ContextDefinition {
+  string context_key = 1 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 128
+  ];
+  // High-level role / purpose of the agent (not product business rules).
+  string purpose = 2 [
+    (buf.validate.field).string.min_len = 1
+  ];
+  repeated FieldDef fields = 3 [
+    (buf.validate.field).repeated.min_items = 1
+  ];
+  ReplyPolicy reply_policy = 4;
+  // Optional product notes appended to the extract prompt (rules, mapping hints).
+  string extract_rules = 5;
+  // Optional extra system guidance (tone, domain vocabulary). Prefer purpose for most cases.
+  string system_prompt = 6;
+}
+
+// ChatMessage is one turn in the transcript.
+message ChatMessage {
+  string role = 1; // "user" | "assistant"
+  string content = 2;
+}
+
+// DocumentEvidence is prior material (CV paste, form dump, notes) to evaluate before asking.
+message DocumentEvidence {
+  string name = 1; // e.g. "cv", "application_form"
+  string kind = 2; // e.g. "cv", "text", "notes"
+  string text = 3;
+}
+
+// FieldStatus is per-field readiness for clients and debugging.
+message FieldStatus {
+  bool ok = 1;
+  string value = 2;
+  string reason = 3;
+}
+
+// SessionStatus tracks lifecycle.
+enum SessionStatus {
+  SESSION_STATUS_UNSPECIFIED = 0;
+  SESSION_STATUS_ACTIVE = 1;
+  SESSION_STATUS_READY = 2;
+  SESSION_STATUS_ENDED = 3;
+}
+
+// ChatSession is the durable conversation state.
+message ChatSession {
+  string id = 1;
+  string subject_id = 2; // profile / candidate / user the session is for
+  string context_key = 3;
+  int32 context_version = 4;
+  ContextDefinition config_snapshot = 5;
+  google.protobuf.Struct fields = 6;
+  repeated ChatMessage messages = 7;
+  bool ready = 8;
+  SessionStatus status = 9;
+  repeated string missing = 10;
+  map<string, FieldStatus> field_status = 11;
+  google.protobuf.Struct runtime = 12; // non-field evidence metadata
+}
+
+// ── Context registry ──────────────────────────────────────────────────────
+
+message UpsertContextRequest {
+  ContextDefinition definition = 1 [(buf.validate.field).required = true];
+}
+
+message UpsertContextResponse {
+  ContextDefinition definition = 1;
+  int32 version = 2;
+}
+
+message GetContextRequest {
+  string context_key = 1 [(buf.validate.field).string.min_len = 1];
+  int32 version = 2; // 0 = latest active
+}
+
+message GetContextResponse {
+  ContextDefinition definition = 1;
+  int32 version = 2;
+}
+
+message ListContextsRequest {}
+
+message ListContextsResponse {
+  repeated ContextSummary contexts = 1;
+}
+
+message ContextSummary {
+  string context_key = 1;
+  int32 version = 2;
+  string purpose = 3;
+  bool active = 4;
+}
+
+// ── Sessions ──────────────────────────────────────────────────────────────
+
+message CreateSessionRequest {
+  string subject_id = 1 [
+    (buf.validate.field).string.min_len = 1,
+    (buf.validate.field).string.max_len = 64
+  ];
+  // Registry lookup (preferred in production).
+  string context_key = 2;
+  int32 context_version = 3; // 0 = latest
+  // Optional full definition for tests / one-offs / migration. Merges over registry when both set.
+  ContextDefinition inline_config = 4;
+  // Already-known answers (resume draft, profile properties).
+  google.protobuf.Struct seed_fields = 5;
+  // Prior documents (CV text, uploads already extracted to text).
+  repeated DocumentEvidence documents = 6;
+  // Optional prior transcript to resume.
+  repeated ChatMessage seed_messages = 7;
+  // Opaque runtime bag re-injected each turn (locale, page context, etc.).
+  google.protobuf.Struct runtime = 8;
+  // When true, run an evaluation turn with no user message to extract from seed+documents.
+  bool evaluate_evidence = 9;
+}
+
+message CreateSessionResponse {
+  ChatSession session = 1;
+}
+
+message GetSessionRequest {
+  string session_id = 1 [(buf.validate.field).string.min_len = 1];
+}
+
+message GetSessionResponse {
+  ChatSession session = 1;
+}
+
+message TurnRequest {
+  string session_id = 1 [(buf.validate.field).string.min_len = 1];
+  // Free-text user message. May be empty when only structured/documents are supplied.
+  string message = 2;
+  // Structured answers this turn (e.g. linkedin URL, form widgets).
+  google.protobuf.Struct structured = 3;
+  // Additional documents this turn (e.g. newly uploaded CV text).
+  repeated DocumentEvidence documents = 4;
+}
+
+message TurnResponse {
+  ChatSession session = 1;
+  string reply = 2;
+  // How fields were filled: llm | heuristic | llm+heuristic | evidence
+  string source = 3;
+}
+
+message EndSessionRequest {
+  string session_id = 1 [(buf.validate.field).string.min_len = 1];
+  string reason = 2;
+}
+
+message EndSessionResponse {
+  ChatSession session = 1;
+}
+
+// ChatAgentService collects structured data via conversation for any product context.
+service ChatAgentService {
+  option (common.v1.service_permissions) = {
+    namespace: "service_chat_agent"
+    permissions: [
+      "chat_agent_view",
+      "chat_agent_manage",
+      "chat_agent_turn"
+    ]
+    role_bindings: [
+      {
+        role: ROLE_OWNER
+        permissions: ["chat_agent_view", "chat_agent_manage", "chat_agent_turn"]
+      },
+      {
+        role: ROLE_ADMIN
+        permissions: ["chat_agent_view", "chat_agent_manage", "chat_agent_turn"]
+      },
+      {
+        role: ROLE_OPERATOR
+        permissions: ["chat_agent_view", "chat_agent_turn"]
+      },
+      {
+        role: ROLE_VIEWER
+        permissions: ["chat_agent_view"]
+      },
+      {
+        role: ROLE_MEMBER
+        permissions: ["chat_agent_view", "chat_agent_turn"]
+      },
+      {
+        role: ROLE_SERVICE
+        permissions: ["chat_agent_view", "chat_agent_manage", "chat_agent_turn"]
+      }
+    ]
+  };
+
+  rpc UpsertContext(UpsertContextRequest) returns (UpsertContextResponse) {
+    option (common.v1.method_permissions) = {permissions: ["chat_agent_manage"]};
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "upsertChatContext"
+      summary: "Register or update an intake context"
+      tags: "ChatAgent"
+    };
+  }
+
+  rpc GetContext(GetContextRequest) returns (GetContextResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (common.v1.method_permissions) = {permissions: ["chat_agent_view"]};
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "getChatContext"
+      summary: "Get an intake context definition"
+      tags: "ChatAgent"
+    };
+  }
+
+  rpc ListContexts(ListContextsRequest) returns (ListContextsResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (common.v1.method_permissions) = {permissions: ["chat_agent_view"]};
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "listChatContexts"
+      summary: "List intake contexts for the tenant"
+      tags: "ChatAgent"
+    };
+  }
+
+  rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse) {
+    option (common.v1.method_permissions) = {permissions: ["chat_agent_turn"]};
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "createChatSession"
+      summary: "Start an intake session with optional seed evidence"
+      tags: "ChatAgent"
+    };
+  }
+
+  rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
+    option idempotency_level = NO_SIDE_EFFECTS;
+    option (common.v1.method_permissions) = {permissions: ["chat_agent_view", "chat_agent_turn"]};
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "getChatSession"
+      summary: "Get session transcript and field state"
+      tags: "ChatAgent"
+    };
+  }
+
+  rpc Turn(TurnRequest) returns (TurnResponse) {
+    option (common.v1.method_permissions) = {permissions: ["chat_agent_turn"]};
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "chatAgentTurn"
+      summary: "Run one conversational turn"
+      tags: "ChatAgent"
+    };
+  }
+
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse) {
+    option (common.v1.method_permissions) = {permissions: ["chat_agent_turn", "chat_agent_manage"]};
+    option (gnostic.openapi.v3.operation) = {
+      operation_id: "endChatSession"
+      summary: "End an intake session"
+      tags: "ChatAgent"
+    };
+  }
+}

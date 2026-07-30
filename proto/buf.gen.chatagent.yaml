@@ -1,0 +1,21 @@
+version: v2
+managed:
+  enabled: true
+  disable:
+    - module: buf.build/bufbuild/protovalidate
+    - module: buf.build/antinvestor/common
+    - module: buf.build/gnostic/gnostic
+  override:
+    - file_option: go_package_prefix
+      value: github.com/antinvestor/service-profile/gen/go
+      module: buf.build/antinvestor/chatagent
+
+plugins:
+  - remote: buf.build/protocolbuffers/go
+    out: ../gen/go
+    opt:
+      - paths=source_relative
+  - remote: buf.build/connectrpc/go
+    out: ../gen/go
+    opt:
+      - paths=source_relative
