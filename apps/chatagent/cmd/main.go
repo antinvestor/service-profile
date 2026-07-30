@@ -3,9 +3,14 @@ package main
 import (
 	"context"
 	"net/http"
+	"strings"
 
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
 	"connectrpc.com/connect"
+	apis "github.com/antinvestor/common/v2"
+	"github.com/antinvestor/common/v2/connection"
 	"github.com/antinvestor/common/v2/permissions"
+	"github.com/antinvestor/common/v2/servicecatalog"
 	"github.com/pitabwire/frame/v2"
 	"github.com/pitabwire/frame/v2/config"
 	"github.com/pitabwire/frame/v2/security/authorizer"
@@ -95,14 +100,38 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, cfg *aconfig.Ch
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	implementation := handlers.NewChatAgentServer(ctx, svc, handlers.LLMConfig{
-		BaseURL: cfg.InferenceBaseURL,
-		APIKey:  cfg.InferenceAPIKey,
-		Model:   cfg.InferenceModel,
+	notificationCli, nErr := setupNotificationClient(ctx, cfg)
+	if nErr != nil {
+		util.Log(ctx).WithError(nErr).Warn("chatagent: notification client unavailable; omnichannel delivery disabled")
+	}
+
+	implementation := handlers.NewChatAgentServer(ctx, svc, handlers.ServerDeps{
+		LLM: handlers.LLMConfig{
+			BaseURL: cfg.InferenceBaseURL,
+			APIKey:  cfg.InferenceAPIKey,
+			Model:   cfg.InferenceModel,
+		},
+		NotificationClient: notificationCli,
 	})
 
 	_, serverHandler := chatagentv1connect.NewChatAgentServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))
 
 	return serverHandler
+}
+
+// setupNotificationClient creates the Notification service client for omnichannel reply delivery.
+// Returns nil when NOTIFICATION_SERVICE_URI is empty (web-only mode).
+func setupNotificationClient(
+	ctx context.Context,
+	cfg *aconfig.ChatAgentConfig,
+) (notificationv1connect.NotificationServiceClient, error) {
+	if strings.TrimSpace(cfg.NotificationSvcURI) == "" {
+		return nil, nil
+	}
+	return connection.NewServiceClient(ctx, cfg, apis.ServiceTarget{
+		Endpoint:              cfg.NotificationSvcURI,
+		WorkloadAPITargetPath: cfg.NotificationServiceWorkloadAPITargetPath,
+		ServiceID:             servicecatalog.ServiceNotification,
+	}, notificationv1connect.NewNotificationServiceClient)
 }

@@ -67,6 +67,9 @@ const (
 	// ChatAgentServiceEndSessionProcedure is the fully-qualified name of the ChatAgentService's
 	// EndSession RPC.
 	ChatAgentServiceEndSessionProcedure = "/chatagent.v1.ChatAgentService/EndSession"
+	// ChatAgentServiceIngestChannelMessageProcedure is the fully-qualified name of the
+	// ChatAgentService's IngestChannelMessage RPC.
+	ChatAgentServiceIngestChannelMessageProcedure = "/chatagent.v1.ChatAgentService/IngestChannelMessage"
 )
 
 // ChatAgentServiceClient is a client for the chatagent.v1.ChatAgentService service.
@@ -78,6 +81,8 @@ type ChatAgentServiceClient interface {
 	GetSession(context.Context, *connect.Request[v1.GetSessionRequest]) (*connect.Response[v1.GetSessionResponse], error)
 	Turn(context.Context, *connect.Request[v1.TurnRequest]) (*connect.Response[v1.TurnResponse], error)
 	EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error)
+	// Ingest an inbound message from any Notification-backed channel and reply on the same channel.
+	IngestChannelMessage(context.Context, *connect.Request[v1.IngestChannelMessageRequest]) (*connect.Response[v1.IngestChannelMessageResponse], error)
 }
 
 // NewChatAgentServiceClient constructs a client for the chatagent.v1.ChatAgentService service. By
@@ -136,18 +141,25 @@ func NewChatAgentServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(chatAgentServiceMethods.ByName("EndSession")),
 			connect.WithClientOptions(opts...),
 		),
+		ingestChannelMessage: connect.NewClient[v1.IngestChannelMessageRequest, v1.IngestChannelMessageResponse](
+			httpClient,
+			baseURL+ChatAgentServiceIngestChannelMessageProcedure,
+			connect.WithSchema(chatAgentServiceMethods.ByName("IngestChannelMessage")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // chatAgentServiceClient implements ChatAgentServiceClient.
 type chatAgentServiceClient struct {
-	upsertContext *connect.Client[v1.UpsertContextRequest, v1.UpsertContextResponse]
-	getContext    *connect.Client[v1.GetContextRequest, v1.GetContextResponse]
-	listContexts  *connect.Client[v1.ListContextsRequest, v1.ListContextsResponse]
-	createSession *connect.Client[v1.CreateSessionRequest, v1.CreateSessionResponse]
-	getSession    *connect.Client[v1.GetSessionRequest, v1.GetSessionResponse]
-	turn          *connect.Client[v1.TurnRequest, v1.TurnResponse]
-	endSession    *connect.Client[v1.EndSessionRequest, v1.EndSessionResponse]
+	upsertContext        *connect.Client[v1.UpsertContextRequest, v1.UpsertContextResponse]
+	getContext           *connect.Client[v1.GetContextRequest, v1.GetContextResponse]
+	listContexts         *connect.Client[v1.ListContextsRequest, v1.ListContextsResponse]
+	createSession        *connect.Client[v1.CreateSessionRequest, v1.CreateSessionResponse]
+	getSession           *connect.Client[v1.GetSessionRequest, v1.GetSessionResponse]
+	turn                 *connect.Client[v1.TurnRequest, v1.TurnResponse]
+	endSession           *connect.Client[v1.EndSessionRequest, v1.EndSessionResponse]
+	ingestChannelMessage *connect.Client[v1.IngestChannelMessageRequest, v1.IngestChannelMessageResponse]
 }
 
 // UpsertContext calls chatagent.v1.ChatAgentService.UpsertContext.
@@ -185,6 +197,11 @@ func (c *chatAgentServiceClient) EndSession(ctx context.Context, req *connect.Re
 	return c.endSession.CallUnary(ctx, req)
 }
 
+// IngestChannelMessage calls chatagent.v1.ChatAgentService.IngestChannelMessage.
+func (c *chatAgentServiceClient) IngestChannelMessage(ctx context.Context, req *connect.Request[v1.IngestChannelMessageRequest]) (*connect.Response[v1.IngestChannelMessageResponse], error) {
+	return c.ingestChannelMessage.CallUnary(ctx, req)
+}
+
 // ChatAgentServiceHandler is an implementation of the chatagent.v1.ChatAgentService service.
 type ChatAgentServiceHandler interface {
 	UpsertContext(context.Context, *connect.Request[v1.UpsertContextRequest]) (*connect.Response[v1.UpsertContextResponse], error)
@@ -194,6 +211,8 @@ type ChatAgentServiceHandler interface {
 	GetSession(context.Context, *connect.Request[v1.GetSessionRequest]) (*connect.Response[v1.GetSessionResponse], error)
 	Turn(context.Context, *connect.Request[v1.TurnRequest]) (*connect.Response[v1.TurnResponse], error)
 	EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error)
+	// Ingest an inbound message from any Notification-backed channel and reply on the same channel.
+	IngestChannelMessage(context.Context, *connect.Request[v1.IngestChannelMessageRequest]) (*connect.Response[v1.IngestChannelMessageResponse], error)
 }
 
 // NewChatAgentServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -248,6 +267,12 @@ func NewChatAgentServiceHandler(svc ChatAgentServiceHandler, opts ...connect.Han
 		connect.WithSchema(chatAgentServiceMethods.ByName("EndSession")),
 		connect.WithHandlerOptions(opts...),
 	)
+	chatAgentServiceIngestChannelMessageHandler := connect.NewUnaryHandler(
+		ChatAgentServiceIngestChannelMessageProcedure,
+		svc.IngestChannelMessage,
+		connect.WithSchema(chatAgentServiceMethods.ByName("IngestChannelMessage")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/chatagent.v1.ChatAgentService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ChatAgentServiceUpsertContextProcedure:
@@ -264,6 +289,8 @@ func NewChatAgentServiceHandler(svc ChatAgentServiceHandler, opts ...connect.Han
 			chatAgentServiceTurnHandler.ServeHTTP(w, r)
 		case ChatAgentServiceEndSessionProcedure:
 			chatAgentServiceEndSessionHandler.ServeHTTP(w, r)
+		case ChatAgentServiceIngestChannelMessageProcedure:
+			chatAgentServiceIngestChannelMessageHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -299,4 +326,8 @@ func (UnimplementedChatAgentServiceHandler) Turn(context.Context, *connect.Reque
 
 func (UnimplementedChatAgentServiceHandler) EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.EndSession is not implemented"))
+}
+
+func (UnimplementedChatAgentServiceHandler) IngestChannelMessage(context.Context, *connect.Request[v1.IngestChannelMessageRequest]) (*connect.Response[v1.IngestChannelMessageResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.IngestChannelMessage is not implemented"))
 }

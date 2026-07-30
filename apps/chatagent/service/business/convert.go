@@ -11,6 +11,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/chatagent/service/engine"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/models"
+	"github.com/antinvestor/service-profile/apps/chatagent/service/notify"
 )
 
 func protoToContextDef(p *chatagentv1.ContextDefinition) engine.ContextDef {
@@ -261,4 +262,114 @@ func fieldsToJSONMap(f engine.Fields) data.JSONMap {
 		return data.JSONMap{}
 	}
 	return m
+}
+
+func channelBindingFromProto(p *chatagentv1.ChannelBinding) notify.Binding {
+	return notify.FromProto(p)
+}
+
+func channelBindingToJSONMap(b notify.Binding) data.JSONMap {
+	p := b.ToProto()
+	if p == nil {
+		return data.JSONMap{}
+	}
+	m, err := models.JSONMapFromStruct(map[string]any{
+		"channel":           int32(b.Channel),
+		"channel_name":      b.Name(),
+		"contact_id":        b.ContactID,
+		"profile_id":        b.ProfileID,
+		"profile_type":      b.ProfileType,
+		"language":          b.Language,
+		"skip_delivery":     b.SkipDelivery,
+		"template":          b.Template,
+		"source_contact_id": b.SourceContactID,
+		"source_profile_id": b.SourceProfileID,
+		"template_payload":  b.TemplatePayload,
+		"route_id":          b.RouteID,
+	})
+	if err != nil {
+		return data.JSONMap{}
+	}
+	return m
+}
+
+func channelBindingFromJSONMap(m data.JSONMap) notify.Binding {
+	if m == nil || len(m) == 0 {
+		return notify.Binding{}
+	}
+	b := notify.Binding{
+		ContactID:       stringField(m, "contact_id"),
+		ProfileID:       stringField(m, "profile_id"),
+		ProfileType:     stringField(m, "profile_type"),
+		Language:        stringField(m, "language"),
+		SkipDelivery:    boolField(m, "skip_delivery"),
+		Template:        stringField(m, "template"),
+		SourceContactID: stringField(m, "source_contact_id"),
+		SourceProfileID: stringField(m, "source_profile_id"),
+		RouteID:         stringField(m, "route_id"),
+	}
+	if raw, ok := m["template_payload"]; ok && raw != nil {
+		if mp, ok := raw.(map[string]any); ok {
+			b.TemplatePayload = mp
+		}
+	}
+	switch v := m["channel"].(type) {
+	case float64:
+		b.Channel = chatagentv1.Channel(int32(v))
+	case int32:
+		b.Channel = chatagentv1.Channel(v)
+	case int:
+		b.Channel = chatagentv1.Channel(v)
+	case json.Number:
+		i, _ := v.Int64()
+		b.Channel = chatagentv1.Channel(int32(i))
+	default:
+		// Fall back to channel_name.
+		b.Channel = channelFromName(stringField(m, "channel_name"))
+	}
+	if b.Channel == chatagentv1.Channel_CHANNEL_UNSPECIFIED {
+		if name := stringField(m, "channel_name"); name != "" && name != "web" {
+			b.Channel = channelFromName(name)
+		}
+	}
+	return b
+}
+
+func channelFromName(name string) chatagentv1.Channel {
+	switch strings.ToLower(strings.TrimSpace(name)) {
+	case "sms":
+		return chatagentv1.Channel_CHANNEL_SMS
+	case "email":
+		return chatagentv1.Channel_CHANNEL_EMAIL
+	case "push":
+		return chatagentv1.Channel_CHANNEL_PUSH
+	case "in-app", "in_app", "inapp":
+		return chatagentv1.Channel_CHANNEL_IN_APP
+	case "whatsapp":
+		return chatagentv1.Channel_CHANNEL_WHATSAPP
+	case "ussd":
+		return chatagentv1.Channel_CHANNEL_USSD
+	case "web":
+		return chatagentv1.Channel_CHANNEL_WEB
+	default:
+		return chatagentv1.Channel_CHANNEL_UNSPECIFIED
+	}
+}
+
+func stringField(m data.JSONMap, key string) string {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return ""
+	}
+	s, _ := v.(string)
+	return strings.TrimSpace(s)
+}
+
+func boolField(m data.JSONMap, key string) bool {
+	v, ok := m[key]
+	if !ok || v == nil {
+		return false
+	}
+	b, _ := v.(bool)
+	return b
 }

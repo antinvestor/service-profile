@@ -15,6 +15,7 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/chatagent/service/engine"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/models"
+	"github.com/antinvestor/service-profile/apps/chatagent/service/notify"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/repository"
 )
 
@@ -27,27 +28,35 @@ type ChatAgentBusiness interface {
 	GetSession(ctx context.Context, req *chatagentv1.GetSessionRequest) (*chatagentv1.GetSessionResponse, error)
 	Turn(ctx context.Context, req *chatagentv1.TurnRequest) (*chatagentv1.TurnResponse, error)
 	EndSession(ctx context.Context, req *chatagentv1.EndSessionRequest) (*chatagentv1.EndSessionResponse, error)
+	IngestChannelMessage(ctx context.Context, req *chatagentv1.IngestChannelMessageRequest) (*chatagentv1.IngestChannelMessageResponse, error)
 }
 
 type chatAgentBusiness struct {
-	contexts repository.ContextRepository
-	sessions repository.SessionRepository
-	messages repository.MessageRepository
-	agent    *engine.Agent
+	contexts  repository.ContextRepository
+	sessions  repository.SessionRepository
+	messages  repository.MessageRepository
+	agent     *engine.Agent
+	deliverer notify.Deliverer
 }
 
-// NewChatAgentBusiness wires repositories and the turn engine.
+// NewChatAgentBusiness wires repositories, the turn engine, and optional omnichannel delivery.
+// deliverer may be nil (web-only / evidence-only deploys).
 func NewChatAgentBusiness(
 	contexts repository.ContextRepository,
 	sessions repository.SessionRepository,
 	messages repository.MessageRepository,
 	llm engine.Completer,
+	deliverer notify.Deliverer,
 ) ChatAgentBusiness {
+	if deliverer == nil {
+		deliverer = notify.NoopDeliverer{}
+	}
 	return &chatAgentBusiness{
-		contexts: contexts,
-		sessions: sessions,
-		messages: messages,
-		agent:    engine.NewAgent(llm),
+		contexts:  contexts,
+		sessions:  sessions,
+		messages:  messages,
+		agent:     engine.NewAgent(llm),
+		deliverer: deliverer,
 	}
 }
 
@@ -160,6 +169,10 @@ func (b *chatAgentBusiness) CreateSession(
 	docs := protoDocs(req.GetDocuments())
 	seedMsgs := protoMessages(req.GetSeedMessages())
 	runtime := structToFields(req.GetRuntime())
+	binding := channelBindingFromProto(req.GetChannel())
+	if binding.ProfileID == "" {
+		binding.ProfileID = subject
+	}
 
 	fields := engine.Sanitize(def, engine.MergeFields(nil, seed))
 	fields = engine.ApplyDocuments(def, fields, docs)
@@ -172,6 +185,9 @@ func (b *chatAgentBusiness) CreateSession(
 		Fields:         fieldsToJSONMap(fields),
 		Runtime:        fieldsToJSONMap(runtime),
 		Documents:      docsToJSONMap(docs),
+		Channel:        channelBindingToJSONMap(binding),
+		ChannelName:    binding.Name(),
+		ContactID:      binding.ContactID,
 		Status:         models.SessionStatusActive,
 		Ready:          false,
 	}
@@ -238,9 +254,16 @@ func (b *chatAgentBusiness) CreateSession(
 	if err != nil {
 		return nil, err
 	}
-	_ = reply
+	delivered := false
+	if reply != "" {
+		delivered = b.deliverReply(ctx, binding, sess.SubjectID, sess.ID, reply)
+	}
 	_ = source
-	return &chatagentv1.CreateSessionResponse{Session: api}, nil
+	return &chatagentv1.CreateSessionResponse{
+		Session:   api,
+		Reply:     reply,
+		Delivered: delivered,
+	}, nil
 }
 
 func (b *chatAgentBusiness) GetSession(
@@ -328,10 +351,116 @@ func (b *chatAgentBusiness) Turn(
 	if err != nil {
 		return nil, err
 	}
+	binding := channelBindingFromJSONMap(sess.Channel)
+	delivered := b.deliverReply(ctx, binding, sess.SubjectID, sess.ID, res.Reply)
 	return &chatagentv1.TurnResponse{
-		Session: api,
-		Reply:   res.Reply,
-		Source:  res.Source,
+		Session:   api,
+		Reply:     res.Reply,
+		Source:    res.Source,
+		Delivered: delivered,
+	}, nil
+}
+
+func (b *chatAgentBusiness) IngestChannelMessage(
+	ctx context.Context,
+	req *chatagentv1.IngestChannelMessageRequest,
+) (*chatagentv1.IngestChannelMessageResponse, error) {
+	binding := channelBindingFromProto(req.GetChannel())
+	if binding.Channel == chatagentv1.Channel_CHANNEL_UNSPECIFIED || binding.Channel == chatagentv1.Channel_CHANNEL_WEB {
+		// Still allow web via ingest for uniformity, but require a message path.
+		if binding.Channel == chatagentv1.Channel_CHANNEL_UNSPECIFIED {
+			binding.Channel = chatagentv1.Channel_CHANNEL_WEB
+		}
+	}
+	msg := strings.TrimSpace(req.GetMessage())
+	if msg == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("message required"))
+	}
+
+	sessionCreated := false
+	var sess *models.Session
+	var err error
+
+	if id := strings.TrimSpace(req.GetSessionId()); id != "" {
+		sess, err = b.sessions.GetByID(ctx, id)
+		if err != nil {
+			if data.ErrorIsNoRows(err) || errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, connect.NewError(connect.CodeNotFound, errors.New("session not found"))
+			}
+			return nil, err
+		}
+	} else {
+		subject := strings.TrimSpace(req.GetSubjectId())
+		if subject == "" {
+			subject = binding.ProfileID
+		}
+		contextKey := strings.TrimSpace(req.GetContextKey())
+		if subject == "" && binding.ContactID == "" {
+			return nil, connect.NewError(connect.CodeInvalidArgument,
+				errors.New("session_id or subject_id/channel.contact_id required"))
+		}
+		sess, err = b.sessions.GetActiveByChannel(ctx, subject, contextKey, binding.Name(), binding.ContactID)
+		if err != nil {
+			if !data.ErrorIsNoRows(err) && !errors.Is(err, gorm.ErrRecordNotFound) {
+				return nil, err
+			}
+			sess = nil
+		}
+		if sess == nil {
+			if !req.GetCreateIfMissing() {
+				return nil, connect.NewError(connect.CodeNotFound,
+					errors.New("no active channel session; set create_if_missing or session_id"))
+			}
+			if subject == "" {
+				return nil, connect.NewError(connect.CodeInvalidArgument,
+					errors.New("subject_id required to create session"))
+			}
+			createResp, cErr := b.CreateSession(ctx, &chatagentv1.CreateSessionRequest{
+				SubjectId:        subject,
+				ContextKey:       contextKey,
+				InlineConfig:     req.GetInlineConfig(),
+				SeedFields:       req.GetSeedFields(),
+				Runtime:          req.GetRuntime(),
+				EvaluateEvidence: req.GetEvaluateEvidence(),
+				Channel:          binding.ToProto(),
+			})
+			if cErr != nil {
+				return nil, cErr
+			}
+			sessionCreated = true
+			sess, err = b.sessions.GetByID(ctx, createResp.GetSession().GetId())
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// Refresh binding from session if inbound only supplied partial contact info.
+	stored := channelBindingFromJSONMap(sess.Channel)
+	binding = mergeBindings(stored, binding)
+	// Persist updated binding if inbound filled gaps.
+	if stored.ContactID == "" && binding.ContactID != "" {
+		sess.Channel = channelBindingToJSONMap(binding)
+		sess.ChannelName = binding.Name()
+		sess.ContactID = binding.ContactID
+		if _, uErr := b.sessions.Update(ctx, sess, "channel", "channel_name", "contact_id"); uErr != nil {
+			util.Log(ctx).WithError(uErr).Warn("chatagent: channel binding update failed")
+		}
+	}
+
+	turnResp, err := b.Turn(ctx, &chatagentv1.TurnRequest{
+		SessionId: sess.ID,
+		Message:   msg,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &chatagentv1.IngestChannelMessageResponse{
+		Session:        turnResp.GetSession(),
+		Reply:          turnResp.GetReply(),
+		Source:         turnResp.GetSource(),
+		Delivered:      turnResp.GetDelivered(),
+		SessionCreated: sessionCreated,
 	}, nil
 }
 
@@ -501,5 +630,66 @@ func (b *chatAgentBusiness) toAPISession(
 		Missing:        missing,
 		FieldStatus:    fieldStatusToProto(status),
 		Runtime:        fieldsToStruct(fieldsFromJSONMap(sess.Runtime)),
+		Channel:        channelBindingFromJSONMap(sess.Channel).ToProto(),
 	}, nil
+}
+
+// deliverReply soft-fails notification delivery so a flaky channel never breaks the turn.
+func (b *chatAgentBusiness) deliverReply(
+	ctx context.Context,
+	binding notify.Binding,
+	subjectID, sessionID, reply string,
+) bool {
+	if strings.TrimSpace(reply) == "" || !binding.ShouldDeliver() {
+		return false
+	}
+	delivered, err := b.deliverer.Deliver(ctx, binding, subjectID, sessionID, reply)
+	if err != nil {
+		util.Log(ctx).WithError(err).WithFields(map[string]any{
+			"session_id": sessionID,
+			"channel":    binding.Name(),
+		}).Warn("chatagent: channel delivery failed (turn still succeeded)")
+		return false
+	}
+	return delivered
+}
+
+// mergeBindings prefers inbound non-empty fields over stored session binding.
+func mergeBindings(stored, inbound notify.Binding) notify.Binding {
+	out := stored
+	if inbound.Channel != chatagentv1.Channel_CHANNEL_UNSPECIFIED {
+		out.Channel = inbound.Channel
+	}
+	if inbound.ContactID != "" {
+		out.ContactID = inbound.ContactID
+	}
+	if inbound.ProfileID != "" {
+		out.ProfileID = inbound.ProfileID
+	}
+	if inbound.ProfileType != "" {
+		out.ProfileType = inbound.ProfileType
+	}
+	if inbound.Language != "" {
+		out.Language = inbound.Language
+	}
+	if inbound.Template != "" {
+		out.Template = inbound.Template
+	}
+	if inbound.SourceContactID != "" {
+		out.SourceContactID = inbound.SourceContactID
+	}
+	if inbound.SourceProfileID != "" {
+		out.SourceProfileID = inbound.SourceProfileID
+	}
+	if inbound.RouteID != "" {
+		out.RouteID = inbound.RouteID
+	}
+	if len(inbound.TemplatePayload) > 0 {
+		out.TemplatePayload = inbound.TemplatePayload
+	}
+	// skip_delivery from inbound wins when true (explicit opt-out).
+	if inbound.SkipDelivery {
+		out.SkipDelivery = true
+	}
+	return out
 }
