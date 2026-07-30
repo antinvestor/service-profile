@@ -24,6 +24,8 @@ jobs:
 
   buf-push:
     if: github.event_name == 'push'
+    # BSR push is optional for release; missing BUF_TOKEN must not fail ships.
+    continue-on-error: true
     permissions:
       contents: read
     uses: antinvestor/common/.github/workflows/buf-push.yaml@main
