@@ -230,8 +230,12 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 	)
 
 	if err := business.SeedBootstrapContacts(ctx, profileBiz, contactBiz); err != nil {
+		// Soft-fail: production DBs already have bootstrap contacts. A DEK mismatch
+		// (e.g. Cloud Run secrets generated after colony cutover) must not block
+		// migrate+ship — that would pin identity-profile on old images forever.
+		// Greenfield: fix DEK secrets and re-run setup so contacts get encrypted.
 		log.WithError(err).
-			Fatal("failed to seed bootstrap contacts — migration incomplete, check DEK env vars")
+			Error("failed to seed bootstrap contacts — continuing migrate; check DEK env vars if greenfield")
 	}
 }
 
