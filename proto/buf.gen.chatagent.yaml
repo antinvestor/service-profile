@@ -9,6 +9,14 @@ managed:
     - file_option: go_package_prefix
       value: github.com/antinvestor/service-profile/gen/go
       module: buf.build/antinvestor/chatagent
+    - file_option: go_package
+      value: buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1;commonv1
+      module: buf.build/antinvestor/common
+      path: common/v1/common.proto
+    - file_option: go_package
+      value: buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1;commonv1
+      module: buf.build/antinvestor/common
+      path: common/v1/permissions.proto
 
 plugins:
   - remote: buf.build/protocolbuffers/go
