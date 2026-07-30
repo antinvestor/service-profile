@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/v2"
 	"github.com/pitabwire/frame/v2/datastore"
@@ -10,6 +11,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/chatagent/service/business"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/engine"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/llm"
+	"github.com/antinvestor/service-profile/apps/chatagent/service/notify"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/repository"
 	chatagentv1 "github.com/antinvestor/service-profile/gen/go/chatagent/v1"
 	"github.com/antinvestor/service-profile/gen/go/chatagent/v1/chatagentv1connect"
@@ -29,8 +31,14 @@ type LLMConfig struct {
 	Model   string
 }
 
-// NewChatAgentServer builds the handler with repositories and optional LLM.
-func NewChatAgentServer(ctx context.Context, svc *frame.Service, llmCfg LLMConfig) *ChatAgentServer {
+// ServerDeps optional dependencies for ChatAgentServer.
+type ServerDeps struct {
+	LLM                LLMConfig
+	NotificationClient notificationv1connect.NotificationServiceClient
+}
+
+// NewChatAgentServer builds the handler with repositories, optional LLM, and Notification delivery.
+func NewChatAgentServer(ctx context.Context, svc *frame.Service, deps ServerDeps) *ChatAgentServer {
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 
@@ -39,13 +47,18 @@ func NewChatAgentServer(ctx context.Context, svc *frame.Service, llmCfg LLMConfi
 	msgRepo := repository.NewMessageRepository(ctx, dbPool, workMan)
 
 	var completer engine.Completer
-	if llmCfg.BaseURL != "" {
+	if deps.LLM.BaseURL != "" {
 		httpClient := svc.HTTPClientManager().Client(ctx)
-		completer = llm.New(llmCfg.BaseURL, llmCfg.APIKey, llmCfg.Model, httpClient)
+		completer = llm.New(deps.LLM.BaseURL, deps.LLM.APIKey, deps.LLM.Model, httpClient)
+	}
+
+	var deliverer notify.Deliverer = notify.NoopDeliverer{}
+	if deps.NotificationClient != nil {
+		deliverer = notify.NewNotificationDeliverer(deps.NotificationClient)
 	}
 
 	return &ChatAgentServer{
-		biz: business.NewChatAgentBusiness(ctxRepo, sessRepo, msgRepo, completer),
+		biz: business.NewChatAgentBusiness(ctxRepo, sessRepo, msgRepo, completer, deliverer),
 	}
 }
 
@@ -120,6 +133,17 @@ func (s *ChatAgentServer) EndSession(
 	req *connect.Request[chatagentv1.EndSessionRequest],
 ) (*connect.Response[chatagentv1.EndSessionResponse], error) {
 	resp, err := s.biz.EndSession(ctx, req.Msg)
+	if err != nil {
+		return nil, errorutil.CleanErr(err)
+	}
+	return connect.NewResponse(resp), nil
+}
+
+func (s *ChatAgentServer) IngestChannelMessage(
+	ctx context.Context,
+	req *connect.Request[chatagentv1.IngestChannelMessageRequest],
+) (*connect.Response[chatagentv1.IngestChannelMessageResponse], error) {
+	resp, err := s.biz.IngestChannelMessage(ctx, req.Msg)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}

@@ -16,6 +16,8 @@ type SessionRepository interface {
 	datastore.BaseRepository[*models.Session]
 	GetByID(ctx context.Context, id string) (*models.Session, error)
 	GetActiveBySubjectContext(ctx context.Context, subjectID, contextKey string) (*models.Session, error)
+	// GetActiveByChannel finds the latest active/ready session for a subject+context on a channel contact.
+	GetActiveByChannel(ctx context.Context, subjectID, contextKey, channelName, contactID string) (*models.Session, error)
 }
 
 type sessionRepository struct {
@@ -48,6 +50,32 @@ func (r *sessionRepository) GetActiveBySubjectContext(
 			subjectID, contextKey, []string{models.SessionStatusActive, models.SessionStatusReady}).
 		Order("created_at DESC").
 		First(&row).Error
+	if err != nil {
+		return nil, err
+	}
+	return &row, nil
+}
+
+func (r *sessionRepository) GetActiveByChannel(
+	ctx context.Context,
+	subjectID, contextKey, channelName, contactID string,
+) (*models.Session, error) {
+	var row models.Session
+	q := r.Pool().DB(ctx, true).
+		Where("status IN ?", []string{models.SessionStatusActive, models.SessionStatusReady})
+	if subjectID != "" {
+		q = q.Where("subject_id = ?", subjectID)
+	}
+	if contextKey != "" {
+		q = q.Where("context_key = ?", contextKey)
+	}
+	if channelName != "" {
+		q = q.Where("channel_name = ?", channelName)
+	}
+	if contactID != "" {
+		q = q.Where("contact_id = ?", contactID)
+	}
+	err := q.Order("created_at DESC").First(&row).Error
 	if err != nil {
 		return nil, err
 	}
