@@ -22,10 +22,10 @@ jobs:
       packages: write
     uses: antinvestor/common/.github/workflows/docker-release.yml@main
 
+  # Optional BSR publish. Reusable workflow jobs cannot use continue-on-error, so
+  # skip entirely when BUF_TOKEN is absent (repo variable BUF_PUSH_ENABLED=true to enable).
   buf-push:
-    if: github.event_name == 'push'
-    # BSR push is optional for release; missing BUF_TOKEN must not fail ships.
-    continue-on-error: true
+    if: github.event_name == 'push' && vars.BUF_PUSH_ENABLED == 'true'
     permissions:
       contents: read
     uses: antinvestor/common/.github/workflows/buf-push.yaml@main
