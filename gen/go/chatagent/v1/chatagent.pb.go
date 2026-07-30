@@ -21,7 +21,7 @@
 package chatagentv1
 
 import (
-	_ "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
+	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
 	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	_ "buf.build/gen/go/gnostic/gnostic/protocolbuffers/go/gnostic/openapi/v3"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -149,72 +149,6 @@ func (x SessionStatus) Number() protoreflect.EnumNumber {
 // Deprecated: Use SessionStatus.Descriptor instead.
 func (SessionStatus) EnumDescriptor() ([]byte, []int) {
 	return file_chatagent_v1_chatagent_proto_rawDescGZIP(), []int{1}
-}
-
-// Channel is the transport surface for a session.
-// The Turn engine is channel-agnostic; Notification service delivers non-web replies.
-type Channel int32
-
-const (
-	Channel_CHANNEL_UNSPECIFIED Channel = 0 // treated as CHANNEL_WEB (RPC return path only)
-	Channel_CHANNEL_WEB         Channel = 1
-	Channel_CHANNEL_SMS         Channel = 2
-	Channel_CHANNEL_EMAIL       Channel = 3
-	Channel_CHANNEL_PUSH        Channel = 4
-	Channel_CHANNEL_IN_APP      Channel = 5
-	Channel_CHANNEL_WHATSAPP    Channel = 6
-	Channel_CHANNEL_USSD        Channel = 7
-)
-
-// Enum value maps for Channel.
-var (
-	Channel_name = map[int32]string{
-		0: "CHANNEL_UNSPECIFIED",
-		1: "CHANNEL_WEB",
-		2: "CHANNEL_SMS",
-		3: "CHANNEL_EMAIL",
-		4: "CHANNEL_PUSH",
-		5: "CHANNEL_IN_APP",
-		6: "CHANNEL_WHATSAPP",
-		7: "CHANNEL_USSD",
-	}
-	Channel_value = map[string]int32{
-		"CHANNEL_UNSPECIFIED": 0,
-		"CHANNEL_WEB":         1,
-		"CHANNEL_SMS":         2,
-		"CHANNEL_EMAIL":       3,
-		"CHANNEL_PUSH":        4,
-		"CHANNEL_IN_APP":      5,
-		"CHANNEL_WHATSAPP":    6,
-		"CHANNEL_USSD":        7,
-	}
-)
-
-func (x Channel) Enum() *Channel {
-	p := new(Channel)
-	*p = x
-	return p
-}
-
-func (x Channel) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (Channel) Descriptor() protoreflect.EnumDescriptor {
-	return file_chatagent_v1_chatagent_proto_enumTypes[2].Descriptor()
-}
-
-func (Channel) Type() protoreflect.EnumType {
-	return &file_chatagent_v1_chatagent_proto_enumTypes[2]
-}
-
-func (x Channel) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use Channel.Descriptor instead.
-func (Channel) EnumDescriptor() ([]byte, []int) {
-	return file_chatagent_v1_chatagent_proto_rawDescGZIP(), []int{2}
 }
 
 // FieldDef describes one piece of information the agent should collect.
@@ -664,47 +598,49 @@ func (x *FieldStatus) GetReason() string {
 	return ""
 }
 
-// ChannelBinding attaches a session to a Notification delivery endpoint.
-// When channel is non-web and skip_delivery is false, assistant replies are
-// sent via Notification.Send (sms/email/push/in-app/whatsapp/ussd).
-type ChannelBinding struct {
-	state   protoimpl.MessageState `protogen:"open.v1"`
-	Channel Channel                `protobuf:"varint,1,opt,name=channel,proto3,enum=chatagent.v1.Channel" json:"channel,omitempty"`
-	// Recipient contact used by Notification (phone contact id, email contact id, device, …).
-	ContactId string `protobuf:"bytes,2,opt,name=contact_id,json=contactId,proto3" json:"contact_id,omitempty"`
-	// Profile owning the contact (often same as subject_id).
-	ProfileId   string `protobuf:"bytes,3,opt,name=profile_id,json=profileId,proto3" json:"profile_id,omitempty"`
-	ProfileType string `protobuf:"bytes,4,opt,name=profile_type,json=profileType,proto3" json:"profile_type,omitempty"` // default "Profile"
-	Language    string `protobuf:"bytes,5,opt,name=language,proto3" json:"language,omitempty"`                          // ISO 639-1 for templated notifications
-	// When true, never deliver replies through Notification (RPC-only even for SMS).
-	SkipDelivery bool `protobuf:"varint,6,opt,name=skip_delivery,json=skipDelivery,proto3" json:"skip_delivery,omitempty"`
-	// Optional Notification template name. Empty → send reply as Notification.data (raw body).
-	Template string `protobuf:"bytes,7,opt,name=template,proto3" json:"template,omitempty"`
-	// Bot/system source identity on Notification.source.
-	SourceContactId string `protobuf:"bytes,8,opt,name=source_contact_id,json=sourceContactId,proto3" json:"source_contact_id,omitempty"`
-	SourceProfileId string `protobuf:"bytes,9,opt,name=source_profile_id,json=sourceProfileId,proto3" json:"source_profile_id,omitempty"`
-	// Extra template variables (session_id and reply are always injected).
-	TemplatePayload *structpb.Struct `protobuf:"bytes,10,opt,name=template_payload,json=templatePayload,proto3" json:"template_payload,omitempty"`
-	// Optional Notification route_id override.
-	RouteId       string `protobuf:"bytes,11,opt,name=route_id,json=routeId,proto3" json:"route_id,omitempty"`
+// NotificationTarget is a thin binding to the existing Notification service.
+// Field meanings match notification.v1.Notification — ChatAgent does NOT invent
+// its own channel model. Outbound replies are sent via NotificationService.Send
+// using this target; empty type means RPC-only (web).
+//
+// See service-notification proto Notification and ContactLink (common.v1).
+type NotificationTarget struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Same as notification.v1.Notification.type (e.g. "sms", "email", "push", "in-app").
+	// Empty → do not call Notification (reply returns on the ChatAgent RPC only).
+	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	// Same as notification.v1.Notification.recipient.
+	Recipient *commonv1.ContactLink `protobuf:"bytes,2,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	// Same as notification.v1.Notification.source (optional bot/system identity).
+	Source *commonv1.ContactLink `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
+	// Same as notification.v1.Notification.language.
+	Language string `protobuf:"bytes,4,opt,name=language,proto3" json:"language,omitempty"`
+	// Same as notification.v1.Notification.template. Empty → raw body in Notification.data.
+	Template string `protobuf:"bytes,5,opt,name=template,proto3" json:"template,omitempty"`
+	// Merged into notification.v1.Notification.payload (reply + session_id always injected).
+	Payload *structpb.Struct `protobuf:"bytes,6,opt,name=payload,proto3" json:"payload,omitempty"`
+	// Same as notification.v1.Notification.route_id.
+	RouteId string `protobuf:"bytes,7,opt,name=route_id,json=routeId,proto3" json:"route_id,omitempty"`
+	// When true, never call Notification.Send even if type is set.
+	Skip          bool `protobuf:"varint,8,opt,name=skip,proto3" json:"skip,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ChannelBinding) Reset() {
-	*x = ChannelBinding{}
+func (x *NotificationTarget) Reset() {
+	*x = NotificationTarget{}
 	mi := &file_chatagent_v1_chatagent_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ChannelBinding) String() string {
+func (x *NotificationTarget) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ChannelBinding) ProtoMessage() {}
+func (*NotificationTarget) ProtoMessage() {}
 
-func (x *ChannelBinding) ProtoReflect() protoreflect.Message {
+func (x *NotificationTarget) ProtoReflect() protoreflect.Message {
 	mi := &file_chatagent_v1_chatagent_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -716,86 +652,65 @@ func (x *ChannelBinding) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ChannelBinding.ProtoReflect.Descriptor instead.
-func (*ChannelBinding) Descriptor() ([]byte, []int) {
+// Deprecated: Use NotificationTarget.ProtoReflect.Descriptor instead.
+func (*NotificationTarget) Descriptor() ([]byte, []int) {
 	return file_chatagent_v1_chatagent_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *ChannelBinding) GetChannel() Channel {
+func (x *NotificationTarget) GetType() string {
 	if x != nil {
-		return x.Channel
-	}
-	return Channel_CHANNEL_UNSPECIFIED
-}
-
-func (x *ChannelBinding) GetContactId() string {
-	if x != nil {
-		return x.ContactId
+		return x.Type
 	}
 	return ""
 }
 
-func (x *ChannelBinding) GetProfileId() string {
+func (x *NotificationTarget) GetRecipient() *commonv1.ContactLink {
 	if x != nil {
-		return x.ProfileId
+		return x.Recipient
 	}
-	return ""
+	return nil
 }
 
-func (x *ChannelBinding) GetProfileType() string {
+func (x *NotificationTarget) GetSource() *commonv1.ContactLink {
 	if x != nil {
-		return x.ProfileType
+		return x.Source
 	}
-	return ""
+	return nil
 }
 
-func (x *ChannelBinding) GetLanguage() string {
+func (x *NotificationTarget) GetLanguage() string {
 	if x != nil {
 		return x.Language
 	}
 	return ""
 }
 
-func (x *ChannelBinding) GetSkipDelivery() bool {
-	if x != nil {
-		return x.SkipDelivery
-	}
-	return false
-}
-
-func (x *ChannelBinding) GetTemplate() string {
+func (x *NotificationTarget) GetTemplate() string {
 	if x != nil {
 		return x.Template
 	}
 	return ""
 }
 
-func (x *ChannelBinding) GetSourceContactId() string {
+func (x *NotificationTarget) GetPayload() *structpb.Struct {
 	if x != nil {
-		return x.SourceContactId
-	}
-	return ""
-}
-
-func (x *ChannelBinding) GetSourceProfileId() string {
-	if x != nil {
-		return x.SourceProfileId
-	}
-	return ""
-}
-
-func (x *ChannelBinding) GetTemplatePayload() *structpb.Struct {
-	if x != nil {
-		return x.TemplatePayload
+		return x.Payload
 	}
 	return nil
 }
 
-func (x *ChannelBinding) GetRouteId() string {
+func (x *NotificationTarget) GetRouteId() string {
 	if x != nil {
 		return x.RouteId
 	}
 	return ""
+}
+
+func (x *NotificationTarget) GetSkip() bool {
+	if x != nil {
+		return x.Skip
+	}
+	return false
 }
 
 // ChatSession is the durable conversation state.
@@ -813,8 +728,8 @@ type ChatSession struct {
 	Missing        []string                `protobuf:"bytes,10,rep,name=missing,proto3" json:"missing,omitempty"`
 	FieldStatus    map[string]*FieldStatus `protobuf:"bytes,11,rep,name=field_status,json=fieldStatus,proto3" json:"field_status,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	Runtime        *structpb.Struct        `protobuf:"bytes,12,opt,name=runtime,proto3" json:"runtime,omitempty"` // non-field evidence metadata
-	// Omnichannel binding; empty/web means replies only return on the RPC.
-	Channel       *ChannelBinding `protobuf:"bytes,13,opt,name=channel,proto3" json:"channel,omitempty"`
+	// Optional Notification.Send target for assistant replies (reuse Notification service).
+	Notification  *NotificationTarget `protobuf:"bytes,13,opt,name=notification,proto3" json:"notification,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -933,9 +848,9 @@ func (x *ChatSession) GetRuntime() *structpb.Struct {
 	return nil
 }
 
-func (x *ChatSession) GetChannel() *ChannelBinding {
+func (x *ChatSession) GetNotification() *NotificationTarget {
 	if x != nil {
-		return x.Channel
+		return x.Notification
 	}
 	return nil
 }
@@ -1306,8 +1221,8 @@ type CreateSessionRequest struct {
 	Runtime *structpb.Struct `protobuf:"bytes,8,opt,name=runtime,proto3" json:"runtime,omitempty"`
 	// When true, run an evaluation turn with no user message to extract from seed+documents.
 	EvaluateEvidence bool `protobuf:"varint,9,opt,name=evaluate_evidence,json=evaluateEvidence,proto3" json:"evaluate_evidence,omitempty"`
-	// Bind this session to a channel for omnichannel delivery via Notification service.
-	Channel       *ChannelBinding `protobuf:"bytes,10,opt,name=channel,proto3" json:"channel,omitempty"`
+	// Optional Notification.Send target for assistant replies (same shape as Notification service).
+	Notification  *NotificationTarget `protobuf:"bytes,10,opt,name=notification,proto3" json:"notification,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1405,9 +1320,9 @@ func (x *CreateSessionRequest) GetEvaluateEvidence() bool {
 	return false
 }
 
-func (x *CreateSessionRequest) GetChannel() *ChannelBinding {
+func (x *CreateSessionRequest) GetNotification() *NotificationTarget {
 	if x != nil {
-		return x.Channel
+		return x.Notification
 	}
 	return nil
 }
@@ -1415,9 +1330,9 @@ func (x *CreateSessionRequest) GetChannel() *ChannelBinding {
 type CreateSessionResponse struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
 	Session *ChatSession           `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
-	// Assistant reply from optional evaluate_evidence (also delivered when channel bound).
+	// Assistant reply from optional evaluate_evidence (also sent via Notification when targeted).
 	Reply         string `protobuf:"bytes,2,opt,name=reply,proto3" json:"reply,omitempty"`
-	Delivered     bool   `protobuf:"varint,3,opt,name=delivered,proto3" json:"delivered,omitempty"` // true when reply was queued on Notification
+	Delivered     bool   `protobuf:"varint,3,opt,name=delivered,proto3" json:"delivered,omitempty"` // true when reply was queued via NotificationService.Send
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1638,7 +1553,7 @@ type TurnResponse struct {
 	Reply   string                 `protobuf:"bytes,2,opt,name=reply,proto3" json:"reply,omitempty"`
 	// How fields were filled: llm | heuristic | llm+heuristic | evidence
 	Source string `protobuf:"bytes,3,opt,name=source,proto3" json:"source,omitempty"`
-	// true when reply was queued on Notification for the session channel.
+	// true when reply was queued via NotificationService.Send for the session target.
 	Delivered     bool `protobuf:"varint,4,opt,name=delivered,proto3" json:"delivered,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1798,19 +1713,20 @@ func (x *EndSessionResponse) GetSession() *ChatSession {
 	return nil
 }
 
-// IngestChannelMessage maps an inbound channel message (SMS/WhatsApp/email/…)
-// onto a Turn, then delivers the assistant reply back via Notification.
-// Use this from channel adapters / notification inbound routes so products
-// stay channel-agnostic: only context_key + binding change.
-type IngestChannelMessageRequest struct {
+// IngestMessage maps an inbound user message (typically from a Notification
+// inbound/integration path) onto a Turn, then replies via NotificationService.Send
+// using the same NotificationTarget. Prefer this from notification adapters so
+// products do not re-implement channel routing — Notification owns channels.
+type IngestMessageRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Prefer session_id when the adapter already knows the conversation.
 	SessionId string `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	// Resolve active session by subject + context + channel contact when session_id empty.
-	SubjectId  string          `protobuf:"bytes,2,opt,name=subject_id,json=subjectId,proto3" json:"subject_id,omitempty"`
-	ContextKey string          `protobuf:"bytes,3,opt,name=context_key,json=contextKey,proto3" json:"context_key,omitempty"`
-	Channel    *ChannelBinding `protobuf:"bytes,4,opt,name=channel,proto3" json:"channel,omitempty"`
-	Message    string          `protobuf:"bytes,5,opt,name=message,proto3" json:"message,omitempty"`
+	// Resolve active session by subject + context + notification type/contact when session_id empty.
+	SubjectId  string `protobuf:"bytes,2,opt,name=subject_id,json=subjectId,proto3" json:"subject_id,omitempty"`
+	ContextKey string `protobuf:"bytes,3,opt,name=context_key,json=contextKey,proto3" json:"context_key,omitempty"`
+	// Delivery target for the reply (and lookup key for active sessions).
+	Notification *NotificationTarget `protobuf:"bytes,4,opt,name=notification,proto3" json:"notification,omitempty"`
+	Message      string              `protobuf:"bytes,5,opt,name=message,proto3" json:"message,omitempty"`
 	// When true and no session is found, create one (requires context_key or inline_config).
 	CreateIfMissing  bool               `protobuf:"varint,6,opt,name=create_if_missing,json=createIfMissing,proto3" json:"create_if_missing,omitempty"`
 	InlineConfig     *ContextDefinition `protobuf:"bytes,7,opt,name=inline_config,json=inlineConfig,proto3" json:"inline_config,omitempty"`
@@ -1821,20 +1737,20 @@ type IngestChannelMessageRequest struct {
 	sizeCache        protoimpl.SizeCache
 }
 
-func (x *IngestChannelMessageRequest) Reset() {
-	*x = IngestChannelMessageRequest{}
+func (x *IngestMessageRequest) Reset() {
+	*x = IngestMessageRequest{}
 	mi := &file_chatagent_v1_chatagent_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *IngestChannelMessageRequest) String() string {
+func (x *IngestMessageRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*IngestChannelMessageRequest) ProtoMessage() {}
+func (*IngestMessageRequest) ProtoMessage() {}
 
-func (x *IngestChannelMessageRequest) ProtoReflect() protoreflect.Message {
+func (x *IngestMessageRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_chatagent_v1_chatagent_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1846,82 +1762,82 @@ func (x *IngestChannelMessageRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use IngestChannelMessageRequest.ProtoReflect.Descriptor instead.
-func (*IngestChannelMessageRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use IngestMessageRequest.ProtoReflect.Descriptor instead.
+func (*IngestMessageRequest) Descriptor() ([]byte, []int) {
 	return file_chatagent_v1_chatagent_proto_rawDescGZIP(), []int{23}
 }
 
-func (x *IngestChannelMessageRequest) GetSessionId() string {
+func (x *IngestMessageRequest) GetSessionId() string {
 	if x != nil {
 		return x.SessionId
 	}
 	return ""
 }
 
-func (x *IngestChannelMessageRequest) GetSubjectId() string {
+func (x *IngestMessageRequest) GetSubjectId() string {
 	if x != nil {
 		return x.SubjectId
 	}
 	return ""
 }
 
-func (x *IngestChannelMessageRequest) GetContextKey() string {
+func (x *IngestMessageRequest) GetContextKey() string {
 	if x != nil {
 		return x.ContextKey
 	}
 	return ""
 }
 
-func (x *IngestChannelMessageRequest) GetChannel() *ChannelBinding {
+func (x *IngestMessageRequest) GetNotification() *NotificationTarget {
 	if x != nil {
-		return x.Channel
+		return x.Notification
 	}
 	return nil
 }
 
-func (x *IngestChannelMessageRequest) GetMessage() string {
+func (x *IngestMessageRequest) GetMessage() string {
 	if x != nil {
 		return x.Message
 	}
 	return ""
 }
 
-func (x *IngestChannelMessageRequest) GetCreateIfMissing() bool {
+func (x *IngestMessageRequest) GetCreateIfMissing() bool {
 	if x != nil {
 		return x.CreateIfMissing
 	}
 	return false
 }
 
-func (x *IngestChannelMessageRequest) GetInlineConfig() *ContextDefinition {
+func (x *IngestMessageRequest) GetInlineConfig() *ContextDefinition {
 	if x != nil {
 		return x.InlineConfig
 	}
 	return nil
 }
 
-func (x *IngestChannelMessageRequest) GetSeedFields() *structpb.Struct {
+func (x *IngestMessageRequest) GetSeedFields() *structpb.Struct {
 	if x != nil {
 		return x.SeedFields
 	}
 	return nil
 }
 
-func (x *IngestChannelMessageRequest) GetRuntime() *structpb.Struct {
+func (x *IngestMessageRequest) GetRuntime() *structpb.Struct {
 	if x != nil {
 		return x.Runtime
 	}
 	return nil
 }
 
-func (x *IngestChannelMessageRequest) GetEvaluateEvidence() bool {
+func (x *IngestMessageRequest) GetEvaluateEvidence() bool {
 	if x != nil {
 		return x.EvaluateEvidence
 	}
 	return false
 }
 
-type IngestChannelMessageResponse struct {
+type IngestMessageResponse struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Session        *ChatSession           `protobuf:"bytes,1,opt,name=session,proto3" json:"session,omitempty"`
 	Reply          string                 `protobuf:"bytes,2,opt,name=reply,proto3" json:"reply,omitempty"`
@@ -1932,20 +1848,20 @@ type IngestChannelMessageResponse struct {
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *IngestChannelMessageResponse) Reset() {
-	*x = IngestChannelMessageResponse{}
+func (x *IngestMessageResponse) Reset() {
+	*x = IngestMessageResponse{}
 	mi := &file_chatagent_v1_chatagent_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *IngestChannelMessageResponse) String() string {
+func (x *IngestMessageResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*IngestChannelMessageResponse) ProtoMessage() {}
+func (*IngestMessageResponse) ProtoMessage() {}
 
-func (x *IngestChannelMessageResponse) ProtoReflect() protoreflect.Message {
+func (x *IngestMessageResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_chatagent_v1_chatagent_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1957,40 +1873,40 @@ func (x *IngestChannelMessageResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use IngestChannelMessageResponse.ProtoReflect.Descriptor instead.
-func (*IngestChannelMessageResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use IngestMessageResponse.ProtoReflect.Descriptor instead.
+func (*IngestMessageResponse) Descriptor() ([]byte, []int) {
 	return file_chatagent_v1_chatagent_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *IngestChannelMessageResponse) GetSession() *ChatSession {
+func (x *IngestMessageResponse) GetSession() *ChatSession {
 	if x != nil {
 		return x.Session
 	}
 	return nil
 }
 
-func (x *IngestChannelMessageResponse) GetReply() string {
+func (x *IngestMessageResponse) GetReply() string {
 	if x != nil {
 		return x.Reply
 	}
 	return ""
 }
 
-func (x *IngestChannelMessageResponse) GetSource() string {
+func (x *IngestMessageResponse) GetSource() string {
 	if x != nil {
 		return x.Source
 	}
 	return ""
 }
 
-func (x *IngestChannelMessageResponse) GetDelivered() bool {
+func (x *IngestMessageResponse) GetDelivered() bool {
 	if x != nil {
 		return x.Delivered
 	}
 	return false
 }
 
-func (x *IngestChannelMessageResponse) GetSessionCreated() bool {
+func (x *IngestMessageResponse) GetSessionCreated() bool {
 	if x != nil {
 		return x.SessionCreated
 	}
@@ -2001,7 +1917,7 @@ var File_chatagent_v1_chatagent_proto protoreflect.FileDescriptor
 
 const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"\n" +
-	"\x1cchatagent/v1/chatagent.proto\x12\fchatagent.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1bcommon/v1/permissions.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xbc\x02\n" +
+	"\x1cchatagent/v1/chatagent.proto\x12\fchatagent.v1\x1a\x1bbuf/validate/validate.proto\x1a\x16common/v1/common.proto\x1a\x1bcommon/v1/permissions.proto\x1a$gnostic/openapi/v3/annotations.proto\x1a\x1cgoogle/protobuf/struct.proto\"\xbc\x02\n" +
 	"\bFieldDef\x12\x1e\n" +
 	"\x04name\x18\x01 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\x80\x01R\x04name\x12+\n" +
@@ -2040,22 +1956,16 @@ const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"\vFieldStatus\x12\x0e\n" +
 	"\x02ok\x18\x01 \x01(\bR\x02ok\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value\x12\x16\n" +
-	"\x06reason\x18\x03 \x01(\tR\x06reason\"\xb6\x03\n" +
-	"\x0eChannelBinding\x12/\n" +
-	"\achannel\x18\x01 \x01(\x0e2\x15.chatagent.v1.ChannelR\achannel\x12\x1d\n" +
-	"\n" +
-	"contact_id\x18\x02 \x01(\tR\tcontactId\x12\x1d\n" +
-	"\n" +
-	"profile_id\x18\x03 \x01(\tR\tprofileId\x12!\n" +
-	"\fprofile_type\x18\x04 \x01(\tR\vprofileType\x12\x1a\n" +
-	"\blanguage\x18\x05 \x01(\tR\blanguage\x12#\n" +
-	"\rskip_delivery\x18\x06 \x01(\bR\fskipDelivery\x12\x1a\n" +
-	"\btemplate\x18\a \x01(\tR\btemplate\x12*\n" +
-	"\x11source_contact_id\x18\b \x01(\tR\x0fsourceContactId\x12*\n" +
-	"\x11source_profile_id\x18\t \x01(\tR\x0fsourceProfileId\x12B\n" +
-	"\x10template_payload\x18\n" +
-	" \x01(\v2\x17.google.protobuf.StructR\x0ftemplatePayload\x12\x19\n" +
-	"\broute_id\x18\v \x01(\tR\arouteId\"\xb2\x05\n" +
+	"\x06reason\x18\x03 \x01(\tR\x06reason\"\xa8\x02\n" +
+	"\x12NotificationTarget\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x124\n" +
+	"\trecipient\x18\x02 \x01(\v2\x16.common.v1.ContactLinkR\trecipient\x12.\n" +
+	"\x06source\x18\x03 \x01(\v2\x16.common.v1.ContactLinkR\x06source\x12\x1a\n" +
+	"\blanguage\x18\x04 \x01(\tR\blanguage\x12\x1a\n" +
+	"\btemplate\x18\x05 \x01(\tR\btemplate\x121\n" +
+	"\apayload\x18\x06 \x01(\v2\x17.google.protobuf.StructR\apayload\x12\x19\n" +
+	"\broute_id\x18\a \x01(\tR\arouteId\x12\x12\n" +
+	"\x04skip\x18\b \x01(\bR\x04skip\"\xc0\x05\n" +
 	"\vChatSession\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -2071,8 +1981,8 @@ const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"\amissing\x18\n" +
 	" \x03(\tR\amissing\x12M\n" +
 	"\ffield_status\x18\v \x03(\v2*.chatagent.v1.ChatSession.FieldStatusEntryR\vfieldStatus\x121\n" +
-	"\aruntime\x18\f \x01(\v2\x17.google.protobuf.StructR\aruntime\x126\n" +
-	"\achannel\x18\r \x01(\v2\x1c.chatagent.v1.ChannelBindingR\achannel\x1aY\n" +
+	"\aruntime\x18\f \x01(\v2\x17.google.protobuf.StructR\aruntime\x12D\n" +
+	"\fnotification\x18\r \x01(\v2 .chatagent.v1.NotificationTargetR\fnotification\x1aY\n" +
 	"\x10FieldStatusEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12/\n" +
 	"\x05value\x18\x02 \x01(\v2\x19.chatagent.v1.FieldStatusR\x05value:\x028\x01\"_\n" +
@@ -2102,7 +2012,7 @@ const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"contextKey\x12\x18\n" +
 	"\aversion\x18\x02 \x01(\x05R\aversion\x12\x18\n" +
 	"\apurpose\x18\x03 \x01(\tR\apurpose\x12\x16\n" +
-	"\x06active\x18\x04 \x01(\bR\x06active\"\xa0\x04\n" +
+	"\x06active\x18\x04 \x01(\bR\x06active\"\xae\x04\n" +
 	"\x14CreateSessionRequest\x12(\n" +
 	"\n" +
 	"subject_id\x18\x01 \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18@R\tsubjectId\x12\x1f\n" +
@@ -2115,9 +2025,9 @@ const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"\tdocuments\x18\x06 \x03(\v2\x1e.chatagent.v1.DocumentEvidenceR\tdocuments\x12>\n" +
 	"\rseed_messages\x18\a \x03(\v2\x19.chatagent.v1.ChatMessageR\fseedMessages\x121\n" +
 	"\aruntime\x18\b \x01(\v2\x17.google.protobuf.StructR\aruntime\x12+\n" +
-	"\x11evaluate_evidence\x18\t \x01(\bR\x10evaluateEvidence\x126\n" +
-	"\achannel\x18\n" +
-	" \x01(\v2\x1c.chatagent.v1.ChannelBindingR\achannel\"\x80\x01\n" +
+	"\x11evaluate_evidence\x18\t \x01(\bR\x10evaluateEvidence\x12D\n" +
+	"\fnotification\x18\n" +
+	" \x01(\v2 .chatagent.v1.NotificationTargetR\fnotification\"\x80\x01\n" +
 	"\x15CreateSessionResponse\x123\n" +
 	"\asession\x18\x01 \x01(\v2\x19.chatagent.v1.ChatSessionR\asession\x12\x14\n" +
 	"\x05reply\x18\x02 \x01(\tR\x05reply\x12\x1c\n" +
@@ -2145,15 +2055,15 @@ const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"session_id\x18\x01 \x01(\tB\a\xbaH\x04r\x02\x10\x01R\tsessionId\x12\x16\n" +
 	"\x06reason\x18\x02 \x01(\tR\x06reason\"I\n" +
 	"\x12EndSessionResponse\x123\n" +
-	"\asession\x18\x01 \x01(\v2\x19.chatagent.v1.ChatSessionR\asession\"\xee\x03\n" +
-	"\x1bIngestChannelMessageRequest\x12\x1d\n" +
+	"\asession\x18\x01 \x01(\v2\x19.chatagent.v1.ChatSessionR\asession\"\xf5\x03\n" +
+	"\x14IngestMessageRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
 	"\n" +
 	"subject_id\x18\x02 \x01(\tR\tsubjectId\x12\x1f\n" +
 	"\vcontext_key\x18\x03 \x01(\tR\n" +
-	"contextKey\x12>\n" +
-	"\achannel\x18\x04 \x01(\v2\x1c.chatagent.v1.ChannelBindingB\x06\xbaH\x03\xc8\x01\x01R\achannel\x12$\n" +
+	"contextKey\x12L\n" +
+	"\fnotification\x18\x04 \x01(\v2 .chatagent.v1.NotificationTargetB\x06\xbaH\x03\xc8\x01\x01R\fnotification\x12$\n" +
 	"\amessage\x18\x05 \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xc0>R\amessage\x12*\n" +
 	"\x11create_if_missing\x18\x06 \x01(\bR\x0fcreateIfMissing\x12D\n" +
@@ -2162,8 +2072,8 @@ const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"seedFields\x121\n" +
 	"\aruntime\x18\t \x01(\v2\x17.google.protobuf.StructR\aruntime\x12+\n" +
 	"\x11evaluate_evidence\x18\n" +
-	" \x01(\bR\x10evaluateEvidence\"\xc8\x01\n" +
-	"\x1cIngestChannelMessageResponse\x123\n" +
+	" \x01(\bR\x10evaluateEvidence\"\xc1\x01\n" +
+	"\x15IngestMessageResponse\x123\n" +
 	"\asession\x18\x01 \x01(\v2\x19.chatagent.v1.ChatSessionR\asession\x12\x14\n" +
 	"\x05reply\x18\x02 \x01(\tR\x05reply\x12\x16\n" +
 	"\x06source\x18\x03 \x01(\tR\x06source\x12\x1c\n" +
@@ -2180,16 +2090,7 @@ const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"\x1aSESSION_STATUS_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15SESSION_STATUS_ACTIVE\x10\x01\x12\x18\n" +
 	"\x14SESSION_STATUS_READY\x10\x02\x12\x18\n" +
-	"\x14SESSION_STATUS_ENDED\x10\x03*\xa5\x01\n" +
-	"\aChannel\x12\x17\n" +
-	"\x13CHANNEL_UNSPECIFIED\x10\x00\x12\x0f\n" +
-	"\vCHANNEL_WEB\x10\x01\x12\x0f\n" +
-	"\vCHANNEL_SMS\x10\x02\x12\x11\n" +
-	"\rCHANNEL_EMAIL\x10\x03\x12\x10\n" +
-	"\fCHANNEL_PUSH\x10\x04\x12\x12\n" +
-	"\x0eCHANNEL_IN_APP\x10\x05\x12\x14\n" +
-	"\x10CHANNEL_WHATSAPP\x10\x06\x12\x10\n" +
-	"\fCHANNEL_USSD\x10\a2\xfb\x0f\n" +
+	"\x14SESSION_STATUS_ENDED\x10\x032\xdf\x0f\n" +
 	"\x10ChatAgentService\x12\xb8\x01\n" +
 	"\rUpsertContext\x12\".chatagent.v1.UpsertContextRequest\x1a#.chatagent.v1.UpsertContextResponse\"^\xbaGD\n" +
 	"\tChatAgent\x12$Register or update an intake context*\x11upsertChatContext\x82\xb5\x18\x13\n" +
@@ -2216,9 +2117,9 @@ const file_chatagent_v1_chatagent_proto_rawDesc = "" +
 	"EndSession\x12\x1f.chatagent.v1.EndSessionRequest\x1a .chatagent.v1.EndSessionResponse\"]\xbaG2\n" +
 	"\tChatAgent\x12\x15End an intake session*\x0eendChatSession\x82\xb5\x18$\n" +
 	"\x0fchat_agent_turn\n" +
-	"\x11chat_agent_manage\x12\x9e\x03\n" +
-	"\x14IngestChannelMessage\x12).chatagent.v1.IngestChannelMessageRequest\x1a*.chatagent.v1.IngestChannelMessageResponse\"\xae\x02\xbaG\x95\x02\n" +
-	"\tChatAgent\x12KIngest inbound SMS/WhatsApp/email/etc and run a turn with omnichannel reply\x1a\xa4\x01Resolves or creates a session from channel binding, runs Turn on the message, and delivers the assistant reply via Notification service when the channel is non-web.*\x14ingestChannelMessage\x82\xb5\x18\x11\n" +
+	"\x11chat_agent_manage\x12\x82\x03\n" +
+	"\rIngestMessage\x12\".chatagent.v1.IngestMessageRequest\x1a#.chatagent.v1.IngestMessageResponse\"\xa7\x02\xbaG\x8e\x02\n" +
+	"\tChatAgent\x129Ingest inbound message and reply via Notification service\x1a\xb2\x01Resolves or creates a session from NotificationTarget, runs Turn, and queues the assistant reply with NotificationService.Send. Channel routing stays in the Notification service.*\x11ingestChatMessage\x82\xb5\x18\x11\n" +
 	"\x0fchat_agent_turn\x1a\xda\x02\x82\xb5\x18\xd5\x02\n" +
 	"\x12service_chat_agent\x12\x0fchat_agent_view\x12\x11chat_agent_manage\x12\x0fchat_agent_turn\x1a7\b\x01\x12\x0fchat_agent_view\x12\x11chat_agent_manage\x12\x0fchat_agent_turn\x1a7\b\x02\x12\x0fchat_agent_view\x12\x11chat_agent_manage\x12\x0fchat_agent_turn\x1a$\b\x03\x12\x0fchat_agent_view\x12\x0fchat_agent_turn\x1a\x13\b\x04\x12\x0fchat_agent_view\x1a$\b\x05\x12\x0fchat_agent_view\x12\x0fchat_agent_turn\x1a7\b\x06\x12\x0fchat_agent_view\x12\x11chat_agent_manage\x12\x0fchat_agent_turnB\xf1\x04\xbaG\xb2\x03\x12\x86\x03\n" +
 	"\x12Chat Agent Service\x12\xc2\x01Structured conversational data collection. Register a context (prompt + field schema), open a session with known evidence (CV text, prior answers), and run turns until required fields are ready.\"X\n" +
@@ -2243,96 +2144,97 @@ func file_chatagent_v1_chatagent_proto_rawDescGZIP() []byte {
 	return file_chatagent_v1_chatagent_proto_rawDescData
 }
 
-var file_chatagent_v1_chatagent_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
+var file_chatagent_v1_chatagent_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
 var file_chatagent_v1_chatagent_proto_msgTypes = make([]protoimpl.MessageInfo, 26)
 var file_chatagent_v1_chatagent_proto_goTypes = []any{
-	(FieldType)(0),                       // 0: chatagent.v1.FieldType
-	(SessionStatus)(0),                   // 1: chatagent.v1.SessionStatus
-	(Channel)(0),                         // 2: chatagent.v1.Channel
-	(*FieldDef)(nil),                     // 3: chatagent.v1.FieldDef
-	(*ReplyPolicy)(nil),                  // 4: chatagent.v1.ReplyPolicy
-	(*ContextDefinition)(nil),            // 5: chatagent.v1.ContextDefinition
-	(*ChatMessage)(nil),                  // 6: chatagent.v1.ChatMessage
-	(*DocumentEvidence)(nil),             // 7: chatagent.v1.DocumentEvidence
-	(*FieldStatus)(nil),                  // 8: chatagent.v1.FieldStatus
-	(*ChannelBinding)(nil),               // 9: chatagent.v1.ChannelBinding
-	(*ChatSession)(nil),                  // 10: chatagent.v1.ChatSession
-	(*UpsertContextRequest)(nil),         // 11: chatagent.v1.UpsertContextRequest
-	(*UpsertContextResponse)(nil),        // 12: chatagent.v1.UpsertContextResponse
-	(*GetContextRequest)(nil),            // 13: chatagent.v1.GetContextRequest
-	(*GetContextResponse)(nil),           // 14: chatagent.v1.GetContextResponse
-	(*ListContextsRequest)(nil),          // 15: chatagent.v1.ListContextsRequest
-	(*ListContextsResponse)(nil),         // 16: chatagent.v1.ListContextsResponse
-	(*ContextSummary)(nil),               // 17: chatagent.v1.ContextSummary
-	(*CreateSessionRequest)(nil),         // 18: chatagent.v1.CreateSessionRequest
-	(*CreateSessionResponse)(nil),        // 19: chatagent.v1.CreateSessionResponse
-	(*GetSessionRequest)(nil),            // 20: chatagent.v1.GetSessionRequest
-	(*GetSessionResponse)(nil),           // 21: chatagent.v1.GetSessionResponse
-	(*TurnRequest)(nil),                  // 22: chatagent.v1.TurnRequest
-	(*TurnResponse)(nil),                 // 23: chatagent.v1.TurnResponse
-	(*EndSessionRequest)(nil),            // 24: chatagent.v1.EndSessionRequest
-	(*EndSessionResponse)(nil),           // 25: chatagent.v1.EndSessionResponse
-	(*IngestChannelMessageRequest)(nil),  // 26: chatagent.v1.IngestChannelMessageRequest
-	(*IngestChannelMessageResponse)(nil), // 27: chatagent.v1.IngestChannelMessageResponse
-	nil,                                  // 28: chatagent.v1.ChatSession.FieldStatusEntry
-	(*structpb.Struct)(nil),              // 29: google.protobuf.Struct
+	(FieldType)(0),                // 0: chatagent.v1.FieldType
+	(SessionStatus)(0),            // 1: chatagent.v1.SessionStatus
+	(*FieldDef)(nil),              // 2: chatagent.v1.FieldDef
+	(*ReplyPolicy)(nil),           // 3: chatagent.v1.ReplyPolicy
+	(*ContextDefinition)(nil),     // 4: chatagent.v1.ContextDefinition
+	(*ChatMessage)(nil),           // 5: chatagent.v1.ChatMessage
+	(*DocumentEvidence)(nil),      // 6: chatagent.v1.DocumentEvidence
+	(*FieldStatus)(nil),           // 7: chatagent.v1.FieldStatus
+	(*NotificationTarget)(nil),    // 8: chatagent.v1.NotificationTarget
+	(*ChatSession)(nil),           // 9: chatagent.v1.ChatSession
+	(*UpsertContextRequest)(nil),  // 10: chatagent.v1.UpsertContextRequest
+	(*UpsertContextResponse)(nil), // 11: chatagent.v1.UpsertContextResponse
+	(*GetContextRequest)(nil),     // 12: chatagent.v1.GetContextRequest
+	(*GetContextResponse)(nil),    // 13: chatagent.v1.GetContextResponse
+	(*ListContextsRequest)(nil),   // 14: chatagent.v1.ListContextsRequest
+	(*ListContextsResponse)(nil),  // 15: chatagent.v1.ListContextsResponse
+	(*ContextSummary)(nil),        // 16: chatagent.v1.ContextSummary
+	(*CreateSessionRequest)(nil),  // 17: chatagent.v1.CreateSessionRequest
+	(*CreateSessionResponse)(nil), // 18: chatagent.v1.CreateSessionResponse
+	(*GetSessionRequest)(nil),     // 19: chatagent.v1.GetSessionRequest
+	(*GetSessionResponse)(nil),    // 20: chatagent.v1.GetSessionResponse
+	(*TurnRequest)(nil),           // 21: chatagent.v1.TurnRequest
+	(*TurnResponse)(nil),          // 22: chatagent.v1.TurnResponse
+	(*EndSessionRequest)(nil),     // 23: chatagent.v1.EndSessionRequest
+	(*EndSessionResponse)(nil),    // 24: chatagent.v1.EndSessionResponse
+	(*IngestMessageRequest)(nil),  // 25: chatagent.v1.IngestMessageRequest
+	(*IngestMessageResponse)(nil), // 26: chatagent.v1.IngestMessageResponse
+	nil,                           // 27: chatagent.v1.ChatSession.FieldStatusEntry
+	(*commonv1.ContactLink)(nil),  // 28: common.v1.ContactLink
+	(*structpb.Struct)(nil),       // 29: google.protobuf.Struct
 }
 var file_chatagent_v1_chatagent_proto_depIdxs = []int32{
 	0,  // 0: chatagent.v1.FieldDef.type:type_name -> chatagent.v1.FieldType
-	3,  // 1: chatagent.v1.ContextDefinition.fields:type_name -> chatagent.v1.FieldDef
-	4,  // 2: chatagent.v1.ContextDefinition.reply_policy:type_name -> chatagent.v1.ReplyPolicy
-	2,  // 3: chatagent.v1.ChannelBinding.channel:type_name -> chatagent.v1.Channel
-	29, // 4: chatagent.v1.ChannelBinding.template_payload:type_name -> google.protobuf.Struct
-	5,  // 5: chatagent.v1.ChatSession.config_snapshot:type_name -> chatagent.v1.ContextDefinition
-	29, // 6: chatagent.v1.ChatSession.fields:type_name -> google.protobuf.Struct
-	6,  // 7: chatagent.v1.ChatSession.messages:type_name -> chatagent.v1.ChatMessage
-	1,  // 8: chatagent.v1.ChatSession.status:type_name -> chatagent.v1.SessionStatus
-	28, // 9: chatagent.v1.ChatSession.field_status:type_name -> chatagent.v1.ChatSession.FieldStatusEntry
-	29, // 10: chatagent.v1.ChatSession.runtime:type_name -> google.protobuf.Struct
-	9,  // 11: chatagent.v1.ChatSession.channel:type_name -> chatagent.v1.ChannelBinding
-	5,  // 12: chatagent.v1.UpsertContextRequest.definition:type_name -> chatagent.v1.ContextDefinition
-	5,  // 13: chatagent.v1.UpsertContextResponse.definition:type_name -> chatagent.v1.ContextDefinition
-	5,  // 14: chatagent.v1.GetContextResponse.definition:type_name -> chatagent.v1.ContextDefinition
-	17, // 15: chatagent.v1.ListContextsResponse.contexts:type_name -> chatagent.v1.ContextSummary
-	5,  // 16: chatagent.v1.CreateSessionRequest.inline_config:type_name -> chatagent.v1.ContextDefinition
-	29, // 17: chatagent.v1.CreateSessionRequest.seed_fields:type_name -> google.protobuf.Struct
-	7,  // 18: chatagent.v1.CreateSessionRequest.documents:type_name -> chatagent.v1.DocumentEvidence
-	6,  // 19: chatagent.v1.CreateSessionRequest.seed_messages:type_name -> chatagent.v1.ChatMessage
-	29, // 20: chatagent.v1.CreateSessionRequest.runtime:type_name -> google.protobuf.Struct
-	9,  // 21: chatagent.v1.CreateSessionRequest.channel:type_name -> chatagent.v1.ChannelBinding
-	10, // 22: chatagent.v1.CreateSessionResponse.session:type_name -> chatagent.v1.ChatSession
-	10, // 23: chatagent.v1.GetSessionResponse.session:type_name -> chatagent.v1.ChatSession
-	29, // 24: chatagent.v1.TurnRequest.structured:type_name -> google.protobuf.Struct
-	7,  // 25: chatagent.v1.TurnRequest.documents:type_name -> chatagent.v1.DocumentEvidence
-	10, // 26: chatagent.v1.TurnResponse.session:type_name -> chatagent.v1.ChatSession
-	10, // 27: chatagent.v1.EndSessionResponse.session:type_name -> chatagent.v1.ChatSession
-	9,  // 28: chatagent.v1.IngestChannelMessageRequest.channel:type_name -> chatagent.v1.ChannelBinding
-	5,  // 29: chatagent.v1.IngestChannelMessageRequest.inline_config:type_name -> chatagent.v1.ContextDefinition
-	29, // 30: chatagent.v1.IngestChannelMessageRequest.seed_fields:type_name -> google.protobuf.Struct
-	29, // 31: chatagent.v1.IngestChannelMessageRequest.runtime:type_name -> google.protobuf.Struct
-	10, // 32: chatagent.v1.IngestChannelMessageResponse.session:type_name -> chatagent.v1.ChatSession
-	8,  // 33: chatagent.v1.ChatSession.FieldStatusEntry.value:type_name -> chatagent.v1.FieldStatus
-	11, // 34: chatagent.v1.ChatAgentService.UpsertContext:input_type -> chatagent.v1.UpsertContextRequest
-	13, // 35: chatagent.v1.ChatAgentService.GetContext:input_type -> chatagent.v1.GetContextRequest
-	15, // 36: chatagent.v1.ChatAgentService.ListContexts:input_type -> chatagent.v1.ListContextsRequest
-	18, // 37: chatagent.v1.ChatAgentService.CreateSession:input_type -> chatagent.v1.CreateSessionRequest
-	20, // 38: chatagent.v1.ChatAgentService.GetSession:input_type -> chatagent.v1.GetSessionRequest
-	22, // 39: chatagent.v1.ChatAgentService.Turn:input_type -> chatagent.v1.TurnRequest
-	24, // 40: chatagent.v1.ChatAgentService.EndSession:input_type -> chatagent.v1.EndSessionRequest
-	26, // 41: chatagent.v1.ChatAgentService.IngestChannelMessage:input_type -> chatagent.v1.IngestChannelMessageRequest
-	12, // 42: chatagent.v1.ChatAgentService.UpsertContext:output_type -> chatagent.v1.UpsertContextResponse
-	14, // 43: chatagent.v1.ChatAgentService.GetContext:output_type -> chatagent.v1.GetContextResponse
-	16, // 44: chatagent.v1.ChatAgentService.ListContexts:output_type -> chatagent.v1.ListContextsResponse
-	19, // 45: chatagent.v1.ChatAgentService.CreateSession:output_type -> chatagent.v1.CreateSessionResponse
-	21, // 46: chatagent.v1.ChatAgentService.GetSession:output_type -> chatagent.v1.GetSessionResponse
-	23, // 47: chatagent.v1.ChatAgentService.Turn:output_type -> chatagent.v1.TurnResponse
-	25, // 48: chatagent.v1.ChatAgentService.EndSession:output_type -> chatagent.v1.EndSessionResponse
-	27, // 49: chatagent.v1.ChatAgentService.IngestChannelMessage:output_type -> chatagent.v1.IngestChannelMessageResponse
-	42, // [42:50] is the sub-list for method output_type
-	34, // [34:42] is the sub-list for method input_type
-	34, // [34:34] is the sub-list for extension type_name
-	34, // [34:34] is the sub-list for extension extendee
-	0,  // [0:34] is the sub-list for field type_name
+	2,  // 1: chatagent.v1.ContextDefinition.fields:type_name -> chatagent.v1.FieldDef
+	3,  // 2: chatagent.v1.ContextDefinition.reply_policy:type_name -> chatagent.v1.ReplyPolicy
+	28, // 3: chatagent.v1.NotificationTarget.recipient:type_name -> common.v1.ContactLink
+	28, // 4: chatagent.v1.NotificationTarget.source:type_name -> common.v1.ContactLink
+	29, // 5: chatagent.v1.NotificationTarget.payload:type_name -> google.protobuf.Struct
+	4,  // 6: chatagent.v1.ChatSession.config_snapshot:type_name -> chatagent.v1.ContextDefinition
+	29, // 7: chatagent.v1.ChatSession.fields:type_name -> google.protobuf.Struct
+	5,  // 8: chatagent.v1.ChatSession.messages:type_name -> chatagent.v1.ChatMessage
+	1,  // 9: chatagent.v1.ChatSession.status:type_name -> chatagent.v1.SessionStatus
+	27, // 10: chatagent.v1.ChatSession.field_status:type_name -> chatagent.v1.ChatSession.FieldStatusEntry
+	29, // 11: chatagent.v1.ChatSession.runtime:type_name -> google.protobuf.Struct
+	8,  // 12: chatagent.v1.ChatSession.notification:type_name -> chatagent.v1.NotificationTarget
+	4,  // 13: chatagent.v1.UpsertContextRequest.definition:type_name -> chatagent.v1.ContextDefinition
+	4,  // 14: chatagent.v1.UpsertContextResponse.definition:type_name -> chatagent.v1.ContextDefinition
+	4,  // 15: chatagent.v1.GetContextResponse.definition:type_name -> chatagent.v1.ContextDefinition
+	16, // 16: chatagent.v1.ListContextsResponse.contexts:type_name -> chatagent.v1.ContextSummary
+	4,  // 17: chatagent.v1.CreateSessionRequest.inline_config:type_name -> chatagent.v1.ContextDefinition
+	29, // 18: chatagent.v1.CreateSessionRequest.seed_fields:type_name -> google.protobuf.Struct
+	6,  // 19: chatagent.v1.CreateSessionRequest.documents:type_name -> chatagent.v1.DocumentEvidence
+	5,  // 20: chatagent.v1.CreateSessionRequest.seed_messages:type_name -> chatagent.v1.ChatMessage
+	29, // 21: chatagent.v1.CreateSessionRequest.runtime:type_name -> google.protobuf.Struct
+	8,  // 22: chatagent.v1.CreateSessionRequest.notification:type_name -> chatagent.v1.NotificationTarget
+	9,  // 23: chatagent.v1.CreateSessionResponse.session:type_name -> chatagent.v1.ChatSession
+	9,  // 24: chatagent.v1.GetSessionResponse.session:type_name -> chatagent.v1.ChatSession
+	29, // 25: chatagent.v1.TurnRequest.structured:type_name -> google.protobuf.Struct
+	6,  // 26: chatagent.v1.TurnRequest.documents:type_name -> chatagent.v1.DocumentEvidence
+	9,  // 27: chatagent.v1.TurnResponse.session:type_name -> chatagent.v1.ChatSession
+	9,  // 28: chatagent.v1.EndSessionResponse.session:type_name -> chatagent.v1.ChatSession
+	8,  // 29: chatagent.v1.IngestMessageRequest.notification:type_name -> chatagent.v1.NotificationTarget
+	4,  // 30: chatagent.v1.IngestMessageRequest.inline_config:type_name -> chatagent.v1.ContextDefinition
+	29, // 31: chatagent.v1.IngestMessageRequest.seed_fields:type_name -> google.protobuf.Struct
+	29, // 32: chatagent.v1.IngestMessageRequest.runtime:type_name -> google.protobuf.Struct
+	9,  // 33: chatagent.v1.IngestMessageResponse.session:type_name -> chatagent.v1.ChatSession
+	7,  // 34: chatagent.v1.ChatSession.FieldStatusEntry.value:type_name -> chatagent.v1.FieldStatus
+	10, // 35: chatagent.v1.ChatAgentService.UpsertContext:input_type -> chatagent.v1.UpsertContextRequest
+	12, // 36: chatagent.v1.ChatAgentService.GetContext:input_type -> chatagent.v1.GetContextRequest
+	14, // 37: chatagent.v1.ChatAgentService.ListContexts:input_type -> chatagent.v1.ListContextsRequest
+	17, // 38: chatagent.v1.ChatAgentService.CreateSession:input_type -> chatagent.v1.CreateSessionRequest
+	19, // 39: chatagent.v1.ChatAgentService.GetSession:input_type -> chatagent.v1.GetSessionRequest
+	21, // 40: chatagent.v1.ChatAgentService.Turn:input_type -> chatagent.v1.TurnRequest
+	23, // 41: chatagent.v1.ChatAgentService.EndSession:input_type -> chatagent.v1.EndSessionRequest
+	25, // 42: chatagent.v1.ChatAgentService.IngestMessage:input_type -> chatagent.v1.IngestMessageRequest
+	11, // 43: chatagent.v1.ChatAgentService.UpsertContext:output_type -> chatagent.v1.UpsertContextResponse
+	13, // 44: chatagent.v1.ChatAgentService.GetContext:output_type -> chatagent.v1.GetContextResponse
+	15, // 45: chatagent.v1.ChatAgentService.ListContexts:output_type -> chatagent.v1.ListContextsResponse
+	18, // 46: chatagent.v1.ChatAgentService.CreateSession:output_type -> chatagent.v1.CreateSessionResponse
+	20, // 47: chatagent.v1.ChatAgentService.GetSession:output_type -> chatagent.v1.GetSessionResponse
+	22, // 48: chatagent.v1.ChatAgentService.Turn:output_type -> chatagent.v1.TurnResponse
+	24, // 49: chatagent.v1.ChatAgentService.EndSession:output_type -> chatagent.v1.EndSessionResponse
+	26, // 50: chatagent.v1.ChatAgentService.IngestMessage:output_type -> chatagent.v1.IngestMessageResponse
+	43, // [43:51] is the sub-list for method output_type
+	35, // [35:43] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_chatagent_v1_chatagent_proto_init() }
@@ -2345,7 +2247,7 @@ func file_chatagent_v1_chatagent_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_chatagent_v1_chatagent_proto_rawDesc), len(file_chatagent_v1_chatagent_proto_rawDesc)),
-			NumEnums:      3,
+			NumEnums:      2,
 			NumMessages:   26,
 			NumExtensions: 0,
 			NumServices:   1,

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/v2/data"
 	"github.com/pitabwire/util"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/chatagent/service/engine"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/models"
-	"github.com/antinvestor/service-profile/apps/chatagent/service/notify"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/repository"
 )
 
@@ -28,35 +28,32 @@ type ChatAgentBusiness interface {
 	GetSession(ctx context.Context, req *chatagentv1.GetSessionRequest) (*chatagentv1.GetSessionResponse, error)
 	Turn(ctx context.Context, req *chatagentv1.TurnRequest) (*chatagentv1.TurnResponse, error)
 	EndSession(ctx context.Context, req *chatagentv1.EndSessionRequest) (*chatagentv1.EndSessionResponse, error)
-	IngestChannelMessage(ctx context.Context, req *chatagentv1.IngestChannelMessageRequest) (*chatagentv1.IngestChannelMessageResponse, error)
+	IngestMessage(ctx context.Context, req *chatagentv1.IngestMessageRequest) (*chatagentv1.IngestMessageResponse, error)
 }
 
 type chatAgentBusiness struct {
-	contexts  repository.ContextRepository
-	sessions  repository.SessionRepository
-	messages  repository.MessageRepository
-	agent     *engine.Agent
-	deliverer notify.Deliverer
+	contexts        repository.ContextRepository
+	sessions        repository.SessionRepository
+	messages        repository.MessageRepository
+	agent           *engine.Agent
+	notificationCli notificationv1connect.NotificationServiceClient // existing Notification service client (optional)
 }
 
-// NewChatAgentBusiness wires repositories, the turn engine, and optional omnichannel delivery.
-// deliverer may be nil (web-only / evidence-only deploys).
+// NewChatAgentBusiness wires repositories, the turn engine, and the existing Notification service client.
+// notificationCli may be nil (RPC-only replies; no Notification.Send).
 func NewChatAgentBusiness(
 	contexts repository.ContextRepository,
 	sessions repository.SessionRepository,
 	messages repository.MessageRepository,
 	llm engine.Completer,
-	deliverer notify.Deliverer,
+	notificationCli notificationv1connect.NotificationServiceClient,
 ) ChatAgentBusiness {
-	if deliverer == nil {
-		deliverer = notify.NoopDeliverer{}
-	}
 	return &chatAgentBusiness{
-		contexts:  contexts,
-		sessions:  sessions,
-		messages:  messages,
-		agent:     engine.NewAgent(llm),
-		deliverer: deliverer,
+		contexts:        contexts,
+		sessions:        sessions,
+		messages:        messages,
+		agent:           engine.NewAgent(llm),
+		notificationCli: notificationCli,
 	}
 }
 
@@ -169,10 +166,7 @@ func (b *chatAgentBusiness) CreateSession(
 	docs := protoDocs(req.GetDocuments())
 	seedMsgs := protoMessages(req.GetSeedMessages())
 	runtime := structToFields(req.GetRuntime())
-	binding := channelBindingFromProto(req.GetChannel())
-	if binding.ProfileID == "" {
-		binding.ProfileID = subject
-	}
+	notifTarget := normalizeNotificationTarget(req.GetNotification(), subject)
 
 	fields := engine.Sanitize(def, engine.MergeFields(nil, seed))
 	fields = engine.ApplyDocuments(def, fields, docs)
@@ -185,11 +179,12 @@ func (b *chatAgentBusiness) CreateSession(
 		Fields:         fieldsToJSONMap(fields),
 		Runtime:        fieldsToJSONMap(runtime),
 		Documents:      docsToJSONMap(docs),
-		Channel:        channelBindingToJSONMap(binding),
-		ChannelName:    binding.Name(),
-		ContactID:      binding.ContactID,
-		Status:         models.SessionStatusActive,
-		Ready:          false,
+		// Persist NotificationTarget (column names kept for schema compatibility).
+		Channel:     notificationTargetToJSONMap(notifTarget),
+		ChannelName: notificationType(notifTarget),
+		ContactID:   notificationContactID(notifTarget),
+		Status:      models.SessionStatusActive,
+		Ready:       false,
 	}
 
 	// Optional immediate evaluation of seed evidence (no chat message yet).
@@ -256,7 +251,7 @@ func (b *chatAgentBusiness) CreateSession(
 	}
 	delivered := false
 	if reply != "" {
-		delivered = b.deliverReply(ctx, binding, sess.SubjectID, sess.ID, reply)
+		delivered = b.deliverReply(ctx, notifTarget, sess.SubjectID, sess.ID, reply)
 	}
 	_ = source
 	return &chatagentv1.CreateSessionResponse{
@@ -351,8 +346,8 @@ func (b *chatAgentBusiness) Turn(
 	if err != nil {
 		return nil, err
 	}
-	binding := channelBindingFromJSONMap(sess.Channel)
-	delivered := b.deliverReply(ctx, binding, sess.SubjectID, sess.ID, res.Reply)
+	notifTarget := notificationTargetFromJSONMap(sess.Channel)
+	delivered := b.deliverReply(ctx, notifTarget, sess.SubjectID, sess.ID, res.Reply)
 	return &chatagentv1.TurnResponse{
 		Session:   api,
 		Reply:     res.Reply,
@@ -361,16 +356,13 @@ func (b *chatAgentBusiness) Turn(
 	}, nil
 }
 
-func (b *chatAgentBusiness) IngestChannelMessage(
+func (b *chatAgentBusiness) IngestMessage(
 	ctx context.Context,
-	req *chatagentv1.IngestChannelMessageRequest,
-) (*chatagentv1.IngestChannelMessageResponse, error) {
-	binding := channelBindingFromProto(req.GetChannel())
-	if binding.Channel == chatagentv1.Channel_CHANNEL_UNSPECIFIED || binding.Channel == chatagentv1.Channel_CHANNEL_WEB {
-		// Still allow web via ingest for uniformity, but require a message path.
-		if binding.Channel == chatagentv1.Channel_CHANNEL_UNSPECIFIED {
-			binding.Channel = chatagentv1.Channel_CHANNEL_WEB
-		}
+	req *chatagentv1.IngestMessageRequest,
+) (*chatagentv1.IngestMessageResponse, error) {
+	notifTarget := normalizeNotificationTarget(req.GetNotification(), strings.TrimSpace(req.GetSubjectId()))
+	if notifTarget == nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("notification target required"))
 	}
 	msg := strings.TrimSpace(req.GetMessage())
 	if msg == "" {
@@ -392,14 +384,15 @@ func (b *chatAgentBusiness) IngestChannelMessage(
 	} else {
 		subject := strings.TrimSpace(req.GetSubjectId())
 		if subject == "" {
-			subject = binding.ProfileID
+			subject = notificationProfileID(notifTarget)
 		}
 		contextKey := strings.TrimSpace(req.GetContextKey())
-		if subject == "" && binding.ContactID == "" {
+		contactID := notificationContactID(notifTarget)
+		if subject == "" && contactID == "" {
 			return nil, connect.NewError(connect.CodeInvalidArgument,
-				errors.New("session_id or subject_id/channel.contact_id required"))
+				errors.New("session_id or subject_id/notification.recipient required"))
 		}
-		sess, err = b.sessions.GetActiveByChannel(ctx, subject, contextKey, binding.Name(), binding.ContactID)
+		sess, err = b.sessions.GetActiveByChannel(ctx, subject, contextKey, notificationType(notifTarget), contactID)
 		if err != nil {
 			if !data.ErrorIsNoRows(err) && !errors.Is(err, gorm.ErrRecordNotFound) {
 				return nil, err
@@ -409,7 +402,7 @@ func (b *chatAgentBusiness) IngestChannelMessage(
 		if sess == nil {
 			if !req.GetCreateIfMissing() {
 				return nil, connect.NewError(connect.CodeNotFound,
-					errors.New("no active channel session; set create_if_missing or session_id"))
+					errors.New("no active session for notification target; set create_if_missing or session_id"))
 			}
 			if subject == "" {
 				return nil, connect.NewError(connect.CodeInvalidArgument,
@@ -422,7 +415,7 @@ func (b *chatAgentBusiness) IngestChannelMessage(
 				SeedFields:       req.GetSeedFields(),
 				Runtime:          req.GetRuntime(),
 				EvaluateEvidence: req.GetEvaluateEvidence(),
-				Channel:          binding.ToProto(),
+				Notification:     notifTarget,
 			})
 			if cErr != nil {
 				return nil, cErr
@@ -435,16 +428,15 @@ func (b *chatAgentBusiness) IngestChannelMessage(
 		}
 	}
 
-	// Refresh binding from session if inbound only supplied partial contact info.
-	stored := channelBindingFromJSONMap(sess.Channel)
-	binding = mergeBindings(stored, binding)
-	// Persist updated binding if inbound filled gaps.
-	if stored.ContactID == "" && binding.ContactID != "" {
-		sess.Channel = channelBindingToJSONMap(binding)
-		sess.ChannelName = binding.Name()
-		sess.ContactID = binding.ContactID
+	stored := notificationTargetFromJSONMap(sess.Channel)
+	merged := mergeNotificationTargets(stored, notifTarget)
+	// Persist if inbound filled contact gaps.
+	if notificationContactID(stored) == "" && notificationContactID(merged) != "" {
+		sess.Channel = notificationTargetToJSONMap(merged)
+		sess.ChannelName = notificationType(merged)
+		sess.ContactID = notificationContactID(merged)
 		if _, uErr := b.sessions.Update(ctx, sess, "channel", "channel_name", "contact_id"); uErr != nil {
-			util.Log(ctx).WithError(uErr).Warn("chatagent: channel binding update failed")
+			util.Log(ctx).WithError(uErr).Warn("chatagent: notification target update failed")
 		}
 	}
 
@@ -455,7 +447,7 @@ func (b *chatAgentBusiness) IngestChannelMessage(
 	if err != nil {
 		return nil, err
 	}
-	return &chatagentv1.IngestChannelMessageResponse{
+	return &chatagentv1.IngestMessageResponse{
 		Session:        turnResp.GetSession(),
 		Reply:          turnResp.GetReply(),
 		Source:         turnResp.GetSource(),
@@ -630,66 +622,6 @@ func (b *chatAgentBusiness) toAPISession(
 		Missing:        missing,
 		FieldStatus:    fieldStatusToProto(status),
 		Runtime:        fieldsToStruct(fieldsFromJSONMap(sess.Runtime)),
-		Channel:        channelBindingFromJSONMap(sess.Channel).ToProto(),
+		Notification:   notificationTargetFromJSONMap(sess.Channel),
 	}, nil
-}
-
-// deliverReply soft-fails notification delivery so a flaky channel never breaks the turn.
-func (b *chatAgentBusiness) deliverReply(
-	ctx context.Context,
-	binding notify.Binding,
-	subjectID, sessionID, reply string,
-) bool {
-	if strings.TrimSpace(reply) == "" || !binding.ShouldDeliver() {
-		return false
-	}
-	delivered, err := b.deliverer.Deliver(ctx, binding, subjectID, sessionID, reply)
-	if err != nil {
-		util.Log(ctx).WithError(err).WithFields(map[string]any{
-			"session_id": sessionID,
-			"channel":    binding.Name(),
-		}).Warn("chatagent: channel delivery failed (turn still succeeded)")
-		return false
-	}
-	return delivered
-}
-
-// mergeBindings prefers inbound non-empty fields over stored session binding.
-func mergeBindings(stored, inbound notify.Binding) notify.Binding {
-	out := stored
-	if inbound.Channel != chatagentv1.Channel_CHANNEL_UNSPECIFIED {
-		out.Channel = inbound.Channel
-	}
-	if inbound.ContactID != "" {
-		out.ContactID = inbound.ContactID
-	}
-	if inbound.ProfileID != "" {
-		out.ProfileID = inbound.ProfileID
-	}
-	if inbound.ProfileType != "" {
-		out.ProfileType = inbound.ProfileType
-	}
-	if inbound.Language != "" {
-		out.Language = inbound.Language
-	}
-	if inbound.Template != "" {
-		out.Template = inbound.Template
-	}
-	if inbound.SourceContactID != "" {
-		out.SourceContactID = inbound.SourceContactID
-	}
-	if inbound.SourceProfileID != "" {
-		out.SourceProfileID = inbound.SourceProfileID
-	}
-	if inbound.RouteID != "" {
-		out.RouteID = inbound.RouteID
-	}
-	if len(inbound.TemplatePayload) > 0 {
-		out.TemplatePayload = inbound.TemplatePayload
-	}
-	// skip_delivery from inbound wins when true (explicit opt-out).
-	if inbound.SkipDelivery {
-		out.SkipDelivery = true
-	}
-	return out
 }

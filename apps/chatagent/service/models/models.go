@@ -37,11 +37,11 @@ type Session struct {
 	Fields         data.JSONMap `gorm:"type:jsonb"`
 	Runtime        data.JSONMap `gorm:"type:jsonb"`
 	Documents      data.JSONMap `gorm:"type:jsonb"` // {items:[{name,kind,text}]}
-	// Channel is the omnichannel binding snapshot (Notification delivery target).
-	// Empty / web means replies are returned on the RPC only.
+	// Channel stores NotificationTarget JSON (notification.v1.Notification subset).
+	// Column name kept for schema stability; empty means RPC-only replies.
 	Channel      data.JSONMap `gorm:"type:jsonb"`
-	ChannelName  string       `gorm:"type:varchar(32);index:idx_chat_sess_channel,priority:1"` // denormalized for lookup
-	ContactID    string       `gorm:"type:varchar(64);index:idx_chat_sess_channel,priority:2"`
+	ChannelName  string       `gorm:"type:varchar(32);index:idx_chat_sess_channel,priority:1"` // notification type (sms/email/…)
+	ContactID    string       `gorm:"type:varchar(64);index:idx_chat_sess_channel,priority:2"` // recipient.contact_id
 	Status       string       `gorm:"type:varchar(32);not null;default:'active';index"`
 	Ready        bool         `gorm:"not null;default:false;index"`
 	MessageCount int          `gorm:"not null;default:0"`

@@ -13,29 +13,75 @@ Rigid forms force users to re-enter data the system already has. Chat agent:
 2. Opens a **session** with seed fields + documents (e.g. uploaded CV text)
 3. Runs **turns** that extract from all evidence before asking the next gap
 4. Returns `ready` + structured `fields` when required data is complete
-5. Optionally delivers assistant replies via **Notification service** so the same
-   conversation works on web, SMS, WhatsApp, email, push, in-app, or USSD
+5. Optionally delivers assistant replies via the **existing Notification service**
+   (`NotificationService.Send`) — ChatAgent does **not** invent channels
 
-Different products (placement, KYC, support intake, …) reuse the same service
-and only change the context (and channel binding for omnichannel).
+Different products reuse the same service and only change the context (and
+optional `NotificationTarget` when they want non-web delivery).
 
-## Architecture (channel-agnostic core)
+## Omnichannel = reuse Notification service
+
+ChatAgent stays **channel-agnostic**. Channels (SMS, email, push, in-app, …)
+already live in **service-notification** (routes, templates, integrations).
 
 ```
-                    ┌─────────────────────────┐
-  Web / product ──► │ ChatAgentService.Turn   │
-  SMS/WA adapter ─► │ IngestChannelMessage    │──► evidence-first engine
-                    └───────────┬─────────────┘
-                                │ assistant reply
-                    ┌───────────▼─────────────┐
-                    │ notify.Deliverer        │  (no-op when channel=web)
-                    │ → Notification.Send     │──► sms | email | push | wa | …
-                    └─────────────────────────┘
+  Web / product RPC ──► Turn / CreateSession
+  Notification adapter ─► IngestMessage
+                │
+                ▼ evidence-first engine (text + fields only)
+                │
+                ▼ assistant reply
+  notificationv1connect.NotificationServiceClient.Send
+                │  (same client/pattern as profile verification)
+                ▼
+         Notification service (type + recipient + template/data)
+                │
+                ▼ sms | email | push | …  (routes in Notification)
 ```
 
-- **Engine** never knows about SMS/WhatsApp — only text + fields.
-- **ChannelBinding** on the session is the delivery address book entry.
-- **Notification** owns routing, templates, and channel integrations.
+### How delivery is configured
+
+`NotificationTarget` is a **thin subset of `notification.v1.Notification`**:
+
+| Field | Same meaning as |
+|-------|-----------------|
+| `type` | `Notification.type` (`"sms"`, `"email"`, `"push"`, `"in-app"`, …) |
+| `recipient` | `Notification.recipient` (`common.v1.ContactLink`) |
+| `source` | `Notification.source` |
+| `language` | `Notification.language` |
+| `template` | `Notification.template` (empty → raw body in `Notification.data`) |
+| `payload` | Merged into `Notification.payload` (`reply` + `session_id` always set) |
+| `route_id` | `Notification.route_id` |
+| `skip` | Opt out of Send even if type is set |
+
+Empty `type` (or no target) → **RPC-only** (web). No parallel channel enum.
+
+### Client wiring (same as profile app)
+
+```go
+// apps/chatagent/cmd — identical pattern to apps/default setupNotificationClient
+notificationCli := setupNotificationClient(ctx, cfg) // connection.NewServiceClient → NotificationServiceClient
+
+handlers.NewChatAgentServer(ctx, svc, handlers.ServerDeps{
+    NotificationClient: notificationCli,
+})
+```
+
+Outbound Send follows the same shape as contact verification:
+
+```go
+n := &notificationv1.Notification{
+    Recipient:   target.Recipient,
+    Type:        target.Type,
+    Template:    target.Template,
+    Payload:     payload, // includes reply, session_id
+    Data:        reply,   // when template empty
+    Language:    target.Language,
+    OutBound:    true,
+    AutoRelease: true,
+}
+cli.Send(ctx, connect.NewRequest(&notificationv1.SendRequest{Data: []*notificationv1.Notification{n}}))
+```
 
 ## API (Connect)
 
@@ -43,21 +89,21 @@ and only change the context (and channel binding for omnichannel).
 |-----|---------|
 | `UpsertContext` | Register/version a context definition |
 | `GetContext` / `ListContexts` | Read registry |
-| `CreateSession` | Start session; optional `evaluate_evidence` + `channel` binding |
+| `CreateSession` | Start session; optional `evaluate_evidence` + `notification` target |
 | `GetSession` | Resume transcript + field state |
-| `Turn` | One message (and/or new documents/structured inputs); delivers reply when channel bound |
-| `IngestChannelMessage` | Inbound SMS/WhatsApp/email path: resolve/create session → Turn → deliver reply |
+| `Turn` | One message; Send via Notification when session has a target |
+| `IngestMessage` | Inbound message (from Notification adapters) → Turn → Notification.Send |
 | `EndSession` | Close session |
 
 Audience path (catalog): `/chat-agent` (`servicecatalog.ServiceChatAgent`).
 
-## Omnichannel usage
+## Examples
 
-### 1. Web (default)
+### Web (default)
 
-Omit `channel` or set `CHANNEL_WEB`. Replies return only on the RPC (`Turn.reply`).
+Omit `notification`. Replies return only on the RPC (`Turn.reply`).
 
-### 2. Outbound-capable session (SMS / WhatsApp / …)
+### SMS via Notification service
 
 ```json
 // CreateSession
@@ -65,52 +111,53 @@ Omit `channel` or set `CHANNEL_WEB`. Replies return only on the RPC (`Turn.reply
   "subject_id": "profile-abc",
   "context_key": "stawi.placement.intake",
   "evaluate_evidence": true,
-  "channel": {
-    "channel": "CHANNEL_SMS",
-    "contact_id": "contact-phone-id",
-    "profile_id": "profile-abc",
+  "notification": {
+    "type": "sms",
+    "recipient": {
+      "contact_id": "contact-phone-id",
+      "profile_id": "profile-abc",
+      "profile_type": "Profile"
+    },
     "language": "en"
   }
 }
 ```
 
-Every subsequent `Turn` (and the optional evaluate reply) is also queued on
-Notification with `type=sms`, `out_bound=true`, `auto_release=true`, and
-`data` = assistant text (or a template when `channel.template` is set).
+Every subsequent `Turn` (and the optional evaluate reply) is also queued with
+`NotificationService.Send` (`type=sms`, `out_bound=true`, `auto_release=true`).
 
-### 3. Inbound channel adapter
-
-Channel integrations (or a thin adapter on Notification inbound routes) call:
+### Inbound adapter (Notification integration path)
 
 ```json
-// IngestChannelMessage
+// IngestMessage
 {
   "subject_id": "profile-abc",
   "context_key": "stawi.placement.intake",
   "create_if_missing": true,
   "message": "Backend engineer, full-time, Kenya",
-  "channel": {
-    "channel": "CHANNEL_WHATSAPP",
-    "contact_id": "contact-wa-id",
-    "profile_id": "profile-abc"
+  "notification": {
+    "type": "whatsapp",
+    "recipient": {
+      "contact_id": "contact-wa-id",
+      "profile_id": "profile-abc"
+    }
   }
 }
 ```
 
-This resolves the active session for that contact/channel (or creates one),
-runs a turn, and delivers the reply on the same channel.
+Channel **routing** (which gateway, which route) stays in Notification —
+ChatAgent only supplies the same `type` / `recipient` / `template` fields
+Notification already uses.
 
 ### Delivery rules
 
 | Condition | Behavior |
 |-----------|----------|
-| `channel` empty / `WEB` / `UNSPECIFIED` | RPC only |
-| `skip_delivery=true` | RPC only even if SMS/WA bound |
-| Non-web + contact or profile | `Notification.Send` after reply |
-| Delivery error | Logged; **Turn still succeeds** (soft-fail) |
-| `NOTIFICATION_SERVICE_URI` empty | Delivery skipped; RPC replies still work |
-
-Supported channel enums: `WEB`, `SMS`, `EMAIL`, `PUSH`, `IN_APP`, `WHATSAPP`, `USSD`.
+| No `notification` / empty `type` / `type=web` | RPC only |
+| `skip=true` | RPC only |
+| Type set + recipient contact or profile | `NotificationService.Send` after reply |
+| Send error | Logged; **Turn still succeeds** (soft-fail) |
+| `NOTIFICATION_SERVICE_URI` empty / client nil | Send skipped; RPC replies still work |
 
 ## Config
 
@@ -121,13 +168,9 @@ Supported channel enums: `WEB`, `SMS`, `EMAIL`, `PUSH`, `IN_APP`, `WHATSAPP`, `U
 | `INFERENCE_BASE_URL` | OpenAI-compatible root (optional) |
 | `INFERENCE_API_KEY` | Bearer token |
 | `INFERENCE_MODEL` | Default `meta/llama-3.1-8b-instruct` |
-| `NOTIFICATION_SERVICE_URI` | Notification Connect endpoint (optional; enables omnichannel) |
-| `NOTIFICATION_SERVICE_WORKLOAD_API_TARGET_PATH` | SPIFFE path for S2S to notification (default `/ns/notifications/sa/service-notification`) |
+| `NOTIFICATION_SERVICE_URI` | Existing Notification Connect endpoint (optional) |
+| `NOTIFICATION_SERVICE_WORKLOAD_API_TARGET_PATH` | SPIFFE path for S2S to notification |
 | OIDC / Frame security | Same as other profile apps |
-
-Without inference, the agent still merges seed/documents and returns guided
-follow-ups (evidence-only mode). Without Notification URI, channel bindings are
-stored but replies are not delivered off-web.
 
 ## Local generate protos
 
@@ -137,39 +180,18 @@ buf generate --template buf.gen.chatagent.yaml chatagent
 # Ensure gen imports use buf.build packages for common + gnostic (see gen/go/chatagent).
 ```
 
-Generated Go lives under `gen/go/chatagent/v1` (local until BSR module is published).
-
-## Example: placement-style context
-
-```json
-{
-  "context_key": "stawi.placement.intake",
-  "purpose": "Collect qualifications and preferences for opportunity matching.",
-  "fields": [
-    {"name": "target_job_title", "type": "FIELD_TYPE_STRING", "required": true, "priority": 1, "ask": "What role are you targeting?"},
-    {"name": "capabilities", "type": "FIELD_TYPE_STRING", "required": true, "priority": 2, "min_length": 80, "evidence_hints": ["document"], "ask": "Share your CV or work history."},
-    {"name": "job_types", "type": "FIELD_TYPE_STRING_LIST", "required": true, "priority": 3, "enum_values": ["Full-time", "Part-time", "Contract"]},
-    {"name": "salary_min", "type": "FIELD_TYPE_NUMBER", "required": true, "priority": 4},
-    {"name": "preferred_countries", "type": "FIELD_TYPE_STRING_LIST", "required": true, "priority": 5},
-    {"name": "experience_level", "type": "FIELD_TYPE_STRING", "required": true, "priority": 6, "enum_values": ["entry","junior","mid","senior","lead","executive"]}
-  ]
-}
-```
-
-CreateSession with CV document + `evaluate_evidence=true` will mark fields
-satisfied by the CV before the user types anything.
+Generated Go lives under `gen/go/chatagent/v1`.
 
 ## Layout
 
 ```
 apps/chatagent/
-  cmd/                 entrypoint (+ Notification client wiring)
+  cmd/                 entrypoint (Notification client via connection.NewServiceClient)
   config/              env config
   service/
     engine/            pure evidence-first turn engine (unit tested)
-    business/          session/context orchestration + channel ingest
+    business/          session orchestration + Notification.Send (no channel model)
     handlers/          Connect RPC
-    notify/            Notification.Send deliverer (omnichannel)
     repository/        PostgreSQL
     models/
     llm/               OpenAI-compatible client
