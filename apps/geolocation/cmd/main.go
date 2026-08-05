@@ -148,7 +148,6 @@ func main() { //nolint:funlen // wiring function
 	// Register permission manifest and event consumers, then start service.
 	svc.Init(ctx,
 		frame.WithHTTPHandler(mux),
-		frame.WithPermissionRegistration(sd),
 		frame.WithRegisterEvents(
 			events.NewLocationPointConsumer(
 				pointRepo, proximityBiz, geofenceBiz, routeDeviationBiz, metrics,

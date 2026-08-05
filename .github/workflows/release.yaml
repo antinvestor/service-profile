@@ -32,6 +32,15 @@ jobs:
     secrets:
       buf_token: ${{ secrets.BUF_TOKEN }}
 
+  # Merge opl/**/*.opl.ts into identity-authorization-keto namespaces.ts.
+  opl-push:
+    if: github.event_name == 'push'
+    permissions:
+      contents: read
+    uses: antinvestor/common/.github/workflows/opl-push.yml@main
+    secrets:
+      deploy_token: ${{ secrets.DEPLOY_REPO_TOKEN }}
+
   ship-identity-profile:
     needs: [docker]
     if: always() && (needs.docker.result == 'success' || (github.event_name == 'workflow_dispatch' && inputs.tag != ''))

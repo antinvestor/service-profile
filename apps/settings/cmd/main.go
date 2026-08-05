@@ -63,7 +63,6 @@ func main() {
 	// Setup HTTP handlers
 	serviceOptions := []frame.Option{
 		frame.WithHTTPHandler(connectHandler),
-		frame.WithPermissionRegistration(settingsSD),
 	}
 
 	svc.Init(ctx, serviceOptions...)
