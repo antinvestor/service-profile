@@ -66,7 +66,6 @@ func main() {
 
 	serviceOptions := []frame.Option{
 		frame.WithHTTPHandler(connectHandler),
-		frame.WithPermissionRegistration(chatSD),
 	}
 
 	svc.Init(ctx, serviceOptions...)

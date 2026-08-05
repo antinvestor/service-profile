@@ -134,7 +134,6 @@ func initServiceComponents(
 
 	return []frame.Option{
 		frame.WithHTTPHandler(connectHandler),
-		frame.WithPermissionRegistration(sd),
 		frame.WithRegisterSubscriber(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis, analysisHandler),
 		frame.WithRegisterPublisher(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis),
 	}

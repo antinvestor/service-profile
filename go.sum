@@ -294,8 +294,8 @@ github.com/ory/keto/proto v0.13.0-alpha.0.0.20260420082854-eb334a7a5cf0 h1:huZxe
 github.com/ory/keto/proto v0.13.0-alpha.0.0.20260420082854-eb334a7a5cf0/go.mod h1:c2UboItfGpqIzXoXlxBRMCp3rQqO+Wx2ecsH25jcWxU=
 github.com/panjf2000/ants/v2 v2.12.1 h1:BWvU2wHpyXWxhhNXsGB6JXLCNbshyLd1QxvoAmZnu10=
 github.com/panjf2000/ants/v2 v2.12.1/go.mod h1:tSQuaNQ6r6NRhPt+IZVUevvDyFMTs+eS4ztZc52uJTY=
-github.com/pitabwire/frame/v2 v2.1.3 h1:G+bSbQfIqCOyxOtU9+7Qke24SgtF5I+arksa8aE1DMY=
-github.com/pitabwire/frame/v2 v2.1.3/go.mod h1:5WqtBx14wGi5RQ0FmHSSOUqQW26/ych/CbU0vZEkfT4=
+github.com/pitabwire/frame/v2 v2.1.4 h1:d/5KqXhRoFp3TbIaiYDW7LUzy9yqAVnzpRnLjo3UB24=
+github.com/pitabwire/frame/v2 v2.1.4/go.mod h1:NcmL8QJh/XeRY6SkcAm07kZtsiyM/Lg+/JsXZ5HJl4A=
 github.com/pitabwire/natspubsub v0.8.4 h1:iXncMM/Fuvmyu3+VFDazOxKf5M3AWNQZdvLpM+NtKZ0=
 github.com/pitabwire/natspubsub v0.8.4/go.mod h1:h2S81+ro+eB1NeWWDbhK4EkEN/A72o7hnrDXTUq67Js=
 github.com/pitabwire/util v0.9.1 h1:V8Ag8TNGXoLztuTCbItj67MmQSS+ObEPzQipUCo2NKY=
@@ -325,8 +325,8 @@ github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0t
 github.com/rogpeppe/go-internal v1.14.1/go.mod h1:MaRKkUm5W0goXpeCfT7UZI6fk/L7L7so1lCWt35ZSgc=
 github.com/rs/xid v1.6.0 h1:fV591PaemRlL6JfRxGDEPl69wICngIQ3shQtzfy2gxU=
 github.com/rs/xid v1.6.0/go.mod h1:7XoLgs4eV+QndskICGsho+ADou8ySMSjJKDIan90Nz0=
-github.com/shirou/gopsutil/v4 v4.26.6 h1:Mzr/npDtQC/xpeEuQKHZt8Zo9CmPvhTj8nkR8w5TLDs=
-github.com/shirou/gopsutil/v4 v4.26.6/go.mod h1:LZ6ewCSkBqUpvSOf+LsTGnRinC6iaNUNMGBtDkJBaLQ=
+github.com/shirou/gopsutil/v4 v4.26.7 h1:IXzpHz/dkMRYAhKkOXr1HB6SuzWU3eoyyeWe7g3bNZc=
+github.com/shirou/gopsutil/v4 v4.26.7/go.mod h1:5O9FjBiXoTDFatIWjZZosqj4pV0DRtLx598xGbBehzM=
 github.com/sirupsen/logrus v1.9.4 h1:TsZE7l11zFCLZnZ+teH4Umoq5BhEIfIzfRDZ1Uzql2w=
 github.com/sirupsen/logrus v1.9.4/go.mod h1:ftWc9WdOfJ0a92nsE2jF5u5ZwH8Bv2zdeOC42RjbV2g=
 github.com/spiffe/go-spiffe/v2 v2.8.1 h1:eXZMLsu+3MLEPJyGJkolqtVrteZfQdUpOWj6LTiDl/E=
@@ -509,8 +509,8 @@ gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EV
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
-gorm.io/driver/postgres v1.6.1 h1:9dA1M08/ZHE0AKrnqeoG0m1Ha9cW7UALU/OPqIjIyF8=
-gorm.io/driver/postgres v1.6.1/go.mod h1:N6HRC/7+yKySXENJ1O4Yh/upkpSJG4vw0H5Rk0UHx3A=
+gorm.io/driver/postgres v1.6.2 h1:BvXQ/cNUg63q5TFNg672DmDcowZSFrNLkkA3Xe6GXq4=
+gorm.io/driver/postgres v1.6.2/go.mod h1:0c4fQA44XhOklXDkgtuKqysHCycTa5i9e3EIpDGCwXk=
 gorm.io/driver/sqlite v1.6.0 h1:WHRRrIiulaPiPFmDcod6prc4l2VGVWHz80KspNsxSfQ=
 gorm.io/driver/sqlite v1.6.0/go.mod h1:AO9V1qIQddBESngQUKWL9yoH93HIeA1X6V633rBwyT8=
 gorm.io/gorm v1.31.2 h1:3o8FXNo9v9S858gil+3LlZA1LkCOzgb4g5BL64FgaCo=

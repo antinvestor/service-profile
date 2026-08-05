@@ -119,7 +119,6 @@ func runtimeServiceOptions(
 
 	return []frame.Option{
 		frame.WithHTTPHandler(connectHandler),
-		frame.WithPermissionRegistration(profileSD),
 		frame.WithRegisterPublisher(
 			cfg.QueueRelationshipConnectName,
 			cfg.QueueRelationshipConnectURI,
