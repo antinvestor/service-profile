@@ -28,15 +28,16 @@ type Config struct {
 }
 
 // BuildCompleter constructs a sticky failover completer from config.
-// Returns (nil, nil) when inference is not configured (evidence-only mode).
-// Returns (nil, err) when config is present but invalid.
+// When inference is not configured, returns a nil completer and a nil error
+// (evidence-only mode). Invalid config returns a non-nil error.
 func BuildCompleter(cfg Config, httpClient *http.Client) (*FailoverCompleter, error) {
 	candidates, err := CandidatesFromConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 	if len(candidates) == 0 {
-		return nil, nil
+		// Evidence-only mode: nil completer is intentional, not an error.
+		return nil, nil //nolint:nilnil // disabled inference is not a failure
 	}
 	cooldown := DefaultCooldown
 	if s := strings.TrimSpace(cfg.FailoverCooldown); s != "" {
@@ -130,9 +131,8 @@ func CandidatesFromConfig(cfg Config) ([]Candidate, error) {
 			Keys:     secondaryKeys,
 			Label:    "secondary",
 		})
-	} else if secProvRaw != "" || secBase != "" {
-		// Declared but not yet keyed — skip secondary pool (primary-only mode).
 	}
+	// Secondary provider/base without keys is ignored (primary-only until keys are seeded).
 
 	return BuildCandidates(slots...)
 }

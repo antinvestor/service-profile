@@ -17,7 +17,7 @@ import (
 )
 
 func chatOK(content string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		_ = json.NewEncoder(w).Encode(map[string]any{
 			"choices": []map[string]any{
 				{"message": map[string]string{"content": content}},
@@ -27,7 +27,7 @@ func chatOK(content string) http.HandlerFunc {
 }
 
 func chatStatus(code int, body string) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(code)
 		_, _ = io.WriteString(w, body)
 	}
@@ -87,7 +87,7 @@ func TestFailover_StickyUsesPrimaryWhileHealthy(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	for i := 0; i < 3; i++ {
+	for range 3 {
 		out, cerr := fc.Complete(ctx, "hello")
 		require.NoError(t, cerr)
 		require.Contains(t, out, "ok")
@@ -214,7 +214,7 @@ func TestFailover_Hard400DoesNotTryNextKey(t *testing.T) {
 func TestFailover_CallerCancelIsHard(t *testing.T) {
 	t.Parallel()
 	var hits atomic.Int32
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	srv := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
 		hits.Add(1)
 		<-r.Context().Done()
 	}))
@@ -267,6 +267,7 @@ func TestFailover_Auth401DegradesToNext(t *testing.T) {
 func TestFailover_SecondaryAfterPrimaryPool(t *testing.T) {
 	t.Parallel()
 	var pathHits sync.Map
+	var googlePath string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		pathHits.Store(r.URL.Path, true)
 		auth := r.Header.Get("Authorization")
@@ -275,10 +276,10 @@ func TestFailover_SecondaryAfterPrimaryPool(t *testing.T) {
 			chatStatus(http.StatusTooManyRequests, "rl")(w, r)
 		case "Bearer gk1":
 			// Google path should be /chat/completions not /v1/...
-			require.Equal(t, llm.PathGoogleCompletions, r.URL.Path)
+			googlePath = r.URL.Path
 			chatOK("gemini-ok")(w, r)
 		default:
-			http.Error(w, "bad auth", 500)
+			http.Error(w, "bad auth", http.StatusInternalServerError)
 		}
 	}))
 	t.Cleanup(srv.Close)
@@ -294,6 +295,7 @@ func TestFailover_SecondaryAfterPrimaryPool(t *testing.T) {
 	out, err := fc.Complete(context.Background(), "x")
 	require.NoError(t, err)
 	require.Equal(t, "gemini-ok", out)
+	require.Equal(t, llm.PathGoogleCompletions, googlePath)
 
 	_, okV1 := pathHits.Load(llm.PathOpenAICompletions)
 	_, okG := pathHits.Load(llm.PathGoogleCompletions)
@@ -311,16 +313,21 @@ func TestFailover_ConcurrentSafe(t *testing.T) {
 	fc, err := llm.NewFailover(candidatesFor(srv.URL, "key1"), srv.Client(), llm.WithCooldown(time.Minute))
 	require.NoError(t, err)
 
-	var wg sync.WaitGroup
-	for i := 0; i < 20; i++ {
+	var (
+		wg   sync.WaitGroup
+		errs atomic.Int32
+	)
+	for range 20 {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			_, cerr := fc.Complete(context.Background(), "x")
-			require.NoError(t, cerr)
+			if _, cerr := fc.Complete(context.Background(), "x"); cerr != nil {
+				errs.Add(1)
+			}
 		}()
 	}
 	wg.Wait()
+	require.Equal(t, int32(0), errs.Load())
 }
 
 func TestClassify_StatusCodes(t *testing.T) {

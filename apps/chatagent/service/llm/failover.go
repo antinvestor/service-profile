@@ -157,7 +157,7 @@ func (f *FailoverCompleter) attemptOrder() []int {
 	now := f.now()
 	n := len(f.candidates)
 	healthy := make([]int, 0, n)
-	for i := 0; i < n; i++ {
+	for i := range n {
 		until := f.degradedUntil[i]
 		if until.IsZero() || !now.Before(until) {
 			// Cooldown expired: clear so next classify starts clean.

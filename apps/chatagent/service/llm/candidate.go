@@ -68,7 +68,7 @@ func ParseProvider(s string) (Provider, error) {
 
 // ResolveBaseURL returns base URL and completions path for a provider slot.
 // Explicit baseURL overrides the provider default when non-empty.
-func ResolveBaseURL(provider Provider, baseURL string) (base string, path string, err error) {
+func ResolveBaseURL(provider Provider, baseURL string) (string, string, error) {
 	baseURL = strings.TrimRight(strings.TrimSpace(baseURL), "/")
 	switch provider {
 	case ProviderOpenAI:
