@@ -165,12 +165,63 @@ Notification already uses.
 |-----|---------|
 | `DATABASE_PRIMARY_URL` | PostgreSQL |
 | `DATABASE_MIGRATION_PATH` | e.g. `file://migrations` |
-| `INFERENCE_BASE_URL` | OpenAI-compatible root (optional) |
-| `INFERENCE_API_KEY` | Bearer token |
-| `INFERENCE_MODEL` | Default `meta/llama-3.1-8b-instruct` |
 | `NOTIFICATION_SERVICE_URI` | Existing Notification Connect endpoint (optional) |
 | `NOTIFICATION_SERVICE_WORKLOAD_API_TARGET_PATH` | SPIFFE path for S2S to notification |
 | OIDC / Frame security | Same as other profile apps |
+
+### Inference (sticky multi-key failover)
+
+Inference is optional. When no provider/keys/base URL are set, the agent runs in
+**evidence-only** mode (guided replies without LLM extract).
+
+| Env | Purpose |
+|-----|---------|
+| `INFERENCE_PROVIDER` | `openai`, `google`, or `custom` |
+| `INFERENCE_BASE_URL` | Override root URL (required for `custom`; optional override for openai/google) |
+| `INFERENCE_MODEL` | Primary model (default `meta/llama-3.1-8b-instruct`) |
+| `INFERENCE_API_KEY` | Single bearer token (legacy) |
+| `INFERENCE_API_KEYS` | Ordered keys (`key1,key2` or whitespace). Preferred over single key |
+| `INFERENCE_SECONDARY_PROVIDER` | Optional fallback provider after primary keys degrade |
+| `INFERENCE_SECONDARY_BASE_URL` | Override for secondary |
+| `INFERENCE_SECONDARY_MODEL` | Secondary model (defaults to primary model if empty) |
+| `INFERENCE_SECONDARY_API_KEY` / `INFERENCE_SECONDARY_API_KEYS` | Secondary key pool |
+| `INFERENCE_FAILOVER_COOLDOWN` | How long a failed key is skipped (default `2m`) |
+
+**Behavior (not load balancing):**
+
+1. Always use the **highest-priority healthy** candidate (primary key order, then secondary).
+2. On degradable errors (429, 5xx, 401/403, timeouts, network), mark that key degraded for the cooldown and try the next key **in the same request**.
+3. Do **not** rotate keys every request while the primary is healthy.
+4. When the cooldown expires, the primary key is preferred again.
+5. Hard client errors (400/422) fail the request without burning other keys.
+
+**Provider defaults:**
+
+| Provider | Default base | Completions path |
+|----------|--------------|------------------|
+| `openai` | `https://api.openai.com` | `/v1/chat/completions` |
+| `google` | `https://generativelanguage.googleapis.com/v1beta/openai` | `/chat/completions` |
+| `custom` | (required via `INFERENCE_BASE_URL`) | `/v1/chat/completions` |
+
+**Example — OpenAI primary keys + Gemini secondary:**
+
+```bash
+INFERENCE_PROVIDER=openai
+INFERENCE_MODEL=gpt-4o-mini
+INFERENCE_API_KEYS=sk-proj-primary,sk-proj-backup
+INFERENCE_SECONDARY_PROVIDER=google
+INFERENCE_SECONDARY_MODEL=gemini-2.0-flash
+INFERENCE_SECONDARY_API_KEYS=AIzaSy…primary,AIzaSy…backup
+INFERENCE_FAILOVER_COOLDOWN=2m
+```
+
+**Legacy (unchanged):**
+
+```bash
+INFERENCE_BASE_URL=https://my-gateway.example
+INFERENCE_API_KEY=secret
+INFERENCE_MODEL=meta/llama-3.1-8b-instruct
+```
 
 ## Local generate protos
 
@@ -194,7 +245,7 @@ apps/chatagent/
     handlers/          Connect RPC
     repository/        PostgreSQL
     models/
-    llm/               OpenAI-compatible client
+    llm/               OpenAI-compatible client + sticky multi-key failover
     authz/
   migrations/
 ```

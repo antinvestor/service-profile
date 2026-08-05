@@ -104,9 +104,17 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, cfg *aconfig.Ch
 
 	implementation := handlers.NewChatAgentServer(ctx, svc, handlers.ServerDeps{
 		LLM: handlers.LLMConfig{
-			BaseURL: cfg.InferenceBaseURL,
-			APIKey:  cfg.InferenceAPIKey,
-			Model:   cfg.InferenceModel,
+			Provider:          cfg.InferenceProvider,
+			BaseURL:           cfg.InferenceBaseURL,
+			APIKey:            cfg.InferenceAPIKey,
+			APIKeys:           cfg.InferenceAPIKeys,
+			Model:             cfg.InferenceModel,
+			SecondaryProvider: cfg.InferenceSecondaryProvider,
+			SecondaryBaseURL:  cfg.InferenceSecondaryBaseURL,
+			SecondaryAPIKey:   cfg.InferenceSecondaryAPIKey,
+			SecondaryAPIKeys:  cfg.InferenceSecondaryAPIKeys,
+			SecondaryModel:    cfg.InferenceSecondaryModel,
+			FailoverCooldown:  cfg.InferenceFailoverCooldown,
 		},
 		NotificationClient: notificationCli,
 	})

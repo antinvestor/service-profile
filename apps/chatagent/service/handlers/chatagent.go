@@ -7,6 +7,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/v2"
 	"github.com/pitabwire/frame/v2/datastore"
+	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/chatagent/service/business"
 	"github.com/antinvestor/service-profile/apps/chatagent/service/engine"
@@ -24,10 +25,21 @@ type ChatAgentServer struct {
 }
 
 // LLMConfig configures optional inference for the handler stack.
+// Supports sticky multi-key failover (see llm.Config / llm.BuildCompleter).
 type LLMConfig struct {
-	BaseURL string
-	APIKey  string
-	Model   string
+	Provider string
+	BaseURL  string
+	APIKey   string
+	APIKeys  string
+	Model    string
+
+	SecondaryProvider string
+	SecondaryBaseURL  string
+	SecondaryAPIKey   string
+	SecondaryAPIKeys  string
+	SecondaryModel    string
+
+	FailoverCooldown string
 }
 
 // ServerDeps optional dependencies for ChatAgentServer.
@@ -47,9 +59,30 @@ func NewChatAgentServer(ctx context.Context, svc *frame.Service, deps ServerDeps
 	msgRepo := repository.NewMessageRepository(ctx, dbPool, workMan)
 
 	var completer engine.Completer
-	if deps.LLM.BaseURL != "" {
-		httpClient := svc.HTTPClientManager().Client(ctx)
-		completer = llm.New(deps.LLM.BaseURL, deps.LLM.APIKey, deps.LLM.Model, httpClient)
+	httpClient := svc.HTTPClientManager().Client(ctx)
+	fc, err := llm.BuildCompleter(llm.Config{
+		Provider:          deps.LLM.Provider,
+		BaseURL:           deps.LLM.BaseURL,
+		Model:             deps.LLM.Model,
+		APIKey:            deps.LLM.APIKey,
+		APIKeys:           deps.LLM.APIKeys,
+		SecondaryProvider: deps.LLM.SecondaryProvider,
+		SecondaryBaseURL:  deps.LLM.SecondaryBaseURL,
+		SecondaryModel:    deps.LLM.SecondaryModel,
+		SecondaryAPIKey:   deps.LLM.SecondaryAPIKey,
+		SecondaryAPIKeys:  deps.LLM.SecondaryAPIKeys,
+		FailoverCooldown:  deps.LLM.FailoverCooldown,
+	}, httpClient)
+	if err != nil {
+		util.Log(ctx).WithError(err).Fatal("chatagent: invalid inference configuration")
+	}
+	if fc != nil {
+		util.Log(ctx).Info("chatagent: inference enabled",
+			"candidates", fc.CandidateCount(),
+		)
+		completer = fc
+	} else {
+		util.Log(ctx).Info("chatagent: inference disabled (evidence-only mode)")
 	}
 
 	return &ChatAgentServer{

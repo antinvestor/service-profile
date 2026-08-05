@@ -11,25 +11,61 @@ import (
 	"time"
 )
 
-// Completer posts OpenAI-compatible chat completions.
+// Completer posts OpenAI-compatible chat completions for a single endpoint/key.
 type Completer struct {
-	BaseURL    string
-	APIKey     string
-	Model      string
-	HTTPClient *http.Client
+	BaseURL         string
+	CompletionsPath string
+	APIKey          string
+	Model           string
+	HTTPClient      *http.Client
 }
 
-// New creates a Completer. httpClient may be nil (uses a 90s timeout client).
+// New creates a Completer with the OpenAI-style path (/v1/chat/completions).
+// httpClient may be nil (uses a 90s timeout client).
 func New(baseURL, apiKey, model string, httpClient *http.Client) *Completer {
+	return NewWithPath(baseURL, PathOpenAICompletions, apiKey, model, httpClient)
+}
+
+// NewWithPath creates a Completer with an explicit completions path
+// (e.g. Google OpenAI-compat uses /chat/completions).
+func NewWithPath(baseURL, completionsPath, apiKey, model string, httpClient *http.Client) *Completer {
 	if httpClient == nil {
 		httpClient = &http.Client{Timeout: 90 * time.Second}
 	}
-	return &Completer{
-		BaseURL:    strings.TrimRight(baseURL, "/"),
-		APIKey:     apiKey,
-		Model:      model,
-		HTTPClient: httpClient,
+	if strings.TrimSpace(completionsPath) == "" {
+		completionsPath = PathOpenAICompletions
 	}
+	return &Completer{
+		BaseURL:         strings.TrimRight(strings.TrimSpace(baseURL), "/"),
+		CompletionsPath: normalizePath(completionsPath),
+		APIKey:          apiKey,
+		Model:           model,
+		HTTPClient:      httpClient,
+	}
+}
+
+// NewFromCandidate builds a Completer for one failover candidate.
+func NewFromCandidate(c Candidate, httpClient *http.Client) *Completer {
+	return NewWithPath(c.BaseURL, c.CompletionsPath, c.APIKey, c.Model, httpClient)
+}
+
+func normalizePath(p string) string {
+	p = strings.TrimSpace(p)
+	if p == "" {
+		return PathOpenAICompletions
+	}
+	if !strings.HasPrefix(p, "/") {
+		p = "/" + p
+	}
+	return p
+}
+
+// CompletionsURL returns the full POST URL.
+func (c *Completer) CompletionsURL() string {
+	if c == nil {
+		return ""
+	}
+	return c.BaseURL + c.CompletionsPath
 }
 
 // Complete implements engine.Completer.
@@ -50,7 +86,7 @@ func (c *Completer) Complete(ctx context.Context, prompt string) (string, error)
 	if err != nil {
 		return "", fmt.Errorf("llm: marshal: %w", err)
 	}
-	url := c.BaseURL + "/v1/chat/completions"
+	url := c.CompletionsURL()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, bytes.NewReader(raw))
 	if err != nil {
 		return "", fmt.Errorf("llm: request: %w", err)
@@ -66,7 +102,7 @@ func (c *Completer) Complete(ctx context.Context, prompt string) (string, error)
 	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		b, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
-		return "", fmt.Errorf("llm: status %d: %s", resp.StatusCode, string(b))
+		return "", &HTTPStatusError{StatusCode: resp.StatusCode, Body: string(b)}
 	}
 	var out struct {
 		Choices []struct {
