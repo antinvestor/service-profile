@@ -38,6 +38,7 @@ class service_device implements Namespace {
 
     device_manage: (ctx: Context): boolean =>
       this.related.admin.includes(ctx.subject) ||
+      this.related.member.includes(ctx.subject) ||
       this.related.operator.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.service.includes(ctx.subject) ||
@@ -45,6 +46,7 @@ class service_device implements Namespace {
 
     device_key_view: (ctx: Context): boolean =>
       this.related.admin.includes(ctx.subject) ||
+      this.related.member.includes(ctx.subject) ||
       this.related.operator.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.service.includes(ctx.subject) ||
@@ -53,6 +55,7 @@ class service_device implements Namespace {
 
     device_key_manage: (ctx: Context): boolean =>
       this.related.admin.includes(ctx.subject) ||
+      this.related.member.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.service.includes(ctx.subject) ||
       this.related.granted_device_key_manage.includes(ctx.subject),
@@ -68,6 +71,7 @@ class service_device implements Namespace {
 
     device_log_manage: (ctx: Context): boolean =>
       this.related.admin.includes(ctx.subject) ||
+      this.related.member.includes(ctx.subject) ||
       this.related.operator.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.service.includes(ctx.subject) ||

@@ -623,10 +623,16 @@ service DeviceService {
         ]
       },
       {
+        // Partition members may register/link their devices, keys, presence,
+        // and logs without admin grants (user-scoped platform baseline).
         role: ROLE_MEMBER
         permissions: [
           "device_view",
-          "device_log_view"
+          "device_manage",
+          "device_key_view",
+          "device_key_manage",
+          "device_log_view",
+          "device_log_manage"
         ]
       },
       {

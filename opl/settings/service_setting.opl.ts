@@ -34,6 +34,7 @@ class service_setting implements Namespace {
 
     setting_manage: (ctx: Context): boolean =>
       this.related.admin.includes(ctx.subject) ||
+      this.related.member.includes(ctx.subject) ||
       this.related.owner.includes(ctx.subject) ||
       this.related.service.includes(ctx.subject) ||
       this.related.granted_setting_manage.includes(ctx.subject),
