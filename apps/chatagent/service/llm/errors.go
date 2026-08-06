@@ -149,15 +149,18 @@ func Classify(callerCtx context.Context, err error) Class {
 func classifyStatus(code int) Class {
 	switch code {
 	case http.StatusTooManyRequests, // 429
-		http.StatusUnauthorized, // 401
+		http.StatusUnauthorized, // 401 — try next key / secondary provider
 		http.StatusForbidden,    // 403
 		http.StatusInternalServerError,
 		http.StatusBadGateway,
 		http.StatusServiceUnavailable,
 		http.StatusGatewayTimeout:
 		return ClassDegradable
-	case http.StatusBadRequest,
-		http.StatusNotFound,
+	case http.StatusBadRequest:
+		// Invalid API key often returns 400 with a body message — still try
+		// the next key or secondary provider rather than hard-stopping the pool.
+		return ClassDegradable
+	case http.StatusNotFound,
 		http.StatusRequestEntityTooLarge,
 		http.StatusUnprocessableEntity:
 		return ClassHard

@@ -187,17 +187,17 @@ func TestFailover_CooldownRestoresPrimary(t *testing.T) {
 	require.Equal(t, int32(2), hits2.Load())
 }
 
-func TestFailover_Hard400DoesNotTryNextKey(t *testing.T) {
+func TestFailover_400DegradesAndTriesNextKey(t *testing.T) {
 	t.Parallel()
 	var hits1, hits2 atomic.Int32
 	srv := multiKeyServer(t, map[string]http.HandlerFunc{
 		"key1": func(w http.ResponseWriter, r *http.Request) {
 			hits1.Add(1)
-			chatStatus(http.StatusBadRequest, `{"error":"bad json schema"}`)(w, r)
+			chatStatus(http.StatusBadRequest, `{"error":"Please pass a valid API key"}`)(w, r)
 		},
 		"key2": func(w http.ResponseWriter, r *http.Request) {
 			hits2.Add(1)
-			chatOK("should-not-run")(w, r)
+			chatOK("from-key2")(w, r)
 		},
 	})
 	t.Cleanup(srv.Close)
@@ -205,10 +205,11 @@ func TestFailover_Hard400DoesNotTryNextKey(t *testing.T) {
 	fc, err := llm.NewFailover(candidatesFor(srv.URL, "key1", "key2"), srv.Client(), llm.WithCooldown(time.Minute))
 	require.NoError(t, err)
 
-	_, err = fc.Complete(context.Background(), "hello")
-	require.Error(t, err)
+	out, err := fc.Complete(context.Background(), "hello")
+	require.NoError(t, err)
+	require.Equal(t, "from-key2", out)
 	require.Equal(t, int32(1), hits1.Load())
-	require.Equal(t, int32(0), hits2.Load(), "hard errors must not fan out to other keys")
+	require.Equal(t, int32(1), hits2.Load(), "400 invalid-key style errors should try next candidate")
 }
 
 func TestFailover_CallerCancelIsHard(t *testing.T) {
@@ -337,7 +338,7 @@ func TestClassify_StatusCodes(t *testing.T) {
 	require.Equal(t, llm.ClassDegradable, llm.Classify(ctx, &llm.HTTPStatusError{StatusCode: 429}))
 	require.Equal(t, llm.ClassDegradable, llm.Classify(ctx, &llm.HTTPStatusError{StatusCode: 503}))
 	require.Equal(t, llm.ClassDegradable, llm.Classify(ctx, &llm.HTTPStatusError{StatusCode: 401}))
-	require.Equal(t, llm.ClassHard, llm.Classify(ctx, &llm.HTTPStatusError{StatusCode: 400}))
+	require.Equal(t, llm.ClassDegradable, llm.Classify(ctx, &llm.HTTPStatusError{StatusCode: 400}))
 	require.Equal(t, llm.ClassHard, llm.Classify(ctx, &llm.HTTPStatusError{StatusCode: 422}))
 }
 
