@@ -105,7 +105,7 @@ func runtimeServiceOptions(
 	ctx context.Context,
 	svc *frame.Service,
 	cfg *aconfig.ProfileConfig,
-	profileSD protoreflect.ServiceDescriptor,
+	_ protoreflect.ServiceDescriptor,
 	dek *aconfig.DEK,
 	notificationCli notificationv1connect.NotificationServiceClient,
 ) []frame.Option {
