@@ -626,10 +626,15 @@ service ProfileService {
         ]
       },
       {
+        // Partition members may maintain their own profile, contacts, and
+        // addresses without admin grants (user-scoped platform baseline).
         role: ROLE_MEMBER
         permissions: [
           "profile_view",
+          "profile_update",
+          "contact_manage",
           "roster_view",
+          "address_manage",
           "relationship_view"
         ]
       },

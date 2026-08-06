@@ -379,8 +379,11 @@ service GeolocationService {
         ]
       },
       {
+        // Partition members may send their own location and read geo views
+        // without admin grants (user-scoped platform baseline).
         role: ROLE_MEMBER
         permissions: [
+          "location_ingest",
           "area_view",
           "route_view",
           "track_view",

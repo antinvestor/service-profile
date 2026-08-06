@@ -154,8 +154,9 @@ service OCRService {
         permissions: ["ocr_status_view"]
       },
       {
+        // Partition members may submit OCR jobs for their own documents.
         role: ROLE_MEMBER
-        permissions: ["ocr_status_view"]
+        permissions: ["ocr_submit", "ocr_status_view"]
       },
       {
         role: ROLE_SERVICE

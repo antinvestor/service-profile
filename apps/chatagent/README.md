@@ -97,6 +97,21 @@ cli.Send(ctx, connect.NewRequest(&notificationv1.SendRequest{Data: []*notificati
 
 Audience path (catalog): `/chat-agent` (`servicecatalog.ServiceChatAgent`).
 
+## Consumer authorization (read before enabling a product)
+
+**Normative:** service-authentication
+[ADR 0002](https://github.com/antinvestor/service-authentication/blob/main/docs/adr/0002-product-peer-mesh-not-per-tenant-grants.md).
+
+| Who | How they reach chat-agent |
+|-----|---------------------------|
+| **End users (mode U)** | User JWT. Public OAuth clients get `/chat-agent` automatically (`ensurePublicPlatformAudiences`). Partition **members** have `chat_agent_view` + `chat_agent_turn` via OPL. Session `subject_id` should be the caller’s profile. **No** per-tenant grants. |
+| **Product BFF (mode B)** | Product authenticates the user, then calls with **product SA** token and passes `subject_id` in the body. Needs SA recipients + `service_chat_agent` grants (once for the platform product bot). |
+
+**Never** grant chat-agent access with per-customer / per-tenant migrations.
+
+Introducing this service seeds the **owner** SA only. **S2S consumers** are not
+auto-wired — update each consumer product SA contract when using mode B.
+
 ## Examples
 
 ### Web (default)
