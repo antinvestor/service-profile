@@ -229,23 +229,3 @@ func looksLikeFalseReady(s string) bool {
 		strings.Contains(low, "we're ready") ||
 		strings.Contains(low, "you are all set")
 }
-
-func replyTargetsMissing(reply, missingKey string, def ContextDef) bool {
-	low := strings.ToLower(reply)
-	fd := fieldByName(def, missingKey)
-	// Soft match on field name tokens and ask text.
-	for _, token := range strings.Fields(strings.ReplaceAll(missingKey, "_", " ")) {
-		if len(token) >= 3 && strings.Contains(low, strings.ToLower(token)) {
-			return true
-		}
-	}
-	if fd.Ask != "" {
-		for _, token := range strings.Fields(fd.Ask) {
-			t := strings.ToLower(strings.Trim(token, "?,.!"))
-			if len(t) >= 4 && strings.Contains(low, t) {
-				return true
-			}
-		}
-	}
-	return false
-}
