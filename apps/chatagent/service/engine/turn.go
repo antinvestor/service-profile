@@ -37,26 +37,28 @@ func (a *Agent) Turn(ctx context.Context, def ContextDef, in TurnInput) (TurnRes
 	msg := strings.TrimSpace(in.Message)
 
 	// Run LLM extract when we have any signal (message, docs, or incomplete seed).
+	// When inference is configured, failures are hard errors — never fall through
+	// to canned/template guided replies that look like a successful assistant turn.
 	needExtract := a.LLM != nil && (msg != "" || len(in.Evidence.Documents) > 0 || !readyBefore || len(in.Evidence.Messages) > 0)
 	if needExtract {
 		prompt := BuildExtractPrompt(def, fields, missingBefore, in.Evidence, msg)
 		raw, err := a.LLM.Complete(ctx, prompt)
 		if err != nil {
-			log.WithError(err).Warn("chatagent: LLM extract failed; continuing with evidence only")
+			log.WithError(err).Error("chatagent: LLM extract failed")
+			return TurnResult{}, fmt.Errorf("chatagent: llm extract failed: %w", err)
+		}
+		extracted, reply, perr := parseExtractResponse(raw)
+		if perr != nil {
+			log.WithError(perr).Error("chatagent: LLM JSON parse failed")
+			return TurnResult{}, fmt.Errorf("chatagent: llm response unusable: %w", perr)
+		}
+		fields = MergeFields(fields, extracted)
+		fields = Sanitize(def, fields)
+		llmReply = strings.TrimSpace(reply)
+		if source == "evidence" {
+			source = "evidence+llm"
 		} else {
-			extracted, reply, perr := parseExtractResponse(raw)
-			if perr != nil {
-				log.WithError(perr).Warn("chatagent: LLM JSON parse failed")
-			} else {
-				fields = MergeFields(fields, extracted)
-				fields = Sanitize(def, fields)
-				llmReply = strings.TrimSpace(reply)
-				if source == "evidence" {
-					source = "evidence+llm"
-				} else {
-					source = "llm"
-				}
-			}
+			source = "llm"
 		}
 	}
 
@@ -151,24 +153,37 @@ func extractJSONObject(s string) string {
 	return s
 }
 
-// ComposeReply prefers a useful model reply but never claims readiness while missing.
+// ComposeReply prefers the model reply. It never invents a canned “Got it…”
+// intake script when the model did not produce wording — callers must fail the
+// turn if extract failed. Guided follow-up is only used when inference is
+// disabled (llmReply empty and no LLM was expected).
 func ComposeReply(def ContextDef, fields Fields, missing []string, ready bool, llmReply string) string {
 	llmReply = strings.TrimSpace(llmReply)
 	if ready {
+		if llmReply != "" && !looksLikeAskingForMore(llmReply) {
+			return llmReply
+		}
 		if def.ReplyPolicy.CompleteMessage != "" {
 			return def.ReplyPolicy.CompleteMessage
 		}
-		if llmReply != "" && !looksLikeAskingForMore(llmReply) {
+		if llmReply != "" {
 			return llmReply
 		}
 		return "Thanks — I have everything I need for now."
 	}
-	// Not ready: allow model wording if it asks for the top missing field.
-	if llmReply != "" && looksLikeAskingForMore(llmReply) && !looksLikeFalseReady(llmReply) {
-		if len(missing) == 0 || replyTargetsMissing(llmReply, missing[0], def) {
+	// Prefer authentic model text whenever present and not a false “ready” claim.
+	if llmReply != "" {
+		if looksLikeFalseReady(llmReply) {
+			// Strip false completion claims; keep any steering if present.
+			if looksLikeAskingForMore(llmReply) {
+				return llmReply
+			}
+			// Fall through only when model falsely claimed done with no next ask.
+		} else {
 			return llmReply
 		}
 	}
+	// No model wording: structural guided ask (evidence-only / no-inference mode).
 	return guidedFollowUp(def, fields, missing)
 }
 
@@ -213,24 +228,4 @@ func looksLikeFalseReady(s string) bool {
 		strings.Contains(low, "i have everything") ||
 		strings.Contains(low, "we're ready") ||
 		strings.Contains(low, "you are all set")
-}
-
-func replyTargetsMissing(reply, missingKey string, def ContextDef) bool {
-	low := strings.ToLower(reply)
-	fd := fieldByName(def, missingKey)
-	// Soft match on field name tokens and ask text.
-	for _, token := range strings.Fields(strings.ReplaceAll(missingKey, "_", " ")) {
-		if len(token) >= 3 && strings.Contains(low, strings.ToLower(token)) {
-			return true
-		}
-	}
-	if fd.Ask != "" {
-		for _, token := range strings.Fields(fd.Ask) {
-			t := strings.ToLower(strings.Trim(token, "?,.!"))
-			if len(t) >= 4 && strings.Contains(low, t) {
-				return true
-			}
-		}
-	}
-	return false
 }
