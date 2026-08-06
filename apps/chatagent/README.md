@@ -97,6 +97,24 @@ cli.Send(ctx, connect.NewRequest(&notificationv1.SendRequest{Data: []*notificati
 
 Audience path (catalog): `/chat-agent` (`servicecatalog.ServiceChatAgent`).
 
+## Consumer authorization (read before enabling a product)
+
+**Normative:** service-authentication
+[ADR 0002 — product peer mesh, not per-tenant grants](https://github.com/antinvestor/service-authentication/blob/main/docs/adr/0002-product-peer-mesh-not-per-tenant-grants.md).
+
+| Who | How they reach chat-agent |
+|-----|---------------------------|
+| End users | **Do not** call this service with their JWT by default. Product BFF (e.g. matching) authenticates the user, then calls chat-agent with the **product SA** token and passes `subject_id` in the body. |
+| Product service accounts | Need (1) deploy `requested_audience_paths` `/chat-agent`, (2) `oauth_client_recipients` for `https://api.stawi.org/chat-agent`, (3) SA policy grants on `service_chat_agent` for the RPCs they call (`chat_agent_turn`, etc.). |
+
+**Never** grant chat-agent access with per-customer / per-tenant migrations.
+One platform product SA peer contract covers all tenants. New users only need
+access to the product edge (e.g. matching).
+
+Introducing this service seeds the **owner** SA only (`make new-service` /
+`20260730_01_service_chat_agent.sql`). **Consumers are not auto-wired** — update
+each consumer product SA contract explicitly.
+
 ## Examples
 
 ### Web (default)
