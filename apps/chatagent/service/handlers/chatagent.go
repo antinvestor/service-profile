@@ -6,6 +6,7 @@ import (
 	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/v2"
+	frameclient "github.com/pitabwire/frame/v2/client"
 	"github.com/pitabwire/frame/v2/datastore"
 	"github.com/pitabwire/util"
 
@@ -59,7 +60,12 @@ func NewChatAgentServer(ctx context.Context, svc *frame.Service, deps ServerDeps
 	msgRepo := repository.NewMessageRepository(ctx, dbPool, workMan)
 
 	var completer engine.Completer
-	httpClient := svc.HTTPClientManager().Client(ctx)
+	// External LLM providers authenticate with their own API keys in
+	// Authorization. The Frame manager client normally auto-attaches this
+	// service's OAuth bearer, which clobbers the provider key → Google 400
+	// "Please pass a valid API key" and NVIDIA 401. WithHTTPNoAuth keeps
+	// OTEL/retry/pooling but leaves Authorization alone for the LLM key.
+	httpClient := svc.HTTPClientManager().Client(ctx, frameclient.WithHTTPNoAuth())
 	fc, err := llm.BuildCompleter(llm.Config{
 		Provider:          deps.LLM.Provider,
 		BaseURL:           deps.LLM.BaseURL,
