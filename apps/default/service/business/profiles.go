@@ -604,7 +604,7 @@ func (pb *profileBusiness) GetContactByID(
 func (pb *profileBusiness) GetContacts(
 	ctx context.Context,
 	ids []string,
-) (found []*profilev1.ContactObject, missing []string, err error) {
+) ([]*profilev1.ContactObject, []string, error) {
 	// Normalize + dedupe request ids.
 	seenReq := make(map[string]struct{}, len(ids))
 	reqIDs := make([]string, 0, len(ids))
@@ -620,7 +620,10 @@ func (pb *profileBusiness) GetContacts(
 		reqIDs = append(reqIDs, id)
 	}
 	if len(reqIDs) == 0 {
-		return nil, nil, connect.NewError(connect.CodeInvalidArgument, errors.New("at least one contact id is required"))
+		return nil, nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			errors.New("at least one contact id is required"),
+		)
 	}
 
 	contacts, err := pb.contactBusiness.GetByIDs(ctx, reqIDs)
@@ -628,7 +631,7 @@ func (pb *profileBusiness) GetContacts(
 		return nil, nil, err
 	}
 
-	found = make([]*profilev1.ContactObject, 0, len(contacts))
+	found := make([]*profilev1.ContactObject, 0, len(contacts))
 	foundSet := make(map[string]struct{}, len(contacts))
 	for _, c := range contacts {
 		obj, toErr := c.ToAPI(pb.dek, true)
@@ -638,6 +641,7 @@ func (pb *profileBusiness) GetContacts(
 		found = append(found, obj)
 		foundSet[c.GetID()] = struct{}{}
 	}
+	missing := make([]string, 0)
 	for _, id := range reqIDs {
 		if _, ok := foundSet[id]; !ok {
 			missing = append(missing, id)
