@@ -336,6 +336,9 @@ func (ps *ProfileServer) CreateContact(
 	ctx context.Context,
 	request *connect.Request[profilev1.CreateContactRequest],
 ) (*connect.Response[profilev1.CreateContactResponse], error) {
+	if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
+		return nil, authorizer.ToConnectError(err)
+	}
 	createReq := request.Msg
 
 	contactList, err := ps.contactBusiness.GetByDetail(ctx, createReq.GetContact())
@@ -370,6 +373,24 @@ func (ps *ProfileServer) CreateContact(
 	}
 
 	return connect.NewResponse(&profilev1.CreateContactResponse{Data: contactObj}), nil
+}
+
+// GetContacts resolves one or many contact ids (standalone or attached).
+func (ps *ProfileServer) GetContacts(
+	ctx context.Context,
+	request *connect.Request[profilev1.GetContactsRequest],
+) (*connect.Response[profilev1.GetContactsResponse], error) {
+	if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
+		return nil, authorizer.ToConnectError(err)
+	}
+	found, missing, err := ps.profileBusiness.GetContacts(ctx, request.Msg.GetIds())
+	if err != nil {
+		return nil, errorutil.CleanErr(err)
+	}
+	return connect.NewResponse(&profilev1.GetContactsResponse{
+		Data:       found,
+		MissingIds: missing,
+	}), nil
 }
 
 func (ps *ProfileServer) CreateContactVerification(

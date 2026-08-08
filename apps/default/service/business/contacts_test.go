@@ -352,6 +352,38 @@ func (cts *ContactTestSuite) Test_contactBusiness_GetByDetail() {
 	})
 }
 
+func (cts *ContactTestSuite) Test_contactBusiness_GetByIDs() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := cts.CreateService(t, dep)
+		cb, _ := cts.getContactBusiness(ctx, svc)
+		existing, err := cts.createContacts(ctx, cb, "+256757592215", "batch@example.com")
+		require.NoError(t, err)
+
+		id1 := existing["+256757592215"].GetID()
+		id2 := existing["batch@example.com"].GetID()
+
+		// One id
+		one, err := cb.GetByIDs(ctx, []string{id1})
+		require.NoError(t, err)
+		require.Len(t, one, 1)
+		require.Equal(t, id1, one[0].GetID())
+
+		// Many ids + missing
+		many, err := cb.GetByIDs(ctx, []string{id1, id2, "not-a-real-id-xxx", id1})
+		require.NoError(t, err)
+		require.Len(t, many, 2)
+		got := map[string]struct{}{}
+		for _, c := range many {
+			got[c.GetID()] = struct{}{}
+		}
+		_, ok1 := got[id1]
+		_, ok2 := got[id2]
+		require.True(t, ok1 && ok2)
+	})
+}
+
 func (cts *ContactTestSuite) Test_contactBusiness_GetByID() {
 	t := cts.T()
 

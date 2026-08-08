@@ -74,6 +74,12 @@ type ProfileBusiness interface {
 		contact *profilev1.AddContactRequest,
 	) (*profilev1.ProfileObject, string, error)
 
+	// GetContacts resolves one or many contact ids (standalone or attached).
+	GetContacts(
+		ctx context.Context,
+		ids []string,
+	) (found []*profilev1.ContactObject, missing []string, err error)
+
 	RemoveContact(
 		ctx context.Context,
 		contact *profilev1.RemoveContactRequest,
@@ -591,6 +597,57 @@ func (pb *profileBusiness) GetContactByID(
 		return nil, err
 	}
 	return contactObj, nil
+}
+
+// GetContacts resolves one or many contact ids. Works for standalone and
+// profile-attached contacts. Missing ids are returned separately.
+func (pb *profileBusiness) GetContacts(
+	ctx context.Context,
+	ids []string,
+) ([]*profilev1.ContactObject, []string, error) {
+	// Normalize + dedupe request ids.
+	seenReq := make(map[string]struct{}, len(ids))
+	reqIDs := make([]string, 0, len(ids))
+	for _, id := range ids {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		if _, ok := seenReq[id]; ok {
+			continue
+		}
+		seenReq[id] = struct{}{}
+		reqIDs = append(reqIDs, id)
+	}
+	if len(reqIDs) == 0 {
+		return nil, nil, connect.NewError(
+			connect.CodeInvalidArgument,
+			errors.New("at least one contact id is required"),
+		)
+	}
+
+	contacts, err := pb.contactBusiness.GetByIDs(ctx, reqIDs)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	found := make([]*profilev1.ContactObject, 0, len(contacts))
+	foundSet := make(map[string]struct{}, len(contacts))
+	for _, c := range contacts {
+		obj, toErr := c.ToAPI(pb.dek, true)
+		if toErr != nil {
+			return nil, nil, toErr
+		}
+		found = append(found, obj)
+		foundSet[c.GetID()] = struct{}{}
+	}
+	missing := make([]string, 0)
+	for _, id := range reqIDs {
+		if _, ok := foundSet[id]; !ok {
+			missing = append(missing, id)
+		}
+	}
+	return found, missing, nil
 }
 
 func (pb *profileBusiness) VerifyContact(

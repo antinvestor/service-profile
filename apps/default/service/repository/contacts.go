@@ -62,6 +62,18 @@ func (cr *contactRepository) GetByIDFromPrimary(ctx context.Context, id string) 
 	return contact, err
 }
 
+// GetByIDs returns contacts for the given ids (any profile attachment state).
+// Order is not guaranteed; missing ids are simply absent from the result.
+func (cr *contactRepository) GetByIDs(ctx context.Context, ids []string) ([]*models.Contact, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
+	var list []*models.Contact
+	err := cr.Pool().DB(unscopedCtx, true).Where("id IN ?", ids).Find(&list).Error
+	return list, err
+}
+
 func (cr *contactRepository) GetByLookupToken(
 	ctx context.Context,
 	lookupTokenList ...[]byte,
