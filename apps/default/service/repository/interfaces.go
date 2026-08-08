@@ -34,6 +34,8 @@ type ContactRepository interface {
 	// GetByIDFromPrimary reads from the primary connection for
 	// read-your-writes (e.g. linking a just-created contact to a profile).
 	GetByIDFromPrimary(ctx context.Context, id string) (*models.Contact, error)
+	// GetByIDs loads contacts by id in one query (standalone or attached).
+	GetByIDs(ctx context.Context, ids []string) ([]*models.Contact, error)
 }
 
 type VerificationRepository interface {

@@ -66,6 +66,9 @@ const (
 	// ProfileServiceCreateContactProcedure is the fully-qualified name of the ProfileService's
 	// CreateContact RPC.
 	ProfileServiceCreateContactProcedure = "/profile.v1.ProfileService/CreateContact"
+	// ProfileServiceGetContactsProcedure is the fully-qualified name of the ProfileService's
+	// GetContacts RPC.
+	ProfileServiceGetContactsProcedure = "/profile.v1.ProfileService/GetContacts"
 	// ProfileServiceCreateContactVerificationProcedure is the fully-qualified name of the
 	// ProfileService's CreateContactVerification RPC.
 	ProfileServiceCreateContactVerificationProcedure = "/profile.v1.ProfileService/CreateContactVerification"
@@ -122,6 +125,10 @@ type ProfileServiceClient interface {
 	AddContact(context.Context, *connect.Request[v1.AddContactRequest]) (*connect.Response[v1.AddContactResponse], error)
 	// CreateContact creates a standalone contact not linked to a profile.
 	CreateContact(context.Context, *connect.Request[v1.CreateContactRequest]) (*connect.Response[v1.CreateContactResponse], error)
+	// GetContacts resolves one or many contacts by id, whether standalone or
+	// attached to a profile. Missing ids are listed in missing_ids; found
+	// contacts are returned in data (order not guaranteed).
+	GetContacts(context.Context, *connect.Request[v1.GetContactsRequest]) (*connect.Response[v1.GetContactsResponse], error)
 	// CreateContactVerification initiates contact verification.
 	CreateContactVerification(context.Context, *connect.Request[v1.CreateContactVerificationRequest]) (*connect.Response[v1.CreateContactVerificationResponse], error)
 	// CheckVerification verifies a contact using the provided code.
@@ -208,6 +215,13 @@ func NewProfileServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			httpClient,
 			baseURL+ProfileServiceCreateContactProcedure,
 			connect.WithSchema(profileServiceMethods.ByName("CreateContact")),
+			connect.WithClientOptions(opts...),
+		),
+		getContacts: connect.NewClient[v1.GetContactsRequest, v1.GetContactsResponse](
+			httpClient,
+			baseURL+ProfileServiceGetContactsProcedure,
+			connect.WithSchema(profileServiceMethods.ByName("GetContacts")),
+			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 			connect.WithClientOptions(opts...),
 		),
 		createContactVerification: connect.NewClient[v1.CreateContactVerificationRequest, v1.CreateContactVerificationResponse](
@@ -299,6 +313,7 @@ type profileServiceClient struct {
 	update                    *connect.Client[v1.UpdateRequest, v1.UpdateResponse]
 	addContact                *connect.Client[v1.AddContactRequest, v1.AddContactResponse]
 	createContact             *connect.Client[v1.CreateContactRequest, v1.CreateContactResponse]
+	getContacts               *connect.Client[v1.GetContactsRequest, v1.GetContactsResponse]
 	createContactVerification *connect.Client[v1.CreateContactVerificationRequest, v1.CreateContactVerificationResponse]
 	checkVerification         *connect.Client[v1.CheckVerificationRequest, v1.CheckVerificationResponse]
 	removeContact             *connect.Client[v1.RemoveContactRequest, v1.RemoveContactResponse]
@@ -351,6 +366,11 @@ func (c *profileServiceClient) AddContact(ctx context.Context, req *connect.Requ
 // CreateContact calls profile.v1.ProfileService.CreateContact.
 func (c *profileServiceClient) CreateContact(ctx context.Context, req *connect.Request[v1.CreateContactRequest]) (*connect.Response[v1.CreateContactResponse], error) {
 	return c.createContact.CallUnary(ctx, req)
+}
+
+// GetContacts calls profile.v1.ProfileService.GetContacts.
+func (c *profileServiceClient) GetContacts(ctx context.Context, req *connect.Request[v1.GetContactsRequest]) (*connect.Response[v1.GetContactsResponse], error) {
+	return c.getContacts.CallUnary(ctx, req)
 }
 
 // CreateContactVerification calls profile.v1.ProfileService.CreateContactVerification.
@@ -431,6 +451,10 @@ type ProfileServiceHandler interface {
 	AddContact(context.Context, *connect.Request[v1.AddContactRequest]) (*connect.Response[v1.AddContactResponse], error)
 	// CreateContact creates a standalone contact not linked to a profile.
 	CreateContact(context.Context, *connect.Request[v1.CreateContactRequest]) (*connect.Response[v1.CreateContactResponse], error)
+	// GetContacts resolves one or many contacts by id, whether standalone or
+	// attached to a profile. Missing ids are listed in missing_ids; found
+	// contacts are returned in data (order not guaranteed).
+	GetContacts(context.Context, *connect.Request[v1.GetContactsRequest]) (*connect.Response[v1.GetContactsResponse], error)
 	// CreateContactVerification initiates contact verification.
 	CreateContactVerification(context.Context, *connect.Request[v1.CreateContactVerificationRequest]) (*connect.Response[v1.CreateContactVerificationResponse], error)
 	// CheckVerification verifies a contact using the provided code.
@@ -513,6 +537,13 @@ func NewProfileServiceHandler(svc ProfileServiceHandler, opts ...connect.Handler
 		ProfileServiceCreateContactProcedure,
 		svc.CreateContact,
 		connect.WithSchema(profileServiceMethods.ByName("CreateContact")),
+		connect.WithHandlerOptions(opts...),
+	)
+	profileServiceGetContactsHandler := connect.NewUnaryHandler(
+		ProfileServiceGetContactsProcedure,
+		svc.GetContacts,
+		connect.WithSchema(profileServiceMethods.ByName("GetContacts")),
+		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 		connect.WithHandlerOptions(opts...),
 	)
 	profileServiceCreateContactVerificationHandler := connect.NewUnaryHandler(
@@ -609,6 +640,8 @@ func NewProfileServiceHandler(svc ProfileServiceHandler, opts ...connect.Handler
 			profileServiceAddContactHandler.ServeHTTP(w, r)
 		case ProfileServiceCreateContactProcedure:
 			profileServiceCreateContactHandler.ServeHTTP(w, r)
+		case ProfileServiceGetContactsProcedure:
+			profileServiceGetContactsHandler.ServeHTTP(w, r)
 		case ProfileServiceCreateContactVerificationProcedure:
 			profileServiceCreateContactVerificationHandler.ServeHTTP(w, r)
 		case ProfileServiceCheckVerificationProcedure:
@@ -672,6 +705,10 @@ func (UnimplementedProfileServiceHandler) AddContact(context.Context, *connect.R
 
 func (UnimplementedProfileServiceHandler) CreateContact(context.Context, *connect.Request[v1.CreateContactRequest]) (*connect.Response[v1.CreateContactResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.CreateContact is not implemented"))
+}
+
+func (UnimplementedProfileServiceHandler) GetContacts(context.Context, *connect.Request[v1.GetContactsRequest]) (*connect.Response[v1.GetContactsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.GetContacts is not implemented"))
 }
 
 func (UnimplementedProfileServiceHandler) CreateContactVerification(context.Context, *connect.Request[v1.CreateContactVerificationRequest]) (*connect.Response[v1.CreateContactVerificationResponse], error) {

@@ -614,6 +614,96 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/profile.v1.GetByIdResponse'
+  /profile.v1.ProfileService/GetContacts:
+    get:
+      tags:
+        - Contacts
+        - profile.v1.ProfileService
+      summary: Get contacts by id
+      description: Fetches ContactObjects for one or more contact ids regardless of profile attachment. Use a single id for one contact, or many for batch resolve (e.g. product-stored cv_contact_ids).
+      operationId: getContacts
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+        - name: message
+          in: query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.GetContactsRequest'
+        - name: encoding
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/encoding'
+        - name: base64
+          in: query
+          schema:
+            $ref: '#/components/schemas/base64'
+        - name: compression
+          in: query
+          schema:
+            $ref: '#/components/schemas/compression'
+        - name: connect
+          in: query
+          schema:
+            $ref: '#/components/schemas/connect'
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.GetContactsResponse'
+    post:
+      tags:
+        - Contacts
+        - profile.v1.ProfileService
+      summary: Get contacts by id
+      description: Fetches ContactObjects for one or more contact ids regardless of profile attachment. Use a single id for one contact, or many for batch resolve (e.g. product-stored cv_contact_ids).
+      operationId: getContacts
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+        - name: Connect-Timeout-Ms
+          in: header
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profile.v1.GetContactsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.GetContactsResponse'
   /profile.v1.ProfileService/ListRelationship: {}
   /profile.v1.ProfileService/Merge:
     post:
@@ -1585,6 +1675,40 @@ components:
           title: data
           $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: GetByIdResponse
+      additionalProperties: false
+    profile.v1.GetContactsRequest:
+      type: object
+      properties:
+        ids:
+          type: array
+          items:
+            type: string
+            maxLength: 40
+            minLength: 3
+            pattern: '[0-9a-z_-]{3,40}'
+          title: ids
+          maxItems: 100
+          minItems: 1
+          description: Contact ids to resolve. Pass one id or a batch (max 100).
+      title: GetContactsRequest
+      additionalProperties: false
+      description: GetContactsRequest resolves contacts by id (one or many).
+    profile.v1.GetContactsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/profile.v1.ContactObject'
+          title: data
+          description: Found contacts (standalone or profile-attached).
+        missingIds:
+          type: array
+          items:
+            type: string
+          title: missing_ids
+          description: Requested ids that were not found or not readable.
+      title: GetContactsResponse
       additionalProperties: false
     profile.v1.ListRelationshipRequest:
       type: object

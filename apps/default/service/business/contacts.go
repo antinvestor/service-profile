@@ -28,6 +28,8 @@ var (
 
 type ContactBusiness interface {
 	GetByID(ctx context.Context, contactID string) (*models.Contact, error)
+	// GetByIDs loads one or many contacts by id (batch). Missing ids are omitted.
+	GetByIDs(ctx context.Context, contactIDs []string) ([]*models.Contact, error)
 	GetByDetail(ctx context.Context, detailList ...string) ([]*models.Contact, error)
 	GetByDetailMap(ctx context.Context, detailList ...string) (map[string]*models.Contact, error)
 	GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error)
@@ -96,6 +98,27 @@ func (cb *contactBusiness) GetByID(ctx context.Context, contactID string) (*mode
 		return nil, err
 	}
 	return contact, nil
+}
+
+func (cb *contactBusiness) GetByIDs(ctx context.Context, contactIDs []string) ([]*models.Contact, error) {
+	// Dedupe while preserving first-seen order for stable missing detection.
+	seen := make(map[string]struct{}, len(contactIDs))
+	ids := make([]string, 0, len(contactIDs))
+	for _, id := range contactIDs {
+		id = strings.TrimSpace(id)
+		if id == "" {
+			continue
+		}
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	return cb.contactRepository.GetByIDs(ctx, ids)
 }
 
 func (cb *contactBusiness) GetByDetail(ctx context.Context, detailList ...string) ([]*models.Contact, error) {
