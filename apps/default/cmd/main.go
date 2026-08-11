@@ -313,9 +313,6 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 		authenticator,
 	)
 
-	// Avatar bytes live in the files service; profile only stores au_avater_uri
-	// via Connect Update. See @stawi/profile uploadAvatar (files → Update).
-
 	mux := http.NewServeMux()
 	mux.Handle("/", serverHandler)
 	mux.Handle("/public/", http.StripPrefix("/public", publicRestHandler))
