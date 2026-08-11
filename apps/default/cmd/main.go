@@ -313,9 +313,18 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 		authenticator,
 	)
 
+	// Avatar upload from @stawi/profile (auth-runtime PUT multipart "file").
+	// Path matches Connect-style procedure URL the widget calls.
+	avatarHandler := securityhttp.AuthenticationMiddleware(
+		http.HandlerFunc(implementation.RestUpdateAvatar),
+		authenticator,
+	)
+
 	mux := http.NewServeMux()
 	mux.Handle("/", serverHandler)
 	mux.Handle("/public/", http.StripPrefix("/public", publicRestHandler))
+	mux.Handle("PUT /profile.v1.ProfileService/UpdateAvatar/{profileId}", avatarHandler)
+	mux.Handle("POST /profile.v1.ProfileService/UpdateAvatar/{profileId}", avatarHandler)
 	mux.Handle("/openapi.yaml", apis.NewOpenAPIHandler(profileAPISpecFile, nil))
 
 	return mux

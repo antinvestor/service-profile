@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"github.com/pitabwire/frame/v2/data"
@@ -198,16 +200,61 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	}
 
 	properties := profile.GetProperties().AsMap()
+	avatarURL, _ := properties[profileDefaultAvaterURI].(string)
+	contacts := profile.GetContacts()
+	email := pickProfileEmail(contacts)
+	// No custom avatar → Gravatar (or identicon) from any email contact so
+	// the widget always has a face without requiring an uploaded picture.
+	if strings.TrimSpace(avatarURL) == "" {
+		avatarURL = gravatarURLForEmail(email, 160)
+	}
+
 	response := data.JSONMap{
 		"sub":      profile.GetId(),
 		"name":     properties[profileDefaultName],
-		"contacts": profile.GetContacts(),
-		"url":      properties[profileDefaultAvaterURI],
+		"email":    email,
+		"contacts": contacts,
+		"url":      avatarURL,
 	}
 
 	rw.Header().Set("Content-Type", "application/json")
 	rw.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(rw).Encode(response)
+}
+
+// pickProfileEmail prefers a verified email contact, else any email.
+func pickProfileEmail(contacts []*profilev1.ContactObject) string {
+	var fallback string
+	for _, c := range contacts {
+		if c == nil || c.GetType() != profilev1.ContactType_EMAIL {
+			continue
+		}
+		detail := strings.TrimSpace(c.GetDetail())
+		if detail == "" {
+			continue
+		}
+		if c.GetVerified() {
+			return detail
+		}
+		if fallback == "" {
+			fallback = detail
+		}
+	}
+	return fallback
+}
+
+// gravatarURLForEmail builds a Gravatar URL using SHA-256 (Gravatar's current
+// hash). d=identicon guarantees an image even when the address has no Gravatar.
+func gravatarURLForEmail(email string, size int) string {
+	email = strings.TrimSpace(strings.ToLower(email))
+	if email == "" {
+		return ""
+	}
+	if size <= 0 {
+		size = 80
+	}
+	sum := sha256.Sum256([]byte(email))
+	return fmt.Sprintf("https://www.gravatar.com/avatar/%x?s=%d&d=identicon", sum, size)
 }
 
 func (ps *ProfileServer) NewSecureRouterV1() *http.ServeMux {
