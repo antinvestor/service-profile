@@ -157,7 +157,10 @@ func (f *fcmNotifier) toFCMMessage(
 			Body:     req.GetBody(),
 			ImageURL: "",
 		},
-		Token: registrationToken,
+		// Device keys of type FCM_TOKEN store registration tokens, not
+		// installation IDs, so we must keep targeting via Token; switching to
+		// the suggested Fid field would break delivery.
+		Token: registrationToken, //nolint:staticcheck,nolintlint // SA1019: value is a registration token, not an FID.
 	}
 }
 
