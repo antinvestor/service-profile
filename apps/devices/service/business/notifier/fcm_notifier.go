@@ -157,7 +157,7 @@ func (f *fcmNotifier) toFCMMessage(
 			Body:     req.GetBody(),
 			ImageURL: "",
 		},
-		Token: registrationToken,
+		Fid: registrationToken,
 	}
 }
 
