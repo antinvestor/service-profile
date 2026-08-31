@@ -110,12 +110,8 @@ message ContextDefinition {
     (buf.validate.field).string.max_len = 128
   ];
   // High-level role / purpose of the agent (not product business rules).
-  string purpose = 2 [
-    (buf.validate.field).string.min_len = 1
-  ];
-  repeated FieldDef fields = 3 [
-    (buf.validate.field).repeated.min_items = 1
-  ];
+  string purpose = 2 [(buf.validate.field).string.min_len = 1];
+  repeated FieldDef fields = 3 [(buf.validate.field).repeated.min_items = 1];
   ReplyPolicy reply_policy = 4;
   // Optional product notes appended to the extract prompt (rules, mapping hints).
   string extract_rules = 5;
@@ -342,15 +338,26 @@ service ChatAgentService {
     role_bindings: [
       {
         role: ROLE_OWNER
-        permissions: ["chat_agent_view", "chat_agent_manage", "chat_agent_turn"]
+        permissions: [
+          "chat_agent_view",
+          "chat_agent_manage",
+          "chat_agent_turn"
+        ]
       },
       {
         role: ROLE_ADMIN
-        permissions: ["chat_agent_view", "chat_agent_manage", "chat_agent_turn"]
+        permissions: [
+          "chat_agent_view",
+          "chat_agent_manage",
+          "chat_agent_turn"
+        ]
       },
       {
         role: ROLE_OPERATOR
-        permissions: ["chat_agent_view", "chat_agent_turn"]
+        permissions: [
+          "chat_agent_view",
+          "chat_agent_turn"
+        ]
       },
       {
         role: ROLE_VIEWER
@@ -358,17 +365,26 @@ service ChatAgentService {
       },
       {
         role: ROLE_MEMBER
-        permissions: ["chat_agent_view", "chat_agent_turn"]
+        permissions: [
+          "chat_agent_view",
+          "chat_agent_turn"
+        ]
       },
       {
         role: ROLE_SERVICE
-        permissions: ["chat_agent_view", "chat_agent_manage", "chat_agent_turn"]
+        permissions: [
+          "chat_agent_view",
+          "chat_agent_manage",
+          "chat_agent_turn"
+        ]
       }
     ]
   };
 
   rpc UpsertContext(UpsertContextRequest) returns (UpsertContextResponse) {
-    option (common.v1.method_permissions) = {permissions: ["chat_agent_manage"]};
+    option (common.v1.method_permissions) = {
+      permissions: ["chat_agent_manage"]
+    };
     option (gnostic.openapi.v3.operation) = {
       operation_id: "upsertChatContext"
       summary: "Register or update an intake context"
@@ -378,7 +394,9 @@ service ChatAgentService {
 
   rpc GetContext(GetContextRequest) returns (GetContextResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
-    option (common.v1.method_permissions) = {permissions: ["chat_agent_view"]};
+    option (common.v1.method_permissions) = {
+      permissions: ["chat_agent_view"]
+    };
     option (gnostic.openapi.v3.operation) = {
       operation_id: "getChatContext"
       summary: "Get an intake context definition"
@@ -388,7 +406,9 @@ service ChatAgentService {
 
   rpc ListContexts(ListContextsRequest) returns (ListContextsResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
-    option (common.v1.method_permissions) = {permissions: ["chat_agent_view"]};
+    option (common.v1.method_permissions) = {
+      permissions: ["chat_agent_view"]
+    };
     option (gnostic.openapi.v3.operation) = {
       operation_id: "listChatContexts"
       summary: "List intake contexts for the tenant"
@@ -397,7 +417,9 @@ service ChatAgentService {
   }
 
   rpc CreateSession(CreateSessionRequest) returns (CreateSessionResponse) {
-    option (common.v1.method_permissions) = {permissions: ["chat_agent_turn"]};
+    option (common.v1.method_permissions) = {
+      permissions: ["chat_agent_turn"]
+    };
     option (gnostic.openapi.v3.operation) = {
       operation_id: "createChatSession"
       summary: "Start an intake session with optional seed evidence"
@@ -407,7 +429,12 @@ service ChatAgentService {
 
   rpc GetSession(GetSessionRequest) returns (GetSessionResponse) {
     option idempotency_level = NO_SIDE_EFFECTS;
-    option (common.v1.method_permissions) = {permissions: ["chat_agent_view", "chat_agent_turn"]};
+    option (common.v1.method_permissions) = {
+      permissions: [
+        "chat_agent_view",
+        "chat_agent_turn"
+      ]
+    };
     option (gnostic.openapi.v3.operation) = {
       operation_id: "getChatSession"
       summary: "Get session transcript and field state"
@@ -416,7 +443,9 @@ service ChatAgentService {
   }
 
   rpc Turn(TurnRequest) returns (TurnResponse) {
-    option (common.v1.method_permissions) = {permissions: ["chat_agent_turn"]};
+    option (common.v1.method_permissions) = {
+      permissions: ["chat_agent_turn"]
+    };
     option (gnostic.openapi.v3.operation) = {
       operation_id: "chatAgentTurn"
       summary: "Run one conversational turn"
@@ -425,7 +454,12 @@ service ChatAgentService {
   }
 
   rpc EndSession(EndSessionRequest) returns (EndSessionResponse) {
-    option (common.v1.method_permissions) = {permissions: ["chat_agent_turn", "chat_agent_manage"]};
+    option (common.v1.method_permissions) = {
+      permissions: [
+        "chat_agent_turn",
+        "chat_agent_manage"
+      ]
+    };
     option (gnostic.openapi.v3.operation) = {
       operation_id: "endChatSession"
       summary: "End an intake session"
@@ -435,7 +469,9 @@ service ChatAgentService {
 
   // Ingest an inbound message and reply via NotificationService.Send using NotificationTarget.
   rpc IngestMessage(IngestMessageRequest) returns (IngestMessageResponse) {
-    option (common.v1.method_permissions) = {permissions: ["chat_agent_turn"]};
+    option (common.v1.method_permissions) = {
+      permissions: ["chat_agent_turn"]
+    };
     option (gnostic.openapi.v3.operation) = {
       operation_id: "ingestChatMessage"
       summary: "Ingest inbound message and reply via Notification service"
