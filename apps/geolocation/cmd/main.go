@@ -6,7 +6,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/antinvestor/common/v2/permissions"
-	"github.com/antinvestor/common/v2/timescale"
 	"github.com/pitabwire/frame/v2"
 	"github.com/pitabwire/frame/v2/config"
 	"github.com/pitabwire/frame/v2/datastore"
@@ -25,7 +24,6 @@ import (
 	"github.com/antinvestor/service-profile/apps/geolocation/service/business"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/events"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/handlers"
-	"github.com/antinvestor/service-profile/apps/geolocation/service/models"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/observability"
 	"github.com/antinvestor/service-profile/apps/geolocation/service/repository"
 )
@@ -70,8 +68,6 @@ func main() { //nolint:funlen // wiring function
 	// Initialize repositories.
 	dbPool := dbManager.GetPool(ctx, datastore.DefaultPoolName)
 
-	// Register hypertables (no-op WARN if timescaledb extension is absent).
-	ensureHypertables(ctx, dbPool)
 	workMan, evtsMan := svc.WorkManager(), svc.EventsManager()
 
 	pointRepo := repository.NewLocationPointRepository(ctx, dbPool, workMan)
@@ -161,15 +157,6 @@ func main() { //nolint:funlen // wiring function
 
 	if runErr := svc.Run(ctx, ""); runErr != nil {
 		log.WithError(runErr).Fatal("could not run server")
-	}
-}
-
-// ensureHypertables registers TimescaleDB hypertables idempotently.
-// Errors are logged as warnings so the service continues when TimescaleDB
-// is not yet available.
-func ensureHypertables(ctx context.Context, dbPool pool.Pool) {
-	if tsErr := timescale.Ensure(ctx, dbPool.DB(ctx, false), models.Hypertables()); tsErr != nil {
-		util.Log(ctx).WithError(tsErr).Warn("timescale hypertable setup skipped — will retry after cluster migration")
 	}
 }
 
