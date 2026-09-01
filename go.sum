@@ -86,8 +86,8 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/antinvestor/common v1.5.2 h1:8aAKu5dsPQOCQEjohN5j0HmvflGeBR+lMcLsfIMhkCs=
 github.com/antinvestor/common v1.5.2/go.mod h1:a/YUP1aqsOTbVo6fs7BrBigrm3LB5ndOEHrSMb0ISeE=
-github.com/antinvestor/common/audit v0.0.0-20260831143448-0c221272f022 h1:5QCaWC2oG1uofyxb5KX6x8Vlnt6HsxNd8V3fbS+Xynw=
-github.com/antinvestor/common/audit v0.0.0-20260831143448-0c221272f022/go.mod h1:L27gMU/wM6htzcNCmjAJbc+rYg4+mLbXa6LlXcXlFpA=
+github.com/antinvestor/common/audit v0.0.0-20260831232917-ab9b90c2a549 h1:d4DMbCsmh4fPyk4qxVePxLI4XK8lZfsnNuFAYXOomDE=
+github.com/antinvestor/common/audit v0.0.0-20260831232917-ab9b90c2a549/go.mod h1:lyzUgxqVzCySK4V6Egi9YIinFdqxYOIc/+QvfUoDV3g=
 github.com/antinvestor/common/v2 v2.0.5 h1:POmhOz6FUNhGPDl9NwvI/K7D5lrIMfuy6vLfnDgXlW8=
 github.com/antinvestor/common/v2 v2.0.5/go.mod h1:V1On2jfKsMUbMv3LdAD33sMmLAO1WX7PNREWoJ6lSTE=
 github.com/antithesishq/antithesis-sdk-go v0.7.2-default-no-op h1:p2zFsAzvhIpFya8AIOHIbWf7NGvO34QpLGclyf7nXj8=
@@ -296,8 +296,8 @@ github.com/ory/keto/proto v0.13.0-alpha.0.0.20260420082854-eb334a7a5cf0 h1:huZxe
 github.com/ory/keto/proto v0.13.0-alpha.0.0.20260420082854-eb334a7a5cf0/go.mod h1:c2UboItfGpqIzXoXlxBRMCp3rQqO+Wx2ecsH25jcWxU=
 github.com/panjf2000/ants/v2 v2.12.1 h1:BWvU2wHpyXWxhhNXsGB6JXLCNbshyLd1QxvoAmZnu10=
 github.com/panjf2000/ants/v2 v2.12.1/go.mod h1:tSQuaNQ6r6NRhPt+IZVUevvDyFMTs+eS4ztZc52uJTY=
-github.com/pitabwire/frame/v2 v2.1.6 h1:Xni/7rue0kemo7rqKRIwSjK/NvXiCl47+lGOexs6O2o=
-github.com/pitabwire/frame/v2 v2.1.6/go.mod h1:x3OvWqOLShFu4aVa3F1V+/BOB0TGQsuz9RRQeuxAKJw=
+github.com/pitabwire/frame/v2 v2.1.7 h1:yp8fHpVCYIFauyz+1Zh2POCJAFUTO+gSQVFvhq9zoS0=
+github.com/pitabwire/frame/v2 v2.1.7/go.mod h1:x3OvWqOLShFu4aVa3F1V+/BOB0TGQsuz9RRQeuxAKJw=
 github.com/pitabwire/natspubsub v0.8.5 h1:FOZHFNWeZz8UoPVG8t7rk7j8fNER+/pqrQewAcUh+To=
 github.com/pitabwire/natspubsub v0.8.5/go.mod h1:pLG5zmartUYqQOj1IWE61MldEwhvJ6xtwCc/1KQgdLc=
 github.com/pitabwire/util v0.9.1 h1:V8Ag8TNGXoLztuTCbItj67MmQSS+ObEPzQipUCo2NKY=
