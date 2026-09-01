@@ -86,10 +86,10 @@ github.com/Microsoft/go-winio v0.6.2 h1:F2VQgta7ecxGYO8k3ZZz3RS8fVIXVxONVUPlNERo
 github.com/Microsoft/go-winio v0.6.2/go.mod h1:yd8OoFMLzJbo9gZq8j5qaps8bJ9aShtEA8Ipt1oGCvU=
 github.com/antinvestor/common v1.5.2 h1:8aAKu5dsPQOCQEjohN5j0HmvflGeBR+lMcLsfIMhkCs=
 github.com/antinvestor/common v1.5.2/go.mod h1:a/YUP1aqsOTbVo6fs7BrBigrm3LB5ndOEHrSMb0ISeE=
-github.com/antinvestor/common/audit v0.0.0-20260831153703-29375d5277fe h1:/0HNNNYe64dpBBJYIkoOwZVOJRFHqXCCf4tBpOCDOtk=
-github.com/antinvestor/common/audit v0.0.0-20260831153703-29375d5277fe/go.mod h1:L27gMU/wM6htzcNCmjAJbc+rYg4+mLbXa6LlXcXlFpA=
-github.com/antinvestor/common/v2 v2.0.6 h1:gYUcJeaRjMpcSe6rGjmWXa028yhU2TrRcLZ19EXnyMk=
-github.com/antinvestor/common/v2 v2.0.6/go.mod h1:V1On2jfKsMUbMv3LdAD33sMmLAO1WX7PNREWoJ6lSTE=
+github.com/antinvestor/common/audit v0.0.0-20260831232917-ab9b90c2a549 h1:d4DMbCsmh4fPyk4qxVePxLI4XK8lZfsnNuFAYXOomDE=
+github.com/antinvestor/common/audit v0.0.0-20260831232917-ab9b90c2a549/go.mod h1:lyzUgxqVzCySK4V6Egi9YIinFdqxYOIc/+QvfUoDV3g=
+github.com/antinvestor/common/v2 v2.0.7 h1:c+vQxi3gaVbxqhOy5Svi4LSMx2WgtOuJmV2d8mHpy0w=
+github.com/antinvestor/common/v2 v2.0.7/go.mod h1:V1On2jfKsMUbMv3LdAD33sMmLAO1WX7PNREWoJ6lSTE=
 github.com/antithesishq/antithesis-sdk-go v0.7.2-default-no-op h1:p2zFsAzvhIpFya8AIOHIbWf7NGvO34QpLGclyf7nXj8=
 github.com/antithesishq/antithesis-sdk-go v0.7.2-default-no-op/go.mod h1:FQyySiasQQM8735Ddel3MRojmy4dA1IqCeyJ5jmPMbI=
 github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYWrPrQ=

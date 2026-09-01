@@ -19,8 +19,8 @@ require (
 	connectrpc.com/connect v1.20.0
 	firebase.google.com/go/v4 v4.21.0
 	github.com/antinvestor/common v1.5.2
-	github.com/antinvestor/common/audit v0.0.0-20260831153703-29375d5277fe
-	github.com/antinvestor/common/v2 v2.0.6
+	github.com/antinvestor/common/audit v0.0.0-20260831232917-ab9b90c2a549
+	github.com/antinvestor/common/v2 v2.0.7
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/gnostic v0.7.1
 	github.com/jackc/pgx/v5 v5.10.0

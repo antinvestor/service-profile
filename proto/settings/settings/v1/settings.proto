@@ -179,7 +179,10 @@ service SettingsService {
       {
         // Partition members may read and write their own settings.
         role: ROLE_MEMBER
-        permissions: ["setting_view", "setting_manage"]
+        permissions: [
+          "setting_view",
+          "setting_manage"
+        ]
       },
       {
         role: ROLE_SERVICE
