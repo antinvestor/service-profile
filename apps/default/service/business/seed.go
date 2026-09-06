@@ -33,6 +33,7 @@ const (
 	SvcTrustageProfileID                   = "d75qclkpf2t1uum8ijbg"
 	SvcNotificationAfricastalkingProfileID = "d75qclkpf2t1uum8ijc0"
 	SvcNotificationEmailSMTPProfileID      = "d75qclkpf2t1uum8ijcg"
+	SvcNotificationWhatsAppProfileID       = "daenc7kpf2t8pa1q04hg"
 	SvcLenderProfileID                     = "d75qclkpf2t1uum8ijd0"
 )
 
@@ -67,6 +68,7 @@ var bootstrapProfiles = []bootstrapProfile{ //nolint:gochecknoglobals // bootstr
 	{SvcTrustageProfileID, "trustage.bot@stawi.org"},
 	{SvcNotificationAfricastalkingProfileID, "notification-africastalking.bot@stawi.org"},
 	{SvcNotificationEmailSMTPProfileID, "notification-emailsmtp.bot@stawi.org"},
+	{SvcNotificationWhatsAppProfileID, "notification-whatsapp.bot@stawi.org"},
 	{SvcLenderProfileID, "lender.bot@stawi.org"},
 }
 
