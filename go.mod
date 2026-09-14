@@ -6,26 +6,26 @@ toolchain go1.26.1
 
 require (
 	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.12-20260509050709-3f270876dbf3.2
-	buf.build/gen/go/antinvestor/device/connectrpc/go v1.20.0-20260831194050-6bb030460a83.1
-	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.12-20260709214326-f1dfa8561306.1
-	buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.20.0-20260709214326-9e514827dcd2.1
+	buf.build/gen/go/antinvestor/device/connectrpc/go v1.21.0-20260831194050-6bb030460a83.1
+	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.12-20260831194050-6bb030460a83.2
+	buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.21.0-20260831194050-ee586b4088ba.1
 	buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.12-20260831194050-ee586b4088ba.2
-	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.20.0-20260709214330-626c8192b906.1
-	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.12-20260709214330-626c8192b906.1
-	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.20.0-20260709214326-f637cc57d60d.1
-	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.12-20260709214326-f637cc57d60d.1
+	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.21.0-20260831182621-e7d71a2bcc5d.1
+	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.12-20260831182621-e7d71a2bcc5d.2
+	buf.build/gen/go/antinvestor/settingz/connectrpc/go v1.21.0-20260831194050-1ad01a14931e.1
+	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.12-20260831194050-1ad01a14931e.2
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.2
 	buf.build/gen/go/gnostic/gnostic/protocolbuffers/go v1.36.12-20230414000709-087bc8072ce4.2
-	connectrpc.com/connect v1.20.0
+	connectrpc.com/connect v1.21.0
 	firebase.google.com/go/v4 v4.21.0
 	github.com/antinvestor/common v1.5.2
 	github.com/antinvestor/common/audit v0.0.0-20260831232917-ab9b90c2a549
 	github.com/antinvestor/common/v2 v2.0.7
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/gnostic v0.7.1
-	github.com/jackc/pgx/v5 v5.10.0
+	github.com/jackc/pgx/v5 v5.11.0
 	github.com/mssola/user_agent v0.6.0
-	github.com/pitabwire/frame/v2 v2.1.7
+	github.com/pitabwire/frame/v2 v2.1.8
 	github.com/pitabwire/util v0.9.1
 	github.com/stretchr/testify v1.12.1
 	github.com/testcontainers/testcontainers-go v0.44.0
@@ -33,7 +33,7 @@ require (
 	go.opentelemetry.io/otel v1.46.0
 	go.opentelemetry.io/otel/sdk/metric v1.46.0
 	go.opentelemetry.io/otel/trace v1.46.0
-	golang.org/x/sync v0.22.0
+	golang.org/x/sync v0.23.0
 	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.12
 	gorm.io/gorm v1.31.2
@@ -45,9 +45,9 @@ require (
 )
 
 require (
-	buf.build/gen/go/antinvestor/audit/connectrpc/go v1.20.0-20260831112827-a96e87701817.1 // indirect
+	buf.build/gen/go/antinvestor/audit/connectrpc/go v1.21.0-20260831112827-a96e87701817.1 // indirect
 	buf.build/gen/go/antinvestor/audit/protocolbuffers/go v1.36.12-20260831112827-a96e87701817.2 // indirect
-	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.20.0-20260808183321-0adca9497d3a.1
+	buf.build/gen/go/antinvestor/profile/connectrpc/go v1.21.0-20260831194050-82ad359a5ea0.1
 	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.12-20260831194050-82ad359a5ea0.2
 	buf.build/go/protovalidate v1.4.0 // indirect
 	cel.dev/expr v0.25.3 // indirect
@@ -61,14 +61,14 @@ require (
 	cloud.google.com/go/monitoring v1.30.0 // indirect
 	cloud.google.com/go/pubsub v1.51.1 // indirect
 	cloud.google.com/go/pubsub/v2 v2.7.0 // indirect
-	cloud.google.com/go/storage v1.67.0 // indirect
+	cloud.google.com/go/storage v1.67.1 // indirect
 	connectrpc.com/otelconnect v0.9.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.37.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.61.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.61.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.38.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.62.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.62.0 // indirect
 	github.com/MicahParks/keyfunc v1.9.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
@@ -80,7 +80,7 @@ require (
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
-	github.com/containerd/log v0.1.0 // indirect
+	github.com/containerd/log v0.2.0 // indirect
 	github.com/containerd/platforms v0.2.1 // indirect
 	github.com/cpuguy83/dockercfg v0.3.2 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -89,7 +89,7 @@ require (
 	github.com/ebitengine/purego v0.11.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.39.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
-	github.com/exaring/otelpgx v0.11.1 // indirect
+	github.com/exaring/otelpgx v0.12.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.5 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -101,7 +101,7 @@ require (
 	github.com/google/s2a-go v0.1.9 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/google/wire v0.7.0 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.21 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.22 // indirect
 	github.com/googleapis/gax-go/v2 v2.24.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.30.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -120,7 +120,7 @@ require (
 	github.com/moby/patternmatcher v0.6.1 // indirect
 	github.com/moby/sys/sequential v0.7.0 // indirect
 	github.com/moby/sys/user v0.4.1 // indirect
-	github.com/moby/sys/userns v0.2.0 // indirect
+	github.com/moby/sys/userns v0.2.1 // indirect
 	github.com/moby/term v0.5.2 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nats-io/nats.go v1.53.1 // indirect
@@ -179,13 +179,13 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	gocloud.dev v0.46.0 // indirect
-	golang.org/x/crypto v0.56.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/exp v0.0.0-20260820142414-ca536658362e // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
-	golang.org/x/time v0.15.0 // indirect
+	golang.org/x/net v0.59.0 // indirect
+	golang.org/x/oauth2 v0.37.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/time v0.16.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/api v0.297.0 // indirect
 	google.golang.org/appengine/v2 v2.0.6 // indirect
