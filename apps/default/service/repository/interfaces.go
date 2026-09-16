@@ -9,6 +9,7 @@ import (
 	"github.com/pitabwire/frame/v2/workerpool"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/outbox"
 )
 
 type ProfileRepository interface {
@@ -23,6 +24,11 @@ type ProfileRepository interface {
 		ctx context.Context,
 		profileType profilev1.ProfileType,
 	) (*models.ProfileType, error)
+	CreateWithFact(
+		ctx context.Context,
+		profile *models.Profile,
+		fact func(*models.Profile) *outbox.Event,
+	) error
 }
 
 type ContactRepository interface {

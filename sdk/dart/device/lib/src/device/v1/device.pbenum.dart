@@ -23,6 +23,8 @@ class KeyType extends $pb.ProtobufEnum {
   static const KeyType CURVE25519_KEY = KeyType._(3, _omitEnumNames ? '' : 'CURVE25519_KEY');
   static const KeyType ED25519_KEY = KeyType._(4, _omitEnumNames ? '' : 'ED25519_KEY');
   static const KeyType PICKLE_KEY = KeyType._(5, _omitEnumNames ? '' : 'PICKLE_KEY');
+  static const KeyType SECP256K1_PUBLIC_KEY = KeyType._(6, _omitEnumNames ? '' : 'SECP256K1_PUBLIC_KEY');
+  static const KeyType P256_WEBAUTHN_PUBLIC_KEY = KeyType._(7, _omitEnumNames ? '' : 'P256_WEBAUTHN_PUBLIC_KEY');
 
   static const $core.List<KeyType> values = <KeyType> [
     MATRIX_KEY,
@@ -31,6 +33,8 @@ class KeyType extends $pb.ProtobufEnum {
     CURVE25519_KEY,
     ED25519_KEY,
     PICKLE_KEY,
+    SECP256K1_PUBLIC_KEY,
+    P256_WEBAUTHN_PUBLIC_KEY,
   ];
 
   static final $core.Map<$core.int, KeyType> _byValue = $pb.ProtobufEnum.initByValue(values);

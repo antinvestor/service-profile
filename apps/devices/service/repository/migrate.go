@@ -7,6 +7,7 @@ import (
 	"github.com/pitabwire/frame/v2/datastore"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
+	"github.com/antinvestor/service-profile/internal/outbox"
 )
 
 func Migrate(ctx context.Context, dbManager datastore.Manager, migrationPath string) error {
@@ -21,5 +22,6 @@ func Migrate(ctx context.Context, dbManager datastore.Manager, migrationPath str
 		&models.DeviceKey{},
 		&models.DeviceLog{},
 		&models.DevicePresence{},
+		&outbox.Event{},
 	)
 }

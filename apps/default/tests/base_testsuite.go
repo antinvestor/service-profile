@@ -22,6 +22,7 @@ import (
 	"github.com/pitabwire/frame/v2/frametests/rlstest"
 	"github.com/pitabwire/frame/v2/security"
 	"github.com/pitabwire/frame/v2/security/authorizer"
+	"github.com/pitabwire/frame/v2/tenancy"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -31,6 +32,8 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/apps/default/tests/testketo"
+	"github.com/antinvestor/service-profile/internal/outbox"
+	"github.com/antinvestor/service-profile/internal/outboxtest"
 	"github.com/antinvestor/service-profile/internal/rlsadmin"
 )
 
@@ -46,6 +49,12 @@ type ProfileBaseTestSuite struct {
 	FunctionChecker *authorizer.FunctionChecker
 	ketoReadURI     string
 	ketoWriteURI    string
+
+	// Facts records the domain facts the outbox relay published, and
+	// FactRelay drains the outbox on demand rather than on the background
+	// ticker.
+	Facts     *outboxtest.Recorder
+	FactRelay *outbox.Relay
 
 	ContactRepo      repository.ContactRepository
 	VerificationRepo repository.VerificationRepository
@@ -142,6 +151,18 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	sm := svc.SecurityManager()
 	bs.FunctionChecker = authorizer.NewFunctionChecker(sm.GetAuthorizer(ctx), "service_profile")
 
+	bs.Facts = &outboxtest.Recorder{}
+
+	profileFactsPublisher := frame.WithRegisterPublisher(
+		cfg.QueueProfileEventsName,
+		cfg.QueueProfileEventsURI,
+	)
+	profileFactsSubscriber := frame.WithRegisterSubscriber(
+		cfg.QueueProfileEventsName,
+		cfg.QueueProfileEventsURI,
+		bs.Facts,
+	)
+
 	relationshipConnectQueuePublisher := frame.WithRegisterPublisher(
 		cfg.QueueRelationshipConnectName,
 		cfg.QueueRelationshipConnectURI,
@@ -160,7 +181,10 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	verificationRepo := repository.NewVerificationRepository(ctx, dbPool, workMan)
 	relationshipRepo := repository.NewRelationshipRepository(ctx, dbPool, workMan)
 
+	bs.FactRelay = outbox.NewRelay(dbPool, qMan, cfg.QueueProfileEventsName)
+
 	svc.Init(ctx,
+		profileFactsPublisher, profileFactsSubscriber,
 		relationshipConnectQueuePublisher, relationshipDisConnectQueuePublisher,
 		frame.WithRegisterEvents(
 			events.NewClientConnectedSetupQueue(ctx, &cfg, qMan, evtsMan, relationshipRepo),
@@ -348,4 +372,17 @@ func (bs *ProfileBaseTestSuite) WithTestDependancies(
 	}
 
 	frametests.WithTestDependencies(t, options, testFn)
+}
+
+// StagedFacts reads the outbox rows with the given fact name, whatever tenant
+// staged them.
+func StagedFacts(ctx context.Context, svc *frame.Service, name string) ([]*outbox.Event, error) {
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	var staged []*outbox.Event
+	err := dbPool.DB(tenancy.WithSkipEnforcement(ctx), true).
+		Where("name = ?", name).
+		Order("created_at asc").
+		Find(&staged).Error
+	return staged, err
 }

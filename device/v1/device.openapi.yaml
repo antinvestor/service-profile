@@ -1,3 +1,17 @@
+# Copyright 2023-2026 Ant Investor Ltd
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 openapi: 3.1.0
 info:
   title: Device Management API
@@ -22,13 +36,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -59,13 +77,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -96,13 +118,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -133,36 +159,49 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
         - name: message
           in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/device.v1.GetByIdRequest'
         - name: encoding
           in: query
+          description: Define which encoding or 'Message-Codec' to use
           required: true
           schema:
             $ref: '#/components/schemas/encoding'
+          example: json
         - name: base64
           in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
           schema:
             $ref: '#/components/schemas/base64'
+          example: false
         - name: compression
           in: query
+          description: Which compression algorithm to use for this request
           schema:
             $ref: '#/components/schemas/compression'
+          example: gzip
         - name: connect
           in: query
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect'
+          example: v1
       responses:
         default:
           description: Error
@@ -182,17 +221,21 @@ paths:
         - device.v1.DeviceService
       summary: Get devices by ID
       description: Retrieves one or more devices by their unique identifiers. Supports batch retrieval and optional extensive details including logs and key counts.
-      operationId: getDeviceById
+      operationId: getDeviceById2
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -223,36 +266,49 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
         - name: message
           in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/device.v1.GetBySessionIdRequest'
         - name: encoding
           in: query
+          description: Define which encoding or 'Message-Codec' to use
           required: true
           schema:
             $ref: '#/components/schemas/encoding'
+          example: json
         - name: base64
           in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
           schema:
             $ref: '#/components/schemas/base64'
+          example: false
         - name: compression
           in: query
+          description: Which compression algorithm to use for this request
           schema:
             $ref: '#/components/schemas/compression'
+          example: gzip
         - name: connect
           in: query
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect'
+          example: v1
       responses:
         default:
           description: Error
@@ -272,17 +328,21 @@ paths:
         - device.v1.DeviceService
       summary: Get device by session ID
       description: Retrieves a device by its active session identifier. Used to resolve device information from session tokens.
-      operationId: getDeviceBySessionId
+      operationId: getDeviceBySessionId2
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -313,13 +373,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -350,13 +414,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -388,13 +456,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -425,13 +497,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -462,13 +538,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -499,13 +579,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -536,13 +620,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -574,36 +662,49 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
         - name: message
           in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/device.v1.SearchKeyRequest'
         - name: encoding
           in: query
+          description: Define which encoding or 'Message-Codec' to use
           required: true
           schema:
             $ref: '#/components/schemas/encoding'
+          example: json
         - name: base64
           in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
           schema:
             $ref: '#/components/schemas/base64'
+          example: false
         - name: compression
           in: query
+          description: Which compression algorithm to use for this request
           schema:
             $ref: '#/components/schemas/compression'
+          example: gzip
         - name: connect
           in: query
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect'
+          example: v1
       responses:
         default:
           description: Error
@@ -623,17 +724,21 @@ paths:
         - device.v1.DeviceService
       summary: Search keys or tokens
       description: Searches for keys or tokens associated with a device. Supports filtering by key type and expiration.
-      operationId: searchDeviceKey
+      operationId: searchDeviceKey2
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -664,13 +769,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -701,13 +810,17 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
+          description: Define the version of the Connect protocol
           required: true
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -731,9 +844,13 @@ components:
   schemas:
     base64:
       type: boolean
+      examples:
+        - false
       title: base64
       description: Specifies if the message query param is base64 encoded, which may be required for binary data
     compression:
+      examples:
+        - gzip
       title: compression
       enum:
         - identity
@@ -741,19 +858,23 @@ components:
         - br
       description: Which compression algorithm to use for this request
     connect:
+      examples:
+        - v1
       title: connect
       enum:
         - v1
       description: Define the version of the Connect protocol
     connect-protocol-version:
       type: number
-      title: Connect-Protocol-Version
-      enum:
+      examples:
         - 1
+      title: Connect-Protocol-Version
       description: Define the version of the Connect protocol
       const: 1
     connect-timeout-header:
       type: number
+      examples:
+        - 1000
       title: Connect-Timeout-Ms
       description: Define the timeout, in ms
     connect.error:
@@ -797,20 +918,15 @@ components:
       properties:
         type:
           type: string
-          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`.'
         value:
           type: string
           format: binary
           description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
         debug:
-          oneOf:
-            - type: object
-              title: Any
-              additionalProperties: true
-              description: Detailed error information.
-          discriminator:
-            propertyName: type
+          type: object
           title: Debug
+          additionalProperties: true
           description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
       additionalProperties: true
       description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
@@ -832,9 +948,10 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Device this key belongs to
         keyType:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.KeyType'
           title: key_type
           description: Type of key (Matrix, FCM, Encryption, etc.)
-          $ref: '#/components/schemas/device.v1.KeyType'
         data:
           type: string
           title: data
@@ -845,9 +962,10 @@ components:
           title: expires_at
           description: Optional expiration timestamp (RFC3339)
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
           description: Additional key metadata (algorithm, app_id, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: AddKeyRequest
       additionalProperties: false
       description: |-
@@ -857,9 +975,10 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.KeyObject'
           title: data
           description: The created key object
-          $ref: '#/components/schemas/device.v1.KeyObject'
       title: AddKeyResponse
       additionalProperties: false
       description: AddKeyResponse returns the created key.
@@ -871,9 +990,10 @@ components:
           title: name
           description: User-friendly name for the device
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
           description: Device properties (model, manufacturer, OS version, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: CreateRequest
       additionalProperties: false
       description: CreateRequest registers a new device in the system.
@@ -881,9 +1001,10 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.DeviceObject'
           title: data
           description: The created device object
-          $ref: '#/components/schemas/device.v1.DeviceObject'
       title: CreateResponse
       additionalProperties: false
       description: CreateResponse returns the newly created device.
@@ -942,9 +1063,10 @@ components:
           title: ip
           description: IP address of the device during this session
         locale:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.Locale'
           title: locale
           description: Locale settings during this session
-          $ref: '#/components/schemas/device.v1.Locale'
         userAgent:
           type: string
           title: user_agent
@@ -958,13 +1080,15 @@ components:
           title: last_seen
           description: Last activity timestamp (RFC3339)
         location:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: location
           description: Geographic location data (lat/long, city, country)
-          $ref: '#/components/schemas/google.protobuf.Struct'
         extra:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extra
           description: Additional log metadata
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: DeviceLog
       additionalProperties: false
       description: |-
@@ -1009,21 +1133,25 @@ components:
           title: profile_id
           description: Profile this device is linked to
         locale:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.Locale'
           title: locale
           description: Device locale settings
-          $ref: '#/components/schemas/device.v1.Locale'
         presence:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.PresenceStatus'
           title: presence
           description: Device presense status
-          $ref: '#/components/schemas/device.v1.PresenceStatus'
         location:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: location
           description: Last known geographic location
-          $ref: '#/components/schemas/google.protobuf.Struct'
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
           description: Additional device properties (model, manufacturer, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: DeviceObject
       additionalProperties: false
       description: |-
@@ -1077,9 +1205,10 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.DeviceObject'
           title: data
           description: Device object for the session
-          $ref: '#/components/schemas/device.v1.DeviceObject'
       title: GetBySessionIdResponse
       additionalProperties: false
       description: GetBySessionIdResponse returns the device associated with the session.
@@ -1126,9 +1255,10 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Device this key belongs to
         keyType:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.KeyType'
           title: key_type
           description: Type of key (FCM token, encryption key, etc.)
-          $ref: '#/components/schemas/device.v1.KeyType'
         key:
           type: string
           title: key
@@ -1147,9 +1277,10 @@ components:
           title: is_active
           description: Whether the key is currently active
         extra:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extra
           description: Additional key metadata (algorithm, app_id, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: KeyObject
       additionalProperties: false
       description: |-
@@ -1165,6 +1296,8 @@ components:
         - CURVE25519_KEY
         - ED25519_KEY
         - PICKLE_KEY
+        - SECP256K1_PUBLIC_KEY
+        - P256_WEBAUTHN_PUBLIC_KEY
       description: |-
         KeyType defines the types of keys that can be stored for a device.
          Different key types serve different purposes in the security infrastructure.
@@ -1187,9 +1320,10 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Profile ID to link the device to
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
           description: Additional linking properties
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: LinkRequest
       additionalProperties: false
       description: |-
@@ -1199,9 +1333,10 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.DeviceObject'
           title: data
           description: The linked device object
-          $ref: '#/components/schemas/device.v1.DeviceObject'
       title: LinkResponse
       additionalProperties: false
       description: LinkResponse returns the linked device.
@@ -1309,9 +1444,10 @@ components:
           title: last_seen
           description: Timestamp of this activity (RFC3339)
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
           description: Additional log data (location, app version, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: LogRequest
       additionalProperties: false
       description: |-
@@ -1321,9 +1457,10 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.DeviceLog'
           title: data
           description: The created log entry
-          $ref: '#/components/schemas/device.v1.DeviceLog'
       title: LogResponse
       additionalProperties: false
       description: LogResponse returns the created log entry.
@@ -1345,13 +1482,15 @@ components:
           title: body
           description: Notification body/message
         data:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: data
           description: Additional notification data/payload (custom data, actions, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
           description: Extra notification options (priority, TTL, badge, sound, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: NotifyMessage
       additionalProperties: false
       description: NotifyPayload represents the content and metadata of a single notification.
@@ -1375,9 +1514,10 @@ components:
             The following fields remain for backward compatibility and represent a single notification payload.
              New integrations should prefer the notifications field for bulk sending. Specific key ID to use (optional - if not provided, uses key_type to select)
         keyType:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.KeyType'
           title: key_type
           description: Type of key to use for notification (e.g., FCM_TOKEN, NOTIFICATION_KEY)
-          $ref: '#/components/schemas/device.v1.KeyType'
         notifications:
           type: array
           items:
@@ -1419,9 +1559,10 @@ components:
           title: notification_id
           description: Unique identifier for the sent notification (if provided by service)
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
           description: Additional response metadata from notification service
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: NotifyResult
       additionalProperties: false
       description: NotifyResult details the outcome of sending an individual notification payload.
@@ -1443,9 +1584,10 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Profile this device belongs to
         status:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.PresenceStatus'
           title: status
           description: Current presence status
-          $ref: '#/components/schemas/device.v1.PresenceStatus'
         statusMessage:
           type: string
           title: status_message
@@ -1459,9 +1601,10 @@ components:
           title: updated_at
           description: Timestamp when presence was last updated (RFC3339)
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
           description: Additional presence metadata (activity type, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: PresenceObject
       additionalProperties: false
       description: |-
@@ -1490,13 +1633,15 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Device to register with the service
         keyType:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.KeyType'
           title: key_type
           description: Type of service to register with (FCM_TOKEN, etc.)
-          $ref: '#/components/schemas/device.v1.KeyType'
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
           description: Service-specific metadata (app_id, platform, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: RegisterKeyRequest
       additionalProperties: false
       description: |-
@@ -1508,9 +1653,10 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.KeyObject'
           title: data
           description: Registered key object with service metadata
-          $ref: '#/components/schemas/device.v1.KeyObject'
       title: RegisterKeyResponse
       additionalProperties: false
       description: |-
@@ -1564,9 +1710,10 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.DeviceObject'
           title: data
           description: The removed device object
-          $ref: '#/components/schemas/device.v1.DeviceObject'
       title: RemoveResponse
       additionalProperties: false
       description: RemoveResponse returns the removed device.
@@ -1651,9 +1798,10 @@ components:
           title: properties
           description: Specific properties to include in results
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
           description: Additional search filters
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: SearchRequest
       additionalProperties: false
       description: SearchRequest searches for devices matching specified criteria.
@@ -1685,9 +1833,7 @@ components:
           title: credential
           description: HMAC-SHA1(username, shared_secret) — base64-encoded
         expiresAt:
-          type:
-            - integer
-            - string
+          type: string
           title: expires_at
           format: int64
           description: Unix timestamp (seconds) when this credential expires
@@ -1704,17 +1850,19 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Device ID to update presence for
         status:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.PresenceStatus'
           title: status
           description: New presence status
-          $ref: '#/components/schemas/device.v1.PresenceStatus'
         statusMessage:
           type: string
           title: status_message
           description: Optional custom status message
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
           description: Additional presence metadata
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: UpdatePresenceRequest
       additionalProperties: false
       description: UpdatePresenceRequest updates the presence status of a device.
@@ -1722,9 +1870,10 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.PresenceObject'
           title: data
           description: Updated presence object
-          $ref: '#/components/schemas/device.v1.PresenceObject'
       title: UpdatePresenceResponse
       additionalProperties: false
       description: UpdatePresenceResponse returns the updated presence.
@@ -1743,9 +1892,10 @@ components:
           title: name
           description: New device name (if changing)
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
           description: Updated device properties
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: UpdateRequest
       additionalProperties: false
       description: UpdateRequest updates an existing device's information.
@@ -1753,67 +1903,46 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/device.v1.DeviceObject'
           title: data
           description: The updated device object
-          $ref: '#/components/schemas/device.v1.DeviceObject'
       title: UpdateResponse
       additionalProperties: false
       description: UpdateResponse returns the updated device.
     encoding:
+      examples:
+        - json
       title: encoding
       enum:
         - proto
         - json
       description: Define which encoding or 'Message-Codec' to use
     google.protobuf.ListValue:
-      type: object
-      properties:
-        values:
-          type: array
-          items:
-            $ref: '#/components/schemas/google.protobuf.Value'
-          title: values
-          description: Repeated field of dynamically typed values.
-      title: ListValue
-      additionalProperties: false
-      description: |-
-        `ListValue` is a wrapper around a repeated field of values.
-
-         The JSON representation for `ListValue` is JSON array.
+      type: array
+      items:
+        $ref: '#/components/schemas/google.protobuf.Value'
+      description: A JSON array whose elements may be any JSON value.
     google.protobuf.NullValue:
       type: string
       title: NullValue
       enum:
         - NULL_VALUE
       description: |-
-        `NullValue` is a singleton enumeration to represent the null value for the
-         `Value` type union.
+        Represents a JSON `null`.
 
-         The JSON representation for `NullValue` is JSON `null`.
+         `NullValue` is a sentinel, using an enum with only one value to represent
+         the null value for the `Value` type union.
+
+         A field of type `NullValue` with any value other than `0` is considered
+         invalid. Most ProtoJSON serializers will emit a Value with a `null_value` set
+         as a JSON `null` regardless of the integer value, and so will round trip to
+         a `0` value.
     google.protobuf.Struct:
       type: object
       additionalProperties:
         $ref: '#/components/schemas/google.protobuf.Value'
-      description: |-
-        `Struct` represents a structured data value, consisting of fields
-         which map to dynamically typed values. In some languages, `Struct`
-         might be supported by a native representation. For example, in
-         scripting languages like JS a struct is represented as an
-         object. The details of that representation are described together
-         with the proto support for the language.
-
-         The JSON representation for `Struct` is JSON object.
-    google.protobuf.Struct.FieldsEntry:
-      type: object
-      properties:
-        key:
-          type: string
-          title: key
-        value:
-          title: value
-          $ref: '#/components/schemas/google.protobuf.Value'
-      title: FieldsEntry
-      additionalProperties: false
+      description: A JSON object whose property values may be any JSON value.
     google.protobuf.Value:
       oneOf:
         - type: "null"
@@ -1823,13 +1952,7 @@ components:
         - type: array
         - type: object
           additionalProperties: true
-      description: |-
-        `Value` represents a dynamically typed value which can be either
-         null, a number, a string, a boolean, a recursive struct value, or a
-         list of values. A producer of value is expected to set one of these
-         variants. Absence of any variant indicates an error.
-
-         The JSON representation for `Value` is JSON value.
+      description: 'Any JSON value: `null`, number, string, boolean, array, or object.'
   securitySchemes:
     BearerAuth:
       type: http

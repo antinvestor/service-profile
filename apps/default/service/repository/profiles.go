@@ -8,9 +8,11 @@ import (
 	"github.com/pitabwire/frame/v2/datastore/pool"
 	"github.com/pitabwire/frame/v2/security"
 	"github.com/pitabwire/frame/v2/workerpool"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/internal/outbox"
 )
 
 type profileRepository struct {
@@ -67,4 +69,22 @@ func (pr *profileRepository) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	return pr.Pool().DB(ctx, false).Delete(profile).Error
+}
+
+// CreateWithFact persists a profile and stages the profile.created fact in the
+// same transaction, so the fact exists exactly when the profile does
+// (GFOS K5).
+func (pr *profileRepository) CreateWithFact(
+	ctx context.Context,
+	profile *models.Profile,
+	fact func(*models.Profile) *outbox.Event,
+) error {
+	profile.GenID(ctx)
+
+	return pr.Pool().DB(ctx, false).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(profile).Error; err != nil {
+			return err
+		}
+		return outbox.Enqueue(tx, fact(profile))
+	})
 }

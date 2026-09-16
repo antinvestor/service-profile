@@ -20,6 +20,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/internal/outbox"
 )
 
 // ErrContactNotFound is returned when a contact lookup finds no matching contact.
@@ -424,7 +425,12 @@ func (pb *profileBusiness) CreateProfile(
 	p.ProfileType = *pt
 	p.ProfileTypeID = pt.ID
 
-	createErr := pb.profileRepo.Create(ctx, &p)
+	// The profile row and the profile.created fact are written in one
+	// transaction, so the fact is true exactly when the profile exists
+	// (GFOS K5).
+	createErr := pb.profileRepo.CreateWithFact(ctx, &p, func(created *models.Profile) *outbox.Event {
+		return ProfileCreatedFact(ctx, created)
+	})
 	if createErr != nil {
 		return nil, data.ErrorConvertToAPI(createErr)
 	}

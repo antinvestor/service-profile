@@ -25,6 +25,8 @@ const KeyType$json = {
     {'1': 'CURVE25519_KEY', '2': 3},
     {'1': 'ED25519_KEY', '2': 4},
     {'1': 'PICKLE_KEY', '2': 5},
+    {'1': 'SECP256K1_PUBLIC_KEY', '2': 6},
+    {'1': 'P256_WEBAUTHN_PUBLIC_KEY', '2': 7},
   ],
 };
 
@@ -32,7 +34,8 @@ const KeyType$json = {
 final $typed_data.Uint8List keyTypeDescriptor = $convert.base64Decode(
     'CgdLZXlUeXBlEg4KCk1BVFJJWF9LRVkQABIUChBOT1RJRklDQVRJT05fS0VZEAESDQoJRkNNX1'
     'RPS0VOEAISEgoOQ1VSVkUyNTUxOV9LRVkQAxIPCgtFRDI1NTE5X0tFWRAEEg4KClBJQ0tMRV9L'
-    'RVkQBQ==');
+    'RVkQBRIYChRTRUNQMjU2SzFfUFVCTElDX0tFWRAGEhwKGFAyNTZfV0VCQVVUSE5fUFVCTElDX0'
+    'tFWRAH');
 
 @$core.Deprecated('Use presenceStatusDescriptor instead')
 const PresenceStatus$json = {
@@ -924,7 +927,7 @@ final $typed_data.Uint8List deviceServiceDescriptor = $convert.base64Decode(
     'ZXZpY2UgcHJlc2VuY2UalwFVcGRhdGVzIHRoZSBwcmVzZW5jZSBzdGF0dXMgb2YgYSBkZXZpY2'
     'UuIFVzZWQgdG8gaW5kaWNhdGUgb25saW5lL29mZmxpbmUvYXdheS9idXN5IHN0YXR1cyBhbmQg'
     'dHJhY2sgbGFzdCBhY3Rpdml0eSBmb3IgcmVhbC10aW1lIGNvbW11bmljYXRpb24gZmVhdHVyZX'
-    'MuKg51cGRhdGVQcmVzZW5jZYK1GA8KDWRldmljZV9tYW5hZ2Ua2wSCtRjWBAoOc2VydmljZV9k'
+    'MuKg51cGRhdGVQcmVzZW5jZYK1GA8KDWRldmljZV9tYW5hZ2UaoQWCtRicBQoOc2VydmljZV9k'
     'ZXZpY2USC2RldmljZV92aWV3Eg1kZXZpY2VfbWFuYWdlEg9kZXZpY2Vfa2V5X3ZpZXcSEWRldm'
     'ljZV9rZXlfbWFuYWdlEg9kZXZpY2VfbG9nX3ZpZXcSEWRldmljZV9sb2dfbWFuYWdlGmYIARIL'
     'ZGV2aWNlX3ZpZXcSDWRldmljZV9tYW5hZ2USD2RldmljZV9rZXlfdmlldxIRZGV2aWNlX2tleV'
@@ -933,7 +936,8 @@ final $typed_data.Uint8List deviceServiceDescriptor = $convert.base64Decode(
     'IPZGV2aWNlX2xvZ192aWV3EhFkZXZpY2VfbG9nX21hbmFnZRpTCAMSC2RldmljZV92aWV3Eg1k'
     'ZXZpY2VfbWFuYWdlEg9kZXZpY2Vfa2V5X3ZpZXcSD2RldmljZV9sb2dfdmlldxIRZGV2aWNlX2'
     'xvZ19tYW5hZ2UaMQgEEgtkZXZpY2VfdmlldxIPZGV2aWNlX2tleV92aWV3Eg9kZXZpY2VfbG9n'
-    'X3ZpZXcaIAgFEgtkZXZpY2VfdmlldxIPZGV2aWNlX2xvZ192aWV3GmYIBhILZGV2aWNlX3ZpZX'
-    'cSDWRldmljZV9tYW5hZ2USD2RldmljZV9rZXlfdmlldxIRZGV2aWNlX2tleV9tYW5hZ2USD2Rl'
-    'dmljZV9sb2dfdmlldxIRZGV2aWNlX2xvZ19tYW5hZ2U=');
+    'X3ZpZXcaZggFEgtkZXZpY2VfdmlldxINZGV2aWNlX21hbmFnZRIPZGV2aWNlX2tleV92aWV3Eh'
+    'FkZXZpY2Vfa2V5X21hbmFnZRIPZGV2aWNlX2xvZ192aWV3EhFkZXZpY2VfbG9nX21hbmFnZRpm'
+    'CAYSC2RldmljZV92aWV3Eg1kZXZpY2VfbWFuYWdlEg9kZXZpY2Vfa2V5X3ZpZXcSEWRldmljZV'
+    '9rZXlfbWFuYWdlEg9kZXZpY2VfbG9nX3ZpZXcSEWRldmljZV9sb2dfbWFuYWdl');
 

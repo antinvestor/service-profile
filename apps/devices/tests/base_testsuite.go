@@ -15,6 +15,7 @@ import (
 	"github.com/pitabwire/frame/v2/frametests/rlstest"
 	"github.com/pitabwire/frame/v2/security"
 	"github.com/pitabwire/frame/v2/security/authorizer"
+	"github.com/pitabwire/frame/v2/tenancy"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -25,6 +26,8 @@ import (
 	devQueue "github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
 	"github.com/antinvestor/service-profile/apps/devices/tests/testketo"
+	"github.com/antinvestor/service-profile/internal/outbox"
+	"github.com/antinvestor/service-profile/internal/outboxtest"
 	"github.com/antinvestor/service-profile/internal/rlsadmin"
 )
 
@@ -40,6 +43,12 @@ type DeviceBaseTestSuite struct {
 	ketoWriteURI    string
 }
 
+// FactRecorder captures the facts the outbox relay published.
+type FactRecorder = outboxtest.Recorder
+
+// RecordedFact is one message seen on the device facts topic.
+type RecordedFact = outboxtest.Fact
+
 type DepsBuilder struct {
 	DeviceRepo    repository.DeviceRepository
 	DeviceLogRepo repository.DeviceLogRepository
@@ -51,6 +60,12 @@ type DepsBuilder struct {
 	KeyBusiness    business.KeysBusiness
 
 	AnalysisQueueHandler *devQueue.DeviceAnalysisQueueHandler
+
+	// FactRelay drains the outbox on demand; tests call Drain rather than
+	// waiting on the background ticker.
+	FactRelay *outbox.Relay
+	// Facts records what the relay published.
+	Facts *FactRecorder
 }
 
 func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
@@ -85,6 +100,9 @@ func BuildRepos(ctx context.Context, svc *frame.Service) *DepsBuilder {
 	keyBusiness := business.NewKeysBusiness(ctx, cfg, qMan, workMan, deviceRepo, keyRepo, cacheSvc)
 
 	return &DepsBuilder{
+		FactRelay: outbox.NewRelay(dbPool, qMan, cfg.QueueDeviceEventsName),
+		Facts:     &FactRecorder{},
+
 		DeviceRepo:    deviceRepo,
 		SessionRepo:   sessionRepo,
 		DeviceLogRepo: deviceLogRepo,
@@ -208,7 +226,18 @@ func (bs *DeviceBaseTestSuite) CreateService(
 		depsBuilder.AnalysisQueueHandler,
 	)
 
-	svc.Init(ctx, analysisQueueTopic, analysisQueue)
+	factsTopic := frame.WithRegisterPublisher(
+		cfg.QueueDeviceEventsName,
+		cfg.QueueDeviceEvents,
+	)
+
+	factsQueue := frame.WithRegisterSubscriber(
+		cfg.QueueDeviceEventsName,
+		cfg.QueueDeviceEvents,
+		depsBuilder.Facts,
+	)
+
+	svc.Init(ctx, analysisQueueTopic, analysisQueue, factsTopic, factsQueue)
 
 	err = repository.Migrate(ctx, svc.DatastoreManager(), "../../migrations/0001")
 	require.NoError(t, err)
@@ -301,4 +330,18 @@ func (bs *DeviceBaseTestSuite) WithTestDependencies(
 	}
 
 	frametests.WithTestDependencies(t, options, testFn)
+}
+
+// StagedFacts reads the outbox rows with the given fact name, whatever tenant
+// staged them. Tests use it to assert that a state change and its fact were
+// written together.
+func StagedFacts(ctx context.Context, svc *frame.Service, name string) ([]*outbox.Event, error) {
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+
+	var staged []*outbox.Event
+	err := dbPool.DB(tenancy.WithSkipEnforcement(ctx), true).
+		Where("name = ?", name).
+		Order("created_at asc").
+		Find(&staged).Error
+	return staged, err
 }
