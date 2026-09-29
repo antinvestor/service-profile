@@ -18,11 +18,9 @@ require (
 	buf.build/gen/go/gnostic/gnostic/protocolbuffers/go v1.36.12-20230414000709-087bc8072ce4.2
 	connectrpc.com/connect v1.21.0
 	firebase.google.com/go/v4 v4.22.0
-	github.com/antinvestor/common v1.5.2
 	github.com/antinvestor/common/audit v0.0.0-20260831232917-ab9b90c2a549
 	github.com/antinvestor/common/v2 v2.0.7
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/google/gnostic v0.7.1
 	github.com/jackc/pgx/v5 v5.11.0
 	github.com/mssola/user_agent v0.6.0
 	github.com/pitabwire/frame/v2 v2.1.8
@@ -97,7 +95,6 @@ require (
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/google/s2a-go v0.1.10 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/google/wire v0.7.0 // indirect
