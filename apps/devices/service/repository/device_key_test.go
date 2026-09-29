@@ -102,7 +102,11 @@ func (suite *DeviceKeyRepositoryTestSuite) TestKeyMaterialUniquenessIsEnforcedBy
 			first := &models.DeviceKey{DeviceID: firstDevice.GetID(), KeyType: devicev1.KeyType_PICKLE_KEY, Key: large}
 			require.NoError(t, deps.KeyRepo.Create(ctx, first))
 
-			duplicate := &models.DeviceKey{DeviceID: secondDevice.GetID(), KeyType: devicev1.KeyType_PICKLE_KEY, Key: large}
+			duplicate := &models.DeviceKey{
+				DeviceID: secondDevice.GetID(),
+				KeyType:  devicev1.KeyType_PICKLE_KEY,
+				Key:      large,
+			}
 			err := deps.KeyRepo.Create(ctx, duplicate)
 			require.Error(t, err, "the unique index must reject the duplicate")
 			assert.Contains(t, err.Error(), "idx_device_keys_key_type_key")
