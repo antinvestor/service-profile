@@ -46,7 +46,7 @@ func NewAreaBusiness(
 func (b *areaBusiness) CreateArea(ctx context.Context, req *models.CreateAreaRequest) (*models.AreaAPI, error) {
 	log := util.Log(ctx)
 
-	if req == nil || req.Data == nil {
+	if req == nil || req.GetData() == nil {
 		return nil, errors.New("create area request data is nil")
 	}
 
