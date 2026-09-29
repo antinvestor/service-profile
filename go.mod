@@ -6,8 +6,8 @@ toolchain go1.26.1
 
 require (
 	buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.12-20260509050709-3f270876dbf3.2
-	buf.build/gen/go/antinvestor/device/connectrpc/go v1.21.0-20260831194050-6bb030460a83.1
-	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.12-20260831194050-6bb030460a83.2
+	buf.build/gen/go/antinvestor/device/connectrpc/go v1.21.0-20260929153428-514d7e254c6f.1
+	buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.12-20260929153428-514d7e254c6f.2
 	buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.21.0-20260831194050-ee586b4088ba.1
 	buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.12-20260831194050-ee586b4088ba.2
 	buf.build/gen/go/antinvestor/notification/connectrpc/go v1.21.0-20260831182621-e7d71a2bcc5d.1
@@ -179,7 +179,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	gocloud.dev v0.46.0 // indirect
-	golang.org/x/crypto v0.57.0 // indirect
+	golang.org/x/crypto v0.57.0
 	golang.org/x/exp v0.0.0-20260820142414-ca536658362e // indirect
 	golang.org/x/net v0.59.0 // indirect
 	golang.org/x/oauth2 v0.37.0 // indirect
