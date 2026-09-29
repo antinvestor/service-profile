@@ -77,9 +77,9 @@ func (b *trackBusiness) GetTrack(ctx context.Context, req *models.GetTrackReques
 		return nil, errors.New("subject_id is required")
 	}
 
-	from, to := resolveTimeRange(req.From, req.To)
-	limit := clampLimit(int(req.Limit), b.cfg.DefaultTrackLimit, b.cfg.MaxTrackLimit)
-	offset := max(int(req.Offset), 0)
+	from, to := resolveTimeRange(req.GetFrom(), req.GetTo())
+	limit := clampLimit(int(req.GetLimit()), b.cfg.DefaultTrackLimit, b.cfg.MaxTrackLimit)
+	offset := max(int(req.GetOffset()), 0)
 
 	points, err := b.pointRepo.GetTrack(ctx, req.GetSubjectId(), from, to, limit, offset)
 	if err != nil {
@@ -112,17 +112,17 @@ func (b *trackBusiness) GetSubjectEvents(
 	}
 
 	var from, to *time.Time
-	if req.From != nil {
-		t := req.From.AsTime()
+	if req.GetFrom() != nil {
+		t := req.GetFrom().AsTime()
 		from = &t
 	}
-	if req.To != nil {
-		t := req.To.AsTime()
+	if req.GetTo() != nil {
+		t := req.GetTo().AsTime()
 		to = &t
 	}
 
-	limit := clampLimit(int(req.Limit), b.cfg.DefaultEventLimit, b.cfg.MaxEventLimit)
-	offset := max(int(req.Offset), 0)
+	limit := clampLimit(int(req.GetLimit()), b.cfg.DefaultEventLimit, b.cfg.MaxEventLimit)
+	offset := max(int(req.GetOffset()), 0)
 
 	events, err := b.geoEventRepo.GetBySubject(ctx, req.GetSubjectId(), from, to, limit, offset)
 	if err != nil {
