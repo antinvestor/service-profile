@@ -81,6 +81,8 @@ enum KeyType {
   CURVE25519_KEY = 3; // Curve25519 key for ECDH
   ED25519_KEY = 4; // Ed25519 key for signing
   PICKLE_KEY = 5; // Pickled key for session storage
+  SECP256K1_PUBLIC_KEY = 6; // secp256k1 public key, SEC1 uncompressed (65 bytes, 0x04 ‖ x ‖ y) — EVM account credential
+  P256_WEBAUTHN_PUBLIC_KEY = 7; // NIST P-256 WebAuthn credential public key, raw coordinates (64 bytes, x ‖ y)
 }
 
 // PresenceStatus defines the online/offline status of a device.

@@ -572,7 +572,10 @@ func (b *deviceBusiness) LinkDeviceToProfile(
 	if device.ProfileID == "" {
 		device.ProfileID = profileID
 
-		_, err = b.deviceRepo.Update(ctx, device, "profile_id")
+		// The link and the device.linked fact are written in one transaction
+		// so a consumer can never see a device bound to a profile without the
+		// fact that says so, or the other way round (GFOS K5).
+		err = b.deviceRepo.LinkProfileWithFact(ctx, device, DeviceLinkedFact(ctx, device, sessionID))
 		if err != nil {
 			return nil, err
 		}

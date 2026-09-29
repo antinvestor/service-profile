@@ -4,10 +4,10 @@ buf.build/gen/go/antinvestor/audit/protocolbuffers/go v1.36.12-20260912192320-28
 buf.build/gen/go/antinvestor/audit/protocolbuffers/go v1.36.12-20260912192320-2865cc687b65.2/go.mod h1:2M48o5NSbpBfSLoYKEq1ClTK5BNYBI294fRWfPGq7vI=
 buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.12-20260509050709-3f270876dbf3.2 h1:Rzgdz5lQyym2xREfmEpybYF3U7W29Rhr64YBRv1GTTQ=
 buf.build/gen/go/antinvestor/common/protocolbuffers/go v1.36.12-20260509050709-3f270876dbf3.2/go.mod h1:lW0aq7sAW/QoJH7VBLMaadXYY6xFyIVW7dy4olw654M=
-buf.build/gen/go/antinvestor/device/connectrpc/go v1.21.0-20260831194050-6bb030460a83.1 h1:84nM/SsN3+ffvvPamf2rMjuAsEANFkDnVttA3qtv++I=
-buf.build/gen/go/antinvestor/device/connectrpc/go v1.21.0-20260831194050-6bb030460a83.1/go.mod h1:tMYlIaTO9AFiNN2gvQ5MgQda8cvK4f0XRPI7VRDALbo=
-buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.12-20260831194050-6bb030460a83.2 h1:gkFFe89x1fNpiBYYtjNbUkMbQu1vbtVWralM9TF0RNA=
-buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.12-20260831194050-6bb030460a83.2/go.mod h1:6KA5A+fCDj7zA5WcsFwbKJ1ZKUYN+TRZr8n+wJquw3w=
+buf.build/gen/go/antinvestor/device/connectrpc/go v1.21.0-20260929153428-514d7e254c6f.1 h1:3tpTR4P6xgaqX3amVK+iwafgMJIteEAQH0TNn7+9DtQ=
+buf.build/gen/go/antinvestor/device/connectrpc/go v1.21.0-20260929153428-514d7e254c6f.1/go.mod h1:juJFhFvqg7WviStLbOWy4HD2gmzqDv4rsRbCVKa9+Fs=
+buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.12-20260929153428-514d7e254c6f.2 h1:L3wePiil16saRBG6uqWWCnOqHXKr4+x0ORsIcIN5xxo=
+buf.build/gen/go/antinvestor/device/protocolbuffers/go v1.36.12-20260929153428-514d7e254c6f.2/go.mod h1:gOBaTMo2j0eKTpg8SCBGGLCYlQcA8YXK+j6QbmRYsP0=
 buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.21.0-20260831194050-ee586b4088ba.1 h1:aoFST4oDJaNzL6zDVFai3e5dZDvWgHQRT6oQjFo+YVY=
 buf.build/gen/go/antinvestor/geolocation/connectrpc/go v1.21.0-20260831194050-ee586b4088ba.1/go.mod h1:6peFUMsRWvLBnM759w8QHjNhlVqT6QBUPZtLSg7Gz1U=
 buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.12-20260831194050-ee586b4088ba.2 h1:yDRYt+fn0mEIgbBSpTnF+HpIOkOwCXSHwzpDL0mt8wE=

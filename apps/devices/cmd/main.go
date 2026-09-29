@@ -25,6 +25,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/devices/service/handlers"
 	"github.com/antinvestor/service-profile/apps/devices/service/queue"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/antinvestor/service-profile/internal/outbox"
 )
 
 func main() {
@@ -132,11 +133,17 @@ func initServiceComponents(
 		httpClientMan, deviceRepo, deviceLogRepo, deviceSessionRepo, cacheSvc,
 	)
 
-	return []frame.Option{
+	// Durable device facts (GFOS K5) leave through one publisher only; the
+	// relay drains what the write paths staged in their own transactions.
+	factEgress := outbox.EgressOptions(ctx, dbPool, queueMan,
+		cfg.QueueDeviceEventsName, cfg.QueueDeviceEvents,
+		cfg.OutboxRelayInterval, cfg.OutboxRelayBatchSize)
+
+	return append([]frame.Option{
 		frame.WithHTTPHandler(connectHandler),
 		frame.WithRegisterSubscriber(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis, analysisHandler),
 		frame.WithRegisterPublisher(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis),
-	}
+	}, factEgress...)
 }
 
 // setupConnectServer initializes and configures the connect server.

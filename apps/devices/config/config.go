@@ -1,6 +1,10 @@
 package config
 
-import "github.com/pitabwire/frame/v2/config"
+import (
+	"time"
+
+	"github.com/pitabwire/frame/v2/config"
+)
 
 // Cache name constants for the devices service.
 const (
@@ -17,6 +21,18 @@ type DevicesConfig struct {
 
 	QueueDeviceAnalysis     string `envDefault:"mem://device_analysis_queue" env:"QUEUE_DEVICE_ANALYSIS_URI"`
 	QueueDeviceAnalysisName string `envDefault:"device_analysis_queue"       env:"QUEUE_DEVICE_ANALYSIS_NAME"`
+
+	// QueueDeviceEvents is the single egress for the durable device domain
+	// facts staged in the outbox (device.linked, device.key.added,
+	// device.key.removed). Consumers route on the event_name header.
+	// Empty URI = no egress: facts stay in the outbox.
+	QueueDeviceEvents     string `envDefault:""              env:"QUEUE_DEVICE_EVENTS_URI"`
+	QueueDeviceEventsName string `envDefault:"device.events" env:"QUEUE_DEVICE_EVENTS_NAME"`
+
+	// OutboxRelayInterval is how often the relay looks for staged facts.
+	OutboxRelayInterval time.Duration `envDefault:"2s" env:"OUTBOX_RELAY_INTERVAL"`
+	// OutboxRelayBatchSize is how many staged facts one relay pass claims.
+	OutboxRelayBatchSize int `envDefault:"100" env:"OUTBOX_RELAY_BATCH_SIZE"`
 
 	FCMMaxBatchSize int `envDefault:"500" env:"FCM_MAX_BATCH_SIZE"`
 

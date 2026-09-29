@@ -7,6 +7,7 @@ import (
 	"slices"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
+	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/v2/data"
 	"github.com/pitabwire/frame/v2/queue"
 	"github.com/pitabwire/frame/v2/workerpool"
@@ -16,6 +17,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/devices/service/caching"
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/apps/devices/service/repository"
+	"github.com/antinvestor/service-profile/internal/outbox"
 )
 
 type KeysBusiness interface {
@@ -69,7 +71,15 @@ func (b *keysBusiness) AddKey(
 	extra data.JSONMap,
 ) (*devicev1.KeyObject, error) {
 	// Validate that the device exists before adding a key.
-	_, err := b.deviceRepo.GetByID(ctx, deviceID)
+	device, err := b.deviceRepo.GetByID(ctx, deviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Key material is checked against the schema for its type before it is
+	// stored, and the extra document the service keeps is the normalised one
+	// (GFOS K4).
+	normalisedExtra, err := ValidateKeyMaterial(keyType, key, extra)
 	if err != nil {
 		return nil, err
 	}
@@ -78,11 +88,18 @@ func (b *keysBusiness) AddKey(
 		DeviceID: deviceID,
 		KeyType:  keyType,
 		Key:      key,
-		Extra:    extra,
+		Extra:    normalisedExtra,
 	}
 
-	err = b.deviceKeyRepo.Create(ctx, deviceKey)
+	// The key row and the device.key.added fact are written together, so a
+	// registered key always has a fact and a fact always has a key (GFOS K5).
+	err = b.deviceKeyRepo.CreateWithFact(ctx, deviceKey, func(stored *models.DeviceKey) *outbox.Event {
+		return DeviceKeyAddedFact(ctx, stored, device.ProfileID)
+	})
 	if err != nil {
+		if errors.Is(err, repository.ErrDuplicateKeyMaterial) {
+			return b.resolveDuplicateKey(ctx, deviceID, keyType, key)
+		}
 		return nil, err
 	}
 
@@ -92,6 +109,30 @@ func (b *keysBusiness) AddKey(
 	}
 
 	return deviceKey.ToAPI(), nil
+}
+
+// resolveDuplicateKey decides what a (key_type, key) collision means. The same
+// device re-registering the same material is the client retrying, so the
+// existing key is returned and no second fact is published. A different device
+// claiming material that is already registered is refused: one public key
+// belongs to one device.
+func (b *keysBusiness) resolveDuplicateKey(
+	ctx context.Context,
+	deviceID string,
+	keyType devicev1.KeyType,
+	key []byte,
+) (*devicev1.KeyObject, error) {
+	existing, err := b.deviceKeyRepo.GetByTypeAndKey(ctx, keyType, key)
+	if err != nil {
+		return nil, err
+	}
+	if existing.DeviceID == deviceID {
+		return existing.ToAPI(), nil
+	}
+	return nil, connect.NewError(
+		connect.CodeAlreadyExists,
+		errors.New("key material is already registered to another device"),
+	)
 }
 
 // cachedKeyEntry is a serializable container for device keys stored in cache.
@@ -200,7 +241,7 @@ func (b *keysBusiness) RemoveKeys(
 			var removedKeys []*devicev1.KeyObject
 
 			for _, keyID := range id {
-				removedKey, err := b.deviceKeyRepo.RemoveByID(ctx, keyID)
+				removedKey, err := b.removeKey(ctx, keyID)
 				if err != nil {
 					return err
 				}
@@ -223,4 +264,23 @@ func (b *keysBusiness) RemoveKeys(
 	}
 
 	return resultPipe.ResultChan(), nil
+}
+
+// removeKey withdraws one key and stages the device.key.removed fact in the
+// same transaction. The owning profile is read first so the fact can name it
+// without a join the consumer would otherwise have to do.
+func (b *keysBusiness) removeKey(ctx context.Context, keyID string) (*models.DeviceKey, error) {
+	existing, err := b.deviceKeyRepo.GetByID(ctx, keyID)
+	if err != nil {
+		return nil, err
+	}
+
+	var profileID string
+	if device, devErr := b.deviceRepo.GetByID(ctx, existing.DeviceID); devErr == nil {
+		profileID = device.ProfileID
+	}
+
+	return b.deviceKeyRepo.RemoveByIDWithFact(ctx, keyID, func(removed *models.DeviceKey) *outbox.Event {
+		return DeviceKeyRemovedFact(ctx, removed, profileID)
+	})
 }

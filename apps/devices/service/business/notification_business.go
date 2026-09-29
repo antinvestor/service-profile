@@ -51,12 +51,14 @@ func NewNotifyBusiness(
 	}
 
 	n.notifiers = map[devicev1.KeyType]notifier.Notifier{
-		devicev1.KeyType_FCM_TOKEN:        nil,
-		devicev1.KeyType_MATRIX_KEY:       nil,
-		devicev1.KeyType_NOTIFICATION_KEY: nil,
-		devicev1.KeyType_CURVE25519_KEY:   nil,
-		devicev1.KeyType_ED25519_KEY:      nil,
-		devicev1.KeyType_PICKLE_KEY:       nil,
+		devicev1.KeyType_FCM_TOKEN:                nil,
+		devicev1.KeyType_MATRIX_KEY:               nil,
+		devicev1.KeyType_NOTIFICATION_KEY:         nil,
+		devicev1.KeyType_CURVE25519_KEY:           nil,
+		devicev1.KeyType_ED25519_KEY:              nil,
+		devicev1.KeyType_PICKLE_KEY:               nil,
+		devicev1.KeyType_SECP256K1_PUBLIC_KEY:     nil,
+		devicev1.KeyType_P256_WEBAUTHN_PUBLIC_KEY: nil,
 	}
 
 	fcmNotifier, err := notifier.NewFCMNotifier(ctx, cfg)

@@ -31,6 +31,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/events"
 	"github.com/antinvestor/service-profile/apps/default/service/handlers"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
+	"github.com/antinvestor/service-profile/internal/outbox"
 )
 
 //go:embed spec/profile.openapi.yaml
@@ -117,7 +118,13 @@ func runtimeServiceOptions(
 	qMan := svc.QueueManager()
 	contactRepository := repository.NewContactRepository(ctx, dbPool, workMan)
 
-	return []frame.Option{
+	// Durable profile facts (GFOS K5) leave through one publisher only; the
+	// relay drains what the write paths staged in their own transactions.
+	factEgress := outbox.EgressOptions(ctx, dbPool, qMan,
+		cfg.QueueProfileEventsName, cfg.QueueProfileEventsURI,
+		cfg.OutboxRelayInterval, cfg.OutboxRelayBatchSize)
+
+	return append([]frame.Option{
 		frame.WithHTTPHandler(connectHandler),
 		frame.WithRegisterPublisher(
 			cfg.QueueRelationshipConnectName,
@@ -149,7 +156,7 @@ func runtimeServiceOptions(
 				cfg, dek, contactRepository,
 			),
 		),
-	}
+	}, factEgress...)
 }
 
 // setupNotificationClient creates and configures the notification client.

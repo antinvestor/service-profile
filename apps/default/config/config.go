@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/pitabwire/frame/v2/config"
 )
 
@@ -24,6 +26,17 @@ type ProfileConfig struct {
 
 	QueueRelationshipDisConnectName string `envDefault:"relationships.disconnect"               env:"QUEUE_RELATIONSHIP_DISCONNECT_NAME"`
 	QueueRelationshipDisConnectURI  string `envDefault:"mem://default.relationships.disconnect" env:"QUEUE_RELATIONSHIP_DISCONNECT_URI"`
+
+	// QueueProfileEvents is the single egress for the durable profile domain
+	// facts staged in the outbox (profile.created). Consumers route on the
+	// event_name header. Empty URI = no egress: facts stay in the outbox.
+	QueueProfileEventsName string `envDefault:"profile.events" env:"QUEUE_PROFILE_EVENTS_NAME"`
+	QueueProfileEventsURI  string `envDefault:""               env:"QUEUE_PROFILE_EVENTS_URI"`
+
+	// OutboxRelayInterval is how often the relay looks for staged facts.
+	OutboxRelayInterval time.Duration `envDefault:"2s" env:"OUTBOX_RELAY_INTERVAL"`
+	// OutboxRelayBatchSize is how many staged facts one relay pass claims.
+	OutboxRelayBatchSize int `envDefault:"100" env:"OUTBOX_RELAY_BATCH_SIZE"`
 
 	LengthOfVerificationCode       int `envDefault:"6"     env:"LENGTH_OF_VERIFICATION_CODE"`
 	VerificationPinExpiryTimeInSec int `envDefault:"86400" env:"VERIFICATION_PIN_EXPIRY_TIME_IN_SEC"`
