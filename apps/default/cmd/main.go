@@ -120,17 +120,12 @@ func runtimeServiceOptions(
 
 	// Durable profile facts (GFOS K5) leave through one publisher only; the
 	// relay drains what the write paths staged in their own transactions.
-	factRelay := outbox.NewRelay(dbPool, qMan, cfg.QueueProfileEventsName).
-		WithInterval(cfg.OutboxRelayInterval).
-		WithBatchSize(cfg.OutboxRelayBatchSize)
+	factEgress := outbox.EgressOptions(ctx, dbPool, qMan,
+		cfg.QueueProfileEventsName, cfg.QueueProfileEventsURI,
+		cfg.OutboxRelayInterval, cfg.OutboxRelayBatchSize)
 
-	return []frame.Option{
+	return append([]frame.Option{
 		frame.WithHTTPHandler(connectHandler),
-		frame.WithBackgroundConsumer(factRelay.Run),
-		frame.WithRegisterPublisher(
-			cfg.QueueProfileEventsName,
-			cfg.QueueProfileEventsURI,
-		),
 		frame.WithRegisterPublisher(
 			cfg.QueueRelationshipConnectName,
 			cfg.QueueRelationshipConnectURI,
@@ -161,7 +156,7 @@ func runtimeServiceOptions(
 				cfg, dek, contactRepository,
 			),
 		),
-	}
+	}, factEgress...)
 }
 
 // setupNotificationClient creates and configures the notification client.

@@ -174,6 +174,7 @@ func (bs *DeviceBaseTestSuite) CreateService(
 	cfg.RunServiceSecurely = false
 	cfg.DatabaseMigrate = true
 	cfg.DatabaseTraceQueries = true
+	cfg.QueueDeviceEvents = "mem://device.events"
 	cfg.ServerPort = ""
 
 	res := depOpts.ByIsDatabase(ctx)

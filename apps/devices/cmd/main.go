@@ -135,17 +135,15 @@ func initServiceComponents(
 
 	// Durable device facts (GFOS K5) leave through one publisher only; the
 	// relay drains what the write paths staged in their own transactions.
-	factRelay := outbox.NewRelay(dbPool, queueMan, cfg.QueueDeviceEventsName).
-		WithInterval(cfg.OutboxRelayInterval).
-		WithBatchSize(cfg.OutboxRelayBatchSize)
+	factEgress := outbox.EgressOptions(ctx, dbPool, queueMan,
+		cfg.QueueDeviceEventsName, cfg.QueueDeviceEvents,
+		cfg.OutboxRelayInterval, cfg.OutboxRelayBatchSize)
 
-	return []frame.Option{
+	return append([]frame.Option{
 		frame.WithHTTPHandler(connectHandler),
 		frame.WithRegisterSubscriber(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis, analysisHandler),
 		frame.WithRegisterPublisher(cfg.QueueDeviceAnalysisName, cfg.QueueDeviceAnalysis),
-		frame.WithRegisterPublisher(cfg.QueueDeviceEventsName, cfg.QueueDeviceEvents),
-		frame.WithBackgroundConsumer(factRelay.Run),
-	}
+	}, factEgress...)
 }
 
 // setupConnectServer initializes and configures the connect server.

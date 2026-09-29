@@ -25,8 +25,9 @@ type DevicesConfig struct {
 	// QueueDeviceEvents is the single egress for the durable device domain
 	// facts staged in the outbox (device.linked, device.key.added,
 	// device.key.removed). Consumers route on the event_name header.
-	QueueDeviceEvents     string `envDefault:"mem://device.events" env:"QUEUE_DEVICE_EVENTS_URI"`
-	QueueDeviceEventsName string `envDefault:"device.events"       env:"QUEUE_DEVICE_EVENTS_NAME"`
+	// Empty URI = no egress: facts stay in the outbox.
+	QueueDeviceEvents     string `envDefault:""              env:"QUEUE_DEVICE_EVENTS_URI"`
+	QueueDeviceEventsName string `envDefault:"device.events" env:"QUEUE_DEVICE_EVENTS_NAME"`
 
 	// OutboxRelayInterval is how often the relay looks for staged facts.
 	OutboxRelayInterval time.Duration `envDefault:"2s" env:"OUTBOX_RELAY_INTERVAL"`

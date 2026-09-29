@@ -29,9 +29,9 @@ type ProfileConfig struct {
 
 	// QueueProfileEvents is the single egress for the durable profile domain
 	// facts staged in the outbox (profile.created). Consumers route on the
-	// event_name header.
-	QueueProfileEventsName string `envDefault:"profile.events"       env:"QUEUE_PROFILE_EVENTS_NAME"`
-	QueueProfileEventsURI  string `envDefault:"mem://profile.events" env:"QUEUE_PROFILE_EVENTS_URI"`
+	// event_name header. Empty URI = no egress: facts stay in the outbox.
+	QueueProfileEventsName string `envDefault:"profile.events" env:"QUEUE_PROFILE_EVENTS_NAME"`
+	QueueProfileEventsURI  string `envDefault:""               env:"QUEUE_PROFILE_EVENTS_URI"`
 
 	// OutboxRelayInterval is how often the relay looks for staged facts.
 	OutboxRelayInterval time.Duration `envDefault:"2s" env:"OUTBOX_RELAY_INTERVAL"`

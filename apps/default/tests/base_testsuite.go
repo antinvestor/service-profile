@@ -117,6 +117,7 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	cfg.ServerPort = ""
 	cfg.DatabaseMigrate = true
 	cfg.DatabaseTraceQueries = true
+	cfg.QueueProfileEventsURI = "mem://profile.events"
 
 	res := depOpts.ByIsDatabase(ctx)
 	testDS, cleanup, err0 := res.GetRandomisedDS(t.Context(), depOpts.Prefix())

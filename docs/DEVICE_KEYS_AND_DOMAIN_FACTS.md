@@ -127,6 +127,16 @@ plain text — plus `event_id` and `aggregate_id`. Every body carries `event_id`
 `name` and `occurred_at`. Delivery is
 at-least-once: consumers deduplicate on `event_id`.
 
+### Egress must be configured
+
+The relay runs only when the queue URI is set — `QUEUE_PROFILE_EVENTS_URI`
+(profile) and `QUEUE_DEVICE_EVENTS_URI` (devices), e.g. a
+`gcppubsub://{project}/{topic}` URL. Unset (the default), no publisher or relay
+is registered, a warning is logged at startup, and facts stay in
+`outbox_events` with `published_at` NULL. Once an egress is configured, the
+relay publishes the whole backlog in order. A default in-process queue would
+instead mark every fact published while delivering it nowhere.
+
 ### Payloads
 
 `profile.created`
