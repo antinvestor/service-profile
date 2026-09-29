@@ -16,6 +16,7 @@ RUN go mod download
 
 COPY ./apps/chatagent ./apps/chatagent
 COPY ./pkg ./pkg
+COPY ./internal ./internal
 COPY ./gen ./gen
 
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
