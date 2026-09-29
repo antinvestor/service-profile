@@ -94,6 +94,20 @@ func (suite *DeviceKeyRepositoryTestSuite) TestKeyMaterialUniquenessIsEnforcedBy
 			require.NoError(t, deps.KeyRepo.Create(ctx, other))
 		})
 
+		t.Run("large key material is unique without hitting the index row limit", func(t *testing.T) {
+			// Pickled Olm sessions and Matrix keys run to several KB; a btree
+			// entry over ~2.7KB cannot be stored, so the index must not hold
+			// the raw bytes.
+			large := []byte(util.RandomAlphaNumericString(8192))
+			first := &models.DeviceKey{DeviceID: firstDevice.GetID(), KeyType: devicev1.KeyType_PICKLE_KEY, Key: large}
+			require.NoError(t, deps.KeyRepo.Create(ctx, first))
+
+			duplicate := &models.DeviceKey{DeviceID: secondDevice.GetID(), KeyType: devicev1.KeyType_PICKLE_KEY, Key: large}
+			err := deps.KeyRepo.Create(ctx, duplicate)
+			require.Error(t, err, "the unique index must reject the duplicate")
+			assert.Contains(t, err.Error(), "idx_device_keys_key_type_key")
+		})
+
 		t.Run("material may be registered again once the key is withdrawn", func(t *testing.T) {
 			removed, err := deps.KeyRepo.RemoveByID(ctx, original.GetID())
 			require.NoError(t, err)

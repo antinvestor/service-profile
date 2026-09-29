@@ -33,8 +33,11 @@ WHERE dk.deleted_at IS NULL
                 AND newer.key = dk.key
                 AND (newer.created_at, newer.id) > (dk.created_at, dk.id));
 
+-- The index holds a SHA-256 of the material, not the bytes: pickled sessions
+-- and Matrix keys run to several KB, beyond the btree row limit, and a raw
+-- index would make registering them fail.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_device_keys_key_type_key
-    ON device_keys (key_type, key)
+    ON device_keys (key_type, sha256(key))
     WHERE deleted_at IS NULL;
 
 -- GFOS platform change K5: the outbox relay claims the oldest staged facts

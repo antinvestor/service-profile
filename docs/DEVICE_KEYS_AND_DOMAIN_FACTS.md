@@ -88,7 +88,7 @@ creates
 
 ```sql
 CREATE UNIQUE INDEX idx_device_keys_key_type_key
-    ON device_keys (key_type, key)
+    ON device_keys (key_type, sha256(key))
     WHERE deleted_at IS NULL;
 ```
 
@@ -96,7 +96,9 @@ so one piece of key material is registered once, enforced by the database and
 not by a read before the write. The index is partial on `deleted_at` so a key
 that has been withdrawn may be registered again — that is what rotation looks
 like. Duplicates that predate the index are retired by the same migration,
-keeping the most recent registration.
+keeping the most recent registration. The index stores a SHA-256 of the
+material rather than the bytes, because pickled sessions and Matrix keys can
+exceed the btree row size limit.
 
 Consequences at the API:
 
