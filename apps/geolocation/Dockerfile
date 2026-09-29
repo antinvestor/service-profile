@@ -18,6 +18,7 @@ RUN go mod download
 # Copy project files
 COPY ./apps/geolocation ./apps/geolocation
 COPY ./pkg ./pkg
+COPY ./internal ./internal
 COPY ./proto ./proto
 
 # Build static binary for target platform
