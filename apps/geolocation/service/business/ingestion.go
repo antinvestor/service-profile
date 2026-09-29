@@ -64,13 +64,13 @@ func (b *ingestionBusiness) IngestBatch(
 	if err := models.ValidateSubjectID(subjectID); err != nil {
 		return nil, fmt.Errorf("invalid request: %w", err)
 	}
-	if len(req.Points) == 0 {
+	if len(req.GetPoints()) == 0 {
 		return &models.IngestLocationsResponse{Accepted: 0, Rejected: 0}, nil
 	}
-	if len(req.Points) > b.cfg.MaxBatchSize {
+	if len(req.GetPoints()) > b.cfg.MaxBatchSize {
 		return nil, fmt.Errorf(
 			"batch size %d exceeds maximum %d",
-			len(req.Points),
+			len(req.GetPoints()),
 			b.cfg.MaxBatchSize,
 		)
 	}
@@ -78,11 +78,11 @@ func (b *ingestionBusiness) IngestBatch(
 	now := time.Now()
 
 	// Phase 1: Validate and build domain models for all valid points.
-	validPoints := make([]*models.LocationPoint, 0, len(req.Points))
-	validInputs := make([]*models.LocationPointInput, 0, len(req.Points))
+	validPoints := make([]*models.LocationPoint, 0, len(req.GetPoints()))
+	validInputs := make([]*models.LocationPointInput, 0, len(req.GetPoints()))
 	var rejected int32
 
-	for _, pt := range req.Points {
+	for _, pt := range req.GetPoints() {
 		if err := models.ValidateLocationPoint(pt); err != nil {
 			log.Debug(
 				"rejecting location point",
@@ -127,9 +127,9 @@ func (b *ingestionBusiness) IngestBatch(
 			},
 			SubjectID: subjectID,
 			DeviceID:  point.DeviceID,
-			Latitude:  pt.Latitude,
-			Longitude: pt.Longitude,
-			Accuracy:  pt.Accuracy,
+			Latitude:  pt.GetLatitude(),
+			Longitude: pt.GetLongitude(),
+			Accuracy:  pt.GetAccuracy(),
 			Timestamp: ts.UnixMilli(),
 		}
 
@@ -165,8 +165,8 @@ func buildLocationPoint(
 	now time.Time,
 ) *models.LocationPoint {
 	ts := now
-	if pt.Timestamp != nil {
-		ts = pt.Timestamp.AsTime()
+	if pt.GetTimestamp() != nil {
+		ts = pt.GetTimestamp().AsTime()
 	}
 
 	point := &models.LocationPoint{
@@ -174,11 +174,11 @@ func buildLocationPoint(
 		DeviceID:        pt.GetDeviceId(),
 		TrueCreatedAt:   ts,
 		IngestedAt:      now,
-		Latitude:        pt.Latitude,
-		Longitude:       pt.Longitude,
-		Accuracy:        pt.Accuracy,
-		Source:          models.LocationSourceFromProto(pt.Source),
-		Extras:          models.StructToJSONMap(pt.Extra),
+		Latitude:        pt.GetLatitude(),
+		Longitude:       pt.GetLongitude(),
+		Accuracy:        pt.GetAccuracy(),
+		Source:          models.LocationSourceFromProto(pt.GetSource()),
+		Extras:          models.StructToJSONMap(pt.GetExtra()),
 		ProcessingState: models.LocationPointProcessingStatePending,
 	}
 

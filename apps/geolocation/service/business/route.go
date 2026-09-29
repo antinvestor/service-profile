@@ -44,7 +44,7 @@ func (b *routeBusiness) CreateRoute(
 ) (*models.RouteAPI, error) {
 	log := util.Log(ctx)
 
-	if req == nil || req.Data == nil {
+	if req == nil || req.GetData() == nil {
 		return nil, errors.New("create route request data is nil")
 	}
 
@@ -279,12 +279,12 @@ func (b *routeBusiness) AssignRoute(
 		RouteID:   req.GetRouteId(),
 		State:     StateActive,
 	}
-	if req.ValidFrom != nil {
-		t := req.ValidFrom.AsTime()
+	if req.GetValidFrom() != nil {
+		t := req.GetValidFrom().AsTime()
 		assignment.ValidFrom = &t
 	}
-	if req.ValidUntil != nil {
-		t := req.ValidUntil.AsTime()
+	if req.GetValidUntil() != nil {
+		t := req.GetValidUntil().AsTime()
 		assignment.ValidUntil = &t
 	}
 	assignment.GenID(ctx)

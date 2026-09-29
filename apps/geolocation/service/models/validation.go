@@ -139,23 +139,23 @@ func ValidateLocationPoint(pt *LocationPointInput) error {
 	if pt == nil {
 		return errors.New("location point is nil")
 	}
-	if err := ValidateLatLon(pt.Latitude, pt.Longitude); err != nil {
+	if err := ValidateLatLon(pt.GetLatitude(), pt.GetLongitude()); err != nil {
 		return fmt.Errorf("invalid coordinates: %w", err)
 	}
-	if err := ValidateAccuracy(pt.Accuracy); err != nil {
+	if err := ValidateAccuracy(pt.GetAccuracy()); err != nil {
 		return fmt.Errorf("invalid accuracy: %w", err)
 	}
-	if pt.Timestamp != nil {
-		if err := ValidateTimestamp(pt.Timestamp.AsTime()); err != nil {
+	if pt.GetTimestamp() != nil {
+		if err := ValidateTimestamp(pt.GetTimestamp().AsTime()); err != nil {
 			return fmt.Errorf("invalid timestamp: %w", err)
 		}
 	}
 	if err := ValidateDeviceID(pt.GetDeviceId()); err != nil {
 		return fmt.Errorf("invalid device_id: %w", err)
 	}
-	if pt.Source < geolocationv1.LocationSource_LOCATION_SOURCE_UNSPECIFIED ||
-		pt.Source > geolocationv1.LocationSource_LOCATION_SOURCE_MANUAL {
-		return fmt.Errorf("invalid source: %d", pt.Source)
+	if pt.GetSource() < geolocationv1.LocationSource_LOCATION_SOURCE_UNSPECIFIED ||
+		pt.GetSource() > geolocationv1.LocationSource_LOCATION_SOURCE_MANUAL {
+		return fmt.Errorf("invalid source: %d", pt.GetSource())
 	}
 	return nil
 }
