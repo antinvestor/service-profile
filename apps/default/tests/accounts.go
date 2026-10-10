@@ -26,10 +26,12 @@ import (
 
 	"github.com/pitabwire/frame/v2"
 	"github.com/pitabwire/frame/v2/datastore"
+	"github.com/pitabwire/frame/v2/tenancy"
 	"github.com/stretchr/testify/require"
 
 	"github.com/antinvestor/service-profile/apps/default/service/accounts"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
+	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
@@ -69,13 +71,18 @@ func NewTestDeriver(t *testing.T) *accounts.Deriver {
 	return deriver
 }
 
+// AsService treats every caller as a service principal.
+func AsService(context.Context) bool { return true }
+
 // NewAccountBusiness builds the account business over the service's pool. A
-// nil deriver disables derivation.
+// nil deriver disables derivation; isService decides who sees accounts
+// besides their owner.
 func NewAccountBusiness(
 	ctx context.Context,
 	svc *frame.Service,
 	deriver *accounts.Deriver,
 	batchSize int,
+	isService business.ServiceCheck,
 ) business.AccountBusiness {
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
 	workMan := svc.WorkManager()
@@ -84,5 +91,18 @@ func NewAccountBusiness(
 		repository.NewProfileAccountRepository(ctx, dbPool, workMan),
 		repository.NewProfileRepository(ctx, dbPool, workMan),
 		batchSize,
+		isService,
 	)
+}
+
+// AccountsOf reads a profile's account rows bypassing tenancy, as the
+// database holds them.
+func AccountsOf(ctx context.Context, svc *frame.Service, profileID string) ([]*models.ProfileAccount, error) {
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+	var out []*models.ProfileAccount
+	err := dbPool.DB(tenancy.WithSkipEnforcement(ctx), true).
+		Where("profile_id = ?", profileID).
+		Order("is_primary desc, created_at asc").
+		Find(&out).Error
+	return out, err
 }

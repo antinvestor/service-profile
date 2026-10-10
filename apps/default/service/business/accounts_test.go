@@ -127,7 +127,7 @@ func (pts *ProfileTestSuite) TestAccountBackfill() {
 		ctx, svc := pts.CreateService(t, dep)
 		withoutAccounts, _ := pts.getProfileBusinessWith(ctx, svc, nil)
 		deriver := tests.NewTestDeriver(t)
-		backfill := tests.NewAccountBusiness(ctx, svc, deriver, 2)
+		backfill := tests.NewAccountBusiness(ctx, svc, deriver, 2, tests.AsService)
 
 		// Persons seeded by the migrations are backfilled first, so the
 		// counts below are this test's own profiles.
@@ -177,7 +177,7 @@ func (pts *ProfileTestSuite) TestAccountBackfill() {
 		require.NoError(t, err)
 		assert.Len(t, staged, len(seeded)+len(persons), "and stages no further facts")
 
-		disabled := tests.NewAccountBusiness(ctx, svc, nil, 2)
+		disabled := tests.NewAccountBusiness(ctx, svc, nil, 2, tests.AsService)
 		skipped, err := disabled.Backfill(ctx)
 		require.NoError(t, err)
 		assert.Zero(t, skipped)
@@ -217,7 +217,7 @@ func (pts *ProfileTestSuite) TestMergeMovesAccounts() {
 		assert.Equal(t, merged.GetId(), staged[0].Payload["merged_profile_id"])
 		assert.Equal(t, []any{mergedAddr}, staged[0].Payload["addresses"])
 
-		resolved, err := tests.NewAccountBusiness(ctx, svc, nil, 0).Resolve(ctx, []string{mergedAddr})
+		resolved, err := tests.NewAccountBusiness(ctx, svc, nil, 0, tests.AsService).Resolve(ctx, []string{mergedAddr})
 		require.NoError(t, err)
 		require.Len(t, resolved, 1)
 		assert.Equal(t, survivor.GetId(), resolved[0].ProfileID)

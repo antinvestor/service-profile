@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"github.com/pitabwire/frame/v2/datastore"
@@ -112,6 +113,39 @@ func (pr *profileRepository) CreateWithAccount(
 		}
 		for _, evt := range facts(profile) {
 			if err := outbox.Enqueue(tx, evt); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// Merge folds merging into target in one transaction (see the interface).
+func (pr *profileRepository) Merge(
+	ctx context.Context,
+	target, merging *models.Profile,
+	inTx func(tx *gorm.DB) ([]*outbox.Event, error),
+) error {
+	return pr.Pool().DB(ctx, false).Transaction(func(tx *gorm.DB) error {
+		facts, err := inTx(tx)
+		if err != nil {
+			return err
+		}
+		now := time.Now().UTC()
+		if err = tx.Table("profiles").Where("id = ?", target.GetID()).
+			Updates(map[string]any{"properties": target.Properties, "modified_at": now}).Error; err != nil {
+			return err
+		}
+		res := tx.Table("profiles").Where("id = ? AND deleted_at IS NULL", merging.GetID()).
+			Update("deleted_at", now)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected != 1 {
+			return gorm.ErrRecordNotFound
+		}
+		for _, evt := range facts {
+			if err = outbox.Enqueue(tx, evt); err != nil {
 				return err
 			}
 		}

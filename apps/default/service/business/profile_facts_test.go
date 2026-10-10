@@ -51,9 +51,10 @@ func (pts *ProfileTestSuite) TestProfileCreatedFactIsPublishedExactlyOnce() {
 		require.Nil(t, staged[0].PublishedAt)
 		assert.Equal(t, created.GetId(), staged[0].AggregateID)
 
+		// A person's profile.account_created fact leaves with it.
 		published, err := pts.FactRelay.Drain(ctx)
 		require.NoError(t, err)
-		assert.Equal(t, 1, published)
+		assert.Equal(t, 2, published)
 
 		require.Eventually(t, func() bool {
 			return len(pts.Facts.Named(business.FactProfileCreated)) == 1

@@ -16,6 +16,8 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/pitabwire/frame/v2/datastore"
@@ -28,6 +30,9 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/internal/outbox"
 )
+
+// ErrCrossTenantMove refuses to move accounts between tenants or partitions.
+var ErrCrossTenantMove = errors.New("profile accounts: profiles are in different tenants or partitions")
 
 type profileAccountRepository struct {
 	datastore.BaseRepository[*models.ProfileAccount]
@@ -46,21 +51,23 @@ func NewProfileAccountRepository(
 	}
 }
 
-// ListByProfileID returns a profile's accounts, primary first. Accounts are
-// identity data read across tenants, like the profile itself.
+// ListByProfileID returns a profile's accounts, primary first. The read is
+// tenancy-scoped by the caller's claims: a caller in another tenant or
+// partition sees none.
 func (ar *profileAccountRepository) ListByProfileID(
 	ctx context.Context,
 	profileID string,
 ) ([]*models.ProfileAccount, error) {
 	var out []*models.ProfileAccount
-	err := ar.Pool().DB(security.SkipTenancyChecksOnClaims(ctx), true).
+	err := ar.Pool().DB(ctx, true).
 		Where("profile_id = ?", profileID).
 		Order("is_primary desc, account_version desc, created_at asc").
 		Find(&out).Error
 	return out, err
 }
 
-// ListByAddresses returns the accounts with any of the given addresses.
+// ListByAddresses returns the accounts with any of the given addresses that
+// are visible in the caller's tenancy.
 func (ar *profileAccountRepository) ListByAddresses(
 	ctx context.Context,
 	addresses [][]byte,
@@ -69,7 +76,7 @@ func (ar *profileAccountRepository) ListByAddresses(
 		return nil, nil
 	}
 	var out []*models.ProfileAccount
-	err := ar.Pool().DB(security.SkipTenancyChecksOnClaims(ctx), true).
+	err := ar.Pool().DB(ctx, true).
 		Where("address IN ?", addresses).
 		Find(&out).Error
 	return out, err
@@ -99,45 +106,51 @@ func (ar *profileAccountRepository) CreateWithFact(
 	return created, err
 }
 
-// MoveToProfile re-homes every account of one profile onto another as
-// secondary accounts and stages the fact describing the move, in one
-// transaction. Nothing is staged when there is nothing to move.
+// MoveToProfile re-homes, on the caller's transaction, the accounts of one
+// profile onto another as secondary accounts. Only rows in the source
+// profile's own tenant and partition are touched, and the destination must be
+// in the same tenant and partition. It never commits: the caller's
+// transaction decides whether the move happens at all.
 func (ar *profileAccountRepository) MoveToProfile(
-	ctx context.Context,
-	fromProfileID, toProfileID string,
-	fact func([]*models.ProfileAccount) *outbox.Event,
+	tx *gorm.DB,
+	from, to *models.Profile,
 ) ([]*models.ProfileAccount, error) {
+	if from.TenantID != to.TenantID || from.PartitionID != to.PartitionID {
+		return nil, ErrCrossTenantMove
+	}
 	var moved []*models.ProfileAccount
-	err := ar.Pool().DB(security.SkipTenancyChecksOnClaims(ctx), false).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
-			Where("profile_id = ?", fromProfileID).
-			Order("created_at asc").
-			Find(&moved).Error; err != nil {
-			return err
-		}
-		if len(moved) == 0 {
-			return nil
-		}
-		ids := make([]string, len(moved))
-		for i, a := range moved {
-			ids[i] = a.GetID()
-			a.ProfileID = toProfileID
-			a.Primary = false
-		}
-		// Table, not Model: a model value would run the BaseModel hooks,
-		// which give it an id that then narrows the WHERE clause.
-		if err := tx.Table("profile_accounts").
-			Where("id IN ?", ids).
-			Updates(map[string]any{
-				"profile_id":  toProfileID,
-				"is_primary":  false,
-				"modified_at": time.Now().UTC(),
-			}).Error; err != nil {
-			return err
-		}
-		return outbox.Enqueue(tx, fact(moved))
-	})
-	return moved, err
+	if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+		Where("profile_id = ? AND tenant_id = ? AND partition_id = ?",
+			from.GetID(), from.TenantID, from.PartitionID).
+		Order("created_at asc").
+		Find(&moved).Error; err != nil {
+		return nil, err
+	}
+	if len(moved) == 0 {
+		return nil, nil
+	}
+	ids := make([]string, len(moved))
+	for i, a := range moved {
+		ids[i] = a.GetID()
+		a.ProfileID = to.GetID()
+		a.Primary = false
+	}
+	// Table, not Model: a model value would run the BaseModel hooks, which
+	// give it an id that then narrows the WHERE clause.
+	res := tx.Table("profile_accounts").
+		Where("id IN ? AND tenant_id = ? AND partition_id = ?", ids, from.TenantID, from.PartitionID).
+		Updates(map[string]any{
+			"profile_id":  to.GetID(),
+			"is_primary":  false,
+			"modified_at": time.Now().UTC(),
+		})
+	if res.Error != nil {
+		return nil, res.Error
+	}
+	if res.RowsAffected != int64(len(moved)) {
+		return nil, fmt.Errorf("profile accounts: moved %d of %d rows", res.RowsAffected, len(moved))
+	}
+	return moved, nil
 }
 
 // PersonProfilesWithoutAccount pages, by id, through profiles of the given

@@ -15,6 +15,7 @@ import (
 	"github.com/pitabwire/frame/v2/security"
 	"github.com/pitabwire/frame/v2/workerpool"
 	"github.com/pitabwire/util"
+	"gorm.io/gorm"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
@@ -166,11 +167,13 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 	}
 	profileObject.Addresses = addressObjects
 
-	accountList, err := pb.accountBusiness.ListByProfile(ctx, p.ID)
-	if err != nil {
-		return nil, err
+	if pb.accountBusiness.Visible(ctx, p.ID) {
+		accountList, listErr := pb.accountBusiness.ListByProfile(ctx, p.ID)
+		if listErr != nil {
+			return nil, listErr
+		}
+		profileObject.Accounts = AccountsToAPI(accountList)
 	}
-	profileObject.Accounts = AccountsToAPI(accountList)
 
 	return &profileObject, nil
 }
@@ -260,10 +263,7 @@ func (pb *profileBusiness) MergeProfile(ctx context.Context,
 		return nil, err
 	}
 
-	// The survivor keeps its own primary account; the merged profile's
-	// accounts move to it as secondary accounts before the merged profile
-	// goes, so no account is ever left without an owner.
-	if _, err = pb.accountBusiness.MoveOnMerge(ctx, target.GetID(), merging.GetID()); err != nil {
+	if err = checkMergeTenancy(ctx, target, merging); err != nil {
 		return nil, err
 	}
 
@@ -274,17 +274,44 @@ func (pb *profileBusiness) MergeProfile(ctx context.Context,
 		target.Properties[key] = value
 	}
 
-	_, err = pb.profileRepo.Update(ctx, target, "properties")
+	// One transaction: the merged profile's accounts move to the survivor
+	// as secondary accounts, the survivor's properties are saved, the merged
+	// profile is deleted and profile.accounts_merged is staged. A failure at
+	// any point leaves every row as it was.
+	err = pb.profileRepo.Merge(ctx, target, merging, func(tx *gorm.DB) ([]*outbox.Event, error) {
+		moved, moveErr := pb.accountBusiness.MoveOnMerge(tx, target, merging)
+		if moveErr != nil {
+			return nil, moveErr
+		}
+		if len(moved) == 0 {
+			return nil, nil
+		}
+		return []*outbox.Event{AccountsMergedFact(ctx, target.GetID(), merging.GetID(), moved)}, nil
+	})
 	if err != nil {
-		return nil, err
-	}
-
-	err = pb.profileRepo.Delete(ctx, merging.GetID())
-	if err != nil {
-		return nil, err
+		return nil, data.ErrorConvertToAPI(err)
 	}
 
 	return pb.ToAPI(ctx, target)
+}
+
+// checkMergeTenancy allows a merge only between two profiles of the same
+// tenant and partition, and, for an authenticated caller, only inside the
+// caller's own tenant and partition (where profile_merge was granted). A
+// profile in another tenancy is reported as not found.
+func checkMergeTenancy(ctx context.Context, target, merging *models.Profile) error {
+	if claims := security.ClaimsFromContext(ctx); claims != nil && claims.GetTenantID() != "" {
+		for _, p := range []*models.Profile{target, merging} {
+			if p.TenantID != claims.GetTenantID() || p.PartitionID != claims.GetPartitionID() {
+				return connect.NewError(connect.CodeNotFound, errors.New("profile not found"))
+			}
+		}
+	}
+	if target.TenantID != merging.TenantID || target.PartitionID != merging.PartitionID {
+		return connect.NewError(connect.CodeFailedPrecondition,
+			errors.New("profiles in different tenants or partitions cannot be merged"))
+	}
+	return nil
 }
 
 func (pb *profileBusiness) UpdateProfile(
@@ -497,6 +524,9 @@ func (pb *profileBusiness) CreateProfile(
 		return nil, err
 	}
 
+	if account != nil && !pb.accountBusiness.Visible(ctx, p.GetID()) {
+		account = nil
+	}
 	return pb.profileFromCreated(&p, contact, account)
 }
 

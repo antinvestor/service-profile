@@ -45,6 +45,15 @@ address            = derive.AccountAddress(FamilyEVM, account_version, identity_
 * **Merge**: the surviving profile keeps its primary account. The merged
   profile's accounts move to the survivor as secondary accounts
   (`primary=false`).
+  * One database transaction moves and demotes the accounts, saves the
+    survivor, deletes the merged profile and stages `profile.accounts_merged`.
+    A failure at any step changes nothing.
+  * Both profiles must be in the same tenant and partition.
+  * An authenticated caller can only merge inside its own tenancy, where
+    `profile_merge` was granted. Naming a profile from another tenancy returns
+    `NOT_FOUND`.
+  * The account rows are selected and updated with the source profile's tenant
+    and partition in the WHERE clause.
 * **New canonical factory**: when the protocol publishes a new factory, raise
   `STAWI_ACCOUNT_VERSION`. The backfill then adds an account for that version,
   and the existing rows stay.
@@ -68,13 +77,22 @@ version.
 
 * `ProfileObject.accounts` (field 7): a list of `ProfileAccount`, with fields
   `address`, `family`, `version`, `identity_salt_hash` and `primary`. The
-  primary account comes first. The field is filled on every profile read
-  (`GetById`, `GetByContact`, `Search`, `Create`, `Update`, `Merge`, …).
-  Addresses are lowercase `0x` hex.
+  primary account comes first. Addresses are lowercase `0x` hex.
+  * The link between an address and a profile is the privacy boundary of the
+    design. The field is filled only when the caller is the profile's owner
+    (token subject = profile id) or a service principal (holds
+    `account_resolve`, which only `ROLE_SERVICE` has).
+  * Any other caller, including a user who holds `profile_view`, gets the
+    profile without accounts. This applies on every read path: `GetById`,
+    `GetByIDAndPartition`, `GetByContact`, `Search`, `Create`, `Update`,
+    `Merge`, and the relationship listings.
+  * Account reads are scoped to the caller's tenant and partition, so a caller
+    in another tenancy sees none.
 * `ResolveAccounts(ResolveAccountsRequest{addresses})`: returns
   `ResolveAccountsResponse{data: [AccountOwner{address, profile_id}]}`.
   * It accepts at most 500 addresses, in any case.
-  * Addresses that no profile owns are left out of the response.
+  * Addresses that no profile owns are left out of the response. So are
+    addresses outside the caller's tenancy.
   * It requires permission `account_resolve`, which is bound to `ROLE_SERVICE`
     only. Owners and admins are refused.
 
@@ -85,7 +103,8 @@ version.
 | `profile.account_created` | `profile_id`, `address`, `family`, `version`, `identity_salt_hash`, `factory`, `primary` |
 | `profile.accounts_merged` | `surviving_profile_id`, `merged_profile_id`, `addresses` |
 
-Each fact also carries the outbox envelope fields `event_id`, `name` and
+These facts go only to the profile events queue, which services consume; no
+user-facing API exposes them. Each fact also carries the outbox envelope fields `event_id`, `name` and
 `occurred_at`. Delivery is at least once, so consumers must deduplicate on
 `event_id`.
 

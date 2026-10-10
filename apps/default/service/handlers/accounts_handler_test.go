@@ -62,7 +62,13 @@ func (s *AccountsHandlerSuite) TestResolveAccountsIsServiceOnly() {
 		server := handlers.NewProfileServer(ctx, svc, testDEK(t, cfg), s.GetNotificationCli(t),
 			s.FunctionChecker, tests.NewTestDeriver(t))
 
-		created, err := server.Create(ctx, connect.NewRequest(&profilev1.CreateRequest{
+		tenantID, partitionID := util.IDString(), util.IDString()
+		serviceID := "svc-" + util.RandomAlphaNumericString(8)
+		serviceCtx := s.WithAuthClaims(ctx, tenantID, partitionID, serviceID)
+		s.SeedTenantRole(serviceCtx, svc, tenantID, partitionID, serviceID, authz.RoleService)
+
+		// A service (e.g. authentication) creates the person in its tenancy.
+		created, err := server.Create(serviceCtx, connect.NewRequest(&profilev1.CreateRequest{
 			Type:    profilev1.ProfileType_PERSON,
 			Contact: util.RandomAlphaNumericString(10) + "@resolve.testing.com",
 		}))
@@ -72,12 +78,6 @@ func (s *AccountsHandlerSuite) TestResolveAccountsIsServiceOnly() {
 		address := profile.GetAccounts()[0].GetAddress()
 		unknown := "0x" + strings.Repeat("ab", 20)
 
-		tenantID, partitionID := util.IDString(), util.IDString()
-
-		serviceID := "svc-" + util.RandomAlphaNumericString(8)
-		serviceCtx := s.WithAuthClaims(ctx, tenantID, partitionID, serviceID)
-		s.SeedTenantRole(serviceCtx, svc, tenantID, partitionID, serviceID, authz.RoleService)
-
 		resp, err := server.ResolveAccounts(serviceCtx, connect.NewRequest(&profilev1.ResolveAccountsRequest{
 			Addresses: []string{strings.ToUpper(address[:2]) + strings.ToUpper(address[2:]), unknown},
 		}))
@@ -85,6 +85,16 @@ func (s *AccountsHandlerSuite) TestResolveAccountsIsServiceOnly() {
 		require.Len(t, resp.Msg.GetData(), 1, "unknown addresses are omitted")
 		assert.Equal(t, address, resp.Msg.GetData()[0].GetAddress())
 		assert.Equal(t, profile.GetId(), resp.Msg.GetData()[0].GetProfileId())
+
+		// A service of another tenancy resolves nothing.
+		otherTenant, otherPartition := util.IDString(), util.IDString()
+		foreignCtx := s.WithAuthClaims(ctx, otherTenant, otherPartition, serviceID)
+		s.SeedTenantRole(foreignCtx, svc, otherTenant, otherPartition, serviceID, authz.RoleService)
+		foreign, err := server.ResolveAccounts(foreignCtx, connect.NewRequest(&profilev1.ResolveAccountsRequest{
+			Addresses: []string{address},
+		}))
+		require.NoError(t, err)
+		assert.Empty(t, foreign.Msg.GetData())
 
 		ownerCtx := s.WithAuthClaims(ctx, tenantID, partitionID, profile.GetId())
 		s.SeedTenantRole(ownerCtx, svc, tenantID, partitionID, profile.GetId(), authz.RoleOwner)
@@ -100,6 +110,15 @@ func (s *AccountsHandlerSuite) TestResolveAccountsIsServiceOnly() {
 		require.NoError(t, err)
 		require.Len(t, own.Msg.GetData().GetAccounts(), 1)
 		assert.Equal(t, address, own.Msg.GetData().GetAccounts()[0].GetAddress())
+
+		// Another user of the tenancy holding profile_view (a viewer) reads
+		// the profile without its accounts.
+		viewerID := "viewer-" + util.RandomAlphaNumericString(6)
+		viewerCtx := s.WithAuthClaims(ctx, tenantID, partitionID, viewerID)
+		s.SeedTenantRole(viewerCtx, svc, tenantID, partitionID, viewerID, authz.RoleViewer)
+		viewed, err := server.GetById(viewerCtx, connect.NewRequest(&profilev1.GetByIdRequest{Id: profile.GetId()}))
+		require.NoError(t, err)
+		assert.Empty(t, viewed.Msg.GetData().GetAccounts())
 
 		_, err = server.ResolveAccounts(serviceCtx, connect.NewRequest(&profilev1.ResolveAccountsRequest{
 			Addresses: []string{"not-an-address"},

@@ -78,7 +78,7 @@ func (ats *AddressTestSuite) getProfileBusiness(
 		addressBusiness,
 		profileRepo,
 		propertyEntryRepo,
-		tests.NewAccountBusiness(ctx, svc, tests.NewTestDeriver(ats.T()), 0),
+		tests.NewAccountBusiness(ctx, svc, tests.NewTestDeriver(ats.T()), 0, nil),
 	), addressRepo
 }
 

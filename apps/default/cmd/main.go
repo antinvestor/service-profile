@@ -249,6 +249,7 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK, 
 		repository.NewProfileAccountRepository(ctx, dbPool, workMan),
 		profileRepo,
 		cfg.AccountBackfillBatchSize,
+		nil,
 	)
 	profileBiz := business.NewProfileBusiness(
 		ctx,
@@ -375,6 +376,7 @@ func backfillAccounts(
 		repository.NewProfileAccountRepository(ctx, dbPool, workMan),
 		repository.NewProfileRepository(ctx, dbPool, workMan),
 		cfg.AccountBackfillBatchSize,
+		nil,
 	)
 	_, err := accountBiz.Backfill(ctx)
 	return err

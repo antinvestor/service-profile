@@ -77,7 +77,7 @@ func (rts *RelationshipTestSuite) getRelationshipBusiness(
 		addressBusiness,
 		profileRepo,
 		propertyEntryRepo,
-		tests.NewAccountBusiness(ctx, svc, tests.NewTestDeriver(rts.T()), 0),
+		tests.NewAccountBusiness(ctx, svc, tests.NewTestDeriver(rts.T()), 0, nil),
 	)
 
 	relationshipRepo := repository.NewRelationshipRepository(ctx, dbPool, workMan)

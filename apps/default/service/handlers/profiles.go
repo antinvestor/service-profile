@@ -82,6 +82,11 @@ func NewProfileServer(
 		repository.NewProfileAccountRepository(ctx, dbPool, workMan),
 		profileRepo,
 		cfg.AccountBackfillBatchSize,
+		// Service principals are those holding account_resolve, which is
+		// bound to ROLE_SERVICE alone.
+		func(ctx context.Context) bool {
+			return checker.Check(ctx, authz.PermissionAccountResolve) == nil
+		},
 	)
 	profileBusiness := business.NewProfileBusiness(
 		ctx,

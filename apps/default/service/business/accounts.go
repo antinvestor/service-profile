@@ -24,7 +24,9 @@ import (
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 
 	"connectrpc.com/connect"
+	"github.com/pitabwire/frame/v2/security"
 	"github.com/pitabwire/util"
+	"gorm.io/gorm"
 
 	"github.com/antinvestor/service-profile/apps/default/service/accounts"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -51,8 +53,13 @@ type AccountBusiness interface {
 	// Resolve maps addresses to their accounts; unknown addresses are omitted.
 	Resolve(ctx context.Context, addresses []string) ([]*models.ProfileAccount, error)
 	// MoveOnMerge re-homes the merged profile's accounts onto the survivor
-	// as secondary accounts and stages profile.accounts_merged.
-	MoveOnMerge(ctx context.Context, survivingProfileID, mergedProfileID string) ([]*models.ProfileAccount, error)
+	// as secondary accounts, on the merge's own transaction (it never
+	// commits by itself). Both profiles must share tenant and partition.
+	MoveOnMerge(tx *gorm.DB, survivor, merged *models.Profile) ([]*models.ProfileAccount, error)
+	// Visible reports whether the caller may see a profile's accounts: the
+	// address-to-profile link is shown only to the profile's owner and to
+	// service principals (those holding account_resolve).
+	Visible(ctx context.Context, profileID string) bool
 	// Backfill derives the primary account of every PERSON profile that has
 	// none for the configured version, staging profile.account_created for
 	// each. It is idempotent and returns how many accounts it created.
@@ -66,6 +73,7 @@ func NewAccountBusiness(
 	accountRepo repository.ProfileAccountRepository,
 	profileRepo repository.ProfileRepository,
 	backfillBatchSize int,
+	isService ServiceCheck,
 ) AccountBusiness {
 	if backfillBatchSize <= 0 {
 		backfillBatchSize = defaultBackfillBatchSize
@@ -75,6 +83,7 @@ func NewAccountBusiness(
 		accountRepo: accountRepo,
 		profileRepo: profileRepo,
 		batchSize:   backfillBatchSize,
+		isService:   isService,
 	}
 }
 
@@ -83,6 +92,20 @@ type accountBusiness struct {
 	accountRepo repository.ProfileAccountRepository
 	profileRepo repository.ProfileRepository
 	batchSize   int
+	isService   ServiceCheck
+}
+
+// ServiceCheck reports whether the caller is a service principal. A nil
+// check means no caller is.
+type ServiceCheck func(ctx context.Context) bool
+
+func (ab *accountBusiness) Visible(ctx context.Context, profileID string) bool {
+	if claims := security.ClaimsFromContext(ctx); claims != nil {
+		if sub, _ := claims.GetSubject(); sub != "" && sub == profileID {
+			return true
+		}
+	}
+	return ab.isService != nil && ab.isService(ctx)
 }
 
 func (ab *accountBusiness) Enabled() bool { return ab.deriver != nil }
@@ -140,13 +163,10 @@ func (ab *accountBusiness) Resolve(ctx context.Context, addresses []string) ([]*
 }
 
 func (ab *accountBusiness) MoveOnMerge(
-	ctx context.Context,
-	survivingProfileID, mergedProfileID string,
+	tx *gorm.DB,
+	survivor, merged *models.Profile,
 ) ([]*models.ProfileAccount, error) {
-	return ab.accountRepo.MoveToProfile(ctx, mergedProfileID, survivingProfileID,
-		func(moved []*models.ProfileAccount) *outbox.Event {
-			return AccountsMergedFact(ctx, survivingProfileID, mergedProfileID, moved)
-		})
+	return ab.accountRepo.MoveToProfile(tx, merged, survivor)
 }
 
 func (ab *accountBusiness) Backfill(ctx context.Context) (int, error) {
