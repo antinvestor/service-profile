@@ -101,6 +101,36 @@ version.
   * It requires permission `account_resolve`, which is bound to `ROLE_SERVICE`
     only. Owners and admins are refused.
 
+## Calling accounts from other services
+
+Consumers use the SDK package
+`github.com/antinvestor/service-profile/client/accounts` instead of building
+their own client. It imports only the BSR profile packages, `connect` and
+`antinvestor/common`, and nothing from inside this service.
+
+```go
+import profileaccounts "github.com/antinvestor/service-profile/client/accounts"
+
+cli, err := profileaccounts.Dial(ctx, &cfg, profileaccounts.Target{
+	Endpoint:              cfg.ProfileServiceURI,
+	WorkloadAPITargetPath: cfg.ProfileServiceWorkloadAPITargetPath,
+}) // nil, nil when no endpoint is configured (development)
+
+owners, err := cli.Resolve(ctx, addresses)          // map[lowercase address]profile id; batched at 500
+profileID, err := cli.ProfileOf(ctx, address)        // ErrNotOwned when nobody owns it
+accts, err := cli.Accounts(ctx, profileID)           // []Account{Address, Family, Version, Primary}
+saltHash, err := cli.IdentitySaltHash(ctx, profileID, address) // [32]byte; ErrNotOwned if not the profile's
+country, err := cli.Jurisdiction(ctx, profileID)     // ISO 3166-1 alpha-2, or ""
+```
+
+`Dial` connects through `common/connection.NewServiceClient` with
+`servicecatalog.ServiceProfile`, so workload identity, OAuth2 and retries come
+from the caller's configuration. `Resolve` and `ProfileOf` need
+`account_resolve`, so the caller must be a `ROLE_SERVICE` principal in the
+same tenancy. `Accounts` and `IdentitySaltHash` return data only to a service
+principal or to the profile's owner. `New(api)` wraps any implementation of
+the two RPCs, which is how tests supply a fake.
+
 ## Facts (profile events queue, transactional outbox)
 
 | Fact | Payload |
