@@ -16,6 +16,7 @@ func Migrate(ctx context.Context, dbManager datastore.Manager, migrationPath str
 		&models.ProfileType{}, &models.Profile{}, &models.PropertyEntry{}, &models.Contact{}, &models.Country{},
 		&models.Address{}, &models.ProfileAddress{}, &models.Verification{}, &models.VerificationAttempt{},
 		&models.RelationshipType{}, &models.Relationship{}, &models.Roster{},
+		&models.ProfileAccount{},
 		&outbox.Event{},
 	)
 }

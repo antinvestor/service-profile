@@ -121,8 +121,12 @@ func (d *Deriver) DeriveBatch(ctx context.Context, profileIDs []string) ([]Accou
 	if err != nil {
 		return nil, err
 	}
+	if len(salts) != len(profileIDs) {
+		return nil, fmt.Errorf("accounts: salter returned %d salts for %d profiles", len(salts), len(profileIDs))
+	}
 	out := make([]Account, len(profileIDs))
-	for i, salt := range salts {
+	for i, profileID := range profileIDs {
+		salt := salts[i]
 		saltHash, hashErr := derive.IdentitySaltHash(salt)
 		if hashErr != nil {
 			return nil, hashErr
@@ -132,7 +136,7 @@ func (d *Deriver) DeriveBatch(ctx context.Context, profileIDs []string) ([]Accou
 			return nil, addrErr
 		}
 		out[i] = Account{
-			ProfileID:        profileIDs[i],
+			ProfileID:        profileID,
 			Family:           FamilyEVM,
 			Version:          d.params.Version,
 			Address:          addr,

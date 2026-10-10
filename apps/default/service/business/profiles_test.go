@@ -18,6 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/accounts"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -51,6 +52,16 @@ func (pts *ProfileTestSuite) getProfileBusiness(
 	ctx context.Context,
 	svc *frame.Service,
 ) (business.ProfileBusiness, repository.VerificationRepository) {
+	return pts.getProfileBusinessWith(ctx, svc, tests.NewTestDeriver(pts.T()))
+}
+
+// getProfileBusinessWith builds the profile business with the given account
+// deriver; nil disables account derivation.
+func (pts *ProfileTestSuite) getProfileBusinessWith(
+	ctx context.Context,
+	svc *frame.Service,
+	deriver *accounts.Deriver,
+) (business.ProfileBusiness, repository.VerificationRepository) {
 	evtsMan := svc.EventsManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
@@ -83,6 +94,7 @@ func (pts *ProfileTestSuite) getProfileBusiness(
 		addressBusiness,
 		profileRepo,
 		propertyEntryRepo,
+		tests.NewAccountBusiness(ctx, svc, deriver, 0),
 	), verificationRepo
 }
 

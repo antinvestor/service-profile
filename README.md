@@ -26,6 +26,21 @@ The profile service repository contains code necessary to run the service that i
     Once the code is ready for deployment, merging to develop deploys to the staging environment.
     Merging to master deploys to production so all changes must be thoroughly validated before merging.
 
+## Profile accounts
+
+A PERSON profile owns a chain account. The service derives the address from an
+identity salt kept in Vault Transit, using
+`github.com/stawilabs/stawi/pkg/protocol/derive`, and stores it on the profile
+(`ProfileObject.accounts`). Services map addresses back to profiles with
+`ResolveAccounts`, which needs the `account_resolve` permission (service role
+only). The service publishes `profile.account_created` and
+`profile.accounts_merged` facts.
+
+The `jurisdiction` profile property takes an ISO 3166-1 alpha-2 code.
+
+For configuration and Vault setup, see
+[docs/PROFILE_ACCOUNTS.md](docs/PROFILE_ACCOUNTS.md).
+
 ## Development Setup
 
 ### Git Hooks

@@ -10,8 +10,8 @@ type ProfileConfig struct {
 	config.ConfigurationDefault
 
 	//nolint:golines // Struct tags must remain a single valid reflect.StructTag literal.
-	NotificationSvcURI                       string `envDefault:"127.0.0.1:7020" env:"NOTIFICATION_SERVICE_URI"`
-	TenancyServiceURI                        string `envDefault:"127.0.0.1:7003" env:"TENANCY_SERVICE_URI"`
+	NotificationSvcURI                       string `envDefault:"127.0.0.1:7020"                            env:"NOTIFICATION_SERVICE_URI"`
+	TenancyServiceURI                        string `envDefault:"127.0.0.1:7003"                            env:"TENANCY_SERVICE_URI"`
 	NotificationServiceWorkloadAPITargetPath string `envDefault:"/ns/notifications/sa/service-notification" env:"NOTIFICATION_SERVICE_WORKLOAD_API_TARGET_PATH"`
 
 	SystemAccessID string `envDefault:"c8cf0ldstmdlinc3eva0" env:"STATIC_SYSTEM_ACCESS_ID"`
@@ -64,10 +64,10 @@ type ProfileConfig struct {
 	// Account derivation inputs from the protocol manifest. The init code is
 	// keccak256(creation_code ‖ identity_salt_hash), so it differs per
 	// profile and the creation code itself is required.
-	AccountFactory          string `envDefault:"" env:"STAWI_ACCOUNT_FACTORY"`
-	AccountCreationCode     string `envDefault:"" env:"STAWI_ACCOUNT_CREATION_CODE"`
-	AccountCreationCodeFile string `envDefault:"" env:"STAWI_ACCOUNT_CREATION_CODE_FILE"`
-	AccountCreationCodeHash string `envDefault:"" env:"STAWI_ACCOUNT_CREATION_CODE_HASH"`
+	AccountFactory          string `envDefault:""  env:"STAWI_ACCOUNT_FACTORY"`
+	AccountCreationCode     string `envDefault:""  env:"STAWI_ACCOUNT_CREATION_CODE"`
+	AccountCreationCodeFile string `envDefault:""  env:"STAWI_ACCOUNT_CREATION_CODE_FILE"`
+	AccountCreationCodeHash string `envDefault:""  env:"STAWI_ACCOUNT_CREATION_CODE_HASH"`
 	AccountVersion          uint32 `envDefault:"1" env:"STAWI_ACCOUNT_VERSION"`
 
 	// AccountBackfillBatchSize is how many profiles one backfill pass derives.

@@ -27,8 +27,12 @@ import (
 	k8sauth "github.com/hashicorp/vault/api/auth/kubernetes"
 )
 
-// tokenRenewMargin re-authenticates this far before the Vault token expires.
-const tokenRenewMargin = 30 * time.Second
+// tokenRenewMargin re-authenticates this far before the Vault token expires,
+// or at 1/tokenRenewFraction of a short TTL.
+const (
+	tokenRenewMargin   = 30 * time.Second
+	tokenRenewFraction = 2
+)
 
 // ErrTransitConfig reports an incomplete Transit configuration.
 var ErrTransitConfig = errors.New("accounts: incomplete vault transit configuration")
@@ -116,7 +120,7 @@ func (t *TransitSalter) login(ctx context.Context) error {
 		return errors.New("accounts: vault kubernetes login returned no token")
 	}
 	ttl := time.Duration(secret.Auth.LeaseDuration) * time.Second
-	t.expiresAt = time.Now().Add(max(ttl-tokenRenewMargin, ttl/2))
+	t.expiresAt = time.Now().Add(max(ttl-tokenRenewMargin, ttl/tokenRenewFraction))
 	return nil
 }
 

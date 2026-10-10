@@ -16,10 +16,12 @@ package business
 
 import (
 	"context"
+	"encoding/hex"
 	"time"
 
 	"github.com/pitabwire/frame/v2/data"
 
+	"github.com/antinvestor/service-profile/apps/default/service/accounts"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/internal/outbox"
 )
@@ -46,5 +48,51 @@ func ProfileCreatedFact(ctx context.Context, profile *models.Profile) *outbox.Ev
 		"profile_type_uid": profile.ProfileType.UID,
 		"profile_type_id":  profile.ProfileTypeID,
 		"created_at":       profile.CreatedAt.UTC().Format(time.RFC3339Nano),
+	})
+}
+
+// FactAccountCreated states that a profile now owns a derived chain account.
+// It is staged in the transaction that writes the account row: with the
+// profile on create, or on its own by the backfill.
+const FactAccountCreated = "profile.account_created"
+
+// FactAccountsMerged states that a merged profile's accounts now belong to
+// the surviving profile as secondary accounts.
+const FactAccountsMerged = "profile.accounts_merged"
+
+// AccountCreatedFact builds the profile.account_created fact.
+//
+// Payload: profile_id, address (lowercase 0x hex), family ("EVM"), version
+// (the account version), identity_salt_hash (0x hex keccak256 of the salt),
+// factory (0x hex) and primary. The identity salt never appears.
+func AccountCreatedFact(ctx context.Context, account *models.ProfileAccount) *outbox.Event {
+	return outbox.NewEvent(ctx, FactAccountCreated, aggregateProfile, account.ProfileID, data.JSONMap{
+		"profile_id":         account.ProfileID,
+		"address":            accounts.HexAddress(account.Address),
+		"family":             account.Family,
+		"version":            account.AccountVersion,
+		"identity_salt_hash": "0x" + hex.EncodeToString(account.IdentitySaltHash),
+		"factory":            accounts.HexAddress(account.Factory),
+		"primary":            account.Primary,
+	})
+}
+
+// AccountsMergedFact builds the profile.accounts_merged fact.
+//
+// Payload: surviving_profile_id, merged_profile_id and addresses (lowercase
+// 0x hex of every account that moved).
+func AccountsMergedFact(
+	ctx context.Context,
+	survivingProfileID, mergedProfileID string,
+	moved []*models.ProfileAccount,
+) *outbox.Event {
+	addresses := make([]any, len(moved))
+	for i, a := range moved {
+		addresses[i] = accounts.HexAddress(a.Address)
+	}
+	return outbox.NewEvent(ctx, FactAccountsMerged, aggregateProfile, survivingProfileID, data.JSONMap{
+		"surviving_profile_id": survivingProfileID,
+		"merged_profile_id":    mergedProfileID,
+		"addresses":            addresses,
 	})
 }

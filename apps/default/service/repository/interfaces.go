@@ -29,6 +29,12 @@ type ProfileRepository interface {
 		profile *models.Profile,
 		fact func(*models.Profile) *outbox.Event,
 	) error
+	CreateWithAccount(
+		ctx context.Context,
+		profile *models.Profile,
+		account *models.ProfileAccount,
+		facts func(*models.Profile) []*outbox.Event,
+	) error
 }
 
 type ContactRepository interface {
@@ -91,6 +97,7 @@ type AddressRepository interface {
 	DeleteLink(ctx context.Context, id string) error
 
 	CountryGetByISO3(ctx context.Context, countryISO3 string) (*models.Country, error)
+	CountryGetByISO2(ctx context.Context, iso2 string) (*models.Country, error)
 	CountryGetByAny(ctx context.Context, c string) (*models.Country, error)
 	CountryGetByName(ctx context.Context, name string) (*models.Country, error)
 }
@@ -125,4 +132,27 @@ type RelationshipRepository interface {
 		ctx context.Context,
 		relationshipTypeID string,
 	) (*models.RelationshipType, error)
+}
+
+type ProfileAccountRepository interface {
+	datastore.BaseRepository[*models.ProfileAccount]
+	ListByProfileID(ctx context.Context, profileID string) ([]*models.ProfileAccount, error)
+	ListByAddresses(ctx context.Context, addresses [][]byte) ([]*models.ProfileAccount, error)
+	CreateWithFact(
+		ctx context.Context,
+		account *models.ProfileAccount,
+		fact func(*models.ProfileAccount) *outbox.Event,
+	) (bool, error)
+	MoveToProfile(
+		ctx context.Context,
+		fromProfileID, toProfileID string,
+		fact func([]*models.ProfileAccount) *outbox.Event,
+	) ([]*models.ProfileAccount, error)
+	PersonProfilesWithoutAccount(
+		ctx context.Context,
+		profileTypeID, family string,
+		accountVersion uint32,
+		afterID string,
+		limit int,
+	) ([]*models.Profile, error)
 }

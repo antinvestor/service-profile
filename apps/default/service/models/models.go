@@ -274,3 +274,21 @@ func (r *Relationship) ToAPI() *profilev1.RelationshipObject {
 
 	return relationshipObj
 }
+
+// ProfileAccount is a chain account a profile owns. The address is derived
+// from the profile's identity salt (accounts package); only the keccak hash
+// of the salt is stored. A PERSON profile has one primary account per family
+// and account version; accounts that arrive through a merge are secondary.
+type ProfileAccount struct {
+	data.BaseModel
+
+	ProfileID string `gorm:"type:varchar(50);not null;index:idx_profile_accounts_profile"`
+	Family    string `gorm:"type:varchar(16);not null"`
+	// AccountVersion is the protocol account version (BaseModel already
+	// uses Version for row versioning).
+	AccountVersion   uint32 `gorm:"not null"`
+	Address          []byte `gorm:"type:bytea;not null;uniqueIndex:idx_profile_accounts_address"`
+	IdentitySaltHash []byte `gorm:"type:bytea;not null"`
+	Factory          []byte `gorm:"type:bytea;not null"`
+	Primary          bool   `gorm:"column:is_primary;not null;default:false"`
+}

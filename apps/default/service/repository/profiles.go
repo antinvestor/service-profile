@@ -79,12 +79,42 @@ func (pr *profileRepository) CreateWithFact(
 	profile *models.Profile,
 	fact func(*models.Profile) *outbox.Event,
 ) error {
+	return pr.CreateWithAccount(ctx, profile, nil, func(p *models.Profile) []*outbox.Event {
+		return []*outbox.Event{fact(p)}
+	})
+}
+
+// CreateWithAccount persists a profile, its primary account (when given) and
+// the facts describing them in one transaction: a person's account exists
+// exactly when the profile does. The account takes the profile's id and
+// tenancy.
+func (pr *profileRepository) CreateWithAccount(
+	ctx context.Context,
+	profile *models.Profile,
+	account *models.ProfileAccount,
+	facts func(*models.Profile) []*outbox.Event,
+) error {
 	profile.GenID(ctx)
 
 	return pr.Pool().DB(ctx, false).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(profile).Error; err != nil {
 			return err
 		}
-		return outbox.Enqueue(tx, fact(profile))
+		if account != nil {
+			account.ProfileID = profile.GetID()
+			account.TenantID = profile.TenantID
+			account.PartitionID = profile.PartitionID
+			account.AccessID = profile.AccessID
+			account.GenID(ctx)
+			if err := tx.Create(account).Error; err != nil {
+				return err
+			}
+		}
+		for _, evt := range facts(profile) {
+			if err := outbox.Enqueue(tx, evt); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }

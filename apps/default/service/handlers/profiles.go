@@ -18,6 +18,8 @@ import (
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/accounts"
+	"github.com/antinvestor/service-profile/apps/default/service/authz"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/pkg/errorutil"
@@ -35,6 +37,7 @@ type ProfileServer struct {
 	NotificationCli      notificationv1connect.NotificationServiceClient
 	checker              *authorizer.FunctionChecker
 	profileBusiness      business.ProfileBusiness
+	accountBusiness      business.AccountBusiness
 	contactBusiness      business.ContactBusiness
 	rosterBusiness       business.RosterBusiness
 	relationshipBusiness business.RelationshipBusiness
@@ -49,6 +52,7 @@ func NewProfileServer(
 	dek *config.DEK,
 	notificationCli notificationv1connect.NotificationServiceClient,
 	checker *authorizer.FunctionChecker,
+	deriver *accounts.Deriver,
 ) *ProfileServer {
 	evtsMan := svc.EventsManager()
 	workMan := svc.WorkManager()
@@ -73,6 +77,12 @@ func NewProfileServer(
 
 	profileRepo := repository.NewProfileRepository(ctx, dbPool, workMan)
 	propertyEntryRepo := repository.NewPropertyEntryRepository(ctx, dbPool, workMan)
+	accountBusiness := business.NewAccountBusiness(
+		deriver,
+		repository.NewProfileAccountRepository(ctx, dbPool, workMan),
+		profileRepo,
+		cfg.AccountBackfillBatchSize,
+	)
 	profileBusiness := business.NewProfileBusiness(
 		ctx,
 		cfg,
@@ -82,6 +92,7 @@ func NewProfileServer(
 		addressBusiness,
 		profileRepo,
 		propertyEntryRepo,
+		accountBusiness,
 	)
 
 	rosterRepo := repository.NewRosterRepository(ctx, dbPool, workMan)
@@ -96,6 +107,7 @@ func NewProfileServer(
 		NotificationCli:      notificationCli,
 		checker:              checker,
 		profileBusiness:      profileBusiness,
+		accountBusiness:      accountBusiness,
 		contactBusiness:      contactBusiness,
 		rosterBusiness:       rosterBusiness,
 		relationshipBusiness: relationshipBusiness,
@@ -119,6 +131,32 @@ func (ps *ProfileServer) GetById(ctx context.Context,
 	}
 
 	return connect.NewResponse(&profilev1.GetByIdResponse{Data: profileObj}), nil
+}
+
+// ResolveAccounts maps chain account addresses to the profiles that own them.
+// account_resolve is bound to ROLE_SERVICE only, so owners and admins are
+// refused; it is checked here (and excluded from the interceptor map) so the
+// rule is enforced on every path into the handler.
+func (ps *ProfileServer) ResolveAccounts(ctx context.Context,
+	request *connect.Request[profilev1.ResolveAccountsRequest]) (
+	*connect.Response[profilev1.ResolveAccountsResponse], error) {
+	if err := ps.checker.Check(ctx, authz.PermissionAccountResolve); err != nil {
+		return nil, authorizer.ToConnectError(err)
+	}
+
+	found, err := ps.accountBusiness.Resolve(ctx, request.Msg.GetAddresses())
+	if err != nil {
+		return nil, errorutil.CleanErr(err)
+	}
+
+	owners := make([]*profilev1.AccountOwner, 0, len(found))
+	for _, a := range found {
+		owners = append(owners, &profilev1.AccountOwner{
+			Address:   accounts.HexAddress(a.Address),
+			ProfileId: a.ProfileID,
+		})
+	}
+	return connect.NewResponse(&profilev1.ResolveAccountsResponse{Data: owners}), nil
 }
 
 func (ps *ProfileServer) GetByContact(ctx context.Context,

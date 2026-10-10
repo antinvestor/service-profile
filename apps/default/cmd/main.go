@@ -26,6 +26,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 
 	aconfig "github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/accounts"
 	"github.com/antinvestor/service-profile/apps/default/service/authz"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/events"
@@ -67,6 +68,14 @@ func main() {
 		log.WithError(dekErr).Fatal("main -- Could not decode DEK encryption keys")
 	}
 
+	// Account derivation: nil (with a warning) when no identity salter is
+	// configured; a configuration that is present but wrong stops the
+	// process.
+	deriver, deriverErr := accounts.FromConfig(ctx, &cfg)
+	if deriverErr != nil {
+		log.WithError(deriverErr).Fatal("main -- Could not configure profile account derivation")
+	}
+
 	// Setup plan: migrate + bootstrap seed. Permissions via setup step only.
 	// DEK env required on the setup/migrate Job:
 	//   DEK_ACTIVE_KEY_ID, DEK_AES256GCM_KEY, DEK_LOOKUP_TOKEN_HMACSHA256_KEY
@@ -75,8 +84,18 @@ func main() {
 		return repository.Migrate(ctx, dbManager, cfg.GetDatabaseMigrationPath())
 	})
 	svc.Setup().RegisterFunc(setup.NameBootstrap, func(ctx context.Context) error {
-		seedDefaultData(ctx, svc, dek)
+		seedDefaultData(ctx, svc, dek, deriver)
+		// A legacy migrate job (argv migrate / DO_MIGRATION) runs only the
+		// well-known steps, so the backfill rides on bootstrap there.
+		if !frame.IsSetupMode(&cfg) {
+			return backfillAccounts(ctx, svc, &cfg, deriver)
+		}
 		return nil
+	})
+	// Every PERSON profile owns an account; profiles created before
+	// accounts existed (or while no salter was configured) get theirs here.
+	svc.Setup().RegisterFunc(setupStepAccountBackfill, func(ctx context.Context) error {
+		return backfillAccounts(ctx, svc, &cfg, deriver)
 	})
 
 	if frame.ShouldRunSetup(&cfg) {
@@ -94,7 +113,7 @@ func main() {
 		log.WithError(nErr).Fatal("main -- Could not setup notification svc")
 	}
 
-	svc.Init(ctx, runtimeServiceOptions(ctx, svc, &cfg, profileSD, dek, notificationCli)...)
+	svc.Init(ctx, runtimeServiceOptions(ctx, svc, &cfg, profileSD, dek, notificationCli, deriver)...)
 
 	if runErr := svc.Run(ctx, ""); runErr != nil {
 		log.WithError(runErr).Fatal("could not run Server")
@@ -109,8 +128,9 @@ func runtimeServiceOptions(
 	_ protoreflect.ServiceDescriptor,
 	dek *aconfig.DEK,
 	notificationCli notificationv1connect.NotificationServiceClient,
+	deriver *accounts.Deriver,
 ) []frame.Option {
-	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli)
+	connectHandler := setupConnectServer(ctx, svc, dek, notificationCli, deriver)
 
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
@@ -209,7 +229,7 @@ func decodeDEK(cfg aconfig.ProfileConfig) (*aconfig.DEK, error) {
 //	DEK_ACTIVE_KEY_ID              — identifies the active encryption key
 //	DEK_AES256GCM_KEY              — AES-256-GCM key for encrypting contact details
 //	DEK_LOOKUP_TOKEN_HMACSHA256_KEY — HMAC key for deterministic contact lookup tokens
-func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) {
+func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK, deriver *accounts.Deriver) {
 	log := util.Log(ctx)
 	cfg, _ := svc.Config().(*aconfig.ProfileConfig)
 	workMan := svc.WorkManager()
@@ -224,6 +244,12 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 	propertyEntryRepo := repository.NewPropertyEntryRepository(ctx, dbPool, workMan)
 	addressRepo := repository.NewAddressRepository(ctx, dbPool, workMan)
 	addressBiz := business.NewAddressBusiness(ctx, addressRepo)
+	accountBiz := business.NewAccountBusiness(
+		deriver,
+		repository.NewProfileAccountRepository(ctx, dbPool, workMan),
+		profileRepo,
+		cfg.AccountBackfillBatchSize,
+	)
 	profileBiz := business.NewProfileBusiness(
 		ctx,
 		cfg,
@@ -233,6 +259,7 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 		addressBiz,
 		profileRepo,
 		propertyEntryRepo,
+		accountBiz,
 	)
 
 	if err := business.SeedBootstrapContacts(ctx, profileBiz, contactBiz); err != nil {
@@ -247,7 +274,7 @@ func seedDefaultData(ctx context.Context, svc *frame.Service, dek *aconfig.DEK) 
 
 // setupConnectServer initializes and configures the gRPC server.
 func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DEK,
-	notificationCli notificationv1connect.NotificationServiceClient) http.Handler {
+	notificationCli notificationv1connect.NotificationServiceClient, deriver *accounts.Deriver) http.Handler {
 	securityMan := svc.SecurityManager()
 
 	authenticator := securityMan.GetAuthenticator(ctx)
@@ -272,6 +299,8 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	delete(procMap, "/profile.v1.ProfileService/SearchRoster")
 	delete(procMap, "/profile.v1.ProfileService/AddRelationship")
 	delete(procMap, "/profile.v1.ProfileService/ListRelationships")
+	// ResolveAccounts checks account_resolve (service role only) itself.
+	delete(procMap, "/profile.v1.ProfileService/ResolveAccounts")
 
 	functionChecker := authorizer.NewFunctionChecker(auth, permissions.ForService(sd).Namespace)
 	functionAccessInterceptor := connectInterceptors.NewFunctionAccessInterceptor(
@@ -310,7 +339,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	implementation := handlers.NewProfileServer(ctx, svc, dek, notificationCli, functionChecker)
+	implementation := handlers.NewProfileServer(ctx, svc, dek, notificationCli, functionChecker, deriver)
 
 	_, serverHandler := profilev1connect.NewProfileServiceHandler(
 		implementation, connect.WithInterceptors(defaultInterceptorList...))
@@ -326,4 +355,27 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	mux.Handle("/openapi.yaml", apis.NewOpenAPIHandler(profileAPISpecFile, nil))
 
 	return mux
+}
+
+// setupStepAccountBackfill derives the accounts of existing PERSON profiles.
+const setupStepAccountBackfill = "account-backfill"
+
+// backfillAccounts runs the account backfill. Without a salter it logs and
+// does nothing, like profile creation.
+func backfillAccounts(
+	ctx context.Context,
+	svc *frame.Service,
+	cfg *aconfig.ProfileConfig,
+	deriver *accounts.Deriver,
+) error {
+	workMan := svc.WorkManager()
+	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
+	accountBiz := business.NewAccountBusiness(
+		deriver,
+		repository.NewProfileAccountRepository(ctx, dbPool, workMan),
+		repository.NewProfileRepository(ctx, dbPool, workMan),
+		cfg.AccountBackfillBatchSize,
+	)
+	_, err := accountBiz.Backfill(ctx)
+	return err
 }

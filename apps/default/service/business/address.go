@@ -22,6 +22,9 @@ type AddressBusiness interface {
 	) error
 
 	ToAPI(address *models.Address) *profilev1.AddressObject
+	// IsCountryISO2 reports whether an upper-case ISO 3166-1 alpha-2 code
+	// names a known country.
+	IsCountryISO2(ctx context.Context, code string) (bool, error)
 }
 
 func NewAddressBusiness(_ context.Context, addressRepo repository.AddressRepository) AddressBusiness {
@@ -32,6 +35,17 @@ func NewAddressBusiness(_ context.Context, addressRepo repository.AddressReposit
 
 type addressBusiness struct {
 	addressRepo repository.AddressRepository
+}
+
+func (aB *addressBusiness) IsCountryISO2(ctx context.Context, code string) (bool, error) {
+	_, err := aB.addressRepo.CountryGetByISO2(ctx, code)
+	if err == nil {
+		return true, nil
+	}
+	if data.ErrorIsNoRows(err) {
+		return false, nil
+	}
+	return false, err
 }
 
 func (aB *addressBusiness) ToAPI(address *models.Address) *profilev1.AddressObject {

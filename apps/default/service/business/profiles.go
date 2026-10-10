@@ -106,9 +106,11 @@ func NewProfileBusiness(_ context.Context, cfg *config.ProfileConfig, dek *confi
 	eventsMan frevents.Manager,
 	contactBusiness ContactBusiness, addressBusiness AddressBusiness,
 	profileRepo repository.ProfileRepository,
-	propertyEntryRepo repository.PropertyEntryRepository) ProfileBusiness {
+	propertyEntryRepo repository.PropertyEntryRepository,
+	accountBusiness AccountBusiness) ProfileBusiness {
 	return &profileBusiness{
 		cfg:               cfg,
+		accountBusiness:   accountBusiness,
 		dek:               dek,
 		contactBusiness:   contactBusiness,
 		addressBusiness:   addressBusiness,
@@ -123,6 +125,7 @@ type profileBusiness struct {
 	dek             *config.DEK
 	contactBusiness ContactBusiness
 	addressBusiness AddressBusiness
+	accountBusiness AccountBusiness
 
 	profileRepo       repository.ProfileRepository
 	propertyEntryRepo repository.PropertyEntryRepository
@@ -162,6 +165,12 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 		addressObjects = append(addressObjects, address)
 	}
 	profileObject.Addresses = addressObjects
+
+	accountList, err := pb.accountBusiness.ListByProfile(ctx, p.ID)
+	if err != nil {
+		return nil, err
+	}
+	profileObject.Accounts = AccountsToAPI(accountList)
 
 	return &profileObject, nil
 }
@@ -238,6 +247,9 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 
 func (pb *profileBusiness) MergeProfile(ctx context.Context,
 	request *profilev1.MergeRequest) (*profilev1.ProfileObject, error) {
+	if request.GetId() == request.GetMergeid() {
+		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("a profile cannot be merged into itself"))
+	}
 	target, err := pb.profileRepo.GetByID(ctx, request.GetId())
 	if err != nil {
 		return nil, err
@@ -245,6 +257,13 @@ func (pb *profileBusiness) MergeProfile(ctx context.Context,
 
 	merging, err := pb.profileRepo.GetByID(ctx, request.GetMergeid())
 	if err != nil {
+		return nil, err
+	}
+
+	// The survivor keeps its own primary account; the merged profile's
+	// accounts move to it as secondary accounts before the merged profile
+	// goes, so no account is ever left without an owner.
+	if _, err = pb.accountBusiness.MoveOnMerge(ctx, target.GetID(), merging.GetID()); err != nil {
 		return nil, err
 	}
 
@@ -281,6 +300,10 @@ func (pb *profileBusiness) UpdateProfileProperties(
 	profileID string, properties data.JSONMap, scoped bool) (*profilev1.ProfileObject, error) {
 	profile, err := pb.profileRepo.GetByID(ctx, profileID)
 	if err != nil {
+		return nil, err
+	}
+
+	if err = pb.validateProperties(ctx, properties); err != nil {
 		return nil, err
 	}
 
@@ -407,6 +430,9 @@ func (pb *profileBusiness) CreateProfile(
 	p := models.Profile{}
 
 	p.Properties = request.GetProperties().AsMap()
+	if err := pb.validateProperties(ctx, p.Properties); err != nil {
+		return nil, err
+	}
 
 	contact, lookupErr := pb.lookupContactByDetail(ctx, contactDetail)
 	if lookupErr != nil && !errors.Is(lookupErr, ErrContactNotFound) {
@@ -425,11 +451,27 @@ func (pb *profileBusiness) CreateProfile(
 	p.ProfileType = *pt
 	p.ProfileTypeID = pt.ID
 
-	// The profile row and the profile.created fact are written in one
-	// transaction, so the fact is true exactly when the profile exists
+	// A person owns a chain account from the moment the profile exists. The
+	// salt comes from Vault, so it is computed before the transaction opens.
+	var account *models.ProfileAccount
+	if pt.UID == models.ProfileTypeIDMap[profilev1.ProfileType_PERSON] {
+		p.GenID(ctx)
+		var accountErr error
+		account, accountErr = pb.accountBusiness.NewPrimary(ctx, p.GetID())
+		if accountErr != nil {
+			return nil, connect.NewError(connect.CodeUnavailable, accountErr)
+		}
+	}
+
+	// The profile row, its account and their facts are written in one
+	// transaction, so the facts are true exactly when the rows exist
 	// (GFOS K5).
-	createErr := pb.profileRepo.CreateWithFact(ctx, &p, func(created *models.Profile) *outbox.Event {
-		return ProfileCreatedFact(ctx, created)
+	createErr := pb.profileRepo.CreateWithAccount(ctx, &p, account, func(created *models.Profile) []*outbox.Event {
+		facts := []*outbox.Event{ProfileCreatedFact(ctx, created)}
+		if account != nil {
+			facts = append(facts, AccountCreatedFact(ctx, account))
+		}
+		return facts
 	})
 	if createErr != nil {
 		return nil, data.ErrorConvertToAPI(createErr)
@@ -455,7 +497,7 @@ func (pb *profileBusiness) CreateProfile(
 		return nil, err
 	}
 
-	return pb.profileFromCreated(&p, contact)
+	return pb.profileFromCreated(&p, contact, account)
 }
 
 // profileFromCreated builds a ProfileObject from the just-created profile and
@@ -463,11 +505,15 @@ func (pb *profileBusiness) CreateProfile(
 func (pb *profileBusiness) profileFromCreated(
 	p *models.Profile,
 	contact *models.Contact,
+	account *models.ProfileAccount,
 ) (*profilev1.ProfileObject, error) {
 	obj := &profilev1.ProfileObject{
 		Id:         p.ID,
 		Type:       models.ProfileTypeIDToEnum(p.ProfileType.UID),
 		Properties: p.Properties.ToProtoStruct(),
+	}
+	if account != nil {
+		obj.Accounts = AccountsToAPI([]*models.ProfileAccount{account})
 	}
 	if contact != nil {
 		contactObj, err := contact.ToAPI(pb.dek, true)
