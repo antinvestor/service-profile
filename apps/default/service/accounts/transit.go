@@ -23,7 +23,9 @@ import (
 	"sync"
 	"time"
 
+	"cloud.google.com/go/compute/metadata"
 	vault "github.com/hashicorp/vault/api"
+	gcpauth "github.com/hashicorp/vault/api/auth/gcp"
 	k8sauth "github.com/hashicorp/vault/api/auth/kubernetes"
 )
 
@@ -37,15 +39,32 @@ const (
 // ErrTransitConfig reports an incomplete Transit configuration.
 var ErrTransitConfig = errors.New("accounts: incomplete vault transit configuration")
 
+// Vault auth methods (VAULT_AUTH_METHOD).
+const (
+	AuthKubernetes = "kubernetes"
+	AuthGCP        = "gcp"
+	AuthToken      = "token"
+)
+
 // TransitConfig locates the Transit key and how to authenticate to Vault.
 type TransitConfig struct {
 	// Address is the Vault address (VAULT_ADDR).
 	Address string
-	// AuthRole is the Kubernetes auth role. Empty means the client token
-	// already in the environment (VAULT_TOKEN) is used, as on a dev server.
+	// AuthMethod is kubernetes (default), gcp or token.
+	AuthMethod string
+	// AuthRole is the Kubernetes auth role.
 	AuthRole string
 	// AuthMount is the Kubernetes auth mount path (default "kubernetes").
 	AuthMount string
+	// GCPRole is the Vault GCP auth role (IAM login).
+	GCPRole string
+	// GCPMount is the GCP auth mount path (default "gcp").
+	GCPMount string
+	// GCPServiceAccount is the email of the service account the IAM login
+	// signs as; empty asks the metadata server for the runtime account.
+	GCPServiceAccount string
+	// Token is the Vault token for the token method.
+	Token string
 	// ServiceAccountTokenPath overrides the projected service-account token
 	// path; empty uses the in-pod default.
 	ServiceAccountTokenPath string
@@ -76,8 +95,31 @@ func NewTransitSalter(cfg TransitConfig) (*TransitSalter, error) {
 	if cfg.KeyVersion < 1 {
 		return nil, fmt.Errorf("%w: key version must be pinned (>= 1)", ErrTransitConfig)
 	}
+	if cfg.AuthMethod == "" {
+		cfg.AuthMethod = AuthKubernetes
+	}
 	if cfg.AuthMount == "" {
-		cfg.AuthMount = "kubernetes"
+		cfg.AuthMount = AuthKubernetes
+	}
+	if cfg.GCPMount == "" {
+		cfg.GCPMount = AuthGCP
+	}
+	switch cfg.AuthMethod {
+	case AuthKubernetes:
+		if cfg.AuthRole == "" {
+			return nil, fmt.Errorf("%w: VAULT_K8S_AUTH_ROLE is required for kubernetes auth", ErrTransitConfig)
+		}
+	case AuthGCP:
+		if cfg.GCPRole == "" {
+			return nil, fmt.Errorf("%w: VAULT_GCP_AUTH_ROLE is required for gcp auth", ErrTransitConfig)
+		}
+	case AuthToken:
+		if cfg.Token == "" {
+			return nil, fmt.Errorf("%w: VAULT_TOKEN is required for token auth", ErrTransitConfig)
+		}
+	default:
+		return nil, fmt.Errorf("%w: unknown VAULT_AUTH_METHOD %q (kubernetes, gcp or token)",
+			ErrTransitConfig, cfg.AuthMethod)
 	}
 
 	vcfg := vault.DefaultConfig()
@@ -89,13 +131,19 @@ func NewTransitSalter(cfg TransitConfig) (*TransitSalter, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Only the token method uses a token from the environment; the others
+	// obtain their own.
+	client.ClearToken()
+	if cfg.AuthMethod == AuthToken {
+		client.SetToken(cfg.Token)
+	}
 	return &TransitSalter{client: client, cfg: cfg}, nil
 }
 
-// login authenticates with Kubernetes auth when a role is configured and the
-// current token is missing or close to expiry.
+// login authenticates (kubernetes or gcp) when the current token is missing
+// or close to expiry. The token method has nothing to renew.
 func (t *TransitSalter) login(ctx context.Context) error {
-	if t.cfg.AuthRole == "" {
+	if t.cfg.AuthMethod == AuthToken {
 		return nil
 	}
 	t.mu.Lock()
@@ -104,24 +152,41 @@ func (t *TransitSalter) login(ctx context.Context) error {
 		return nil
 	}
 
-	opts := []k8sauth.LoginOption{k8sauth.WithMountPath(t.cfg.AuthMount)}
-	if t.cfg.ServiceAccountTokenPath != "" {
-		opts = append(opts, k8sauth.WithServiceAccountTokenPath(t.cfg.ServiceAccountTokenPath))
-	}
-	auth, err := k8sauth.NewKubernetesAuth(t.cfg.AuthRole, opts...)
+	auth, err := t.authMethod(ctx)
 	if err != nil {
-		return fmt.Errorf("accounts: vault kubernetes auth: %w", err)
+		return fmt.Errorf("accounts: vault %s auth: %w", t.cfg.AuthMethod, err)
 	}
 	secret, err := t.client.Auth().Login(ctx, auth)
 	if err != nil {
-		return fmt.Errorf("accounts: vault kubernetes login: %w", err)
+		return fmt.Errorf("accounts: vault %s login: %w", t.cfg.AuthMethod, err)
 	}
 	if secret == nil || secret.Auth == nil {
-		return errors.New("accounts: vault kubernetes login returned no token")
+		return fmt.Errorf("accounts: vault %s login returned no token", t.cfg.AuthMethod)
 	}
 	ttl := time.Duration(secret.Auth.LeaseDuration) * time.Second
 	t.expiresAt = time.Now().Add(max(ttl-tokenRenewMargin, ttl/tokenRenewFraction))
 	return nil
+}
+
+func (t *TransitSalter) authMethod(ctx context.Context) (vault.AuthMethod, error) {
+	if t.cfg.AuthMethod == AuthGCP {
+		email := t.cfg.GCPServiceAccount
+		if email == "" {
+			// Cloud Run and GCE expose the runtime service account here.
+			var err error
+			email, err = metadata.EmailWithContext(ctx, "default")
+			if err != nil {
+				return nil, fmt.Errorf("runtime service account from metadata: %w", err)
+			}
+		}
+		return gcpauth.NewGCPAuth(t.cfg.GCPRole,
+			gcpauth.WithMountPath(t.cfg.GCPMount), gcpauth.WithIAMAuth(email))
+	}
+	opts := []k8sauth.LoginOption{k8sauth.WithMountPath(t.cfg.AuthMount)}
+	if t.cfg.ServiceAccountTokenPath != "" {
+		opts = append(opts, k8sauth.WithServiceAccountTokenPath(t.cfg.ServiceAccountTokenPath))
+	}
+	return k8sauth.NewKubernetesAuth(t.cfg.AuthRole, opts...)
 }
 
 // Salt implements Salter.

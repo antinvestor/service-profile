@@ -14,12 +14,17 @@ address            = derive.AccountAddress(FamilyEVM, account_version, identity_
                        factory, keccak256(creation_code ‖ identity_salt_hash))
 ```
 
-* `derive` is `github.com/stawilabs/stawi/pkg/protocol/derive`. It is the same
-  code the contracts are vector-tested against. `apps/default/service/accounts`
-  calls it and copies nothing. The vector in
-  `apps/default/service/accounts/testdata/account_derivation.json` is stawi's
-  `packages/contracts/test/vectors/account_derivation.json`. The test asserts
-  that profile derives the address the Solidity `AccountFactory` computes.
+* `derive` lives in `apps/default/service/accounts/derive`. It is a verbatim
+  copy of stawi's `pkg/protocol/derive` at tag `pkg/protocol/derive/v0.1.0`
+  (commit `a9d937d`), the same code the contracts are vector-tested against.
+  It is vendored because the stawi repository is private.
+* Do not edit the copy here. Change it upstream, retag, then copy it again,
+  together with the vector.
+* The copy is pinned by `contracts_vector_test.go`, which runs over the
+  contract-generated vector in `accounts/testdata/account_derivation.json`
+  (stawi's `packages/contracts/test/vectors/account_derivation.json`, copied
+  verbatim), and by the upstream fixed-input tests. Linters skip the directory
+  so the copy stays byte-identical.
 * `K_identity` is a root key and never rotates, because rotating it would move
   every address. In production it stays inside Vault Transit. Only
   `identity_salt_hash` and the address leave the service. The salt itself is
@@ -121,9 +126,15 @@ rejected with `INVALID_ARGUMENT`. The check applies on `Create` and on
 | Variable | Default | Meaning |
 |---|---|---|
 | `VAULT_ADDR` | | Vault address; turns on the Transit salter |
-| `VAULT_K8S_AUTH_ROLE` | | Kubernetes auth role. If empty, `VAULT_TOKEN` is used instead (dev servers) |
+| `VAULT_AUTH_METHOD` | `kubernetes` | `kubernetes`, `gcp` (Cloud Run / GCE) or `token` |
+| `VAULT_K8S_AUTH_ROLE` | | Kubernetes auth role (required for `kubernetes`) |
 | `VAULT_K8S_AUTH_MOUNT` | `kubernetes` | Kubernetes auth mount |
 | `VAULT_K8S_TOKEN_PATH` | in-pod default | service-account token path |
+| `VAULT_GCP_AUTH_ROLE` | | GCP auth role (required for `gcp`); IAM login |
+| `VAULT_GCP_AUTH_MOUNT` | `gcp` | GCP auth mount |
+| `VAULT_GCP_SERVICE_ACCOUNT` | runtime account | service-account email to sign as; empty reads it from the metadata server |
+| `VAULT_TOKEN` | | token for `token` (dev servers); refused in prod |
+| `VAULT_ALLOW_TOKEN_AUTH` | `false` | `true` allows `token` in prod |
 | `VAULT_TRANSIT_MOUNT` | `transit` | Transit mount |
 | `STAWI_IDENTITY_TRANSIT_KEY` | `stawi-identity` | Transit key |
 | `STAWI_IDENTITY_KEY_VERSION` | | **required with Vault**; the pinned key version |
@@ -183,6 +194,44 @@ vault write auth/kubernetes/role/service-profile \
 
 Then set `VAULT_ADDR`, `VAULT_K8S_AUTH_ROLE=service-profile` and
 `STAWI_IDENTITY_KEY_VERSION=1` on both the service and its setup job.
+
+### Cloud Run (GCP IAM auth)
+
+Cloud Run has no Kubernetes service-account token, so use `gcp`. The service
+signs a JWT as its runtime service account through the IAM Credentials API
+(`signJwt`), and Vault verifies it.
+
+On GCP, the runtime service account of `identity-profile` and of the
+`identity-profile-migrate` job must be allowed to sign as itself:
+
+```sh
+SA=<runtime-sa>@stawi-identity.iam.gserviceaccount.com
+gcloud iam service-accounts add-iam-policy-binding "$SA" \
+  --member="serviceAccount:$SA" --role=roles/iam.serviceAccountTokenCreator
+```
+
+On Vault, enable the GCP auth method. Its credentials must be able to read
+service accounts and their keys (`iam.serviceAccounts.get`,
+`iam.serviceAccountKeys.get`). Then bind the same policy to a role:
+
+```sh
+vault auth enable gcp
+vault write auth/gcp/config credentials=@vault-gcp-verifier.json
+vault write auth/gcp/role/service-profile \
+  type=iam \
+  bound_service_accounts="$SA" \
+  token_policies=stawi-identity-hmac \
+  max_jwt_exp=15m token_ttl=1h token_max_ttl=4h
+```
+
+Then set the following on both the service and the migrate job:
+
+* `VAULT_ADDR`
+* `VAULT_AUTH_METHOD=gcp`
+* `VAULT_GCP_AUTH_ROLE=service-profile`
+* `STAWI_IDENTITY_KEY_VERSION=1`
+
+`VAULT_GCP_SERVICE_ACCOUNT` is optional.
 
 The salter calls `transit/hmac/stawi-identity/sha2-256` with `key_version`
 pinned and `batch_input`, so the backfill makes one call per batch. It logs in

@@ -97,11 +97,11 @@ func localSalt(key []byte, profileID string) [32]byte {
 
 func TestTransitSalterAgainstVault(t *testing.T) {
 	endpoint, key := startVault(t)
-	t.Setenv("VAULT_TOKEN", vaultRootToken)
 	ctx := t.Context()
 
 	salter, err := accounts.NewTransitSalter(accounts.TransitConfig{
-		Address: endpoint, TransitMount: "transit", Key: transitKey, KeyVersion: 1,
+		Address: endpoint, AuthMethod: accounts.AuthToken, Token: vaultRootToken,
+		TransitMount: "transit", Key: transitKey, KeyVersion: 1,
 	})
 	require.NoError(t, err)
 
@@ -140,7 +140,8 @@ func TestTransitSalterAgainstVault(t *testing.T) {
 
 	// A version that does not exist is an error, never a different salt.
 	wrong, err := accounts.NewTransitSalter(accounts.TransitConfig{
-		Address: endpoint, TransitMount: "transit", Key: transitKey, KeyVersion: 9,
+		Address: endpoint, AuthMethod: accounts.AuthToken, Token: vaultRootToken,
+		TransitMount: "transit", Key: transitKey, KeyVersion: 9,
 	})
 	require.NoError(t, err)
 	_, err = wrong.Salt(ctx, "profile-one")

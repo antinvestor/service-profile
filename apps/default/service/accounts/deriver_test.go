@@ -24,9 +24,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stawilabs/stawi/pkg/protocol/derive"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/antinvestor/service-profile/apps/default/service/accounts/derive"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
 	"github.com/antinvestor/service-profile/apps/default/service/accounts"
@@ -203,4 +204,66 @@ func TestFromConfig(t *testing.T) {
 		})
 		require.ErrorIs(t, err, accounts.ErrAccountConfig)
 	})
+}
+
+func TestVaultAuthMethodSelection(t *testing.T) {
+	base := func() *config.ProfileConfig {
+		return &config.ProfileConfig{
+			VaultAddress: "http://127.0.0.1:8200", VaultTransitMount: "transit",
+			IdentityTransitKey: "stawi-identity", IdentityTransitKeyVer: 1,
+			VaultK8sAuthMount: "kubernetes", VaultGCPAuthMount: "gcp",
+		}
+	}
+	cases := []struct {
+		name    string
+		edit    func(c *config.ProfileConfig)
+		wantErr error
+	}{
+		{"kubernetes is the default and needs a role", func(*config.ProfileConfig) {}, accounts.ErrTransitConfig},
+		{"kubernetes with a role", func(c *config.ProfileConfig) { c.VaultK8sAuthRole = "service-profile" }, nil},
+		{"gcp needs a role", func(c *config.ProfileConfig) { c.VaultAuthMethod = "gcp" }, accounts.ErrTransitConfig},
+		{"gcp with a role", func(c *config.ProfileConfig) {
+			c.VaultAuthMethod = "GCP"
+			c.VaultGCPAuthRole = "service-profile"
+		}, nil},
+		{
+			"token needs VAULT_TOKEN",
+			func(c *config.ProfileConfig) { c.VaultAuthMethod = "token" },
+			accounts.ErrTransitConfig,
+		},
+		{"token outside production", func(c *config.ProfileConfig) {
+			c.VaultAuthMethod = "token"
+			c.VaultToken = "s.dev"
+		}, nil},
+		{"token refused in production", func(c *config.ProfileConfig) {
+			c.VaultAuthMethod = "token"
+			c.VaultToken = "s.prod"
+			c.DeploymentEnvironment = "production"
+		}, accounts.ErrTokenAuthInProduction},
+		{"token in production when explicitly allowed", func(c *config.ProfileConfig) {
+			c.VaultAuthMethod = "token"
+			c.VaultToken = "s.prod"
+			c.DeploymentEnvironment = "prod"
+			c.VaultAllowTokenAuth = true
+		}, nil},
+		{"unknown method", func(c *config.ProfileConfig) { c.VaultAuthMethod = "approle" }, accounts.ErrTransitConfig},
+		{"key version still required", func(c *config.ProfileConfig) {
+			c.VaultK8sAuthRole = "service-profile"
+			c.IdentityTransitKeyVer = 0
+		}, accounts.ErrTransitConfig},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg := base()
+			tc.edit(cfg)
+			salter, err := accounts.SalterFromConfig(cfg)
+			if tc.wantErr != nil {
+				require.ErrorIs(t, err, tc.wantErr)
+				return
+			}
+			require.NoError(t, err)
+			_, isTransit := salter.(*accounts.TransitSalter)
+			assert.True(t, isTransit)
+		})
+	}
 }

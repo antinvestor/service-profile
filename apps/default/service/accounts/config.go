@@ -29,6 +29,11 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/config"
 )
 
+// ErrTokenAuthInProduction refuses static Vault tokens in production unless
+// VAULT_ALLOW_TOKEN_AUTH=true.
+var ErrTokenAuthInProduction = errors.New(
+	"accounts: VAULT_AUTH_METHOD=token is refused in production unless VAULT_ALLOW_TOKEN_AUTH=true")
+
 // ErrStaticKeyInProduction refuses the static identity key in production.
 var ErrStaticKeyInProduction = errors.New(
 	"accounts: STAWI_IDENTITY_STATIC_KEY is refused in production; configure Vault Transit")
@@ -70,11 +75,20 @@ func SalterFromConfig(cfg *config.ProfileConfig) (Salter, error) {
 		if cfg.IdentityTransitKeyVer < 1 {
 			return nil, fmt.Errorf("%w: STAWI_IDENTITY_KEY_VERSION is required with VAULT_ADDR", ErrTransitConfig)
 		}
+		method := strings.ToLower(strings.TrimSpace(cfg.VaultAuthMethod))
+		if method == AuthToken && isProduction(cfg) && !cfg.VaultAllowTokenAuth {
+			return nil, ErrTokenAuthInProduction
+		}
 		return NewTransitSalter(TransitConfig{
 			Address:                 cfg.VaultAddress,
+			AuthMethod:              method,
 			AuthRole:                cfg.VaultK8sAuthRole,
 			AuthMount:               cfg.VaultK8sAuthMount,
 			ServiceAccountTokenPath: cfg.VaultK8sTokenPath,
+			GCPRole:                 cfg.VaultGCPAuthRole,
+			GCPMount:                cfg.VaultGCPAuthMount,
+			GCPServiceAccount:       cfg.VaultGCPServiceAccount,
+			Token:                   cfg.VaultToken,
 			TransitMount:            cfg.VaultTransitMount,
 			Key:                     cfg.IdentityTransitKey,
 			KeyVersion:              cfg.IdentityTransitKeyVer,

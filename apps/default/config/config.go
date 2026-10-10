@@ -52,14 +52,20 @@ type ProfileConfig struct {
 	// Identity salt (HMAC-SHA256 over "stawi/identity/v1" ‖ profile_id).
 	// Vault Transit when VAULT_ADDR is set; otherwise the static key; with
 	// neither, accounts are not derived.
-	VaultAddress          string `envDefault:""               env:"VAULT_ADDR"`
-	VaultK8sAuthRole      string `envDefault:""               env:"VAULT_K8S_AUTH_ROLE"`
-	VaultK8sAuthMount     string `envDefault:"kubernetes"     env:"VAULT_K8S_AUTH_MOUNT"`
-	VaultK8sTokenPath     string `envDefault:""               env:"VAULT_K8S_TOKEN_PATH"`
-	VaultTransitMount     string `envDefault:"transit"        env:"VAULT_TRANSIT_MOUNT"`
-	IdentityTransitKey    string `envDefault:"stawi-identity" env:"STAWI_IDENTITY_TRANSIT_KEY"`
-	IdentityTransitKeyVer int    `envDefault:"0"              env:"STAWI_IDENTITY_KEY_VERSION"`
-	IdentityStaticKeyHex  string `envDefault:""               env:"STAWI_IDENTITY_STATIC_KEY"`
+	VaultAddress           string `envDefault:""               env:"VAULT_ADDR"`
+	VaultAuthMethod        string `envDefault:"kubernetes"     env:"VAULT_AUTH_METHOD"`
+	VaultK8sAuthRole       string `envDefault:""               env:"VAULT_K8S_AUTH_ROLE"`
+	VaultK8sAuthMount      string `envDefault:"kubernetes"     env:"VAULT_K8S_AUTH_MOUNT"`
+	VaultK8sTokenPath      string `envDefault:""               env:"VAULT_K8S_TOKEN_PATH"`
+	VaultGCPAuthRole       string `envDefault:""               env:"VAULT_GCP_AUTH_ROLE"`
+	VaultGCPAuthMount      string `envDefault:"gcp"            env:"VAULT_GCP_AUTH_MOUNT"`
+	VaultGCPServiceAccount string `envDefault:""               env:"VAULT_GCP_SERVICE_ACCOUNT"`
+	VaultToken             string `envDefault:""               env:"VAULT_TOKEN"`
+	VaultAllowTokenAuth    bool   `envDefault:"false"          env:"VAULT_ALLOW_TOKEN_AUTH"`
+	VaultTransitMount      string `envDefault:"transit"        env:"VAULT_TRANSIT_MOUNT"`
+	IdentityTransitKey     string `envDefault:"stawi-identity" env:"STAWI_IDENTITY_TRANSIT_KEY"`
+	IdentityTransitKeyVer  int    `envDefault:"0"              env:"STAWI_IDENTITY_KEY_VERSION"`
+	IdentityStaticKeyHex   string `envDefault:""               env:"STAWI_IDENTITY_STATIC_KEY"`
 
 	// Account derivation inputs from the protocol manifest. The init code is
 	// keccak256(creation_code ‖ identity_salt_hash), so it differs per

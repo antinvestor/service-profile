@@ -29,8 +29,8 @@ The profile service repository contains code necessary to run the service that i
 ## Profile accounts
 
 A PERSON profile owns a chain account. The service derives the address from an
-identity salt kept in Vault Transit, using
-`github.com/stawilabs/stawi/pkg/protocol/derive`, and stores it on the profile
+identity salt kept in Vault Transit, using stawi's derivation code (vendored in
+`apps/default/service/accounts/derive`), and stores it on the profile
 (`ProfileObject.accounts`). Services map addresses back to profiles with
 `ResolveAccounts`, which needs the `account_resolve` permission (service role
 only). The service publishes `profile.account_created` and

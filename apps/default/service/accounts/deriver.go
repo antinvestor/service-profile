@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/stawilabs/stawi/pkg/protocol/derive"
+	"github.com/antinvestor/service-profile/apps/default/service/accounts/derive"
 )
 
 // FamilyEVM is the account family name stored and published; its on-chain
