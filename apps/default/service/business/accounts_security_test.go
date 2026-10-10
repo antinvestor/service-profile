@@ -24,6 +24,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/pitabwire/frame/v2"
 	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v2/datastore"
 	"github.com/pitabwire/frame/v2/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
@@ -32,7 +33,9 @@ import (
 
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
+	"github.com/antinvestor/service-profile/apps/default/service/repository"
 	"github.com/antinvestor/service-profile/apps/default/tests"
+	"github.com/antinvestor/service-profile/internal/outbox"
 )
 
 var errInjected = errors.New("injected failure after the account update")
@@ -227,4 +230,39 @@ func hexAddr(ctx context.Context, t *testing.T, svc *frame.Service, profileID st
 	require.NoError(t, err)
 	require.NotEmpty(t, rows)
 	return hex.EncodeToString(rows[0].Address)
+}
+
+// TestMergeIntoDeletedSurvivorChangesNothing: a survivor deleted after it was
+// read (e.g. merged away concurrently) receives nothing; the merge fails and
+// the merged profile keeps its account.
+func (pts *ProfileTestSuite) TestMergeIntoDeletedSurvivorChangesNothing() {
+	pts.WithTestDependancies(pts.T(), func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+		tn := newTenancy()
+		survivor := pts.createPersonIn(ctx, t, pb, tn)
+		merged := pts.createPersonIn(ctx, t, pb, tn)
+
+		repo := pts.profileRepo(ctx, svc)
+		target, err := repo.GetByID(ctx, survivor.GetId())
+		require.NoError(t, err)
+		merging, err := repo.GetByID(ctx, merged.GetId())
+		require.NoError(t, err)
+		require.NoError(t, repo.Delete(ctx, survivor.GetId()))
+
+		accountBiz := tests.NewAccountBusiness(ctx, svc, nil, 0, tests.AsService)
+		err = repo.Merge(ctx, target, merging, func(tx *gorm.DB) ([]*outbox.Event, error) {
+			_, moveErr := accountBiz.MoveOnMerge(tx, target, merging)
+			return nil, moveErr
+		})
+		require.Error(t, err)
+		requireUntouched(ctx, t, svc, merged.GetId())
+		_, err = pb.GetByID(ctx, merged.GetId())
+		require.NoError(t, err, "the merged profile is not deleted")
+	})
+}
+
+func (pts *ProfileTestSuite) profileRepo(ctx context.Context, svc *frame.Service) repository.ProfileRepository {
+	return repository.NewProfileRepository(ctx,
+		svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName), svc.WorkManager())
 }

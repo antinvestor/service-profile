@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
@@ -127,16 +128,37 @@ func (pr *profileRepository) Merge(
 	inTx func(tx *gorm.DB) ([]*outbox.Event, error),
 ) error {
 	return pr.Pool().DB(ctx, false).Transaction(func(tx *gorm.DB) error {
+		// Lock both profiles, in id order so concurrent merges of the same
+		// pair cannot deadlock, and require both to be live: a survivor
+		// deleted (or merged away) since it was read must not receive
+		// accounts.
+		ids := []string{target.GetID(), merging.GetID()}
+		sort.Strings(ids)
+		var live []string
+		if err := tx.Table("profiles").Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("id IN ? AND deleted_at IS NULL", ids).
+			Order("id asc").
+			Pluck("id", &live).Error; err != nil {
+			return err
+		}
+		if len(live) != len(ids) {
+			return gorm.ErrRecordNotFound
+		}
+
 		facts, err := inTx(tx)
 		if err != nil {
 			return err
 		}
 		now := time.Now().UTC()
-		if err = tx.Table("profiles").Where("id = ?", target.GetID()).
-			Updates(map[string]any{"properties": target.Properties, "modified_at": now}).Error; err != nil {
-			return err
+		res := tx.Table("profiles").Where("id = ? AND deleted_at IS NULL", target.GetID()).
+			Updates(map[string]any{"properties": target.Properties, "modified_at": now})
+		if res.Error != nil {
+			return res.Error
 		}
-		res := tx.Table("profiles").Where("id = ? AND deleted_at IS NULL", merging.GetID()).
+		if res.RowsAffected != 1 {
+			return gorm.ErrRecordNotFound
+		}
+		res = tx.Table("profiles").Where("id = ? AND deleted_at IS NULL", merging.GetID()).
 			Update("deleted_at", now)
 		if res.Error != nil {
 			return res.Error
