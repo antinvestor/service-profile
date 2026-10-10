@@ -9,7 +9,7 @@ info:
   license:
     name: Apache License
     url: https://github.com/antinvestor/apis/blob/master/LICENSE
-  version: v1.0.0
+  version: v1.1.0
 paths:
   /profile.v1.ProfileService/AddAddress:
     post:
@@ -22,13 +22,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -59,13 +62,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -96,13 +102,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -133,13 +142,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -170,13 +182,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -207,13 +222,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -244,13 +262,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -281,13 +302,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -318,13 +342,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -355,36 +382,49 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
         - name: message
           in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/profile.v1.GetByContactRequest'
         - name: encoding
           in: query
+          description: Define which encoding or 'Message-Codec' to use
           required: true
           schema:
             $ref: '#/components/schemas/encoding'
+          example: json
         - name: base64
           in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
           schema:
             $ref: '#/components/schemas/base64'
+          example: false
         - name: compression
           in: query
+          description: Which compression algorithm to use for this request
           schema:
             $ref: '#/components/schemas/compression'
+          example: gzip
         - name: connect
           in: query
+          description: Define the version of the Connect protocol
+          required: true
           schema:
             $ref: '#/components/schemas/connect'
+          example: v1
       responses:
         default:
           description: Error
@@ -404,17 +444,20 @@ paths:
         - profile.v1.ProfileService
       summary: Get profile by contact
       description: Retrieves a profile associated with a specific contact (email or phone number).
-      operationId: getProfileByContact
+      operationId: getProfileByContact2
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -445,36 +488,49 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
         - name: message
           in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/profile.v1.GetByIDAndPartitionRequest'
         - name: encoding
           in: query
+          description: Define which encoding or 'Message-Codec' to use
           required: true
           schema:
             $ref: '#/components/schemas/encoding'
+          example: json
         - name: base64
           in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
           schema:
             $ref: '#/components/schemas/base64'
+          example: false
         - name: compression
           in: query
+          description: Which compression algorithm to use for this request
           schema:
             $ref: '#/components/schemas/compression'
+          example: gzip
         - name: connect
           in: query
+          description: Define the version of the Connect protocol
+          required: true
           schema:
             $ref: '#/components/schemas/connect'
+          example: v1
       responses:
         default:
           description: Error
@@ -494,17 +550,20 @@ paths:
         - profile.v1.ProfileService
       summary: Get profile by ID and partition
       description: Retrieves a profile by ID with tenant-scoped properties merged into the base properties.
-      operationId: getProfileByIDAndPartition
+      operationId: getProfileByIDAndPartition2
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -535,36 +594,49 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
         - name: message
           in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/profile.v1.GetByIdRequest'
         - name: encoding
           in: query
+          description: Define which encoding or 'Message-Codec' to use
           required: true
           schema:
             $ref: '#/components/schemas/encoding'
+          example: json
         - name: base64
           in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
           schema:
             $ref: '#/components/schemas/base64'
+          example: false
         - name: compression
           in: query
+          description: Which compression algorithm to use for this request
           schema:
             $ref: '#/components/schemas/compression'
+          example: gzip
         - name: connect
           in: query
+          description: Define the version of the Connect protocol
+          required: true
           schema:
             $ref: '#/components/schemas/connect'
+          example: v1
       responses:
         default:
           description: Error
@@ -584,17 +656,20 @@ paths:
         - profile.v1.ProfileService
       summary: Get profile by ID
       description: Retrieves a complete profile by its unique identifier including contacts, addresses, and properties.
-      operationId: getProfileById
+      operationId: getProfileById2
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -625,36 +700,49 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
         - name: message
           in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/profile.v1.GetContactsRequest'
         - name: encoding
           in: query
+          description: Define which encoding or 'Message-Codec' to use
           required: true
           schema:
             $ref: '#/components/schemas/encoding'
+          example: json
         - name: base64
           in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
           schema:
             $ref: '#/components/schemas/base64'
+          example: false
         - name: compression
           in: query
+          description: Which compression algorithm to use for this request
           schema:
             $ref: '#/components/schemas/compression'
+          example: gzip
         - name: connect
           in: query
+          description: Define the version of the Connect protocol
+          required: true
           schema:
             $ref: '#/components/schemas/connect'
+          example: v1
       responses:
         default:
           description: Error
@@ -674,17 +762,20 @@ paths:
         - profile.v1.ProfileService
       summary: Get contacts by id
       description: Fetches ContactObjects for one or more contact ids regardless of profile attachment. Use a single id for one contact, or many for batch resolve (e.g. product-stored cv_contact_ids).
-      operationId: getContacts
+      operationId: getContacts2
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -716,13 +807,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -753,36 +847,49 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
         - name: message
           in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/profile.v1.PropertyHistoryRequest'
         - name: encoding
           in: query
+          description: Define which encoding or 'Message-Codec' to use
           required: true
           schema:
             $ref: '#/components/schemas/encoding'
+          example: json
         - name: base64
           in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
           schema:
             $ref: '#/components/schemas/base64'
+          example: false
         - name: compression
           in: query
+          description: Which compression algorithm to use for this request
           schema:
             $ref: '#/components/schemas/compression'
+          example: gzip
         - name: connect
           in: query
+          description: Define the version of the Connect protocol
+          required: true
           schema:
             $ref: '#/components/schemas/connect'
+          example: v1
       responses:
         default:
           description: Error
@@ -802,17 +909,20 @@ paths:
         - profile.v1.ProfileService
       summary: Get property change history
       description: Returns the change history for a specific property key on a profile, filtered by caller tenant visibility.
-      operationId: propertyHistory
+      operationId: propertyHistory2
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -843,13 +953,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -880,13 +993,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -906,6 +1022,112 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/profile.v1.RemoveRosterResponse'
+  /profile.v1.ProfileService/ResolveAccounts:
+    get:
+      tags:
+        - Accounts
+        - profile.v1.ProfileService
+      summary: Resolve account owners
+      description: Maps up to 500 chain account addresses to the profiles that own them. Service accounts only; addresses no profile owns are omitted.
+      operationId: resolveAccounts
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          description: Define the version of the Connect protocol
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
+        - name: Connect-Timeout-Ms
+          in: header
+          description: Define the timeout, in ms
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
+        - name: message
+          in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.ResolveAccountsRequest'
+        - name: encoding
+          in: query
+          description: Define which encoding or 'Message-Codec' to use
+          required: true
+          schema:
+            $ref: '#/components/schemas/encoding'
+          example: json
+        - name: base64
+          in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
+          schema:
+            $ref: '#/components/schemas/base64'
+          example: false
+        - name: compression
+          in: query
+          description: Which compression algorithm to use for this request
+          schema:
+            $ref: '#/components/schemas/compression'
+          example: gzip
+        - name: connect
+          in: query
+          description: Define the version of the Connect protocol
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect'
+          example: v1
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.ResolveAccountsResponse'
+    post:
+      tags:
+        - Accounts
+        - profile.v1.ProfileService
+      summary: Resolve account owners
+      description: Maps up to 500 chain account addresses to the profiles that own them. Service accounts only; addresses no profile owns are omitted.
+      operationId: resolveAccounts2
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          description: Define the version of the Connect protocol
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
+        - name: Connect-Timeout-Ms
+          in: header
+          description: Define the timeout, in ms
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profile.v1.ResolveAccountsRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.ResolveAccountsResponse'
   /profile.v1.ProfileService/Search: {}
   /profile.v1.ProfileService/SearchRoster: {}
   /profile.v1.ProfileService/Update:
@@ -919,13 +1141,16 @@ paths:
       parameters:
         - name: Connect-Protocol-Version
           in: header
-          required: true
+          description: Define the version of the Connect protocol
           schema:
             $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
         - name: Connect-Timeout-Ms
           in: header
+          description: Define the timeout, in ms
           schema:
             $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
       requestBody:
         content:
           application/json:
@@ -949,6 +1174,8 @@ components:
   schemas:
     base64:
       type: boolean
+      examples:
+        - false
       title: base64
       description: Specifies if the message query param is base64 encoded, which may be required for binary data
     common.v1.STATE:
@@ -965,6 +1192,8 @@ components:
          This enum provides a consistent way to track entity states from creation to deletion.
          buf:lint:ignore ENUM_VALUE_PREFIX
     compression:
+      examples:
+        - gzip
       title: compression
       enum:
         - identity
@@ -972,19 +1201,23 @@ components:
         - br
       description: Which compression algorithm to use for this request
     connect:
+      examples:
+        - v1
       title: connect
       enum:
         - v1
       description: Define the version of the Connect protocol
     connect-protocol-version:
       type: number
-      title: Connect-Protocol-Version
-      enum:
+      examples:
         - 1
+      title: Connect-Protocol-Version
       description: Define the version of the Connect protocol
       const: 1
     connect-timeout-header:
       type: number
+      examples:
+        - 1000
       title: Connect-Timeout-Ms
       description: Define the timeout, in ms
     connect.error:
@@ -1028,44 +1261,31 @@ components:
       properties:
         type:
           type: string
-          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`. This is used to determine the schema of the data in the `value` field and is the discriminator for the `debug` field.'
+          description: 'A URL that acts as a globally unique identifier for the type of the serialized message. For example: `type.googleapis.com/google.rpc.ErrorInfo`.'
         value:
           type: string
-          format: binary
+          format: byte
           description: The Protobuf message, serialized as bytes and base64-encoded. The specific message type is identified by the `type` field.
         debug:
-          oneOf:
-            - type: object
-              title: Any
-              additionalProperties: true
-              description: Detailed error information.
-          discriminator:
-            propertyName: type
+          type: object
           title: Debug
+          additionalProperties: true
           description: Deserialized error detail payload. The 'type' field indicates the schema. This field is for easier debugging and should not be relied upon for application logic.
       additionalProperties: true
       description: Contains an arbitrary serialized message along with a @type that describes the type of the serialized message, with an additional debug field for ConnectRPC error details.
     encoding:
+      examples:
+        - json
       title: encoding
       enum:
         - proto
         - json
       description: Define which encoding or 'Message-Codec' to use
     google.protobuf.ListValue:
-      type: object
-      properties:
-        values:
-          type: array
-          items:
-            $ref: '#/components/schemas/google.protobuf.Value'
-          title: values
-          description: Repeated field of dynamically typed values.
-      title: ListValue
-      additionalProperties: false
-      description: |-
-        `ListValue` is a wrapper around a repeated field of values.
-
-         The JSON representation for `ListValue` is JSON array.
+      type: array
+      items:
+        $ref: '#/components/schemas/google.protobuf.Value'
+      description: A JSON array whose elements may be any JSON value.
     google.protobuf.NullValue:
       type: string
       title: NullValue
@@ -1080,122 +1300,14 @@ components:
       type: object
       additionalProperties:
         $ref: '#/components/schemas/google.protobuf.Value'
-      description: |-
-        `Struct` represents a structured data value, consisting of fields
-         which map to dynamically typed values. In some languages, `Struct`
-         might be supported by a native representation. For example, in
-         scripting languages like JS a struct is represented as an
-         object. The details of that representation are described together
-         with the proto support for the language.
-
-         The JSON representation for `Struct` is JSON object.
-    google.protobuf.Struct.FieldsEntry:
-      type: object
-      properties:
-        key:
-          type: string
-          title: key
-        value:
-          title: value
-          $ref: '#/components/schemas/google.protobuf.Value'
-      title: FieldsEntry
-      additionalProperties: false
+      description: A JSON object whose property values may be any JSON value.
     google.protobuf.Timestamp:
       type: string
       examples:
         - "2023-01-15T01:30:15.01Z"
         - "2024-12-25T12:00:00Z"
       format: date-time
-      description: |-
-        A Timestamp represents a point in time independent of any time zone or local
-         calendar, encoded as a count of seconds and fractions of seconds at
-         nanosecond resolution. The count is relative to an epoch at UTC midnight on
-         January 1, 1970, in the proleptic Gregorian calendar which extends the
-         Gregorian calendar backwards to year one.
-
-         All minutes are 60 seconds long. Leap seconds are "smeared" so that no leap
-         second table is needed for interpretation, using a [24-hour linear
-         smear](https://developers.google.com/time/smear).
-
-         The range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By
-         restricting to that range, we ensure that we can convert to and from [RFC
-         3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.
-
-         # Examples
-
-         Example 1: Compute Timestamp from POSIX `time()`.
-
-             Timestamp timestamp;
-             timestamp.set_seconds(time(NULL));
-             timestamp.set_nanos(0);
-
-         Example 2: Compute Timestamp from POSIX `gettimeofday()`.
-
-             struct timeval tv;
-             gettimeofday(&tv, NULL);
-
-             Timestamp timestamp;
-             timestamp.set_seconds(tv.tv_sec);
-             timestamp.set_nanos(tv.tv_usec * 1000);
-
-         Example 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.
-
-             FILETIME ft;
-             GetSystemTimeAsFileTime(&ft);
-             UINT64 ticks = (((UINT64)ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
-
-             // A Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z
-             // is 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.
-             Timestamp timestamp;
-             timestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));
-             timestamp.set_nanos((INT32) ((ticks % 10000000) * 100));
-
-         Example 4: Compute Timestamp from Java `System.currentTimeMillis()`.
-
-             long millis = System.currentTimeMillis();
-
-             Timestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)
-                 .setNanos((int) ((millis % 1000) * 1000000)).build();
-
-         Example 5: Compute Timestamp from Java `Instant.now()`.
-
-             Instant now = Instant.now();
-
-             Timestamp timestamp =
-                 Timestamp.newBuilder().setSeconds(now.getEpochSecond())
-                     .setNanos(now.getNano()).build();
-
-         Example 6: Compute Timestamp from current time in Python.
-
-             timestamp = Timestamp()
-             timestamp.GetCurrentTime()
-
-         # JSON Mapping
-
-         In JSON format, the Timestamp type is encoded as a string in the
-         [RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the
-         format is "{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z"
-         where {year} is always expressed using four digits while {month}, {day},
-         {hour}, {min}, and {sec} are zero-padded to two digits each. The fractional
-         seconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),
-         are optional. The "Z" suffix indicates the timezone ("UTC"); the timezone
-         is required. A proto3 JSON serializer should always use UTC (as indicated by
-         "Z") when printing the Timestamp type and a proto3 JSON parser should be
-         able to accept both UTC and other timezones (as indicated by an offset).
-
-         For example, "2017-01-15T01:30:15.01Z" encodes 15.01 seconds past
-         01:30 UTC on January 15, 2017.
-
-         In JavaScript, one can convert a Date object to this format using the
-         standard
-         [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)
-         method. In Python, a standard `datetime.datetime` object can be converted
-         to this format using
-         [`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with
-         the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use
-         the Joda Time's [`ISODateTimeFormat.dateTime()`](
-         http://joda-time.sourceforge.net/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime()
-         ) to obtain a formatter capable of generating timestamps in this format.
+      description: A point in time in RFC 3339 format, with up to nanosecond precision. Output uses UTC (`Z`); input may use an offset from UTC.
     google.protobuf.Value:
       oneOf:
         - type: "null"
@@ -1205,13 +1317,21 @@ components:
         - type: array
         - type: object
           additionalProperties: true
-      description: |-
-        `Value` represents a dynamically typed value which can be either
-         null, a number, a string, a boolean, a recursive struct value, or a
-         list of values. A producer of value is expected to set one of these
-         variants. Absence of any variant indicates an error.
-
-         The JSON representation for `Value` is JSON value.
+      description: 'Any JSON value: `null`, number, string, boolean, array, or object.'
+    profile.v1.AccountOwner:
+      type: object
+      properties:
+        address:
+          type: string
+          title: address
+          description: Account address, lowercase 0x-prefixed hex.
+        profileId:
+          type: string
+          title: profile_id
+          description: Owning profile id.
+      title: AccountOwner
+      additionalProperties: false
+      description: AccountOwner is the profile that owns an address.
     profile.v1.AddAddressRequest:
       type: object
       properties:
@@ -1222,8 +1342,9 @@ components:
           minLength: 3
           pattern: '[0-9a-z_-]{3,40}'
         address:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.AddressObject'
           title: address
-          $ref: '#/components/schemas/profile.v1.AddressObject'
       title: AddAddressRequest
       additionalProperties: false
       description: The request message containing the information necessary to create a profile
@@ -1231,8 +1352,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: AddAddressResponse
       additionalProperties: false
     profile.v1.AddContactRequest:
@@ -1248,8 +1370,9 @@ components:
           type: string
           title: contact
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: AddContactRequest
       additionalProperties: false
       description: The request message containing the information necessary to create a profile
@@ -1257,8 +1380,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
         verificationId:
           type: string
           title: verification_id
@@ -1304,11 +1428,13 @@ components:
           minLength: 3
           pattern: '[0-9a-z_-]{3,40}'
         type:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.RelationshipType'
           title: type
-          $ref: '#/components/schemas/profile.v1.RelationshipType'
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: AddRelationshipRequest
       additionalProperties: false
       description: The request message containing the information necessary to create a profile
@@ -1316,8 +1442,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.RelationshipObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.RelationshipObject'
       title: AddRelationshipResponse
       additionalProperties: false
     profile.v1.AddRosterRequest:
@@ -1455,9 +1582,10 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Unique contact ID
         type:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ContactType'
           title: type
           description: Contact type (email or MSISDN)
-          $ref: '#/components/schemas/profile.v1.ContactType'
         detail:
           type: string
           title: detail
@@ -1467,17 +1595,20 @@ components:
           title: verified
           description: Whether contact has been verified
         communicationLevel:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.CommunicationLevel'
           title: communication_level
           description: User's communication preferences
-          $ref: '#/components/schemas/profile.v1.CommunicationLevel'
         state:
+          allOf:
+            - $ref: '#/components/schemas/common.v1.STATE'
           title: state
           description: Contact state
-          $ref: '#/components/schemas/common.v1.STATE'
         extra:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extra
           description: Additional metadata
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: ContactObject
       additionalProperties: false
       description: ContactObject represents a contact method (email or phone).
@@ -1503,8 +1634,9 @@ components:
           type: string
           title: contact
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: CreateContactRequest
       additionalProperties: false
       description: The request message containing the information necessary to create a profile
@@ -1512,8 +1644,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ContactObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ContactObject'
       title: CreateContactResponse
       additionalProperties: false
     profile.v1.CreateContactVerificationRequest:
@@ -1559,16 +1692,20 @@ components:
       type: object
       properties:
         type:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileType'
           title: type
-          $ref: '#/components/schemas/profile.v1.ProfileType'
+          description: |
+            enum.defined_only = true
         contact:
           type: string
           title: contact
           maxLength: 255
           minLength: 3
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: CreateRequest
       additionalProperties: false
       description: The request message containing the information necessary to create a profile
@@ -1576,8 +1713,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: CreateResponse
       additionalProperties: false
     profile.v1.DeleteRelationshipRequest:
@@ -1602,8 +1740,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.RelationshipObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.RelationshipObject'
       title: DeleteRelationshipResponse
       additionalProperties: false
     profile.v1.EntryItem:
@@ -1633,8 +1772,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: GetByContactResponse
       additionalProperties: false
     profile.v1.GetByIDAndPartitionRequest:
@@ -1652,8 +1792,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: GetByIDAndPartitionResponse
       additionalProperties: false
     profile.v1.GetByIdRequest:
@@ -1672,8 +1813,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: GetByIdResponse
       additionalProperties: false
     profile.v1.GetContactsRequest:
@@ -1782,10 +1924,46 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: MergeResponse
       additionalProperties: false
+    profile.v1.ProfileAccount:
+      type: object
+      properties:
+        address:
+          type: string
+          title: address
+          description: Account address, lowercase 0x-prefixed hex (20 bytes).
+        family:
+          type: string
+          title: family
+          description: Account family; "EVM" in protocol v1.
+        version:
+          type: integer
+          title: version
+          description: Protocol account version the address was derived for.
+        identitySaltHash:
+          type: string
+          title: identity_salt_hash
+          format: byte
+          description: |-
+            keccak256 of the profile's identity salt (32 bytes); the StawiAccount
+             constructor argument.
+        primary:
+          type: boolean
+          title: primary
+          description: |-
+            True for the account derived for this profile; false for accounts that
+             arrived through a merge.
+      title: ProfileAccount
+      additionalProperties: false
+      description: |-
+        ProfileAccount is a chain account derived for a profile:
+         address = CREATE2(factory, ACCOUNT_SALT(family, version, identity_salt_hash),
+         keccak256(creation_code || identity_salt_hash)). The identity salt itself
+         never leaves the profile service.
     profile.v1.ProfileObject:
       type: object
       properties:
@@ -1797,13 +1975,15 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Unique profile ID
         type:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileType'
           title: type
           description: Profile type (person, institution, bot)
-          $ref: '#/components/schemas/profile.v1.ProfileType'
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
           description: Profile properties (name, bio, avatar, etc.)
-          $ref: '#/components/schemas/google.protobuf.Struct'
         contacts:
           type: array
           items:
@@ -1817,9 +1997,18 @@ components:
           title: addresses
           description: Associated addresses
         state:
+          allOf:
+            - $ref: '#/components/schemas/common.v1.STATE'
           title: state
           description: Profile state
-          $ref: '#/components/schemas/common.v1.STATE'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/profile.v1.ProfileAccount'
+          title: accounts
+          description: |-
+            Chain accounts the profile owns, primary first. Only PERSON profiles
+             own accounts; a merge adds the merged profile's accounts as secondary.
       title: ProfileObject
       additionalProperties: false
       description: ProfileObject represents a complete user or entity profile.
@@ -1849,8 +2038,9 @@ components:
           type: string
           title: created_by
         createdAt:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Timestamp'
           title: created_at
-          $ref: '#/components/schemas/google.protobuf.Timestamp'
         scoped:
           type: boolean
           title: scoped
@@ -1884,8 +2074,9 @@ components:
           type: string
           title: contact
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: RawContact
       additionalProperties: false
     profile.v1.RelationshipObject:
@@ -1899,25 +2090,30 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Unique relationship ID
         type:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.RelationshipType'
           title: type
           description: Relationship type
-          $ref: '#/components/schemas/profile.v1.RelationshipType'
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
           description: Relationship properties
-          $ref: '#/components/schemas/google.protobuf.Struct'
         childEntry:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.EntryItem'
           title: child_entry
           description: Child entry in relationship
-          $ref: '#/components/schemas/profile.v1.EntryItem'
         parentEntry:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.EntryItem'
           title: parent_entry
           description: Parent entry in relationship
-          $ref: '#/components/schemas/profile.v1.EntryItem'
         peerProfile:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: peer_profile
           description: Peer profile information
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: RelationshipObject
       additionalProperties: false
       description: RelationshipObject represents a relationship between two profiles.
@@ -1947,8 +2143,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: RemoveContactResponse
       additionalProperties: false
     profile.v1.RemoveRosterRequest:
@@ -1970,10 +2167,39 @@ components:
       type: object
       properties:
         roster:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.RosterObject'
           title: roster
-          $ref: '#/components/schemas/profile.v1.RosterObject'
       title: RemoveRosterResponse
       additionalProperties: false
+    profile.v1.ResolveAccountsRequest:
+      type: object
+      properties:
+        addresses:
+          type: array
+          items:
+            type: string
+            pattern: ^0[xX][0-9a-fA-F]{40}$
+          title: addresses
+          maxItems: 500
+          minItems: 1
+          description: 0x-prefixed hex addresses, any case (max 500).
+      title: ResolveAccountsRequest
+      additionalProperties: false
+      description: ResolveAccountsRequest maps chain account addresses to profiles.
+    profile.v1.ResolveAccountsResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/profile.v1.AccountOwner'
+          title: data
+      title: ResolveAccountsResponse
+      additionalProperties: false
+      description: |-
+        ResolveAccountsResponse lists the owners of the known addresses. Addresses
+         no profile owns are omitted.
     profile.v1.RosterObject:
       type: object
       properties:
@@ -1992,13 +2218,15 @@ components:
           pattern: '[0-9a-z_-]{3,40}'
           description: Profile ID of the contact
         contact:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ContactObject'
           title: contact
           description: Contact information
-          $ref: '#/components/schemas/profile.v1.ContactObject'
         extra:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extra
           description: Additional metadata
-          $ref: '#/components/schemas/google.protobuf.Struct'
         name:
           type: string
           title: name
@@ -2013,9 +2241,7 @@ components:
           type: string
           title: query
         page:
-          type:
-            - integer
-            - string
+          type: string
           title: page
           format: int64
         count:
@@ -2034,8 +2260,9 @@ components:
             type: string
           title: properties
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
-          $ref: '#/components/schemas/google.protobuf.Struct'
       title: SearchRequest
       additionalProperties: false
     profile.v1.SearchResponse:
@@ -2055,9 +2282,7 @@ components:
           type: string
           title: query
         page:
-          type:
-            - integer
-            - string
+          type: string
           title: page
           format: int64
         count:
@@ -2076,8 +2301,9 @@ components:
             type: string
           title: properties
         extras:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: extras
-          $ref: '#/components/schemas/google.protobuf.Struct'
         profileId:
           type: string
           title: profile_id
@@ -2110,11 +2336,13 @@ components:
           minLength: 3
           pattern: '[0-9a-z_-]{3,40}'
         properties:
+          allOf:
+            - $ref: '#/components/schemas/google.protobuf.Struct'
           title: properties
-          $ref: '#/components/schemas/google.protobuf.Struct'
         state:
+          allOf:
+            - $ref: '#/components/schemas/common.v1.STATE'
           title: state
-          $ref: '#/components/schemas/common.v1.STATE'
         scoped:
           type: boolean
           title: scoped
@@ -2125,8 +2353,9 @@ components:
       type: object
       properties:
         data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
           title: data
-          $ref: '#/components/schemas/profile.v1.ProfileObject'
       title: UpdateResponse
       additionalProperties: false
   securitySchemes:

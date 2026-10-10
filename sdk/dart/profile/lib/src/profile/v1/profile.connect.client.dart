@@ -154,6 +154,26 @@ extension type ProfileServiceClient (connect.Transport _transport) {
     );
   }
 
+  /// GetContacts resolves one or many contacts by id, whether standalone or
+  /// attached to a profile. Missing ids are listed in missing_ids; found
+  /// contacts are returned in data (order not guaranteed).
+  Future<profilev1profile.GetContactsResponse> getContacts(
+    profilev1profile.GetContactsRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.ProfileService.getContacts,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// CreateContactVerification initiates contact verification.
   Future<profilev1profile.CreateContactVerificationResponse> createContactVerification(
     profilev1profile.CreateContactVerificationRequest input, {
@@ -362,6 +382,26 @@ extension type ProfileServiceClient (connect.Transport _transport) {
   }) {
     return connect.Client(_transport).unary(
       specs.ProfileService.propertyHistory,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
+  /// ResolveAccounts maps chain account addresses to the profiles that own
+  /// them. Service-to-service only (account_resolve is bound to ROLE_SERVICE
+  /// alone); unknown addresses are omitted from the response.
+  Future<profilev1profile.ResolveAccountsResponse> resolveAccounts(
+    profilev1profile.ResolveAccountsRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.ProfileService.resolveAccounts,
       input,
       signal: signal,
       headers: headers,

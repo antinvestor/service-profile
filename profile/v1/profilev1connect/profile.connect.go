@@ -105,6 +105,9 @@ const (
 	// ProfileServicePropertyHistoryProcedure is the fully-qualified name of the ProfileService's
 	// PropertyHistory RPC.
 	ProfileServicePropertyHistoryProcedure = "/profile.v1.ProfileService/PropertyHistory"
+	// ProfileServiceResolveAccountsProcedure is the fully-qualified name of the ProfileService's
+	// ResolveAccounts RPC.
+	ProfileServiceResolveAccountsProcedure = "/profile.v1.ProfileService/ResolveAccounts"
 )
 
 // ProfileServiceClient is a client for the profile.v1.ProfileService service.
@@ -153,6 +156,10 @@ type ProfileServiceClient interface {
 	GetByIDAndPartition(context.Context, *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error)
 	// PropertyHistory returns the change history for a specific property key on a profile.
 	PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error)
+	// ResolveAccounts maps chain account addresses to the profiles that own
+	// them. Service-to-service only (account_resolve is bound to ROLE_SERVICE
+	// alone); unknown addresses are omitted from the response.
+	ResolveAccounts(context.Context, *connect.Request[v1.ResolveAccountsRequest]) (*connect.Response[v1.ResolveAccountsResponse], error)
 }
 
 // NewProfileServiceClient constructs a client for the profile.v1.ProfileService service. By
@@ -300,6 +307,13 @@ func NewProfileServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 			connect.WithClientOptions(opts...),
 		),
+		resolveAccounts: connect.NewClient[v1.ResolveAccountsRequest, v1.ResolveAccountsResponse](
+			httpClient,
+			baseURL+ProfileServiceResolveAccountsProcedure,
+			connect.WithSchema(profileServiceMethods.ByName("ResolveAccounts")),
+			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -326,6 +340,7 @@ type profileServiceClient struct {
 	listRelationship          *connect.Client[v1.ListRelationshipRequest, v1.ListRelationshipResponse]
 	getByIDAndPartition       *connect.Client[v1.GetByIDAndPartitionRequest, v1.GetByIDAndPartitionResponse]
 	propertyHistory           *connect.Client[v1.PropertyHistoryRequest, v1.PropertyHistoryResponse]
+	resolveAccounts           *connect.Client[v1.ResolveAccountsRequest, v1.ResolveAccountsResponse]
 }
 
 // GetById calls profile.v1.ProfileService.GetById.
@@ -433,6 +448,11 @@ func (c *profileServiceClient) PropertyHistory(ctx context.Context, req *connect
 	return c.propertyHistory.CallUnary(ctx, req)
 }
 
+// ResolveAccounts calls profile.v1.ProfileService.ResolveAccounts.
+func (c *profileServiceClient) ResolveAccounts(ctx context.Context, req *connect.Request[v1.ResolveAccountsRequest]) (*connect.Response[v1.ResolveAccountsResponse], error) {
+	return c.resolveAccounts.CallUnary(ctx, req)
+}
+
 // ProfileServiceHandler is an implementation of the profile.v1.ProfileService service.
 type ProfileServiceHandler interface {
 	// GetById retrieves a profile by its unique ID.
@@ -479,6 +499,10 @@ type ProfileServiceHandler interface {
 	GetByIDAndPartition(context.Context, *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error)
 	// PropertyHistory returns the change history for a specific property key on a profile.
 	PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error)
+	// ResolveAccounts maps chain account addresses to the profiles that own
+	// them. Service-to-service only (account_resolve is bound to ROLE_SERVICE
+	// alone); unknown addresses are omitted from the response.
+	ResolveAccounts(context.Context, *connect.Request[v1.ResolveAccountsRequest]) (*connect.Response[v1.ResolveAccountsResponse], error)
 }
 
 // NewProfileServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -622,6 +646,13 @@ func NewProfileServiceHandler(svc ProfileServiceHandler, opts ...connect.Handler
 		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
 		connect.WithHandlerOptions(opts...),
 	)
+	profileServiceResolveAccountsHandler := connect.NewUnaryHandler(
+		ProfileServiceResolveAccountsProcedure,
+		svc.ResolveAccounts,
+		connect.WithSchema(profileServiceMethods.ByName("ResolveAccounts")),
+		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/profile.v1.ProfileService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ProfileServiceGetByIdProcedure:
@@ -666,6 +697,8 @@ func NewProfileServiceHandler(svc ProfileServiceHandler, opts ...connect.Handler
 			profileServiceGetByIDAndPartitionHandler.ServeHTTP(w, r)
 		case ProfileServicePropertyHistoryProcedure:
 			profileServicePropertyHistoryHandler.ServeHTTP(w, r)
+		case ProfileServiceResolveAccountsProcedure:
+			profileServiceResolveAccountsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -757,4 +790,8 @@ func (UnimplementedProfileServiceHandler) GetByIDAndPartition(context.Context, *
 
 func (UnimplementedProfileServiceHandler) PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.PropertyHistory is not implemented"))
+}
+
+func (UnimplementedProfileServiceHandler) ResolveAccounts(context.Context, *connect.Request[v1.ResolveAccountsRequest]) (*connect.Response[v1.ResolveAccountsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.ResolveAccounts is not implemented"))
 }

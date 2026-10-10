@@ -29,6 +29,7 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
   $async.Future<$8.UpdateResponse> update($pb.ServerContext ctx, $8.UpdateRequest request);
   $async.Future<$8.AddContactResponse> addContact($pb.ServerContext ctx, $8.AddContactRequest request);
   $async.Future<$8.CreateContactResponse> createContact($pb.ServerContext ctx, $8.CreateContactRequest request);
+  $async.Future<$8.GetContactsResponse> getContacts($pb.ServerContext ctx, $8.GetContactsRequest request);
   $async.Future<$8.CreateContactVerificationResponse> createContactVerification($pb.ServerContext ctx, $8.CreateContactVerificationRequest request);
   $async.Future<$8.CheckVerificationResponse> checkVerification($pb.ServerContext ctx, $8.CheckVerificationRequest request);
   $async.Future<$8.RemoveContactResponse> removeContact($pb.ServerContext ctx, $8.RemoveContactRequest request);
@@ -41,6 +42,7 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
   $async.Future<$8.ListRelationshipResponse> listRelationship($pb.ServerContext ctx, $8.ListRelationshipRequest request);
   $async.Future<$8.GetByIDAndPartitionResponse> getByIDAndPartition($pb.ServerContext ctx, $8.GetByIDAndPartitionRequest request);
   $async.Future<$8.PropertyHistoryResponse> propertyHistory($pb.ServerContext ctx, $8.PropertyHistoryRequest request);
+  $async.Future<$8.ResolveAccountsResponse> resolveAccounts($pb.ServerContext ctx, $8.ResolveAccountsRequest request);
 
   $pb.GeneratedMessage createRequest($core.String methodName) {
     switch (methodName) {
@@ -52,6 +54,7 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
       case 'Update': return $8.UpdateRequest();
       case 'AddContact': return $8.AddContactRequest();
       case 'CreateContact': return $8.CreateContactRequest();
+      case 'GetContacts': return $8.GetContactsRequest();
       case 'CreateContactVerification': return $8.CreateContactVerificationRequest();
       case 'CheckVerification': return $8.CheckVerificationRequest();
       case 'RemoveContact': return $8.RemoveContactRequest();
@@ -64,6 +67,7 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
       case 'ListRelationship': return $8.ListRelationshipRequest();
       case 'GetByIDAndPartition': return $8.GetByIDAndPartitionRequest();
       case 'PropertyHistory': return $8.PropertyHistoryRequest();
+      case 'ResolveAccounts': return $8.ResolveAccountsRequest();
       default: throw $core.ArgumentError('Unknown method: $methodName');
     }
   }
@@ -78,6 +82,7 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
       case 'Update': return this.update(ctx, request as $8.UpdateRequest);
       case 'AddContact': return this.addContact(ctx, request as $8.AddContactRequest);
       case 'CreateContact': return this.createContact(ctx, request as $8.CreateContactRequest);
+      case 'GetContacts': return this.getContacts(ctx, request as $8.GetContactsRequest);
       case 'CreateContactVerification': return this.createContactVerification(ctx, request as $8.CreateContactVerificationRequest);
       case 'CheckVerification': return this.checkVerification(ctx, request as $8.CheckVerificationRequest);
       case 'RemoveContact': return this.removeContact(ctx, request as $8.RemoveContactRequest);
@@ -90,6 +95,7 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
       case 'ListRelationship': return this.listRelationship(ctx, request as $8.ListRelationshipRequest);
       case 'GetByIDAndPartition': return this.getByIDAndPartition(ctx, request as $8.GetByIDAndPartitionRequest);
       case 'PropertyHistory': return this.propertyHistory(ctx, request as $8.PropertyHistoryRequest);
+      case 'ResolveAccounts': return this.resolveAccounts(ctx, request as $8.ResolveAccountsRequest);
       default: throw $core.ArgumentError('Unknown method: $methodName');
     }
   }

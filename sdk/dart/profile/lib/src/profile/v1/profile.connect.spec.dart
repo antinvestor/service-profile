@@ -79,6 +79,17 @@ abstract final class ProfileService {
     profilev1profile.CreateContactResponse.new,
   );
 
+  /// GetContacts resolves one or many contacts by id, whether standalone or
+  /// attached to a profile. Missing ids are listed in missing_ids; found
+  /// contacts are returned in data (order not guaranteed).
+  static const getContacts = connect.Spec(
+    '/$name/GetContacts',
+    connect.StreamType.unary,
+    profilev1profile.GetContactsRequest.new,
+    profilev1profile.GetContactsResponse.new,
+    idempotency: connect.Idempotency.noSideEffects,
+  );
+
   /// CreateContactVerification initiates contact verification.
   static const createContactVerification = connect.Spec(
     '/$name/CreateContactVerification',
@@ -176,6 +187,17 @@ abstract final class ProfileService {
     connect.StreamType.unary,
     profilev1profile.PropertyHistoryRequest.new,
     profilev1profile.PropertyHistoryResponse.new,
+    idempotency: connect.Idempotency.noSideEffects,
+  );
+
+  /// ResolveAccounts maps chain account addresses to the profiles that own
+  /// them. Service-to-service only (account_resolve is bound to ROLE_SERVICE
+  /// alone); unknown addresses are omitted from the response.
+  static const resolveAccounts = connect.Spec(
+    '/$name/ResolveAccounts',
+    connect.StreamType.unary,
+    profilev1profile.ResolveAccountsRequest.new,
+    profilev1profile.ResolveAccountsResponse.new,
     idempotency: connect.Idempotency.noSideEffects,
   );
 }
