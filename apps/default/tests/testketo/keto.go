@@ -71,6 +71,7 @@ class service_profile implements Namespace {
     granted_location_ingest: (profile_user | service_profile)[]
     granted_settings_manage: (profile_user | service_profile)[]
     granted_settings_view: (profile_user | service_profile)[]
+    granted_account_resolve: (profile_user | service_profile)[]
   }
 
   permits = {
@@ -164,6 +165,10 @@ class service_profile implements Namespace {
       this.related.viewer.includes(ctx.subject) ||
       this.related.member.includes(ctx.subject) ||
       this.related.granted_settings_view.includes(ctx.subject),
+
+    account_resolve: (ctx: Context): boolean =>
+      this.related.service.includes(ctx.subject) ||
+      this.related.granted_account_resolve.includes(ctx.subject),
   }
 }
 `

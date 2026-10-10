@@ -18,6 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
+	"github.com/antinvestor/service-profile/apps/default/service/accounts"
 	"github.com/antinvestor/service-profile/apps/default/service/business"
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
@@ -51,6 +52,27 @@ func (pts *ProfileTestSuite) getProfileBusiness(
 	ctx context.Context,
 	svc *frame.Service,
 ) (business.ProfileBusiness, repository.VerificationRepository) {
+	return pts.getProfileBusinessWith(ctx, svc, tests.NewTestDeriver(pts.T()))
+}
+
+// getProfileBusinessWith builds the profile business with the given account
+// deriver (nil disables account derivation); every caller sees accounts as a
+// service principal would.
+func (pts *ProfileTestSuite) getProfileBusinessWith(
+	ctx context.Context,
+	svc *frame.Service,
+	deriver *accounts.Deriver,
+) (business.ProfileBusiness, repository.VerificationRepository) {
+	return pts.getProfileBusinessWithAccounts(ctx, svc, tests.NewAccountBusiness(ctx, svc, deriver, 0, tests.AsService))
+}
+
+// getProfileBusinessWithAccounts builds the profile business over the given
+// account business.
+func (pts *ProfileTestSuite) getProfileBusinessWithAccounts(
+	ctx context.Context,
+	svc *frame.Service,
+	accountBiz business.AccountBusiness,
+) (business.ProfileBusiness, repository.VerificationRepository) {
 	evtsMan := svc.EventsManager()
 	workMan := svc.WorkManager()
 	dbPool := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName)
@@ -83,6 +105,7 @@ func (pts *ProfileTestSuite) getProfileBusiness(
 		addressBusiness,
 		profileRepo,
 		propertyEntryRepo,
+		accountBiz,
 	), verificationRepo
 }
 

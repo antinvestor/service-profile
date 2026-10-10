@@ -90,6 +90,17 @@ func (ar *addressRepository) CountryGetByISO3(
 	return country, err
 }
 
+func (ar *addressRepository) CountryGetByISO2(
+	ctx context.Context,
+	iso2 string,
+) (*models.Country, error) {
+	// Countries are global seed data. Skip tenancy scoping.
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
+	country := &models.Country{}
+	err := ar.Pool().DB(unscopedCtx, true).Where("iso2 = ?", iso2).First(country).Error
+	return country, err
+}
+
 func (ar *addressRepository) CountryGetByAny(
 	ctx context.Context,
 	c string,

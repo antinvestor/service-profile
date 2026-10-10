@@ -470,6 +470,7 @@ class ProfileObject extends $pb.GeneratedMessage {
     $core.Iterable<ContactObject>? contacts,
     $core.Iterable<AddressObject>? addresses,
     $7.STATE? state,
+    $core.Iterable<ProfileAccount>? accounts,
   }) {
     final $result = create();
     if (id != null) {
@@ -490,6 +491,9 @@ class ProfileObject extends $pb.GeneratedMessage {
     if (state != null) {
       $result.state = state;
     }
+    if (accounts != null) {
+      $result.accounts.addAll(accounts);
+    }
     return $result;
   }
   ProfileObject._() : super();
@@ -503,6 +507,7 @@ class ProfileObject extends $pb.GeneratedMessage {
     ..pc<ContactObject>(4, _omitFieldNames ? '' : 'contacts', $pb.PbFieldType.PM, subBuilder: ContactObject.create)
     ..pc<AddressObject>(5, _omitFieldNames ? '' : 'addresses', $pb.PbFieldType.PM, subBuilder: AddressObject.create)
     ..e<$7.STATE>(6, _omitFieldNames ? '' : 'state', $pb.PbFieldType.OE, defaultOrMaker: $7.STATE.CREATED, valueOf: $7.STATE.valueOf, enumValues: $7.STATE.values)
+    ..pc<ProfileAccount>(7, _omitFieldNames ? '' : 'accounts', $pb.PbFieldType.PM, subBuilder: ProfileAccount.create)
     ..hasRequiredFields = false
   ;
 
@@ -570,6 +575,128 @@ class ProfileObject extends $pb.GeneratedMessage {
   $core.bool hasState() => $_has(5);
   @$pb.TagNumber(6)
   void clearState() => clearField(6);
+
+  /// Chain accounts the profile owns, primary first. Only PERSON profiles
+  /// own accounts; a merge adds the merged profile's accounts as secondary.
+  @$pb.TagNumber(7)
+  $core.List<ProfileAccount> get accounts => $_getList(6);
+}
+
+/// ProfileAccount is a chain account derived for a profile:
+/// address = CREATE2(factory, ACCOUNT_SALT(family, version, identity_salt_hash),
+/// keccak256(creation_code || identity_salt_hash)). The identity salt itself
+/// never leaves the profile service.
+class ProfileAccount extends $pb.GeneratedMessage {
+  factory ProfileAccount({
+    $core.String? address,
+    $core.String? family,
+    $core.int? version,
+    $core.List<$core.int>? identitySaltHash,
+    $core.bool? primary,
+  }) {
+    final $result = create();
+    if (address != null) {
+      $result.address = address;
+    }
+    if (family != null) {
+      $result.family = family;
+    }
+    if (version != null) {
+      $result.version = version;
+    }
+    if (identitySaltHash != null) {
+      $result.identitySaltHash = identitySaltHash;
+    }
+    if (primary != null) {
+      $result.primary = primary;
+    }
+    return $result;
+  }
+  ProfileAccount._() : super();
+  factory ProfileAccount.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ProfileAccount.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ProfileAccount', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'address')
+    ..aOS(2, _omitFieldNames ? '' : 'family')
+    ..a<$core.int>(3, _omitFieldNames ? '' : 'version', $pb.PbFieldType.OU3)
+    ..a<$core.List<$core.int>>(4, _omitFieldNames ? '' : 'identitySaltHash', $pb.PbFieldType.OY)
+    ..aOB(5, _omitFieldNames ? '' : 'primary')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ProfileAccount clone() => ProfileAccount()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ProfileAccount copyWith(void Function(ProfileAccount) updates) => super.copyWith((message) => updates(message as ProfileAccount)) as ProfileAccount;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ProfileAccount create() => ProfileAccount._();
+  ProfileAccount createEmptyInstance() => create();
+  static $pb.PbList<ProfileAccount> createRepeated() => $pb.PbList<ProfileAccount>();
+  @$core.pragma('dart2js:noInline')
+  static ProfileAccount getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ProfileAccount>(create);
+  static ProfileAccount? _defaultInstance;
+
+  /// Account address, lowercase 0x-prefixed hex (20 bytes).
+  @$pb.TagNumber(1)
+  $core.String get address => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set address($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasAddress() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAddress() => clearField(1);
+
+  /// Account family; "EVM" in protocol v1.
+  @$pb.TagNumber(2)
+  $core.String get family => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set family($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasFamily() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFamily() => clearField(2);
+
+  /// Protocol account version the address was derived for.
+  @$pb.TagNumber(3)
+  $core.int get version => $_getIZ(2);
+  @$pb.TagNumber(3)
+  set version($core.int v) { $_setUnsignedInt32(2, v); }
+  @$pb.TagNumber(3)
+  $core.bool hasVersion() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearVersion() => clearField(3);
+
+  /// keccak256 of the profile's identity salt (32 bytes); the StawiAccount
+  /// constructor argument.
+  @$pb.TagNumber(4)
+  $core.List<$core.int> get identitySaltHash => $_getN(3);
+  @$pb.TagNumber(4)
+  set identitySaltHash($core.List<$core.int> v) { $_setBytes(3, v); }
+  @$pb.TagNumber(4)
+  $core.bool hasIdentitySaltHash() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearIdentitySaltHash() => clearField(4);
+
+  /// True for the account derived for this profile; false for accounts that
+  /// arrived through a merge.
+  @$pb.TagNumber(5)
+  $core.bool get primary => $_getBF(4);
+  @$pb.TagNumber(5)
+  set primary($core.bool v) { $_setBool(4, v); }
+  @$pb.TagNumber(5)
+  $core.bool hasPrimary() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearPrimary() => clearField(5);
 }
 
 /// EntryItem identifies an object in a relationship.
@@ -1718,6 +1845,265 @@ class CreateContactResponse extends $pb.GeneratedMessage {
   void clearData() => clearField(1);
   @$pb.TagNumber(1)
   ContactObject ensureData() => $_ensure(0);
+}
+
+/// GetContactsRequest resolves contacts by id (one or many).
+class GetContactsRequest extends $pb.GeneratedMessage {
+  factory GetContactsRequest({
+    $core.Iterable<$core.String>? ids,
+  }) {
+    final $result = create();
+    if (ids != null) {
+      $result.ids.addAll(ids);
+    }
+    return $result;
+  }
+  GetContactsRequest._() : super();
+  factory GetContactsRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetContactsRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetContactsRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..pPS(1, _omitFieldNames ? '' : 'ids')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetContactsRequest clone() => GetContactsRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetContactsRequest copyWith(void Function(GetContactsRequest) updates) => super.copyWith((message) => updates(message as GetContactsRequest)) as GetContactsRequest;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetContactsRequest create() => GetContactsRequest._();
+  GetContactsRequest createEmptyInstance() => create();
+  static $pb.PbList<GetContactsRequest> createRepeated() => $pb.PbList<GetContactsRequest>();
+  @$core.pragma('dart2js:noInline')
+  static GetContactsRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetContactsRequest>(create);
+  static GetContactsRequest? _defaultInstance;
+
+  /// Contact ids to resolve. Pass one id or a batch (max 100).
+  @$pb.TagNumber(1)
+  $core.List<$core.String> get ids => $_getList(0);
+}
+
+class GetContactsResponse extends $pb.GeneratedMessage {
+  factory GetContactsResponse({
+    $core.Iterable<ContactObject>? data,
+    $core.Iterable<$core.String>? missingIds,
+  }) {
+    final $result = create();
+    if (data != null) {
+      $result.data.addAll(data);
+    }
+    if (missingIds != null) {
+      $result.missingIds.addAll(missingIds);
+    }
+    return $result;
+  }
+  GetContactsResponse._() : super();
+  factory GetContactsResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory GetContactsResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'GetContactsResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..pc<ContactObject>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.PM, subBuilder: ContactObject.create)
+    ..pPS(2, _omitFieldNames ? '' : 'missingIds')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  GetContactsResponse clone() => GetContactsResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  GetContactsResponse copyWith(void Function(GetContactsResponse) updates) => super.copyWith((message) => updates(message as GetContactsResponse)) as GetContactsResponse;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static GetContactsResponse create() => GetContactsResponse._();
+  GetContactsResponse createEmptyInstance() => create();
+  static $pb.PbList<GetContactsResponse> createRepeated() => $pb.PbList<GetContactsResponse>();
+  @$core.pragma('dart2js:noInline')
+  static GetContactsResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<GetContactsResponse>(create);
+  static GetContactsResponse? _defaultInstance;
+
+  /// Found contacts (standalone or profile-attached).
+  @$pb.TagNumber(1)
+  $core.List<ContactObject> get data => $_getList(0);
+
+  /// Requested ids that were not found or not readable.
+  @$pb.TagNumber(2)
+  $core.List<$core.String> get missingIds => $_getList(1);
+}
+
+/// ResolveAccountsRequest maps chain account addresses to profiles.
+class ResolveAccountsRequest extends $pb.GeneratedMessage {
+  factory ResolveAccountsRequest({
+    $core.Iterable<$core.String>? addresses,
+  }) {
+    final $result = create();
+    if (addresses != null) {
+      $result.addresses.addAll(addresses);
+    }
+    return $result;
+  }
+  ResolveAccountsRequest._() : super();
+  factory ResolveAccountsRequest.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ResolveAccountsRequest.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ResolveAccountsRequest', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..pPS(1, _omitFieldNames ? '' : 'addresses')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ResolveAccountsRequest clone() => ResolveAccountsRequest()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ResolveAccountsRequest copyWith(void Function(ResolveAccountsRequest) updates) => super.copyWith((message) => updates(message as ResolveAccountsRequest)) as ResolveAccountsRequest;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ResolveAccountsRequest create() => ResolveAccountsRequest._();
+  ResolveAccountsRequest createEmptyInstance() => create();
+  static $pb.PbList<ResolveAccountsRequest> createRepeated() => $pb.PbList<ResolveAccountsRequest>();
+  @$core.pragma('dart2js:noInline')
+  static ResolveAccountsRequest getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ResolveAccountsRequest>(create);
+  static ResolveAccountsRequest? _defaultInstance;
+
+  /// 0x-prefixed hex addresses, any case (max 500).
+  @$pb.TagNumber(1)
+  $core.List<$core.String> get addresses => $_getList(0);
+}
+
+/// AccountOwner is the profile that owns an address.
+class AccountOwner extends $pb.GeneratedMessage {
+  factory AccountOwner({
+    $core.String? address,
+    $core.String? profileId,
+  }) {
+    final $result = create();
+    if (address != null) {
+      $result.address = address;
+    }
+    if (profileId != null) {
+      $result.profileId = profileId;
+    }
+    return $result;
+  }
+  AccountOwner._() : super();
+  factory AccountOwner.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory AccountOwner.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'AccountOwner', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'address')
+    ..aOS(2, _omitFieldNames ? '' : 'profileId')
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  AccountOwner clone() => AccountOwner()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  AccountOwner copyWith(void Function(AccountOwner) updates) => super.copyWith((message) => updates(message as AccountOwner)) as AccountOwner;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static AccountOwner create() => AccountOwner._();
+  AccountOwner createEmptyInstance() => create();
+  static $pb.PbList<AccountOwner> createRepeated() => $pb.PbList<AccountOwner>();
+  @$core.pragma('dart2js:noInline')
+  static AccountOwner getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<AccountOwner>(create);
+  static AccountOwner? _defaultInstance;
+
+  /// Account address, lowercase 0x-prefixed hex.
+  @$pb.TagNumber(1)
+  $core.String get address => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set address($core.String v) { $_setString(0, v); }
+  @$pb.TagNumber(1)
+  $core.bool hasAddress() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearAddress() => clearField(1);
+
+  /// Owning profile id.
+  @$pb.TagNumber(2)
+  $core.String get profileId => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set profileId($core.String v) { $_setString(1, v); }
+  @$pb.TagNumber(2)
+  $core.bool hasProfileId() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearProfileId() => clearField(2);
+}
+
+/// ResolveAccountsResponse lists the owners of the known addresses. Addresses
+/// no profile owns are omitted.
+class ResolveAccountsResponse extends $pb.GeneratedMessage {
+  factory ResolveAccountsResponse({
+    $core.Iterable<AccountOwner>? data,
+  }) {
+    final $result = create();
+    if (data != null) {
+      $result.data.addAll(data);
+    }
+    return $result;
+  }
+  ResolveAccountsResponse._() : super();
+  factory ResolveAccountsResponse.fromBuffer($core.List<$core.int> i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromBuffer(i, r);
+  factory ResolveAccountsResponse.fromJson($core.String i, [$pb.ExtensionRegistry r = $pb.ExtensionRegistry.EMPTY]) => create()..mergeFromJson(i, r);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(_omitMessageNames ? '' : 'ResolveAccountsResponse', package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'), createEmptyInstance: create)
+    ..pc<AccountOwner>(1, _omitFieldNames ? '' : 'data', $pb.PbFieldType.PM, subBuilder: AccountOwner.create)
+    ..hasRequiredFields = false
+  ;
+
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.deepCopy] instead. '
+  'Will be removed in next major version')
+  ResolveAccountsResponse clone() => ResolveAccountsResponse()..mergeFromMessage(this);
+  @$core.Deprecated(
+  'Using this can add significant overhead to your binary. '
+  'Use [GeneratedMessageGenericExtensions.rebuild] instead. '
+  'Will be removed in next major version')
+  ResolveAccountsResponse copyWith(void Function(ResolveAccountsResponse) updates) => super.copyWith((message) => updates(message as ResolveAccountsResponse)) as ResolveAccountsResponse;
+
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ResolveAccountsResponse create() => ResolveAccountsResponse._();
+  ResolveAccountsResponse createEmptyInstance() => create();
+  static $pb.PbList<ResolveAccountsResponse> createRepeated() => $pb.PbList<ResolveAccountsResponse>();
+  @$core.pragma('dart2js:noInline')
+  static ResolveAccountsResponse getDefault() => _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ResolveAccountsResponse>(create);
+  static ResolveAccountsResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.List<AccountOwner> get data => $_getList(0);
 }
 
 /// The request message containing the information necessary to verify a contact
@@ -3670,6 +4056,9 @@ class ProfileServiceApi {
   $async.Future<CreateContactResponse> createContact($pb.ClientContext? ctx, CreateContactRequest request) =>
     _client.invoke<CreateContactResponse>(ctx, 'ProfileService', 'CreateContact', request, CreateContactResponse())
   ;
+  $async.Future<GetContactsResponse> getContacts($pb.ClientContext? ctx, GetContactsRequest request) =>
+    _client.invoke<GetContactsResponse>(ctx, 'ProfileService', 'GetContacts', request, GetContactsResponse())
+  ;
   $async.Future<CreateContactVerificationResponse> createContactVerification($pb.ClientContext? ctx, CreateContactVerificationRequest request) =>
     _client.invoke<CreateContactVerificationResponse>(ctx, 'ProfileService', 'CreateContactVerification', request, CreateContactVerificationResponse())
   ;
@@ -3705,6 +4094,9 @@ class ProfileServiceApi {
   ;
   $async.Future<PropertyHistoryResponse> propertyHistory($pb.ClientContext? ctx, PropertyHistoryRequest request) =>
     _client.invoke<PropertyHistoryResponse>(ctx, 'ProfileService', 'PropertyHistory', request, PropertyHistoryResponse())
+  ;
+  $async.Future<ResolveAccountsResponse> resolveAccounts($pb.ClientContext? ctx, ResolveAccountsRequest request) =>
+    _client.invoke<ResolveAccountsResponse>(ctx, 'ProfileService', 'ResolveAccounts', request, ResolveAccountsResponse())
   ;
 }
 

@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"sort"
+	"time"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 	"github.com/pitabwire/frame/v2/datastore"
@@ -79,12 +81,96 @@ func (pr *profileRepository) CreateWithFact(
 	profile *models.Profile,
 	fact func(*models.Profile) *outbox.Event,
 ) error {
+	return pr.CreateWithAccount(ctx, profile, nil, func(p *models.Profile) []*outbox.Event {
+		return []*outbox.Event{fact(p)}
+	})
+}
+
+// CreateWithAccount persists a profile, its primary account (when given) and
+// the facts describing them in one transaction: a person's account exists
+// exactly when the profile does. The account takes the profile's id and
+// tenancy.
+func (pr *profileRepository) CreateWithAccount(
+	ctx context.Context,
+	profile *models.Profile,
+	account *models.ProfileAccount,
+	facts func(*models.Profile) []*outbox.Event,
+) error {
 	profile.GenID(ctx)
 
 	return pr.Pool().DB(ctx, false).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(profile).Error; err != nil {
 			return err
 		}
-		return outbox.Enqueue(tx, fact(profile))
+		if account != nil {
+			account.ProfileID = profile.GetID()
+			account.TenantID = profile.TenantID
+			account.PartitionID = profile.PartitionID
+			account.AccessID = profile.AccessID
+			account.GenID(ctx)
+			if err := tx.Create(account).Error; err != nil {
+				return err
+			}
+		}
+		for _, evt := range facts(profile) {
+			if err := outbox.Enqueue(tx, evt); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+// Merge folds merging into target in one transaction (see the interface).
+func (pr *profileRepository) Merge(
+	ctx context.Context,
+	target, merging *models.Profile,
+	inTx func(tx *gorm.DB) ([]*outbox.Event, error),
+) error {
+	return pr.Pool().DB(ctx, false).Transaction(func(tx *gorm.DB) error {
+		// Lock both profiles, in id order so concurrent merges of the same
+		// pair cannot deadlock, and require both to be live: a survivor
+		// deleted (or merged away) since it was read must not receive
+		// accounts.
+		ids := []string{target.GetID(), merging.GetID()}
+		sort.Strings(ids)
+		var live []string
+		if err := tx.Table("profiles").Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("id IN ? AND deleted_at IS NULL", ids).
+			Order("id asc").
+			Pluck("id", &live).Error; err != nil {
+			return err
+		}
+		if len(live) != len(ids) {
+			return gorm.ErrRecordNotFound
+		}
+
+		facts, err := inTx(tx)
+		if err != nil {
+			return err
+		}
+		now := time.Now().UTC()
+		res := tx.Table("profiles").Where("id = ? AND deleted_at IS NULL", target.GetID()).
+			Updates(map[string]any{"properties": target.Properties, "modified_at": now})
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected != 1 {
+			return gorm.ErrRecordNotFound
+		}
+		res = tx.Table("profiles").Where("id = ? AND deleted_at IS NULL", merging.GetID()).
+			Update("deleted_at", now)
+		if res.Error != nil {
+			return res.Error
+		}
+		if res.RowsAffected != 1 {
+			return gorm.ErrRecordNotFound
+		}
+		for _, evt := range facts {
+			if err = outbox.Enqueue(tx, evt); err != nil {
+				return err
+			}
+		}
+		return nil
 	})
 }

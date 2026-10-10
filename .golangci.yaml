@@ -423,6 +423,10 @@ linters:
     presets:
       - std-error-handling
       - common-false-positives
+    # Vendored verbatim from stawi (pkg/protocol/derive); kept byte-identical
+    # to upstream and pinned by the contracts vector test instead.
+    paths:
+      - apps/default/service/accounts/derive/
     # Excluding configuration per-path, per-linter, per-text and per-source.
     rules:
       - source: 'TODO'

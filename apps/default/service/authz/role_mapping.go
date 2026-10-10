@@ -16,6 +16,9 @@ const (
 	PermissionContactsManage      = "contact_manage"
 	PermissionRosterManage        = "roster_manage"
 	PermissionRelationshipsManage = "relationship_manage"
+	// PermissionAccountResolve maps chain addresses to profiles. It is bound
+	// to the service role only.
+	PermissionAccountResolve = "account_resolve"
 )
 
 const (
@@ -59,7 +62,7 @@ func RolePermissions() map[string][]string {
 		RoleService: {
 			PermissionProfileView, PermissionProfileCreate, PermissionProfileUpdate,
 			PermissionProfilesMerge, PermissionContactsManage, PermissionRosterManage,
-			PermissionRelationshipsManage,
+			PermissionRelationshipsManage, PermissionAccountResolve,
 		},
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"github.com/pitabwire/frame/v2/data"
 	"github.com/pitabwire/frame/v2/datastore"
 	"github.com/pitabwire/frame/v2/workerpool"
+	"gorm.io/gorm"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 	"github.com/antinvestor/service-profile/internal/outbox"
@@ -28,6 +29,20 @@ type ProfileRepository interface {
 		ctx context.Context,
 		profile *models.Profile,
 		fact func(*models.Profile) *outbox.Event,
+	) error
+	CreateWithAccount(
+		ctx context.Context,
+		profile *models.Profile,
+		account *models.ProfileAccount,
+		facts func(*models.Profile) []*outbox.Event,
+	) error
+	// Merge folds merging into target in one transaction: inTx runs first
+	// on that transaction (moving accounts) and returns the facts to stage;
+	// then target's properties are saved and merging is deleted.
+	Merge(
+		ctx context.Context,
+		target, merging *models.Profile,
+		inTx func(tx *gorm.DB) ([]*outbox.Event, error),
 	) error
 }
 
@@ -91,6 +106,7 @@ type AddressRepository interface {
 	DeleteLink(ctx context.Context, id string) error
 
 	CountryGetByISO3(ctx context.Context, countryISO3 string) (*models.Country, error)
+	CountryGetByISO2(ctx context.Context, iso2 string) (*models.Country, error)
 	CountryGetByAny(ctx context.Context, c string) (*models.Country, error)
 	CountryGetByName(ctx context.Context, name string) (*models.Country, error)
 }
@@ -125,4 +141,24 @@ type RelationshipRepository interface {
 		ctx context.Context,
 		relationshipTypeID string,
 	) (*models.RelationshipType, error)
+}
+
+type ProfileAccountRepository interface {
+	datastore.BaseRepository[*models.ProfileAccount]
+	ListByProfileID(ctx context.Context, profileID string) ([]*models.ProfileAccount, error)
+	ListByAddresses(ctx context.Context, addresses [][]byte) ([]*models.ProfileAccount, error)
+	CreateWithFact(
+		ctx context.Context,
+		account *models.ProfileAccount,
+		fact func(*models.ProfileAccount) *outbox.Event,
+	) (bool, error)
+	// MoveToProfile runs on the caller's transaction and never commits.
+	MoveToProfile(tx *gorm.DB, from, to *models.Profile) ([]*models.ProfileAccount, error)
+	PersonProfilesWithoutAccount(
+		ctx context.Context,
+		profileTypeID, family string,
+		accountVersion uint32,
+		afterID string,
+		limit int,
+	) ([]*models.Profile, error)
 }
