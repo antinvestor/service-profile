@@ -35,7 +35,7 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/service/repository"
 )
 
-// TestIdentityKey keys the static salter in tests.
+// TestIdentityKey is K_identity in tests.
 const TestIdentityKey = "0123456789abcdef0123456789abcdef"
 
 // TestAccountParams are the factory, creation code and version of stawi's
@@ -61,10 +61,10 @@ func TestAccountParams(t *testing.T) accounts.Params {
 	return accounts.Params{Factory: factory, CreationCode: code, Version: v.AccountVersion}
 }
 
-// NewTestDeriver derives accounts with the static test key.
+// NewTestDeriver derives accounts with the test key.
 func NewTestDeriver(t *testing.T) *accounts.Deriver {
 	t.Helper()
-	salter, err := accounts.NewStaticSalter([]byte(TestIdentityKey))
+	salter, err := accounts.NewHMACSalter([]byte(TestIdentityKey))
 	require.NoError(t, err)
 	deriver, err := accounts.NewDeriver(salter, TestAccountParams(t))
 	require.NoError(t, err)
