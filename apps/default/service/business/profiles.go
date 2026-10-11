@@ -479,7 +479,7 @@ func (pb *profileBusiness) CreateProfile(
 	p.ProfileTypeID = pt.ID
 
 	// A person owns a chain account from the moment the profile exists. The
-	// salt comes from Vault, so it is computed before the transaction opens.
+	// account is derived before the transaction opens.
 	var account *models.ProfileAccount
 	if pt.UID == models.ProfileTypeIDMap[profilev1.ProfileType_PERSON] {
 		p.GenID(ctx)

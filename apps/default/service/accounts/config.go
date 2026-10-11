@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -29,82 +28,34 @@ import (
 	"github.com/antinvestor/service-profile/apps/default/config"
 )
 
-// ErrTokenAuthInProduction refuses static Vault tokens in production unless
-// VAULT_ALLOW_TOKEN_AUTH=true.
-var ErrTokenAuthInProduction = errors.New(
-	"accounts: VAULT_AUTH_METHOD=token is refused in production unless VAULT_ALLOW_TOKEN_AUTH=true")
-
-// ErrStaticKeyInProduction refuses the static identity key in production.
-var ErrStaticKeyInProduction = errors.New(
-	"accounts: STAWI_IDENTITY_STATIC_KEY is refused in production; configure Vault Transit")
-
 // FromConfig builds the deriver the configuration describes.
 //
-// With no salter configured (neither VAULT_ADDR nor STAWI_IDENTITY_STATIC_KEY)
-// it returns (nil, nil) and logs a warning: profiles are created without
+// With nothing configured (neither ACCOUNTS_SALT_FILE nor STAWI_ACCOUNT_*) it
+// returns (nil, nil) and logs a warning: profiles are created without
 // accounts, which is the development posture. A configuration that is present
-// but wrong is an error.
+// but wrong, including a key file that is missing, empty or under 32 bytes, is
+// an error, and the service refuses to start.
 func FromConfig(ctx context.Context, cfg *config.ProfileConfig) (*Deriver, error) {
-	salter, err := SalterFromConfig(cfg)
-	if err != nil {
-		return nil, err
-	}
 	accountConfigured := cfg.AccountFactory != "" ||
 		cfg.AccountCreationCode != "" || cfg.AccountCreationCodeFile != ""
 
-	if salter == nil {
+	if cfg.AccountsSaltFile == "" {
 		if accountConfigured {
-			return nil, fmt.Errorf("%w: STAWI_ACCOUNT_* is set but no identity salter "+
-				"(VAULT_ADDR or STAWI_IDENTITY_STATIC_KEY)", ErrAccountConfig)
+			return nil, fmt.Errorf("%w: STAWI_ACCOUNT_* is set but ACCOUNTS_SALT_FILE is not", ErrAccountConfig)
 		}
-		util.Log(ctx).Warn("no identity salter configured: profile accounts are not derived")
+		util.Log(ctx).Warn("ACCOUNTS_SALT_FILE is not set: profile accounts are not derived")
 		return nil, nil //nolint:nilnil // no deriver is a valid, logged state
 	}
 
+	salter, err := NewHMACSalterFromFile(cfg.AccountsSaltFile)
+	if err != nil {
+		return nil, fmt.Errorf("ACCOUNTS_SALT_FILE: %w", err)
+	}
 	params, err := ParamsFromConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 	return NewDeriver(salter, params)
-}
-
-// SalterFromConfig returns the Transit salter when VAULT_ADDR is set, the
-// static salter when STAWI_IDENTITY_STATIC_KEY is set, or nil.
-func SalterFromConfig(cfg *config.ProfileConfig) (Salter, error) {
-	if cfg.VaultAddress != "" {
-		if cfg.IdentityTransitKeyVer < 1 {
-			return nil, fmt.Errorf("%w: STAWI_IDENTITY_KEY_VERSION is required with VAULT_ADDR", ErrTransitConfig)
-		}
-		method := strings.ToLower(strings.TrimSpace(cfg.VaultAuthMethod))
-		if method == AuthToken && isProduction(cfg) && !cfg.VaultAllowTokenAuth {
-			return nil, ErrTokenAuthInProduction
-		}
-		return NewTransitSalter(TransitConfig{
-			Address:                 cfg.VaultAddress,
-			AuthMethod:              method,
-			AuthRole:                cfg.VaultK8sAuthRole,
-			AuthMount:               cfg.VaultK8sAuthMount,
-			ServiceAccountTokenPath: cfg.VaultK8sTokenPath,
-			GCPRole:                 cfg.VaultGCPAuthRole,
-			GCPMount:                cfg.VaultGCPAuthMount,
-			GCPServiceAccount:       cfg.VaultGCPServiceAccount,
-			Token:                   cfg.VaultToken,
-			TransitMount:            cfg.VaultTransitMount,
-			Key:                     cfg.IdentityTransitKey,
-			KeyVersion:              cfg.IdentityTransitKeyVer,
-		})
-	}
-	if cfg.IdentityStaticKeyHex == "" {
-		return nil, nil //nolint:nilnil // no salter configured
-	}
-	if isProduction(cfg) {
-		return nil, ErrStaticKeyInProduction
-	}
-	key, err := decodeHex(cfg.IdentityStaticKeyHex)
-	if err != nil {
-		return nil, fmt.Errorf("accounts: STAWI_IDENTITY_STATIC_KEY: %w", err)
-	}
-	return NewStaticSalter(key)
 }
 
 // ParamsFromConfig reads the factory, creation code and version.
@@ -146,16 +97,6 @@ func ParamsFromConfig(cfg *config.ProfileConfig) (Params, error) {
 		}
 	}
 	return p, nil
-}
-
-func isProduction(cfg *config.ProfileConfig) bool {
-	for _, env := range []string{cfg.DeploymentEnvironment, cfg.Environment()} {
-		switch strings.ToLower(strings.TrimSpace(env)) {
-		case "prod", "production":
-			return true
-		}
-	}
-	return false
 }
 
 func decodeHex(s string) ([]byte, error) {

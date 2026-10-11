@@ -26,9 +26,10 @@ address            = derive.AccountAddress(FamilyEVM, account_version, identity_
   verbatim), and by the upstream fixed-input tests. Linters skip the directory
   so the copy stays byte-identical.
 * `K_identity` is a root key and never rotates, because rotating it would move
-  every address. In production it stays inside Vault Transit. Only
-  `identity_salt_hash` and the address leave the service. The salt itself is
-  never stored or published.
+  every address. The service reads it once at startup from the file named by
+  `ACCOUNTS_SALT_FILE` and computes the HMAC in process. Only
+  `identity_salt_hash` and the address leave the service. The key and the salt
+  are never logged, stored or published.
 * The init code takes the identity salt hash as its constructor argument, so the
   init code hash is different for every profile. Because of that, the service
   needs the StawiAccount **creation code**; a single init code hash is not
@@ -37,8 +38,8 @@ address            = derive.AccountAddress(FamilyEVM, account_version, identity_
 ## Who gets an account
 
 * **PERSON** profiles: they get a primary account in the same transaction that
-  creates the profile. The salt is computed before that transaction opens. If
-  Vault is unavailable, the create fails with `UNAVAILABLE`, so a person never
+  creates the profile. The account is derived before that transaction opens. If
+  derivation fails, the create fails with `UNAVAILABLE`, so a person never
   exists without an account.
 * **BOT** and **INSTITUTION** profiles: they get no account.
 * **Existing profiles**: the `account-backfill` setup step derives an account
@@ -155,20 +156,7 @@ rejected with `INVALID_ARGUMENT`. The check applies on `Create` and on
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `VAULT_ADDR` | | Vault address; turns on the Transit salter |
-| `VAULT_AUTH_METHOD` | `kubernetes` | `kubernetes`, `gcp` (Cloud Run / GCE) or `token` |
-| `VAULT_K8S_AUTH_ROLE` | | Kubernetes auth role (required for `kubernetes`) |
-| `VAULT_K8S_AUTH_MOUNT` | `kubernetes` | Kubernetes auth mount |
-| `VAULT_K8S_TOKEN_PATH` | in-pod default | service-account token path |
-| `VAULT_GCP_AUTH_ROLE` | | GCP auth role (required for `gcp`); IAM login |
-| `VAULT_GCP_AUTH_MOUNT` | `gcp` | GCP auth mount |
-| `VAULT_GCP_SERVICE_ACCOUNT` | runtime account | service-account email to sign as; empty reads it from the metadata server |
-| `VAULT_TOKEN` | | token for `token` (dev servers); refused in prod |
-| `VAULT_ALLOW_TOKEN_AUTH` | `false` | `true` allows `token` in prod |
-| `VAULT_TRANSIT_MOUNT` | `transit` | Transit mount |
-| `STAWI_IDENTITY_TRANSIT_KEY` | `stawi-identity` | Transit key |
-| `STAWI_IDENTITY_KEY_VERSION` | | **required with Vault**; the pinned key version |
-| `STAWI_IDENTITY_STATIC_KEY` | | hex key (32 bytes or more) for tests and local stacks; refused when `ENVIRONMENT` or `SERVICE_ENVIRONMENT` is `prod`/`production` |
+| `ACCOUNTS_SALT_FILE` | | path of the file holding `K_identity`; turns accounts on. Its bytes are the key as stored (nothing is trimmed or decoded); 32 to 1024 bytes |
 | `STAWI_ACCOUNT_FACTORY` | | canonical `AccountFactory` address |
 | `STAWI_ACCOUNT_CREATION_CODE` | | StawiAccount creation code as hex (`AccountFactory.accountCreationCode()`) |
 | `STAWI_ACCOUNT_CREATION_CODE_FILE` | | the same, read from a file (for example a mounted ConfigMap) |
@@ -178,91 +166,45 @@ rejected with `INVALID_ARGUMENT`. The check applies on `Create` and on
 
 How the service behaves with each configuration:
 
-* **No salter configured** (neither `VAULT_ADDR` nor
-  `STAWI_IDENTITY_STATIC_KEY`): the service logs a warning and creates profiles
-  without accounts. This is the development posture.
-* **Account variables set, no salter**: the service refuses to start.
-* **Salter configured, account variables missing or malformed**: the service
-  refuses to start.
+* **Nothing configured** (neither `ACCOUNTS_SALT_FILE` nor `STAWI_ACCOUNT_*`):
+  the service logs a warning and creates profiles without accounts. This is
+  the development posture.
+* **Account variables set, no `ACCOUNTS_SALT_FILE`**: the service refuses to
+  start.
+* **`ACCOUNTS_SALT_FILE` set, but the file is missing, unreadable, empty,
+  under 32 bytes or over 1024 bytes**: the service refuses to start. The error
+  names the path and the size, never the contents.
+* **`ACCOUNTS_SALT_FILE` set, account variables missing or malformed**: the
+  service refuses to start.
 
-The setup job also needs the Vault and account variables, because it runs the
-backfill.
+The setup job also needs `ACCOUNTS_SALT_FILE` and the account variables,
+because it runs the backfill.
 
-## Vault setup
+## Key setup
 
-Create the Transit key once. It must not be exportable, and it must never be
-rotated:
-
-```sh
-vault secrets enable transit   # if not already enabled
-vault write -f transit/keys/stawi-identity type=aes256-gcm96 exportable=false allow_plaintext_backup=false
-vault read -field=latest_version transit/keys/stawi-identity   # -> STAWI_IDENTITY_KEY_VERSION (1)
-```
-
-Create a policy that allows the HMAC endpoint of this key and nothing else:
-
-```hcl
-# stawi-identity-hmac.hcl
-path "transit/hmac/stawi-identity" {
-  capabilities = ["update"]
-}
-path "transit/hmac/stawi-identity/sha2-256" {
-  capabilities = ["update"]
-}
-```
-
-Bind the policy to the service with Kubernetes auth:
+`K_identity` is 32 random bytes, generated once and kept forever:
 
 ```sh
-vault policy write stawi-identity-hmac stawi-identity-hmac.hcl
-vault write auth/kubernetes/role/service-profile \
-  bound_service_account_names=service-profile \
-  bound_service_account_namespaces=profile \
-  token_policies=stawi-identity-hmac \
-  token_ttl=1h token_max_ttl=4h
+openssl rand 32 > k_identity.bin
 ```
 
-Then set `VAULT_ADDR`, `VAULT_K8S_AUTH_ROLE=service-profile` and
-`STAWI_IDENTITY_KEY_VERSION=1` on both the service and its setup job.
-
-### Cloud Run (GCP IAM auth)
-
-Cloud Run has no Kubernetes service-account token, so use `gcp`. The service
-signs a JWT as its runtime service account through the IAM Credentials API
-(`signJwt`), and Vault verifies it.
-
-On GCP, the runtime service account of `identity-profile` and of the
-`identity-profile-migrate` job must be allowed to sign as itself:
+Store the raw bytes in your secret store and mount them as a file on the
+service and its setup job, then point `ACCOUNTS_SALT_FILE` at it. For example,
+on Google Cloud:
 
 ```sh
-SA=<runtime-sa>@stawi-identity.iam.gserviceaccount.com
-gcloud iam service-accounts add-iam-policy-binding "$SA" \
-  --member="serviceAccount:$SA" --role=roles/iam.serviceAccountTokenCreator
+gcloud secrets create identity-profile-accounts-salt --replication-policy=automatic
+gcloud secrets versions add identity-profile-accounts-salt --data-file=k_identity.bin
+shred -u k_identity.bin
 ```
 
-On Vault, enable the GCP auth method. Its credentials must be able to read
-service accounts and their keys (`iam.serviceAccounts.get`,
-`iam.serviceAccountKeys.get`). Then bind the same policy to a role:
+Rules for this key:
 
-```sh
-vault auth enable gcp
-vault write auth/gcp/config credentials=@vault-gcp-verifier.json
-vault write auth/gcp/role/service-profile \
-  type=iam \
-  bound_service_accounts="$SA" \
-  token_policies=stawi-identity-hmac \
-  max_jwt_exp=15m token_ttl=1h token_max_ttl=4h
-```
-
-Then set the following on both the service and the migrate job:
-
-* `VAULT_ADDR`
-* `VAULT_AUTH_METHOD=gcp`
-* `VAULT_GCP_AUTH_ROLE=service-profile`
-* `STAWI_IDENTITY_KEY_VERSION=1`
-
-`VAULT_GCP_SERVICE_ACCOUNT` is optional.
-
-The salter calls `transit/hmac/stawi-identity/sha2-256` with `key_version`
-pinned and `batch_input`, so the backfill makes one call per batch. It logs in
-again before the token expires.
+* Store the bytes exactly as generated. Do not hex-encode, base64-encode or
+  edit the file: the file's bytes are the key, so an added newline is a
+  different key and moves every address.
+* Never rotate it or add a new version with different bytes. Pin the mount to
+  a fixed version where the platform allows it.
+* Keep a backup in a second place (for example an offline copy or a team
+  password manager). Losing it means existing addresses can no longer be derived.
+* Only the profile service and its setup job may read it.

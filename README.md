@@ -29,7 +29,8 @@ The profile service repository contains code necessary to run the service that i
 ## Profile accounts
 
 A PERSON profile owns a chain account. The service derives the address from an
-identity salt kept in Vault Transit, using stawi's derivation code (vendored in
+identity salt keyed by a secret read from a mounted file (`ACCOUNTS_SALT_FILE`),
+using stawi's derivation code (vendored in
 `apps/default/service/accounts/derive`), and stores it on the profile
 (`ProfileObject.accounts`). Services map addresses back to profiles with
 `ResolveAccounts`, which needs the `account_resolve` permission (service role
@@ -38,7 +39,7 @@ only). The service publishes `profile.account_created` and
 
 The `jurisdiction` profile property takes an ISO 3166-1 alpha-2 code.
 
-For configuration and Vault setup, see
+For configuration and key setup, see
 [docs/PROFILE_ACCOUNTS.md](docs/PROFILE_ACCOUNTS.md).
 
 ## Development Setup

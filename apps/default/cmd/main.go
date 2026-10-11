@@ -68,9 +68,9 @@ func main() {
 		log.WithError(dekErr).Fatal("main -- Could not decode DEK encryption keys")
 	}
 
-	// Account derivation: nil (with a warning) when no identity salter is
-	// configured; a configuration that is present but wrong stops the
-	// process.
+	// Account derivation: nil (with a warning) when ACCOUNTS_SALT_FILE is
+	// unset; a configuration that is present but wrong (including a missing,
+	// empty or short key file) stops the process.
 	deriver, deriverErr := accounts.FromConfig(ctx, &cfg)
 	if deriverErr != nil {
 		log.WithError(deriverErr).Fatal("main -- Could not configure profile account derivation")
