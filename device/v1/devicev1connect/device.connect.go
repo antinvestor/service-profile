@@ -19,641 +19,814 @@
 package devicev1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "github.com/antinvestor/service-profile/device/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// DeviceServiceName is the fully-qualified name of the DeviceService service.
 	DeviceServiceName = "device.v1.DeviceService"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// DeviceServiceGetByIdProcedure is the fully-qualified name of the DeviceService's GetById RPC.
+	// DeviceServiceGetByIdProcedure is the procedure name of the DeviceService's GetById RPC.
 	DeviceServiceGetByIdProcedure = "/device.v1.DeviceService/GetById"
-	// DeviceServiceGetBySessionIdProcedure is the fully-qualified name of the DeviceService's
-	// GetBySessionId RPC.
-	DeviceServiceGetBySessionIdProcedure = "/device.v1.DeviceService/GetBySessionId"
-	// DeviceServiceSearchProcedure is the fully-qualified name of the DeviceService's Search RPC.
-	DeviceServiceSearchProcedure = "/device.v1.DeviceService/Search"
-	// DeviceServiceCreateProcedure is the fully-qualified name of the DeviceService's Create RPC.
-	DeviceServiceCreateProcedure = "/device.v1.DeviceService/Create"
-	// DeviceServiceUpdateProcedure is the fully-qualified name of the DeviceService's Update RPC.
-	DeviceServiceUpdateProcedure = "/device.v1.DeviceService/Update"
-	// DeviceServiceLinkProcedure is the fully-qualified name of the DeviceService's Link RPC.
-	DeviceServiceLinkProcedure = "/device.v1.DeviceService/Link"
-	// DeviceServiceRemoveProcedure is the fully-qualified name of the DeviceService's Remove RPC.
-	DeviceServiceRemoveProcedure = "/device.v1.DeviceService/Remove"
-	// DeviceServiceLogProcedure is the fully-qualified name of the DeviceService's Log RPC.
-	DeviceServiceLogProcedure = "/device.v1.DeviceService/Log"
-	// DeviceServiceListLogsProcedure is the fully-qualified name of the DeviceService's ListLogs RPC.
-	DeviceServiceListLogsProcedure = "/device.v1.DeviceService/ListLogs"
-	// DeviceServiceAddKeyProcedure is the fully-qualified name of the DeviceService's AddKey RPC.
-	DeviceServiceAddKeyProcedure = "/device.v1.DeviceService/AddKey"
-	// DeviceServiceRemoveKeyProcedure is the fully-qualified name of the DeviceService's RemoveKey RPC.
-	DeviceServiceRemoveKeyProcedure = "/device.v1.DeviceService/RemoveKey"
-	// DeviceServiceSearchKeyProcedure is the fully-qualified name of the DeviceService's SearchKey RPC.
-	DeviceServiceSearchKeyProcedure = "/device.v1.DeviceService/SearchKey"
-	// DeviceServiceRegisterKeyProcedure is the fully-qualified name of the DeviceService's RegisterKey
+	// DeviceServiceGetBySessionIdProcedure is the procedure name of the DeviceService's GetBySessionId
 	// RPC.
+	DeviceServiceGetBySessionIdProcedure = "/device.v1.DeviceService/GetBySessionId"
+	// DeviceServiceSearchProcedure is the procedure name of the DeviceService's Search RPC.
+	DeviceServiceSearchProcedure = "/device.v1.DeviceService/Search"
+	// DeviceServiceCreateProcedure is the procedure name of the DeviceService's Create RPC.
+	DeviceServiceCreateProcedure = "/device.v1.DeviceService/Create"
+	// DeviceServiceUpdateProcedure is the procedure name of the DeviceService's Update RPC.
+	DeviceServiceUpdateProcedure = "/device.v1.DeviceService/Update"
+	// DeviceServiceLinkProcedure is the procedure name of the DeviceService's Link RPC.
+	DeviceServiceLinkProcedure = "/device.v1.DeviceService/Link"
+	// DeviceServiceRemoveProcedure is the procedure name of the DeviceService's Remove RPC.
+	DeviceServiceRemoveProcedure = "/device.v1.DeviceService/Remove"
+	// DeviceServiceLogProcedure is the procedure name of the DeviceService's Log RPC.
+	DeviceServiceLogProcedure = "/device.v1.DeviceService/Log"
+	// DeviceServiceListLogsProcedure is the procedure name of the DeviceService's ListLogs RPC.
+	DeviceServiceListLogsProcedure = "/device.v1.DeviceService/ListLogs"
+	// DeviceServiceAddKeyProcedure is the procedure name of the DeviceService's AddKey RPC.
+	DeviceServiceAddKeyProcedure = "/device.v1.DeviceService/AddKey"
+	// DeviceServiceRemoveKeyProcedure is the procedure name of the DeviceService's RemoveKey RPC.
+	DeviceServiceRemoveKeyProcedure = "/device.v1.DeviceService/RemoveKey"
+	// DeviceServiceSearchKeyProcedure is the procedure name of the DeviceService's SearchKey RPC.
+	DeviceServiceSearchKeyProcedure = "/device.v1.DeviceService/SearchKey"
+	// DeviceServiceRegisterKeyProcedure is the procedure name of the DeviceService's RegisterKey RPC.
 	DeviceServiceRegisterKeyProcedure = "/device.v1.DeviceService/RegisterKey"
-	// DeviceServiceDeRegisterKeyProcedure is the fully-qualified name of the DeviceService's
-	// DeRegisterKey RPC.
+	// DeviceServiceDeRegisterKeyProcedure is the procedure name of the DeviceService's DeRegisterKey
+	// RPC.
 	DeviceServiceDeRegisterKeyProcedure = "/device.v1.DeviceService/DeRegisterKey"
-	// DeviceServiceGetTurnCredentialsProcedure is the fully-qualified name of the DeviceService's
+	// DeviceServiceGetTurnCredentialsProcedure is the procedure name of the DeviceService's
 	// GetTurnCredentials RPC.
 	DeviceServiceGetTurnCredentialsProcedure = "/device.v1.DeviceService/GetTurnCredentials"
-	// DeviceServiceNotifyProcedure is the fully-qualified name of the DeviceService's Notify RPC.
+	// DeviceServiceNotifyProcedure is the procedure name of the DeviceService's Notify RPC.
 	DeviceServiceNotifyProcedure = "/device.v1.DeviceService/Notify"
-	// DeviceServiceUpdatePresenceProcedure is the fully-qualified name of the DeviceService's
-	// UpdatePresence RPC.
+	// DeviceServiceUpdatePresenceProcedure is the procedure name of the DeviceService's UpdatePresence
+	// RPC.
 	DeviceServiceUpdatePresenceProcedure = "/device.v1.DeviceService/UpdatePresence"
+)
+
+var (
+	deviceServiceGetByIdSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("GetById"),
+			Procedure:        DeviceServiceGetByIdProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	deviceServiceGetBySessionIdSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("GetBySessionId"),
+			Procedure:        DeviceServiceGetBySessionIdProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	deviceServiceSearchSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeServer,
+			Schema:           v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("Search"),
+			Procedure:        DeviceServiceSearchProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	deviceServiceCreateSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("Create"),
+			Procedure:  DeviceServiceCreateProcedure,
+		}
+	})
+	deviceServiceUpdateSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("Update"),
+			Procedure:  DeviceServiceUpdateProcedure,
+		}
+	})
+	deviceServiceLinkSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("Link"),
+			Procedure:  DeviceServiceLinkProcedure,
+		}
+	})
+	deviceServiceRemoveSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("Remove"),
+			Procedure:  DeviceServiceRemoveProcedure,
+		}
+	})
+	deviceServiceLogSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("Log"),
+			Procedure:  DeviceServiceLogProcedure,
+		}
+	})
+	deviceServiceListLogsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeServer,
+			Schema:           v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("ListLogs"),
+			Procedure:        DeviceServiceListLogsProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	deviceServiceAddKeySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("AddKey"),
+			Procedure:  DeviceServiceAddKeyProcedure,
+		}
+	})
+	deviceServiceRemoveKeySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("RemoveKey"),
+			Procedure:  DeviceServiceRemoveKeyProcedure,
+		}
+	})
+	deviceServiceSearchKeySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("SearchKey"),
+			Procedure:        DeviceServiceSearchKeyProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	deviceServiceRegisterKeySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("RegisterKey"),
+			Procedure:  DeviceServiceRegisterKeyProcedure,
+		}
+	})
+	deviceServiceDeRegisterKeySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("DeRegisterKey"),
+			Procedure:  DeviceServiceDeRegisterKeyProcedure,
+		}
+	})
+	deviceServiceGetTurnCredentialsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("GetTurnCredentials"),
+			Procedure:  DeviceServiceGetTurnCredentialsProcedure,
+		}
+	})
+	deviceServiceNotifySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("Notify"),
+			Procedure:  DeviceServiceNotifyProcedure,
+		}
+	})
+	deviceServiceUpdatePresenceSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods().ByName("UpdatePresence"),
+			Procedure:  DeviceServiceUpdatePresenceProcedure,
+		}
+	})
 )
 
 // DeviceServiceClient is a client for the device.v1.DeviceService service.
 type DeviceServiceClient interface {
 	// GetById retrieves one or more devices by their unique identifiers.
 	// Supports batch retrieval for efficiency.
-	GetById(context.Context, *connect.Request[v1.GetByIdRequest]) (*connect.Response[v1.GetByIdResponse], error)
+	GetById(context.Context, *v1.GetByIdRequest) (*v1.GetByIdResponse, error)
 	// GetBySessionId retrieves a device by its active session identifier.
 	// Useful for resolving devices from session tokens.
-	GetBySessionId(context.Context, *connect.Request[v1.GetBySessionIdRequest]) (*connect.Response[v1.GetBySessionIdResponse], error)
+	GetBySessionId(context.Context, *v1.GetBySessionIdRequest) (*v1.GetBySessionIdResponse, error)
 	// Search finds devices matching specified criteria.
 	// Supports filtering by date range, properties, and full-text search.
-	Search(context.Context, *connect.Request[v1.SearchRequest]) (*connect.ServerStreamForClient[v1.SearchResponse], error)
+	Search(context.Context, *v1.SearchRequest) (DeviceServiceSearchClientStream, error)
 	// Create registers a new device in the system.
 	// Returns a unique device ID that should be stored by the client.
-	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error)
+	Create(context.Context, *v1.CreateRequest) (*v1.CreateResponse, error)
 	// Update modifies an existing device's information.
 	// Only the device owner or administrators can update device information.
-	Update(context.Context, *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error)
+	Update(context.Context, *v1.UpdateRequest) (*v1.UpdateResponse, error)
 	// Link associates a device with a user profile.
 	// Required before the device can be used for authenticated operations.
-	Link(context.Context, *connect.Request[v1.LinkRequest]) (*connect.Response[v1.LinkResponse], error)
+	Link(context.Context, *v1.LinkRequest) (*v1.LinkResponse, error)
 	// Remove deletes a device from the system.
 	// This operation cannot be undone.
-	Remove(context.Context, *connect.Request[v1.RemoveRequest]) (*connect.Response[v1.RemoveResponse], error)
+	Remove(context.Context, *v1.RemoveRequest) (*v1.RemoveResponse, error)
 	// Log creates a new activity log entry for a device.
 	// Used for session tracking and security auditing.
-	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
+	Log(context.Context, *v1.LogRequest) (*v1.LogResponse, error)
 	// ListLogs retrieves activity logs for a device.
 	// Returns a stream of log entries for the specified device.
-	ListLogs(context.Context, *connect.Request[v1.ListLogsRequest]) (*connect.ServerStreamForClient[v1.ListLogsResponse], error)
+	ListLogs(context.Context, *v1.ListLogsRequest) (DeviceServiceListLogsClientStream, error)
 	// AddKey stores a key or token and its material in the local storage for a device.
 	// This is used for keys generated by the service or when the service needs to manage the key material directly.
-	AddKey(context.Context, *connect.Request[v1.AddKeyRequest]) (*connect.Response[v1.AddKeyResponse], error)
+	AddKey(context.Context, *v1.AddKeyRequest) (*v1.AddKeyResponse, error)
 	// RemoveKey removes one or more keys or tokens from local storage.
 	// This does not handle deregistration from third-party services. For that, use DeRegisterKey.
-	RemoveKey(context.Context, *connect.Request[v1.RemoveKeyRequest]) (*connect.Response[v1.RemoveKeyResponse], error)
+	RemoveKey(context.Context, *v1.RemoveKeyRequest) (*v1.RemoveKeyResponse, error)
 	// SearchKey searches for keys or tokens associated with a device.
-	SearchKey(context.Context, *connect.Request[v1.SearchKeyRequest]) (*connect.Response[v1.SearchKeyResponse], error)
+	SearchKey(context.Context, *v1.SearchKeyRequest) (*v1.SearchKeyResponse, error)
 	// RegisterKey registers a key with a third-party service using an externally-generated key or token.
 	// This method handles the integration with the external service and stores metadata about the key,
 	// but not the key material itself. Use AddKey to store key material.
-	RegisterKey(context.Context, *connect.Request[v1.RegisterKeyRequest]) (*connect.Response[v1.RegisterKeyResponse], error)
+	RegisterKey(context.Context, *v1.RegisterKeyRequest) (*v1.RegisterKeyResponse, error)
 	// DeRegisterKey deregisters a key from a third-party service.
 	// This handles cleanup with the external service and removes the associated key metadata from local storage.
-	DeRegisterKey(context.Context, *connect.Request[v1.DeRegisterKeyRequest]) (*connect.Response[v1.DeRegisterKeyResponse], error)
+	DeRegisterKey(context.Context, *v1.DeRegisterKeyRequest) (*v1.DeRegisterKeyResponse, error)
 	// Returns short-lived TURN server credentials for WebRTC media relay.
 	// Credentials are generated per-request with a configurable TTL.
 	// The server should generate HMAC-based credentials using a shared
 	// secret with the TURN server (RFC 5766 long-term credentials).
-	GetTurnCredentials(context.Context, *connect.Request[v1.GetTurnCredentialsRequest]) (*connect.Response[v1.GetTurnCredentialsResponse], error)
+	GetTurnCredentials(context.Context, *v1.GetTurnCredentialsRequest) (*v1.GetTurnCredentialsResponse, error)
 	// Notify sends a notification to a device using one of its registered keys.
 	// The service selects an appropriate key based on key_type (e.g., FCM_TOKEN for push notifications).
 	// If key_id is provided, that specific key will be used; otherwise the service selects the best available key.
-	Notify(context.Context, *connect.Request[v1.NotifyRequest]) (*connect.Response[v1.NotifyResponse], error)
+	Notify(context.Context, *v1.NotifyRequest) (*v1.NotifyResponse, error)
 	// UpdatePresence updates the presence status of a device.
 	// Used to track online/offline status and availability for real-time features.
-	UpdatePresence(context.Context, *connect.Request[v1.UpdatePresenceRequest]) (*connect.Response[v1.UpdatePresenceResponse], error)
+	UpdatePresence(context.Context, *v1.UpdatePresenceRequest) (*v1.UpdatePresenceResponse, error)
 }
 
-// NewDeviceServiceClient constructs a client for the device.v1.DeviceService service. By default,
-// it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and
-// sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC()
-// or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewDeviceServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) DeviceServiceClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	deviceServiceMethods := v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods()
-	return &deviceServiceClient{
-		getById: connect.NewClient[v1.GetByIdRequest, v1.GetByIdResponse](
-			httpClient,
-			baseURL+DeviceServiceGetByIdProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("GetById")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		getBySessionId: connect.NewClient[v1.GetBySessionIdRequest, v1.GetBySessionIdResponse](
-			httpClient,
-			baseURL+DeviceServiceGetBySessionIdProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("GetBySessionId")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		search: connect.NewClient[v1.SearchRequest, v1.SearchResponse](
-			httpClient,
-			baseURL+DeviceServiceSearchProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("Search")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		create: connect.NewClient[v1.CreateRequest, v1.CreateResponse](
-			httpClient,
-			baseURL+DeviceServiceCreateProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("Create")),
-			connect.WithClientOptions(opts...),
-		),
-		update: connect.NewClient[v1.UpdateRequest, v1.UpdateResponse](
-			httpClient,
-			baseURL+DeviceServiceUpdateProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("Update")),
-			connect.WithClientOptions(opts...),
-		),
-		link: connect.NewClient[v1.LinkRequest, v1.LinkResponse](
-			httpClient,
-			baseURL+DeviceServiceLinkProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("Link")),
-			connect.WithClientOptions(opts...),
-		),
-		remove: connect.NewClient[v1.RemoveRequest, v1.RemoveResponse](
-			httpClient,
-			baseURL+DeviceServiceRemoveProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("Remove")),
-			connect.WithClientOptions(opts...),
-		),
-		log: connect.NewClient[v1.LogRequest, v1.LogResponse](
-			httpClient,
-			baseURL+DeviceServiceLogProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("Log")),
-			connect.WithClientOptions(opts...),
-		),
-		listLogs: connect.NewClient[v1.ListLogsRequest, v1.ListLogsResponse](
-			httpClient,
-			baseURL+DeviceServiceListLogsProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("ListLogs")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		addKey: connect.NewClient[v1.AddKeyRequest, v1.AddKeyResponse](
-			httpClient,
-			baseURL+DeviceServiceAddKeyProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("AddKey")),
-			connect.WithClientOptions(opts...),
-		),
-		removeKey: connect.NewClient[v1.RemoveKeyRequest, v1.RemoveKeyResponse](
-			httpClient,
-			baseURL+DeviceServiceRemoveKeyProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("RemoveKey")),
-			connect.WithClientOptions(opts...),
-		),
-		searchKey: connect.NewClient[v1.SearchKeyRequest, v1.SearchKeyResponse](
-			httpClient,
-			baseURL+DeviceServiceSearchKeyProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("SearchKey")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		registerKey: connect.NewClient[v1.RegisterKeyRequest, v1.RegisterKeyResponse](
-			httpClient,
-			baseURL+DeviceServiceRegisterKeyProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("RegisterKey")),
-			connect.WithClientOptions(opts...),
-		),
-		deRegisterKey: connect.NewClient[v1.DeRegisterKeyRequest, v1.DeRegisterKeyResponse](
-			httpClient,
-			baseURL+DeviceServiceDeRegisterKeyProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("DeRegisterKey")),
-			connect.WithClientOptions(opts...),
-		),
-		getTurnCredentials: connect.NewClient[v1.GetTurnCredentialsRequest, v1.GetTurnCredentialsResponse](
-			httpClient,
-			baseURL+DeviceServiceGetTurnCredentialsProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("GetTurnCredentials")),
-			connect.WithClientOptions(opts...),
-		),
-		notify: connect.NewClient[v1.NotifyRequest, v1.NotifyResponse](
-			httpClient,
-			baseURL+DeviceServiceNotifyProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("Notify")),
-			connect.WithClientOptions(opts...),
-		),
-		updatePresence: connect.NewClient[v1.UpdatePresenceRequest, v1.UpdatePresenceResponse](
-			httpClient,
-			baseURL+DeviceServiceUpdatePresenceProcedure,
-			connect.WithSchema(deviceServiceMethods.ByName("UpdatePresence")),
-			connect.WithClientOptions(opts...),
-		),
+// NewDeviceServiceClient constructs a client for the device.v1.DeviceService service. Multiple
+// service clients may share a single connect.Client.
+func NewDeviceServiceClient(client *connect.Client) DeviceServiceClient {
+	return &deviceServiceClient{client: client}
+}
+
+// DeviceServiceSearchClientStream is the client stream for the DeviceService's Search RPC.
+type DeviceServiceSearchClientStream struct {
+	stream connect.ClientStream
+}
+
+// Receive returns the next response message from the server.
+func (s DeviceServiceSearchClientStream) Receive() (*v1.SearchResponse, error) {
+	var res v1.SearchResponse
+	if err := s.stream.Receive(&res); err != nil {
+		return nil, err
 	}
+	return &res, nil
 }
 
-// deviceServiceClient implements DeviceServiceClient.
-type deviceServiceClient struct {
-	getById            *connect.Client[v1.GetByIdRequest, v1.GetByIdResponse]
-	getBySessionId     *connect.Client[v1.GetBySessionIdRequest, v1.GetBySessionIdResponse]
-	search             *connect.Client[v1.SearchRequest, v1.SearchResponse]
-	create             *connect.Client[v1.CreateRequest, v1.CreateResponse]
-	update             *connect.Client[v1.UpdateRequest, v1.UpdateResponse]
-	link               *connect.Client[v1.LinkRequest, v1.LinkResponse]
-	remove             *connect.Client[v1.RemoveRequest, v1.RemoveResponse]
-	log                *connect.Client[v1.LogRequest, v1.LogResponse]
-	listLogs           *connect.Client[v1.ListLogsRequest, v1.ListLogsResponse]
-	addKey             *connect.Client[v1.AddKeyRequest, v1.AddKeyResponse]
-	removeKey          *connect.Client[v1.RemoveKeyRequest, v1.RemoveKeyResponse]
-	searchKey          *connect.Client[v1.SearchKeyRequest, v1.SearchKeyResponse]
-	registerKey        *connect.Client[v1.RegisterKeyRequest, v1.RegisterKeyResponse]
-	deRegisterKey      *connect.Client[v1.DeRegisterKeyRequest, v1.DeRegisterKeyResponse]
-	getTurnCredentials *connect.Client[v1.GetTurnCredentialsRequest, v1.GetTurnCredentialsResponse]
-	notify             *connect.Client[v1.NotifyRequest, v1.NotifyResponse]
-	updatePresence     *connect.Client[v1.UpdatePresenceRequest, v1.UpdatePresenceResponse]
+// Close releases the stream's resources. It is idempotent and is typically deferred to clean up a
+// stream abandoned before io.EOF.
+func (s DeviceServiceSearchClientStream) Close() error {
+	return s.stream.Close()
 }
 
-// GetById calls device.v1.DeviceService.GetById.
-func (c *deviceServiceClient) GetById(ctx context.Context, req *connect.Request[v1.GetByIdRequest]) (*connect.Response[v1.GetByIdResponse], error) {
-	return c.getById.CallUnary(ctx, req)
+// DeviceServiceListLogsClientStream is the client stream for the DeviceService's ListLogs RPC.
+type DeviceServiceListLogsClientStream struct {
+	stream connect.ClientStream
 }
 
-// GetBySessionId calls device.v1.DeviceService.GetBySessionId.
-func (c *deviceServiceClient) GetBySessionId(ctx context.Context, req *connect.Request[v1.GetBySessionIdRequest]) (*connect.Response[v1.GetBySessionIdResponse], error) {
-	return c.getBySessionId.CallUnary(ctx, req)
+// Receive returns the next response message from the server.
+func (s DeviceServiceListLogsClientStream) Receive() (*v1.ListLogsResponse, error) {
+	var res v1.ListLogsResponse
+	if err := s.stream.Receive(&res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-// Search calls device.v1.DeviceService.Search.
-func (c *deviceServiceClient) Search(ctx context.Context, req *connect.Request[v1.SearchRequest]) (*connect.ServerStreamForClient[v1.SearchResponse], error) {
-	return c.search.CallServerStream(ctx, req)
-}
-
-// Create calls device.v1.DeviceService.Create.
-func (c *deviceServiceClient) Create(ctx context.Context, req *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error) {
-	return c.create.CallUnary(ctx, req)
-}
-
-// Update calls device.v1.DeviceService.Update.
-func (c *deviceServiceClient) Update(ctx context.Context, req *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error) {
-	return c.update.CallUnary(ctx, req)
-}
-
-// Link calls device.v1.DeviceService.Link.
-func (c *deviceServiceClient) Link(ctx context.Context, req *connect.Request[v1.LinkRequest]) (*connect.Response[v1.LinkResponse], error) {
-	return c.link.CallUnary(ctx, req)
-}
-
-// Remove calls device.v1.DeviceService.Remove.
-func (c *deviceServiceClient) Remove(ctx context.Context, req *connect.Request[v1.RemoveRequest]) (*connect.Response[v1.RemoveResponse], error) {
-	return c.remove.CallUnary(ctx, req)
-}
-
-// Log calls device.v1.DeviceService.Log.
-func (c *deviceServiceClient) Log(ctx context.Context, req *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error) {
-	return c.log.CallUnary(ctx, req)
-}
-
-// ListLogs calls device.v1.DeviceService.ListLogs.
-func (c *deviceServiceClient) ListLogs(ctx context.Context, req *connect.Request[v1.ListLogsRequest]) (*connect.ServerStreamForClient[v1.ListLogsResponse], error) {
-	return c.listLogs.CallServerStream(ctx, req)
-}
-
-// AddKey calls device.v1.DeviceService.AddKey.
-func (c *deviceServiceClient) AddKey(ctx context.Context, req *connect.Request[v1.AddKeyRequest]) (*connect.Response[v1.AddKeyResponse], error) {
-	return c.addKey.CallUnary(ctx, req)
-}
-
-// RemoveKey calls device.v1.DeviceService.RemoveKey.
-func (c *deviceServiceClient) RemoveKey(ctx context.Context, req *connect.Request[v1.RemoveKeyRequest]) (*connect.Response[v1.RemoveKeyResponse], error) {
-	return c.removeKey.CallUnary(ctx, req)
-}
-
-// SearchKey calls device.v1.DeviceService.SearchKey.
-func (c *deviceServiceClient) SearchKey(ctx context.Context, req *connect.Request[v1.SearchKeyRequest]) (*connect.Response[v1.SearchKeyResponse], error) {
-	return c.searchKey.CallUnary(ctx, req)
-}
-
-// RegisterKey calls device.v1.DeviceService.RegisterKey.
-func (c *deviceServiceClient) RegisterKey(ctx context.Context, req *connect.Request[v1.RegisterKeyRequest]) (*connect.Response[v1.RegisterKeyResponse], error) {
-	return c.registerKey.CallUnary(ctx, req)
-}
-
-// DeRegisterKey calls device.v1.DeviceService.DeRegisterKey.
-func (c *deviceServiceClient) DeRegisterKey(ctx context.Context, req *connect.Request[v1.DeRegisterKeyRequest]) (*connect.Response[v1.DeRegisterKeyResponse], error) {
-	return c.deRegisterKey.CallUnary(ctx, req)
-}
-
-// GetTurnCredentials calls device.v1.DeviceService.GetTurnCredentials.
-func (c *deviceServiceClient) GetTurnCredentials(ctx context.Context, req *connect.Request[v1.GetTurnCredentialsRequest]) (*connect.Response[v1.GetTurnCredentialsResponse], error) {
-	return c.getTurnCredentials.CallUnary(ctx, req)
-}
-
-// Notify calls device.v1.DeviceService.Notify.
-func (c *deviceServiceClient) Notify(ctx context.Context, req *connect.Request[v1.NotifyRequest]) (*connect.Response[v1.NotifyResponse], error) {
-	return c.notify.CallUnary(ctx, req)
-}
-
-// UpdatePresence calls device.v1.DeviceService.UpdatePresence.
-func (c *deviceServiceClient) UpdatePresence(ctx context.Context, req *connect.Request[v1.UpdatePresenceRequest]) (*connect.Response[v1.UpdatePresenceResponse], error) {
-	return c.updatePresence.CallUnary(ctx, req)
+// Close releases the stream's resources. It is idempotent and is typically deferred to clean up a
+// stream abandoned before io.EOF.
+func (s DeviceServiceListLogsClientStream) Close() error {
+	return s.stream.Close()
 }
 
 // DeviceServiceHandler is an implementation of the device.v1.DeviceService service.
 type DeviceServiceHandler interface {
 	// GetById retrieves one or more devices by their unique identifiers.
 	// Supports batch retrieval for efficiency.
-	GetById(context.Context, *connect.Request[v1.GetByIdRequest]) (*connect.Response[v1.GetByIdResponse], error)
+	GetById(context.Context, *v1.GetByIdRequest) (*v1.GetByIdResponse, error)
 	// GetBySessionId retrieves a device by its active session identifier.
 	// Useful for resolving devices from session tokens.
-	GetBySessionId(context.Context, *connect.Request[v1.GetBySessionIdRequest]) (*connect.Response[v1.GetBySessionIdResponse], error)
+	GetBySessionId(context.Context, *v1.GetBySessionIdRequest) (*v1.GetBySessionIdResponse, error)
 	// Search finds devices matching specified criteria.
 	// Supports filtering by date range, properties, and full-text search.
-	Search(context.Context, *connect.Request[v1.SearchRequest], *connect.ServerStream[v1.SearchResponse]) error
+	Search(context.Context, *v1.SearchRequest, DeviceServiceSearchServerStream) error
 	// Create registers a new device in the system.
 	// Returns a unique device ID that should be stored by the client.
-	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error)
+	Create(context.Context, *v1.CreateRequest) (*v1.CreateResponse, error)
 	// Update modifies an existing device's information.
 	// Only the device owner or administrators can update device information.
-	Update(context.Context, *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error)
+	Update(context.Context, *v1.UpdateRequest) (*v1.UpdateResponse, error)
 	// Link associates a device with a user profile.
 	// Required before the device can be used for authenticated operations.
-	Link(context.Context, *connect.Request[v1.LinkRequest]) (*connect.Response[v1.LinkResponse], error)
+	Link(context.Context, *v1.LinkRequest) (*v1.LinkResponse, error)
 	// Remove deletes a device from the system.
 	// This operation cannot be undone.
-	Remove(context.Context, *connect.Request[v1.RemoveRequest]) (*connect.Response[v1.RemoveResponse], error)
+	Remove(context.Context, *v1.RemoveRequest) (*v1.RemoveResponse, error)
 	// Log creates a new activity log entry for a device.
 	// Used for session tracking and security auditing.
-	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
+	Log(context.Context, *v1.LogRequest) (*v1.LogResponse, error)
 	// ListLogs retrieves activity logs for a device.
 	// Returns a stream of log entries for the specified device.
-	ListLogs(context.Context, *connect.Request[v1.ListLogsRequest], *connect.ServerStream[v1.ListLogsResponse]) error
+	ListLogs(context.Context, *v1.ListLogsRequest, DeviceServiceListLogsServerStream) error
 	// AddKey stores a key or token and its material in the local storage for a device.
 	// This is used for keys generated by the service or when the service needs to manage the key material directly.
-	AddKey(context.Context, *connect.Request[v1.AddKeyRequest]) (*connect.Response[v1.AddKeyResponse], error)
+	AddKey(context.Context, *v1.AddKeyRequest) (*v1.AddKeyResponse, error)
 	// RemoveKey removes one or more keys or tokens from local storage.
 	// This does not handle deregistration from third-party services. For that, use DeRegisterKey.
-	RemoveKey(context.Context, *connect.Request[v1.RemoveKeyRequest]) (*connect.Response[v1.RemoveKeyResponse], error)
+	RemoveKey(context.Context, *v1.RemoveKeyRequest) (*v1.RemoveKeyResponse, error)
 	// SearchKey searches for keys or tokens associated with a device.
-	SearchKey(context.Context, *connect.Request[v1.SearchKeyRequest]) (*connect.Response[v1.SearchKeyResponse], error)
+	SearchKey(context.Context, *v1.SearchKeyRequest) (*v1.SearchKeyResponse, error)
 	// RegisterKey registers a key with a third-party service using an externally-generated key or token.
 	// This method handles the integration with the external service and stores metadata about the key,
 	// but not the key material itself. Use AddKey to store key material.
-	RegisterKey(context.Context, *connect.Request[v1.RegisterKeyRequest]) (*connect.Response[v1.RegisterKeyResponse], error)
+	RegisterKey(context.Context, *v1.RegisterKeyRequest) (*v1.RegisterKeyResponse, error)
 	// DeRegisterKey deregisters a key from a third-party service.
 	// This handles cleanup with the external service and removes the associated key metadata from local storage.
-	DeRegisterKey(context.Context, *connect.Request[v1.DeRegisterKeyRequest]) (*connect.Response[v1.DeRegisterKeyResponse], error)
+	DeRegisterKey(context.Context, *v1.DeRegisterKeyRequest) (*v1.DeRegisterKeyResponse, error)
 	// Returns short-lived TURN server credentials for WebRTC media relay.
 	// Credentials are generated per-request with a configurable TTL.
 	// The server should generate HMAC-based credentials using a shared
 	// secret with the TURN server (RFC 5766 long-term credentials).
-	GetTurnCredentials(context.Context, *connect.Request[v1.GetTurnCredentialsRequest]) (*connect.Response[v1.GetTurnCredentialsResponse], error)
+	GetTurnCredentials(context.Context, *v1.GetTurnCredentialsRequest) (*v1.GetTurnCredentialsResponse, error)
 	// Notify sends a notification to a device using one of its registered keys.
 	// The service selects an appropriate key based on key_type (e.g., FCM_TOKEN for push notifications).
 	// If key_id is provided, that specific key will be used; otherwise the service selects the best available key.
-	Notify(context.Context, *connect.Request[v1.NotifyRequest]) (*connect.Response[v1.NotifyResponse], error)
+	Notify(context.Context, *v1.NotifyRequest) (*v1.NotifyResponse, error)
 	// UpdatePresence updates the presence status of a device.
 	// Used to track online/offline status and availability for real-time features.
-	UpdatePresence(context.Context, *connect.Request[v1.UpdatePresenceRequest]) (*connect.Response[v1.UpdatePresenceResponse], error)
+	UpdatePresence(context.Context, *v1.UpdatePresenceRequest) (*v1.UpdatePresenceResponse, error)
 }
 
-// NewDeviceServiceHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewDeviceServiceHandler(svc DeviceServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	deviceServiceMethods := v1.File_device_v1_device_proto.Services().ByName("DeviceService").Methods()
-	deviceServiceGetByIdHandler := connect.NewUnaryHandler(
-		DeviceServiceGetByIdProcedure,
-		svc.GetById,
-		connect.WithSchema(deviceServiceMethods.ByName("GetById")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
+// RegisterDeviceServiceHandler registers svc as the device.v1.DeviceService implementation on
+// server.
+func RegisterDeviceServiceHandler(server *connect.Server, svc DeviceServiceHandler) {
+	adapter := deviceServiceHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: deviceServiceGetByIdSpec(), Handler: adapter.getById},
+		connect.Method{Spec: deviceServiceGetBySessionIdSpec(), Handler: adapter.getBySessionId},
+		connect.Method{Spec: deviceServiceSearchSpec(), Handler: adapter.search},
+		connect.Method{Spec: deviceServiceCreateSpec(), Handler: adapter.create},
+		connect.Method{Spec: deviceServiceUpdateSpec(), Handler: adapter.update},
+		connect.Method{Spec: deviceServiceLinkSpec(), Handler: adapter.link},
+		connect.Method{Spec: deviceServiceRemoveSpec(), Handler: adapter.remove},
+		connect.Method{Spec: deviceServiceLogSpec(), Handler: adapter.log},
+		connect.Method{Spec: deviceServiceListLogsSpec(), Handler: adapter.listLogs},
+		connect.Method{Spec: deviceServiceAddKeySpec(), Handler: adapter.addKey},
+		connect.Method{Spec: deviceServiceRemoveKeySpec(), Handler: adapter.removeKey},
+		connect.Method{Spec: deviceServiceSearchKeySpec(), Handler: adapter.searchKey},
+		connect.Method{Spec: deviceServiceRegisterKeySpec(), Handler: adapter.registerKey},
+		connect.Method{Spec: deviceServiceDeRegisterKeySpec(), Handler: adapter.deRegisterKey},
+		connect.Method{Spec: deviceServiceGetTurnCredentialsSpec(), Handler: adapter.getTurnCredentials},
+		connect.Method{Spec: deviceServiceNotifySpec(), Handler: adapter.notify},
+		connect.Method{Spec: deviceServiceUpdatePresenceSpec(), Handler: adapter.updatePresence},
 	)
-	deviceServiceGetBySessionIdHandler := connect.NewUnaryHandler(
-		DeviceServiceGetBySessionIdProcedure,
-		svc.GetBySessionId,
-		connect.WithSchema(deviceServiceMethods.ByName("GetBySessionId")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceSearchHandler := connect.NewServerStreamHandler(
-		DeviceServiceSearchProcedure,
-		svc.Search,
-		connect.WithSchema(deviceServiceMethods.ByName("Search")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceCreateHandler := connect.NewUnaryHandler(
-		DeviceServiceCreateProcedure,
-		svc.Create,
-		connect.WithSchema(deviceServiceMethods.ByName("Create")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceUpdateHandler := connect.NewUnaryHandler(
-		DeviceServiceUpdateProcedure,
-		svc.Update,
-		connect.WithSchema(deviceServiceMethods.ByName("Update")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceLinkHandler := connect.NewUnaryHandler(
-		DeviceServiceLinkProcedure,
-		svc.Link,
-		connect.WithSchema(deviceServiceMethods.ByName("Link")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceRemoveHandler := connect.NewUnaryHandler(
-		DeviceServiceRemoveProcedure,
-		svc.Remove,
-		connect.WithSchema(deviceServiceMethods.ByName("Remove")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceLogHandler := connect.NewUnaryHandler(
-		DeviceServiceLogProcedure,
-		svc.Log,
-		connect.WithSchema(deviceServiceMethods.ByName("Log")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceListLogsHandler := connect.NewServerStreamHandler(
-		DeviceServiceListLogsProcedure,
-		svc.ListLogs,
-		connect.WithSchema(deviceServiceMethods.ByName("ListLogs")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceAddKeyHandler := connect.NewUnaryHandler(
-		DeviceServiceAddKeyProcedure,
-		svc.AddKey,
-		connect.WithSchema(deviceServiceMethods.ByName("AddKey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceRemoveKeyHandler := connect.NewUnaryHandler(
-		DeviceServiceRemoveKeyProcedure,
-		svc.RemoveKey,
-		connect.WithSchema(deviceServiceMethods.ByName("RemoveKey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceSearchKeyHandler := connect.NewUnaryHandler(
-		DeviceServiceSearchKeyProcedure,
-		svc.SearchKey,
-		connect.WithSchema(deviceServiceMethods.ByName("SearchKey")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceRegisterKeyHandler := connect.NewUnaryHandler(
-		DeviceServiceRegisterKeyProcedure,
-		svc.RegisterKey,
-		connect.WithSchema(deviceServiceMethods.ByName("RegisterKey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceDeRegisterKeyHandler := connect.NewUnaryHandler(
-		DeviceServiceDeRegisterKeyProcedure,
-		svc.DeRegisterKey,
-		connect.WithSchema(deviceServiceMethods.ByName("DeRegisterKey")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceGetTurnCredentialsHandler := connect.NewUnaryHandler(
-		DeviceServiceGetTurnCredentialsProcedure,
-		svc.GetTurnCredentials,
-		connect.WithSchema(deviceServiceMethods.ByName("GetTurnCredentials")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceNotifyHandler := connect.NewUnaryHandler(
-		DeviceServiceNotifyProcedure,
-		svc.Notify,
-		connect.WithSchema(deviceServiceMethods.ByName("Notify")),
-		connect.WithHandlerOptions(opts...),
-	)
-	deviceServiceUpdatePresenceHandler := connect.NewUnaryHandler(
-		DeviceServiceUpdatePresenceProcedure,
-		svc.UpdatePresence,
-		connect.WithSchema(deviceServiceMethods.ByName("UpdatePresence")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/device.v1.DeviceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case DeviceServiceGetByIdProcedure:
-			deviceServiceGetByIdHandler.ServeHTTP(w, r)
-		case DeviceServiceGetBySessionIdProcedure:
-			deviceServiceGetBySessionIdHandler.ServeHTTP(w, r)
-		case DeviceServiceSearchProcedure:
-			deviceServiceSearchHandler.ServeHTTP(w, r)
-		case DeviceServiceCreateProcedure:
-			deviceServiceCreateHandler.ServeHTTP(w, r)
-		case DeviceServiceUpdateProcedure:
-			deviceServiceUpdateHandler.ServeHTTP(w, r)
-		case DeviceServiceLinkProcedure:
-			deviceServiceLinkHandler.ServeHTTP(w, r)
-		case DeviceServiceRemoveProcedure:
-			deviceServiceRemoveHandler.ServeHTTP(w, r)
-		case DeviceServiceLogProcedure:
-			deviceServiceLogHandler.ServeHTTP(w, r)
-		case DeviceServiceListLogsProcedure:
-			deviceServiceListLogsHandler.ServeHTTP(w, r)
-		case DeviceServiceAddKeyProcedure:
-			deviceServiceAddKeyHandler.ServeHTTP(w, r)
-		case DeviceServiceRemoveKeyProcedure:
-			deviceServiceRemoveKeyHandler.ServeHTTP(w, r)
-		case DeviceServiceSearchKeyProcedure:
-			deviceServiceSearchKeyHandler.ServeHTTP(w, r)
-		case DeviceServiceRegisterKeyProcedure:
-			deviceServiceRegisterKeyHandler.ServeHTTP(w, r)
-		case DeviceServiceDeRegisterKeyProcedure:
-			deviceServiceDeRegisterKeyHandler.ServeHTTP(w, r)
-		case DeviceServiceGetTurnCredentialsProcedure:
-			deviceServiceGetTurnCredentialsHandler.ServeHTTP(w, r)
-		case DeviceServiceNotifyProcedure:
-			deviceServiceNotifyHandler.ServeHTTP(w, r)
-		case DeviceServiceUpdatePresenceProcedure:
-			deviceServiceUpdatePresenceHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
+}
+
+// DeviceServiceSearchServerStream is the server stream for the DeviceService's Search RPC.
+type DeviceServiceSearchServerStream struct {
+	stream connect.ServerStream
+}
+
+// SendHeaders flushes the response headers without a message. The first Send does this implicitly.
+func (s DeviceServiceSearchServerStream) SendHeaders() error {
+	return s.stream.SendHeaders()
+}
+
+// Send sends a response message to the client.
+func (s DeviceServiceSearchServerStream) Send(res *v1.SearchResponse) error {
+	return s.stream.Send(res)
+}
+
+// DeviceServiceListLogsServerStream is the server stream for the DeviceService's ListLogs RPC.
+type DeviceServiceListLogsServerStream struct {
+	stream connect.ServerStream
+}
+
+// SendHeaders flushes the response headers without a message. The first Send does this implicitly.
+func (s DeviceServiceListLogsServerStream) SendHeaders() error {
+	return s.stream.SendHeaders()
+}
+
+// Send sends a response message to the client.
+func (s DeviceServiceListLogsServerStream) Send(res *v1.ListLogsResponse) error {
+	return s.stream.Send(res)
 }
 
 // UnimplementedDeviceServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedDeviceServiceHandler struct{}
 
-func (UnimplementedDeviceServiceHandler) GetById(context.Context, *connect.Request[v1.GetByIdRequest]) (*connect.Response[v1.GetByIdResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.GetById is not implemented"))
+func (UnimplementedDeviceServiceHandler) GetById(context.Context, *v1.GetByIdRequest) (*v1.GetByIdResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.GetById is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) GetBySessionId(context.Context, *connect.Request[v1.GetBySessionIdRequest]) (*connect.Response[v1.GetBySessionIdResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.GetBySessionId is not implemented"))
+func (UnimplementedDeviceServiceHandler) GetBySessionId(context.Context, *v1.GetBySessionIdRequest) (*v1.GetBySessionIdResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.GetBySessionId is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) Search(context.Context, *connect.Request[v1.SearchRequest], *connect.ServerStream[v1.SearchResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.Search is not implemented"))
+func (UnimplementedDeviceServiceHandler) Search(context.Context, *v1.SearchRequest, DeviceServiceSearchServerStream) error {
+	return connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.Search is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.Create is not implemented"))
+func (UnimplementedDeviceServiceHandler) Create(context.Context, *v1.CreateRequest) (*v1.CreateResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.Create is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) Update(context.Context, *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.Update is not implemented"))
+func (UnimplementedDeviceServiceHandler) Update(context.Context, *v1.UpdateRequest) (*v1.UpdateResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.Update is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) Link(context.Context, *connect.Request[v1.LinkRequest]) (*connect.Response[v1.LinkResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.Link is not implemented"))
+func (UnimplementedDeviceServiceHandler) Link(context.Context, *v1.LinkRequest) (*v1.LinkResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.Link is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) Remove(context.Context, *connect.Request[v1.RemoveRequest]) (*connect.Response[v1.RemoveResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.Remove is not implemented"))
+func (UnimplementedDeviceServiceHandler) Remove(context.Context, *v1.RemoveRequest) (*v1.RemoveResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.Remove is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.Log is not implemented"))
+func (UnimplementedDeviceServiceHandler) Log(context.Context, *v1.LogRequest) (*v1.LogResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.Log is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) ListLogs(context.Context, *connect.Request[v1.ListLogsRequest], *connect.ServerStream[v1.ListLogsResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.ListLogs is not implemented"))
+func (UnimplementedDeviceServiceHandler) ListLogs(context.Context, *v1.ListLogsRequest, DeviceServiceListLogsServerStream) error {
+	return connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.ListLogs is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) AddKey(context.Context, *connect.Request[v1.AddKeyRequest]) (*connect.Response[v1.AddKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.AddKey is not implemented"))
+func (UnimplementedDeviceServiceHandler) AddKey(context.Context, *v1.AddKeyRequest) (*v1.AddKeyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.AddKey is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) RemoveKey(context.Context, *connect.Request[v1.RemoveKeyRequest]) (*connect.Response[v1.RemoveKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.RemoveKey is not implemented"))
+func (UnimplementedDeviceServiceHandler) RemoveKey(context.Context, *v1.RemoveKeyRequest) (*v1.RemoveKeyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.RemoveKey is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) SearchKey(context.Context, *connect.Request[v1.SearchKeyRequest]) (*connect.Response[v1.SearchKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.SearchKey is not implemented"))
+func (UnimplementedDeviceServiceHandler) SearchKey(context.Context, *v1.SearchKeyRequest) (*v1.SearchKeyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.SearchKey is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) RegisterKey(context.Context, *connect.Request[v1.RegisterKeyRequest]) (*connect.Response[v1.RegisterKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.RegisterKey is not implemented"))
+func (UnimplementedDeviceServiceHandler) RegisterKey(context.Context, *v1.RegisterKeyRequest) (*v1.RegisterKeyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.RegisterKey is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) DeRegisterKey(context.Context, *connect.Request[v1.DeRegisterKeyRequest]) (*connect.Response[v1.DeRegisterKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.DeRegisterKey is not implemented"))
+func (UnimplementedDeviceServiceHandler) DeRegisterKey(context.Context, *v1.DeRegisterKeyRequest) (*v1.DeRegisterKeyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.DeRegisterKey is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) GetTurnCredentials(context.Context, *connect.Request[v1.GetTurnCredentialsRequest]) (*connect.Response[v1.GetTurnCredentialsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.GetTurnCredentials is not implemented"))
+func (UnimplementedDeviceServiceHandler) GetTurnCredentials(context.Context, *v1.GetTurnCredentialsRequest) (*v1.GetTurnCredentialsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.GetTurnCredentials is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) Notify(context.Context, *connect.Request[v1.NotifyRequest]) (*connect.Response[v1.NotifyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.Notify is not implemented"))
+func (UnimplementedDeviceServiceHandler) Notify(context.Context, *v1.NotifyRequest) (*v1.NotifyResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.Notify is not implemented")
 }
 
-func (UnimplementedDeviceServiceHandler) UpdatePresence(context.Context, *connect.Request[v1.UpdatePresenceRequest]) (*connect.Response[v1.UpdatePresenceResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("device.v1.DeviceService.UpdatePresence is not implemented"))
+func (UnimplementedDeviceServiceHandler) UpdatePresence(context.Context, *v1.UpdatePresenceRequest) (*v1.UpdatePresenceResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "device.v1.DeviceService.UpdatePresence is not implemented")
+}
+
+type deviceServiceClient struct {
+	client *connect.Client
+}
+
+func (c *deviceServiceClient) GetById(ctx context.Context, req *v1.GetByIdRequest) (*v1.GetByIdResponse, error) {
+	var res v1.GetByIdResponse
+	if err := c.client.CallUnary(ctx, deviceServiceGetByIdSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) GetBySessionId(ctx context.Context, req *v1.GetBySessionIdRequest) (*v1.GetBySessionIdResponse, error) {
+	var res v1.GetBySessionIdResponse
+	if err := c.client.CallUnary(ctx, deviceServiceGetBySessionIdSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) Search(ctx context.Context, req *v1.SearchRequest) (DeviceServiceSearchClientStream, error) {
+	stream, err := c.client.CallServerStream(ctx, deviceServiceSearchSpec(), req)
+	if err != nil {
+		return DeviceServiceSearchClientStream{}, err
+	}
+	return DeviceServiceSearchClientStream{stream: stream}, nil
+}
+
+func (c *deviceServiceClient) Create(ctx context.Context, req *v1.CreateRequest) (*v1.CreateResponse, error) {
+	var res v1.CreateResponse
+	if err := c.client.CallUnary(ctx, deviceServiceCreateSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) Update(ctx context.Context, req *v1.UpdateRequest) (*v1.UpdateResponse, error) {
+	var res v1.UpdateResponse
+	if err := c.client.CallUnary(ctx, deviceServiceUpdateSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) Link(ctx context.Context, req *v1.LinkRequest) (*v1.LinkResponse, error) {
+	var res v1.LinkResponse
+	if err := c.client.CallUnary(ctx, deviceServiceLinkSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) Remove(ctx context.Context, req *v1.RemoveRequest) (*v1.RemoveResponse, error) {
+	var res v1.RemoveResponse
+	if err := c.client.CallUnary(ctx, deviceServiceRemoveSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) Log(ctx context.Context, req *v1.LogRequest) (*v1.LogResponse, error) {
+	var res v1.LogResponse
+	if err := c.client.CallUnary(ctx, deviceServiceLogSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) ListLogs(ctx context.Context, req *v1.ListLogsRequest) (DeviceServiceListLogsClientStream, error) {
+	stream, err := c.client.CallServerStream(ctx, deviceServiceListLogsSpec(), req)
+	if err != nil {
+		return DeviceServiceListLogsClientStream{}, err
+	}
+	return DeviceServiceListLogsClientStream{stream: stream}, nil
+}
+
+func (c *deviceServiceClient) AddKey(ctx context.Context, req *v1.AddKeyRequest) (*v1.AddKeyResponse, error) {
+	var res v1.AddKeyResponse
+	if err := c.client.CallUnary(ctx, deviceServiceAddKeySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) RemoveKey(ctx context.Context, req *v1.RemoveKeyRequest) (*v1.RemoveKeyResponse, error) {
+	var res v1.RemoveKeyResponse
+	if err := c.client.CallUnary(ctx, deviceServiceRemoveKeySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) SearchKey(ctx context.Context, req *v1.SearchKeyRequest) (*v1.SearchKeyResponse, error) {
+	var res v1.SearchKeyResponse
+	if err := c.client.CallUnary(ctx, deviceServiceSearchKeySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) RegisterKey(ctx context.Context, req *v1.RegisterKeyRequest) (*v1.RegisterKeyResponse, error) {
+	var res v1.RegisterKeyResponse
+	if err := c.client.CallUnary(ctx, deviceServiceRegisterKeySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) DeRegisterKey(ctx context.Context, req *v1.DeRegisterKeyRequest) (*v1.DeRegisterKeyResponse, error) {
+	var res v1.DeRegisterKeyResponse
+	if err := c.client.CallUnary(ctx, deviceServiceDeRegisterKeySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) GetTurnCredentials(ctx context.Context, req *v1.GetTurnCredentialsRequest) (*v1.GetTurnCredentialsResponse, error) {
+	var res v1.GetTurnCredentialsResponse
+	if err := c.client.CallUnary(ctx, deviceServiceGetTurnCredentialsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) Notify(ctx context.Context, req *v1.NotifyRequest) (*v1.NotifyResponse, error) {
+	var res v1.NotifyResponse
+	if err := c.client.CallUnary(ctx, deviceServiceNotifySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *deviceServiceClient) UpdatePresence(ctx context.Context, req *v1.UpdatePresenceRequest) (*v1.UpdatePresenceResponse, error) {
+	var res v1.UpdatePresenceResponse
+	if err := c.client.CallUnary(ctx, deviceServiceUpdatePresenceSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type deviceServiceHandler struct{ svc DeviceServiceHandler }
+
+func (h deviceServiceHandler) getById(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetByIdRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetById(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) getBySessionId(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetBySessionIdRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetBySessionId(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) search(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SearchRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	return h.svc.Search(ctx, &req, DeviceServiceSearchServerStream{stream: stream})
+}
+
+func (h deviceServiceHandler) create(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Create(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) update(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdateRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Update(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) link(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.LinkRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Link(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) remove(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RemoveRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Remove(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) log(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.LogRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Log(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) listLogs(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListLogsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	return h.svc.ListLogs(ctx, &req, DeviceServiceListLogsServerStream{stream: stream})
+}
+
+func (h deviceServiceHandler) addKey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.AddKeyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.AddKey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) removeKey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RemoveKeyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.RemoveKey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) searchKey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SearchKeyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.SearchKey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) registerKey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RegisterKeyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.RegisterKey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) deRegisterKey(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DeRegisterKeyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DeRegisterKey(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) getTurnCredentials(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetTurnCredentialsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetTurnCredentials(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) notify(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.NotifyRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Notify(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h deviceServiceHandler) updatePresence(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdatePresenceRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UpdatePresence(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

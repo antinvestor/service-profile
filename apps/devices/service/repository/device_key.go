@@ -7,9 +7,9 @@ import (
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/datastore/pool"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/datastore/pool"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"gorm.io/gorm"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"

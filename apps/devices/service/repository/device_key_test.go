@@ -18,7 +18,7 @@ import (
 	"testing"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"github.com/pitabwire/frame/v2/frametests/definition"
+	"github.com/pitabwire/frame/v3/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

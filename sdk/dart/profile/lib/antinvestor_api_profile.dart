@@ -16,5 +16,5 @@ export 'src/profile/v1/profile.connect.spec.dart';
 // Common types
 export 'src/common/v1/common.pb.dart' hide SearchRequest;
 export 'src/common/v1/common.pbenum.dart';
-export 'src/google/protobuf/struct.pb.dart';
-export 'src/google/protobuf/timestamp.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/struct.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';

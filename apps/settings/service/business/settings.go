@@ -2,13 +2,12 @@ package business
 
 import (
 	"context"
-	"errors"
 
 	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
 	settingsv1 "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/workerpool"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/models"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
@@ -163,5 +162,5 @@ func (nb *settingsBusiness) Search(
 	_ context.Context,
 	_ *commonv1.SearchRequest,
 ) (workerpool.JobResultPipe[[]*settingsv1.SettingObject], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
+	return nil, connect.NewError(connect.CodeUnimplemented, "not implemented")
 }

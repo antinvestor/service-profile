@@ -20,8 +20,8 @@ import (
 	"testing"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/frametests/definition"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,61 +68,61 @@ func (s *AccountsHandlerSuite) TestResolveAccountsIsServiceOnly() {
 		s.SeedTenantRole(serviceCtx, svc, tenantID, partitionID, serviceID, authz.RoleService)
 
 		// A service (e.g. authentication) creates the person in its tenancy.
-		created, err := server.Create(serviceCtx, connect.NewRequest(&profilev1.CreateRequest{
+		created, err := server.Create(serviceCtx, &profilev1.CreateRequest{
 			Type:    profilev1.ProfileType_PERSON,
 			Contact: util.RandomAlphaNumericString(10) + "@resolve.testing.com",
-		}))
+		})
 		require.NoError(t, err)
-		profile := created.Msg.GetData()
+		profile := created.GetData()
 		require.Len(t, profile.GetAccounts(), 1)
 		address := profile.GetAccounts()[0].GetAddress()
 		unknown := "0x" + strings.Repeat("ab", 20)
 
-		resp, err := server.ResolveAccounts(serviceCtx, connect.NewRequest(&profilev1.ResolveAccountsRequest{
+		resp, err := server.ResolveAccounts(serviceCtx, &profilev1.ResolveAccountsRequest{
 			Addresses: []string{strings.ToUpper(address[:2]) + strings.ToUpper(address[2:]), unknown},
-		}))
+		})
 		require.NoError(t, err)
-		require.Len(t, resp.Msg.GetData(), 1, "unknown addresses are omitted")
-		assert.Equal(t, address, resp.Msg.GetData()[0].GetAddress())
-		assert.Equal(t, profile.GetId(), resp.Msg.GetData()[0].GetProfileId())
+		require.Len(t, resp.GetData(), 1, "unknown addresses are omitted")
+		assert.Equal(t, address, resp.GetData()[0].GetAddress())
+		assert.Equal(t, profile.GetId(), resp.GetData()[0].GetProfileId())
 
 		// A service of another tenancy resolves nothing.
 		otherTenant, otherPartition := util.IDString(), util.IDString()
 		foreignCtx := s.WithAuthClaims(ctx, otherTenant, otherPartition, serviceID)
 		s.SeedTenantRole(foreignCtx, svc, otherTenant, otherPartition, serviceID, authz.RoleService)
-		foreign, err := server.ResolveAccounts(foreignCtx, connect.NewRequest(&profilev1.ResolveAccountsRequest{
+		foreign, err := server.ResolveAccounts(foreignCtx, &profilev1.ResolveAccountsRequest{
 			Addresses: []string{address},
-		}))
+		})
 		require.NoError(t, err)
-		assert.Empty(t, foreign.Msg.GetData())
+		assert.Empty(t, foreign.GetData())
 
 		ownerCtx := s.WithAuthClaims(ctx, tenantID, partitionID, profile.GetId())
 		s.SeedTenantRole(ownerCtx, svc, tenantID, partitionID, profile.GetId(), authz.RoleOwner)
 		s.SeedTenantRole(ownerCtx, svc, tenantID, partitionID, profile.GetId(), authz.RoleAdmin)
-		_, err = server.ResolveAccounts(ownerCtx, connect.NewRequest(&profilev1.ResolveAccountsRequest{
+		_, err = server.ResolveAccounts(ownerCtx, &profilev1.ResolveAccountsRequest{
 			Addresses: []string{address},
-		}))
+		})
 		require.Error(t, err)
 		assert.Equal(t, connect.CodePermissionDenied, connect.CodeOf(err))
 
 		// The owner still sees the account on their own profile.
-		own, err := server.GetById(ownerCtx, connect.NewRequest(&profilev1.GetByIdRequest{Id: profile.GetId()}))
+		own, err := server.GetById(ownerCtx, &profilev1.GetByIdRequest{Id: profile.GetId()})
 		require.NoError(t, err)
-		require.Len(t, own.Msg.GetData().GetAccounts(), 1)
-		assert.Equal(t, address, own.Msg.GetData().GetAccounts()[0].GetAddress())
+		require.Len(t, own.GetData().GetAccounts(), 1)
+		assert.Equal(t, address, own.GetData().GetAccounts()[0].GetAddress())
 
 		// Another user of the tenancy holding profile_view (a viewer) reads
 		// the profile without its accounts.
 		viewerID := "viewer-" + util.RandomAlphaNumericString(6)
 		viewerCtx := s.WithAuthClaims(ctx, tenantID, partitionID, viewerID)
 		s.SeedTenantRole(viewerCtx, svc, tenantID, partitionID, viewerID, authz.RoleViewer)
-		viewed, err := server.GetById(viewerCtx, connect.NewRequest(&profilev1.GetByIdRequest{Id: profile.GetId()}))
+		viewed, err := server.GetById(viewerCtx, &profilev1.GetByIdRequest{Id: profile.GetId()})
 		require.NoError(t, err)
-		assert.Empty(t, viewed.Msg.GetData().GetAccounts())
+		assert.Empty(t, viewed.GetData().GetAccounts())
 
-		_, err = server.ResolveAccounts(serviceCtx, connect.NewRequest(&profilev1.ResolveAccountsRequest{
+		_, err = server.ResolveAccounts(serviceCtx, &profilev1.ResolveAccountsRequest{
 			Addresses: []string{"not-an-address"},
-		}))
+		})
 		require.Error(t, err)
 		assert.Equal(t, connect.CodeInvalidArgument, connect.CodeOf(err))
 	})

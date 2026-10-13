@@ -80,7 +80,7 @@ n := &notificationv1.Notification{
     OutBound:    true,
     AutoRelease: true,
 }
-cli.Send(ctx, connect.NewRequest(&notificationv1.SendRequest{Data: []*notificationv1.Notification{n}}))
+cli.Send(ctx, &notificationv1.SendRequest{Data: []*notificationv1.Notification{n}})
 ```
 
 ## API (Connect)

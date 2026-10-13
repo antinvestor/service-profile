@@ -3,11 +3,11 @@ package handlers
 import (
 	"context"
 	"net"
-	"net/http"
 	"strconv"
 	"strings"
 
-	"github.com/pitabwire/frame/v2/data"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 )
@@ -95,11 +95,12 @@ func firstMDValue(md metadata.MD, key string) string {
 //
 // Cloudflare geo headers reference:
 // https://developers.cloudflare.com/fundamentals/reference/http-request-headers/
-func ExtractCloudflareGeo(ctx context.Context, httpHeader http.Header) data.JSONMap {
+func ExtractCloudflareGeo(ctx context.Context) data.JSONMap {
 	geo := data.JSONMap{}
 
-	// Try Connect/HTTP headers first (preferred — they come directly from the request).
-	if httpHeader != nil {
+	// Try Connect request headers first (preferred — they come directly from the request).
+	if info, ok := connect.CallInfoForServerContext(ctx); ok {
+		httpHeader := info.RequestHeader()
 		setIfPresent(geo, "cf_country", httpHeader.Get("Cf-Ipcountry"))
 		setIfPresent(geo, "cf_city", httpHeader.Get("Cf-Ipcity"))
 		setIfPresent(geo, "cf_continent", httpHeader.Get("Cf-Ipcontinent"))

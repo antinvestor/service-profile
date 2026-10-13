@@ -2,13 +2,12 @@ package repository
 
 import (
 	"context"
-	"errors"
 
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/datastore/pool"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/datastore/pool"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/workerpool"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
 )
@@ -101,7 +100,7 @@ func (cr *contactRepository) DelinkFromProfile(ctx context.Context, id, profileI
 	}
 
 	if profileID != contact.ProfileID {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("contact profile is invalid"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "contact profile is invalid")
 	}
 
 	contact.ProfileID = ""

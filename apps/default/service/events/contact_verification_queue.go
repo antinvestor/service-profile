@@ -3,12 +3,12 @@ package events
 import (
 	"context"
 	"errors"
+	"io"
 
 	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
-	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/v2/notification/v1/notificationv1connect"
 	notificationv1 "buf.build/gen/go/antinvestor/notification/protocolbuffers/go/notification/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v3/data"
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -106,9 +106,9 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		AutoRelease: true,
 	}
 
-	req := connect.NewRequest(&notificationv1.SendRequest{
+	req := &notificationv1.SendRequest{
 		Data: []*notificationv1.Notification{nMessages},
-	})
+	}
 
 	resp, err := vq.notificationCli.Send(ctx, req)
 	if err != nil {
@@ -116,14 +116,13 @@ func (vq *ContactVerificationQueue) Execute(ctx context.Context, payload any) er
 		return err
 	}
 
-	if resp == nil {
-		logger.Debug("notification response is nil, likely in test mode")
-		return nil
-	}
-
-	for resp.Receive() {
-		err = resp.Err()
+	defer func() { _ = resp.Close() }()
+	for {
+		_, err = resp.Receive()
 		if err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
 			logger.WithField("contact_id", contact.ID).
 				WithError(err).Error("failed submitting verification for contact")
 			return err

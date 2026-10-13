@@ -19,315 +19,357 @@
 package chatagentv1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "github.com/antinvestor/service-profile/gen/go/chatagent/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// ChatAgentServiceName is the fully-qualified name of the ChatAgentService service.
 	ChatAgentServiceName = "chatagent.v1.ChatAgentService"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// ChatAgentServiceUpsertContextProcedure is the fully-qualified name of the ChatAgentService's
+	// ChatAgentServiceUpsertContextProcedure is the procedure name of the ChatAgentService's
 	// UpsertContext RPC.
 	ChatAgentServiceUpsertContextProcedure = "/chatagent.v1.ChatAgentService/UpsertContext"
-	// ChatAgentServiceGetContextProcedure is the fully-qualified name of the ChatAgentService's
-	// GetContext RPC.
+	// ChatAgentServiceGetContextProcedure is the procedure name of the ChatAgentService's GetContext
+	// RPC.
 	ChatAgentServiceGetContextProcedure = "/chatagent.v1.ChatAgentService/GetContext"
-	// ChatAgentServiceListContextsProcedure is the fully-qualified name of the ChatAgentService's
+	// ChatAgentServiceListContextsProcedure is the procedure name of the ChatAgentService's
 	// ListContexts RPC.
 	ChatAgentServiceListContextsProcedure = "/chatagent.v1.ChatAgentService/ListContexts"
-	// ChatAgentServiceCreateSessionProcedure is the fully-qualified name of the ChatAgentService's
+	// ChatAgentServiceCreateSessionProcedure is the procedure name of the ChatAgentService's
 	// CreateSession RPC.
 	ChatAgentServiceCreateSessionProcedure = "/chatagent.v1.ChatAgentService/CreateSession"
-	// ChatAgentServiceGetSessionProcedure is the fully-qualified name of the ChatAgentService's
-	// GetSession RPC.
+	// ChatAgentServiceGetSessionProcedure is the procedure name of the ChatAgentService's GetSession
+	// RPC.
 	ChatAgentServiceGetSessionProcedure = "/chatagent.v1.ChatAgentService/GetSession"
-	// ChatAgentServiceTurnProcedure is the fully-qualified name of the ChatAgentService's Turn RPC.
+	// ChatAgentServiceTurnProcedure is the procedure name of the ChatAgentService's Turn RPC.
 	ChatAgentServiceTurnProcedure = "/chatagent.v1.ChatAgentService/Turn"
-	// ChatAgentServiceEndSessionProcedure is the fully-qualified name of the ChatAgentService's
-	// EndSession RPC.
+	// ChatAgentServiceEndSessionProcedure is the procedure name of the ChatAgentService's EndSession
+	// RPC.
 	ChatAgentServiceEndSessionProcedure = "/chatagent.v1.ChatAgentService/EndSession"
-	// ChatAgentServiceIngestMessageProcedure is the fully-qualified name of the ChatAgentService's
+	// ChatAgentServiceIngestMessageProcedure is the procedure name of the ChatAgentService's
 	// IngestMessage RPC.
 	ChatAgentServiceIngestMessageProcedure = "/chatagent.v1.ChatAgentService/IngestMessage"
 )
 
+var (
+	chatAgentServiceUpsertContextSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods().ByName("UpsertContext"),
+			Procedure:  ChatAgentServiceUpsertContextProcedure,
+		}
+	})
+	chatAgentServiceGetContextSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods().ByName("GetContext"),
+			Procedure:        ChatAgentServiceGetContextProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	chatAgentServiceListContextsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods().ByName("ListContexts"),
+			Procedure:        ChatAgentServiceListContextsProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	chatAgentServiceCreateSessionSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods().ByName("CreateSession"),
+			Procedure:  ChatAgentServiceCreateSessionProcedure,
+		}
+	})
+	chatAgentServiceGetSessionSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods().ByName("GetSession"),
+			Procedure:        ChatAgentServiceGetSessionProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	chatAgentServiceTurnSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods().ByName("Turn"),
+			Procedure:  ChatAgentServiceTurnProcedure,
+		}
+	})
+	chatAgentServiceEndSessionSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods().ByName("EndSession"),
+			Procedure:  ChatAgentServiceEndSessionProcedure,
+		}
+	})
+	chatAgentServiceIngestMessageSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods().ByName("IngestMessage"),
+			Procedure:  ChatAgentServiceIngestMessageProcedure,
+		}
+	})
+)
+
 // ChatAgentServiceClient is a client for the chatagent.v1.ChatAgentService service.
 type ChatAgentServiceClient interface {
-	UpsertContext(context.Context, *connect.Request[v1.UpsertContextRequest]) (*connect.Response[v1.UpsertContextResponse], error)
-	GetContext(context.Context, *connect.Request[v1.GetContextRequest]) (*connect.Response[v1.GetContextResponse], error)
-	ListContexts(context.Context, *connect.Request[v1.ListContextsRequest]) (*connect.Response[v1.ListContextsResponse], error)
-	CreateSession(context.Context, *connect.Request[v1.CreateSessionRequest]) (*connect.Response[v1.CreateSessionResponse], error)
-	GetSession(context.Context, *connect.Request[v1.GetSessionRequest]) (*connect.Response[v1.GetSessionResponse], error)
-	Turn(context.Context, *connect.Request[v1.TurnRequest]) (*connect.Response[v1.TurnResponse], error)
-	EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error)
+	UpsertContext(context.Context, *v1.UpsertContextRequest) (*v1.UpsertContextResponse, error)
+	GetContext(context.Context, *v1.GetContextRequest) (*v1.GetContextResponse, error)
+	ListContexts(context.Context, *v1.ListContextsRequest) (*v1.ListContextsResponse, error)
+	CreateSession(context.Context, *v1.CreateSessionRequest) (*v1.CreateSessionResponse, error)
+	GetSession(context.Context, *v1.GetSessionRequest) (*v1.GetSessionResponse, error)
+	Turn(context.Context, *v1.TurnRequest) (*v1.TurnResponse, error)
+	EndSession(context.Context, *v1.EndSessionRequest) (*v1.EndSessionResponse, error)
 	// Ingest an inbound message and reply via NotificationService.Send using NotificationTarget.
-	IngestMessage(context.Context, *connect.Request[v1.IngestMessageRequest]) (*connect.Response[v1.IngestMessageResponse], error)
+	IngestMessage(context.Context, *v1.IngestMessageRequest) (*v1.IngestMessageResponse, error)
 }
 
-// NewChatAgentServiceClient constructs a client for the chatagent.v1.ChatAgentService service. By
-// default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses,
-// and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
-// connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewChatAgentServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) ChatAgentServiceClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	chatAgentServiceMethods := v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods()
-	return &chatAgentServiceClient{
-		upsertContext: connect.NewClient[v1.UpsertContextRequest, v1.UpsertContextResponse](
-			httpClient,
-			baseURL+ChatAgentServiceUpsertContextProcedure,
-			connect.WithSchema(chatAgentServiceMethods.ByName("UpsertContext")),
-			connect.WithClientOptions(opts...),
-		),
-		getContext: connect.NewClient[v1.GetContextRequest, v1.GetContextResponse](
-			httpClient,
-			baseURL+ChatAgentServiceGetContextProcedure,
-			connect.WithSchema(chatAgentServiceMethods.ByName("GetContext")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		listContexts: connect.NewClient[v1.ListContextsRequest, v1.ListContextsResponse](
-			httpClient,
-			baseURL+ChatAgentServiceListContextsProcedure,
-			connect.WithSchema(chatAgentServiceMethods.ByName("ListContexts")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		createSession: connect.NewClient[v1.CreateSessionRequest, v1.CreateSessionResponse](
-			httpClient,
-			baseURL+ChatAgentServiceCreateSessionProcedure,
-			connect.WithSchema(chatAgentServiceMethods.ByName("CreateSession")),
-			connect.WithClientOptions(opts...),
-		),
-		getSession: connect.NewClient[v1.GetSessionRequest, v1.GetSessionResponse](
-			httpClient,
-			baseURL+ChatAgentServiceGetSessionProcedure,
-			connect.WithSchema(chatAgentServiceMethods.ByName("GetSession")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		turn: connect.NewClient[v1.TurnRequest, v1.TurnResponse](
-			httpClient,
-			baseURL+ChatAgentServiceTurnProcedure,
-			connect.WithSchema(chatAgentServiceMethods.ByName("Turn")),
-			connect.WithClientOptions(opts...),
-		),
-		endSession: connect.NewClient[v1.EndSessionRequest, v1.EndSessionResponse](
-			httpClient,
-			baseURL+ChatAgentServiceEndSessionProcedure,
-			connect.WithSchema(chatAgentServiceMethods.ByName("EndSession")),
-			connect.WithClientOptions(opts...),
-		),
-		ingestMessage: connect.NewClient[v1.IngestMessageRequest, v1.IngestMessageResponse](
-			httpClient,
-			baseURL+ChatAgentServiceIngestMessageProcedure,
-			connect.WithSchema(chatAgentServiceMethods.ByName("IngestMessage")),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// chatAgentServiceClient implements ChatAgentServiceClient.
-type chatAgentServiceClient struct {
-	upsertContext *connect.Client[v1.UpsertContextRequest, v1.UpsertContextResponse]
-	getContext    *connect.Client[v1.GetContextRequest, v1.GetContextResponse]
-	listContexts  *connect.Client[v1.ListContextsRequest, v1.ListContextsResponse]
-	createSession *connect.Client[v1.CreateSessionRequest, v1.CreateSessionResponse]
-	getSession    *connect.Client[v1.GetSessionRequest, v1.GetSessionResponse]
-	turn          *connect.Client[v1.TurnRequest, v1.TurnResponse]
-	endSession    *connect.Client[v1.EndSessionRequest, v1.EndSessionResponse]
-	ingestMessage *connect.Client[v1.IngestMessageRequest, v1.IngestMessageResponse]
-}
-
-// UpsertContext calls chatagent.v1.ChatAgentService.UpsertContext.
-func (c *chatAgentServiceClient) UpsertContext(ctx context.Context, req *connect.Request[v1.UpsertContextRequest]) (*connect.Response[v1.UpsertContextResponse], error) {
-	return c.upsertContext.CallUnary(ctx, req)
-}
-
-// GetContext calls chatagent.v1.ChatAgentService.GetContext.
-func (c *chatAgentServiceClient) GetContext(ctx context.Context, req *connect.Request[v1.GetContextRequest]) (*connect.Response[v1.GetContextResponse], error) {
-	return c.getContext.CallUnary(ctx, req)
-}
-
-// ListContexts calls chatagent.v1.ChatAgentService.ListContexts.
-func (c *chatAgentServiceClient) ListContexts(ctx context.Context, req *connect.Request[v1.ListContextsRequest]) (*connect.Response[v1.ListContextsResponse], error) {
-	return c.listContexts.CallUnary(ctx, req)
-}
-
-// CreateSession calls chatagent.v1.ChatAgentService.CreateSession.
-func (c *chatAgentServiceClient) CreateSession(ctx context.Context, req *connect.Request[v1.CreateSessionRequest]) (*connect.Response[v1.CreateSessionResponse], error) {
-	return c.createSession.CallUnary(ctx, req)
-}
-
-// GetSession calls chatagent.v1.ChatAgentService.GetSession.
-func (c *chatAgentServiceClient) GetSession(ctx context.Context, req *connect.Request[v1.GetSessionRequest]) (*connect.Response[v1.GetSessionResponse], error) {
-	return c.getSession.CallUnary(ctx, req)
-}
-
-// Turn calls chatagent.v1.ChatAgentService.Turn.
-func (c *chatAgentServiceClient) Turn(ctx context.Context, req *connect.Request[v1.TurnRequest]) (*connect.Response[v1.TurnResponse], error) {
-	return c.turn.CallUnary(ctx, req)
-}
-
-// EndSession calls chatagent.v1.ChatAgentService.EndSession.
-func (c *chatAgentServiceClient) EndSession(ctx context.Context, req *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error) {
-	return c.endSession.CallUnary(ctx, req)
-}
-
-// IngestMessage calls chatagent.v1.ChatAgentService.IngestMessage.
-func (c *chatAgentServiceClient) IngestMessage(ctx context.Context, req *connect.Request[v1.IngestMessageRequest]) (*connect.Response[v1.IngestMessageResponse], error) {
-	return c.ingestMessage.CallUnary(ctx, req)
+// NewChatAgentServiceClient constructs a client for the chatagent.v1.ChatAgentService service.
+// Multiple service clients may share a single connect.Client.
+func NewChatAgentServiceClient(client *connect.Client) ChatAgentServiceClient {
+	return &chatAgentServiceClient{client: client}
 }
 
 // ChatAgentServiceHandler is an implementation of the chatagent.v1.ChatAgentService service.
 type ChatAgentServiceHandler interface {
-	UpsertContext(context.Context, *connect.Request[v1.UpsertContextRequest]) (*connect.Response[v1.UpsertContextResponse], error)
-	GetContext(context.Context, *connect.Request[v1.GetContextRequest]) (*connect.Response[v1.GetContextResponse], error)
-	ListContexts(context.Context, *connect.Request[v1.ListContextsRequest]) (*connect.Response[v1.ListContextsResponse], error)
-	CreateSession(context.Context, *connect.Request[v1.CreateSessionRequest]) (*connect.Response[v1.CreateSessionResponse], error)
-	GetSession(context.Context, *connect.Request[v1.GetSessionRequest]) (*connect.Response[v1.GetSessionResponse], error)
-	Turn(context.Context, *connect.Request[v1.TurnRequest]) (*connect.Response[v1.TurnResponse], error)
-	EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error)
+	UpsertContext(context.Context, *v1.UpsertContextRequest) (*v1.UpsertContextResponse, error)
+	GetContext(context.Context, *v1.GetContextRequest) (*v1.GetContextResponse, error)
+	ListContexts(context.Context, *v1.ListContextsRequest) (*v1.ListContextsResponse, error)
+	CreateSession(context.Context, *v1.CreateSessionRequest) (*v1.CreateSessionResponse, error)
+	GetSession(context.Context, *v1.GetSessionRequest) (*v1.GetSessionResponse, error)
+	Turn(context.Context, *v1.TurnRequest) (*v1.TurnResponse, error)
+	EndSession(context.Context, *v1.EndSessionRequest) (*v1.EndSessionResponse, error)
 	// Ingest an inbound message and reply via NotificationService.Send using NotificationTarget.
-	IngestMessage(context.Context, *connect.Request[v1.IngestMessageRequest]) (*connect.Response[v1.IngestMessageResponse], error)
+	IngestMessage(context.Context, *v1.IngestMessageRequest) (*v1.IngestMessageResponse, error)
 }
 
-// NewChatAgentServiceHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewChatAgentServiceHandler(svc ChatAgentServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	chatAgentServiceMethods := v1.File_chatagent_v1_chatagent_proto.Services().ByName("ChatAgentService").Methods()
-	chatAgentServiceUpsertContextHandler := connect.NewUnaryHandler(
-		ChatAgentServiceUpsertContextProcedure,
-		svc.UpsertContext,
-		connect.WithSchema(chatAgentServiceMethods.ByName("UpsertContext")),
-		connect.WithHandlerOptions(opts...),
+// RegisterChatAgentServiceHandler registers svc as the chatagent.v1.ChatAgentService implementation
+// on server.
+func RegisterChatAgentServiceHandler(server *connect.Server, svc ChatAgentServiceHandler) {
+	adapter := chatAgentServiceHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: chatAgentServiceUpsertContextSpec(), Handler: adapter.upsertContext},
+		connect.Method{Spec: chatAgentServiceGetContextSpec(), Handler: adapter.getContext},
+		connect.Method{Spec: chatAgentServiceListContextsSpec(), Handler: adapter.listContexts},
+		connect.Method{Spec: chatAgentServiceCreateSessionSpec(), Handler: adapter.createSession},
+		connect.Method{Spec: chatAgentServiceGetSessionSpec(), Handler: adapter.getSession},
+		connect.Method{Spec: chatAgentServiceTurnSpec(), Handler: adapter.turn},
+		connect.Method{Spec: chatAgentServiceEndSessionSpec(), Handler: adapter.endSession},
+		connect.Method{Spec: chatAgentServiceIngestMessageSpec(), Handler: adapter.ingestMessage},
 	)
-	chatAgentServiceGetContextHandler := connect.NewUnaryHandler(
-		ChatAgentServiceGetContextProcedure,
-		svc.GetContext,
-		connect.WithSchema(chatAgentServiceMethods.ByName("GetContext")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	chatAgentServiceListContextsHandler := connect.NewUnaryHandler(
-		ChatAgentServiceListContextsProcedure,
-		svc.ListContexts,
-		connect.WithSchema(chatAgentServiceMethods.ByName("ListContexts")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	chatAgentServiceCreateSessionHandler := connect.NewUnaryHandler(
-		ChatAgentServiceCreateSessionProcedure,
-		svc.CreateSession,
-		connect.WithSchema(chatAgentServiceMethods.ByName("CreateSession")),
-		connect.WithHandlerOptions(opts...),
-	)
-	chatAgentServiceGetSessionHandler := connect.NewUnaryHandler(
-		ChatAgentServiceGetSessionProcedure,
-		svc.GetSession,
-		connect.WithSchema(chatAgentServiceMethods.ByName("GetSession")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	chatAgentServiceTurnHandler := connect.NewUnaryHandler(
-		ChatAgentServiceTurnProcedure,
-		svc.Turn,
-		connect.WithSchema(chatAgentServiceMethods.ByName("Turn")),
-		connect.WithHandlerOptions(opts...),
-	)
-	chatAgentServiceEndSessionHandler := connect.NewUnaryHandler(
-		ChatAgentServiceEndSessionProcedure,
-		svc.EndSession,
-		connect.WithSchema(chatAgentServiceMethods.ByName("EndSession")),
-		connect.WithHandlerOptions(opts...),
-	)
-	chatAgentServiceIngestMessageHandler := connect.NewUnaryHandler(
-		ChatAgentServiceIngestMessageProcedure,
-		svc.IngestMessage,
-		connect.WithSchema(chatAgentServiceMethods.ByName("IngestMessage")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/chatagent.v1.ChatAgentService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case ChatAgentServiceUpsertContextProcedure:
-			chatAgentServiceUpsertContextHandler.ServeHTTP(w, r)
-		case ChatAgentServiceGetContextProcedure:
-			chatAgentServiceGetContextHandler.ServeHTTP(w, r)
-		case ChatAgentServiceListContextsProcedure:
-			chatAgentServiceListContextsHandler.ServeHTTP(w, r)
-		case ChatAgentServiceCreateSessionProcedure:
-			chatAgentServiceCreateSessionHandler.ServeHTTP(w, r)
-		case ChatAgentServiceGetSessionProcedure:
-			chatAgentServiceGetSessionHandler.ServeHTTP(w, r)
-		case ChatAgentServiceTurnProcedure:
-			chatAgentServiceTurnHandler.ServeHTTP(w, r)
-		case ChatAgentServiceEndSessionProcedure:
-			chatAgentServiceEndSessionHandler.ServeHTTP(w, r)
-		case ChatAgentServiceIngestMessageProcedure:
-			chatAgentServiceIngestMessageHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedChatAgentServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedChatAgentServiceHandler struct{}
 
-func (UnimplementedChatAgentServiceHandler) UpsertContext(context.Context, *connect.Request[v1.UpsertContextRequest]) (*connect.Response[v1.UpsertContextResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.UpsertContext is not implemented"))
+func (UnimplementedChatAgentServiceHandler) UpsertContext(context.Context, *v1.UpsertContextRequest) (*v1.UpsertContextResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "chatagent.v1.ChatAgentService.UpsertContext is not implemented")
 }
 
-func (UnimplementedChatAgentServiceHandler) GetContext(context.Context, *connect.Request[v1.GetContextRequest]) (*connect.Response[v1.GetContextResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.GetContext is not implemented"))
+func (UnimplementedChatAgentServiceHandler) GetContext(context.Context, *v1.GetContextRequest) (*v1.GetContextResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "chatagent.v1.ChatAgentService.GetContext is not implemented")
 }
 
-func (UnimplementedChatAgentServiceHandler) ListContexts(context.Context, *connect.Request[v1.ListContextsRequest]) (*connect.Response[v1.ListContextsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.ListContexts is not implemented"))
+func (UnimplementedChatAgentServiceHandler) ListContexts(context.Context, *v1.ListContextsRequest) (*v1.ListContextsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "chatagent.v1.ChatAgentService.ListContexts is not implemented")
 }
 
-func (UnimplementedChatAgentServiceHandler) CreateSession(context.Context, *connect.Request[v1.CreateSessionRequest]) (*connect.Response[v1.CreateSessionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.CreateSession is not implemented"))
+func (UnimplementedChatAgentServiceHandler) CreateSession(context.Context, *v1.CreateSessionRequest) (*v1.CreateSessionResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "chatagent.v1.ChatAgentService.CreateSession is not implemented")
 }
 
-func (UnimplementedChatAgentServiceHandler) GetSession(context.Context, *connect.Request[v1.GetSessionRequest]) (*connect.Response[v1.GetSessionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.GetSession is not implemented"))
+func (UnimplementedChatAgentServiceHandler) GetSession(context.Context, *v1.GetSessionRequest) (*v1.GetSessionResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "chatagent.v1.ChatAgentService.GetSession is not implemented")
 }
 
-func (UnimplementedChatAgentServiceHandler) Turn(context.Context, *connect.Request[v1.TurnRequest]) (*connect.Response[v1.TurnResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.Turn is not implemented"))
+func (UnimplementedChatAgentServiceHandler) Turn(context.Context, *v1.TurnRequest) (*v1.TurnResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "chatagent.v1.ChatAgentService.Turn is not implemented")
 }
 
-func (UnimplementedChatAgentServiceHandler) EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.EndSession is not implemented"))
+func (UnimplementedChatAgentServiceHandler) EndSession(context.Context, *v1.EndSessionRequest) (*v1.EndSessionResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "chatagent.v1.ChatAgentService.EndSession is not implemented")
 }
 
-func (UnimplementedChatAgentServiceHandler) IngestMessage(context.Context, *connect.Request[v1.IngestMessageRequest]) (*connect.Response[v1.IngestMessageResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("chatagent.v1.ChatAgentService.IngestMessage is not implemented"))
+func (UnimplementedChatAgentServiceHandler) IngestMessage(context.Context, *v1.IngestMessageRequest) (*v1.IngestMessageResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "chatagent.v1.ChatAgentService.IngestMessage is not implemented")
+}
+
+type chatAgentServiceClient struct {
+	client *connect.Client
+}
+
+func (c *chatAgentServiceClient) UpsertContext(ctx context.Context, req *v1.UpsertContextRequest) (*v1.UpsertContextResponse, error) {
+	var res v1.UpsertContextResponse
+	if err := c.client.CallUnary(ctx, chatAgentServiceUpsertContextSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *chatAgentServiceClient) GetContext(ctx context.Context, req *v1.GetContextRequest) (*v1.GetContextResponse, error) {
+	var res v1.GetContextResponse
+	if err := c.client.CallUnary(ctx, chatAgentServiceGetContextSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *chatAgentServiceClient) ListContexts(ctx context.Context, req *v1.ListContextsRequest) (*v1.ListContextsResponse, error) {
+	var res v1.ListContextsResponse
+	if err := c.client.CallUnary(ctx, chatAgentServiceListContextsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *chatAgentServiceClient) CreateSession(ctx context.Context, req *v1.CreateSessionRequest) (*v1.CreateSessionResponse, error) {
+	var res v1.CreateSessionResponse
+	if err := c.client.CallUnary(ctx, chatAgentServiceCreateSessionSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *chatAgentServiceClient) GetSession(ctx context.Context, req *v1.GetSessionRequest) (*v1.GetSessionResponse, error) {
+	var res v1.GetSessionResponse
+	if err := c.client.CallUnary(ctx, chatAgentServiceGetSessionSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *chatAgentServiceClient) Turn(ctx context.Context, req *v1.TurnRequest) (*v1.TurnResponse, error) {
+	var res v1.TurnResponse
+	if err := c.client.CallUnary(ctx, chatAgentServiceTurnSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *chatAgentServiceClient) EndSession(ctx context.Context, req *v1.EndSessionRequest) (*v1.EndSessionResponse, error) {
+	var res v1.EndSessionResponse
+	if err := c.client.CallUnary(ctx, chatAgentServiceEndSessionSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *chatAgentServiceClient) IngestMessage(ctx context.Context, req *v1.IngestMessageRequest) (*v1.IngestMessageResponse, error) {
+	var res v1.IngestMessageResponse
+	if err := c.client.CallUnary(ctx, chatAgentServiceIngestMessageSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type chatAgentServiceHandler struct{ svc ChatAgentServiceHandler }
+
+func (h chatAgentServiceHandler) upsertContext(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpsertContextRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.UpsertContext(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h chatAgentServiceHandler) getContext(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetContextRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetContext(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h chatAgentServiceHandler) listContexts(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListContextsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ListContexts(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h chatAgentServiceHandler) createSession(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateSessionRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateSession(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h chatAgentServiceHandler) getSession(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetSessionRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetSession(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h chatAgentServiceHandler) turn(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.TurnRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Turn(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h chatAgentServiceHandler) endSession(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.EndSessionRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.EndSession(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h chatAgentServiceHandler) ingestMessage(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.IngestMessageRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.IngestMessage(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

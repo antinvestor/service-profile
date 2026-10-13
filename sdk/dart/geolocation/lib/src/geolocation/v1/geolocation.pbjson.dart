@@ -1,21 +1,26 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: geolocation/v1/geolocation.proto
-//
-// @dart = 2.12
+// Generated from geolocation/v1/geolocation.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import '../../google/protobuf/empty.pbjson.dart' as $2;
-import '../../google/protobuf/struct.pbjson.dart' as $1;
-import '../../google/protobuf/timestamp.pbjson.dart' as $0;
+import 'package:protobuf/well_known_types/google/protobuf/empty.pbjson.dart'
+    as $2;
+import 'package:protobuf/well_known_types/google/protobuf/struct.pbjson.dart'
+    as $1;
+import 'package:protobuf/well_known_types/google/protobuf/timestamp.pbjson.dart'
+    as $0;
 
 @$core.Deprecated('Use locationSourceDescriptor instead')
 const LocationSource$json = {
@@ -91,15 +96,52 @@ final $typed_data.Uint8List routeDeviationEventTypeDescriptor = $convert.base64D
 const LocationPointInput$json = {
   '1': 'LocationPointInput',
   '2': [
-    {'1': 'timestamp', '3': 1, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'timestamp'},
+    {
+      '1': 'timestamp',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'timestamp'
+    },
     {'1': 'latitude', '3': 2, '4': 1, '5': 1, '10': 'latitude'},
     {'1': 'longitude', '3': 3, '4': 1, '5': 1, '10': 'longitude'},
-    {'1': 'altitude', '3': 4, '4': 1, '5': 1, '9': 0, '10': 'altitude', '17': true},
+    {
+      '1': 'altitude',
+      '3': 4,
+      '4': 1,
+      '5': 1,
+      '9': 0,
+      '10': 'altitude',
+      '17': true
+    },
     {'1': 'accuracy', '3': 5, '4': 1, '5': 1, '10': 'accuracy'},
     {'1': 'speed', '3': 6, '4': 1, '5': 1, '9': 1, '10': 'speed', '17': true},
-    {'1': 'bearing', '3': 7, '4': 1, '5': 1, '9': 2, '10': 'bearing', '17': true},
-    {'1': 'source', '3': 8, '4': 1, '5': 14, '6': '.geolocation.v1.LocationSource', '10': 'source'},
-    {'1': 'extra', '3': 9, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
+    {
+      '1': 'bearing',
+      '3': 7,
+      '4': 1,
+      '5': 1,
+      '9': 2,
+      '10': 'bearing',
+      '17': true
+    },
+    {
+      '1': 'source',
+      '3': 8,
+      '4': 1,
+      '5': 14,
+      '6': '.geolocation.v1.LocationSource',
+      '10': 'source'
+    },
+    {
+      '1': 'extra',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
     {'1': 'device_id', '3': 10, '4': 1, '5': 9, '10': 'deviceId'},
   ],
   '8': [
@@ -126,16 +168,60 @@ const LocationPointObject$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'subject_id', '3': 2, '4': 1, '5': 9, '10': 'subjectId'},
-    {'1': 'timestamp', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'timestamp'},
+    {
+      '1': 'timestamp',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'timestamp'
+    },
     {'1': 'latitude', '3': 4, '4': 1, '5': 1, '10': 'latitude'},
     {'1': 'longitude', '3': 5, '4': 1, '5': 1, '10': 'longitude'},
-    {'1': 'altitude', '3': 6, '4': 1, '5': 1, '9': 0, '10': 'altitude', '17': true},
+    {
+      '1': 'altitude',
+      '3': 6,
+      '4': 1,
+      '5': 1,
+      '9': 0,
+      '10': 'altitude',
+      '17': true
+    },
     {'1': 'accuracy', '3': 7, '4': 1, '5': 1, '10': 'accuracy'},
     {'1': 'speed', '3': 8, '4': 1, '5': 1, '9': 1, '10': 'speed', '17': true},
-    {'1': 'bearing', '3': 9, '4': 1, '5': 1, '9': 2, '10': 'bearing', '17': true},
-    {'1': 'source', '3': 10, '4': 1, '5': 14, '6': '.geolocation.v1.LocationSource', '10': 'source'},
-    {'1': 'extra', '3': 11, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
-    {'1': 'created_at', '3': 12, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'createdAt'},
+    {
+      '1': 'bearing',
+      '3': 9,
+      '4': 1,
+      '5': 1,
+      '9': 2,
+      '10': 'bearing',
+      '17': true
+    },
+    {
+      '1': 'source',
+      '3': 10,
+      '4': 1,
+      '5': 14,
+      '6': '.geolocation.v1.LocationSource',
+      '10': 'source'
+    },
+    {
+      '1': 'extra',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
+    {
+      '1': 'created_at',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'createdAt'
+    },
     {'1': 'device_id', '3': 13, '4': 1, '5': 9, '10': 'deviceId'},
   ],
   '8': [
@@ -166,13 +252,34 @@ const AreaObject$json = {
     {'1': 'owner_id', '3': 2, '4': 1, '5': 9, '10': 'ownerId'},
     {'1': 'name', '3': 3, '4': 1, '5': 9, '10': 'name'},
     {'1': 'description', '3': 4, '4': 1, '5': 9, '10': 'description'},
-    {'1': 'area_type', '3': 5, '4': 1, '5': 14, '6': '.geolocation.v1.AreaType', '10': 'areaType'},
+    {
+      '1': 'area_type',
+      '3': 5,
+      '4': 1,
+      '5': 14,
+      '6': '.geolocation.v1.AreaType',
+      '10': 'areaType'
+    },
     {'1': 'geometry', '3': 6, '4': 1, '5': 9, '10': 'geometry'},
     {'1': 'area_m2', '3': 7, '4': 1, '5': 1, '10': 'areaM2'},
     {'1': 'perimeter_m', '3': 8, '4': 1, '5': 1, '10': 'perimeterM'},
     {'1': 'state', '3': 9, '4': 1, '5': 5, '10': 'state'},
-    {'1': 'extra', '3': 10, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
-    {'1': 'created_at', '3': 11, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'createdAt'},
+    {
+      '1': 'extra',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
+    {
+      '1': 'created_at',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'createdAt'
+    },
   ],
 };
 
@@ -193,11 +300,32 @@ const GeoEventObject$json = {
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'subject_id', '3': 2, '4': 1, '5': 9, '10': 'subjectId'},
     {'1': 'area_id', '3': 3, '4': 1, '5': 9, '10': 'areaId'},
-    {'1': 'event_type', '3': 4, '4': 1, '5': 14, '6': '.geolocation.v1.GeoEventType', '10': 'eventType'},
-    {'1': 'timestamp', '3': 5, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'timestamp'},
+    {
+      '1': 'event_type',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.geolocation.v1.GeoEventType',
+      '10': 'eventType'
+    },
+    {
+      '1': 'timestamp',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'timestamp'
+    },
     {'1': 'confidence', '3': 6, '4': 1, '5': 1, '10': 'confidence'},
     {'1': 'point_id', '3': 7, '4': 1, '5': 9, '10': 'pointId'},
-    {'1': 'extra', '3': 8, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
+    {
+      '1': 'extra',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
   ],
 };
 
@@ -215,7 +343,14 @@ const AreaSubjectObject$json = {
   '1': 'AreaSubjectObject',
   '2': [
     {'1': 'subject_id', '3': 1, '4': 1, '5': 9, '10': 'subjectId'},
-    {'1': 'enter_timestamp', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'enterTimestamp'},
+    {
+      '1': 'enter_timestamp',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'enterTimestamp'
+    },
   ],
 };
 
@@ -231,7 +366,14 @@ const NearbySubjectObject$json = {
   '2': [
     {'1': 'subject_id', '3': 1, '4': 1, '5': 9, '10': 'subjectId'},
     {'1': 'distance_meters', '3': 2, '4': 1, '5': 1, '10': 'distanceMeters'},
-    {'1': 'last_seen', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'lastSeen'},
+    {
+      '1': 'last_seen',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'lastSeen'
+    },
   ],
 };
 
@@ -247,7 +389,14 @@ const NearbyAreaObject$json = {
   '2': [
     {'1': 'area_id', '3': 1, '4': 1, '5': 9, '10': 'areaId'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'area_type', '3': 3, '4': 1, '5': 14, '6': '.geolocation.v1.AreaType', '10': 'areaType'},
+    {
+      '1': 'area_type',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.geolocation.v1.AreaType',
+      '10': 'areaType'
+    },
     {'1': 'distance_meters', '3': 4, '4': 1, '5': 1, '10': 'distanceMeters'},
   ],
 };
@@ -269,11 +418,49 @@ const RouteObject$json = {
     {'1': 'geometry', '3': 5, '4': 1, '5': 9, '10': 'geometry'},
     {'1': 'length_m', '3': 6, '4': 1, '5': 1, '10': 'lengthM'},
     {'1': 'state', '3': 7, '4': 1, '5': 5, '10': 'state'},
-    {'1': 'deviation_threshold_m', '3': 8, '4': 1, '5': 1, '9': 0, '10': 'deviationThresholdM', '17': true},
-    {'1': 'deviation_consecutive_count', '3': 9, '4': 1, '5': 5, '9': 1, '10': 'deviationConsecutiveCount', '17': true},
-    {'1': 'deviation_cooldown_sec', '3': 10, '4': 1, '5': 5, '9': 2, '10': 'deviationCooldownSec', '17': true},
-    {'1': 'extra', '3': 11, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
-    {'1': 'created_at', '3': 12, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'createdAt'},
+    {
+      '1': 'deviation_threshold_m',
+      '3': 8,
+      '4': 1,
+      '5': 1,
+      '9': 0,
+      '10': 'deviationThresholdM',
+      '17': true
+    },
+    {
+      '1': 'deviation_consecutive_count',
+      '3': 9,
+      '4': 1,
+      '5': 5,
+      '9': 1,
+      '10': 'deviationConsecutiveCount',
+      '17': true
+    },
+    {
+      '1': 'deviation_cooldown_sec',
+      '3': 10,
+      '4': 1,
+      '5': 5,
+      '9': 2,
+      '10': 'deviationCooldownSec',
+      '17': true
+    },
+    {
+      '1': 'extra',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
+    {
+      '1': 'created_at',
+      '3': 12,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'createdAt'
+    },
   ],
   '8': [
     {'1': '_deviation_threshold_m'},
@@ -303,11 +490,39 @@ const RouteAssignmentObject$json = {
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'subject_id', '3': 2, '4': 1, '5': 9, '10': 'subjectId'},
     {'1': 'route_id', '3': 3, '4': 1, '5': 9, '10': 'routeId'},
-    {'1': 'valid_from', '3': 4, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'validFrom'},
-    {'1': 'valid_until', '3': 5, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'validUntil'},
+    {
+      '1': 'valid_from',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'validFrom'
+    },
+    {
+      '1': 'valid_until',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'validUntil'
+    },
     {'1': 'state', '3': 6, '4': 1, '5': 5, '10': 'state'},
-    {'1': 'extra', '3': 7, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
-    {'1': 'created_at', '3': 8, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'createdAt'},
+    {
+      '1': 'extra',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
+    {
+      '1': 'created_at',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'createdAt'
+    },
   ],
 };
 
@@ -328,12 +543,33 @@ const RouteDeviationEventObject$json = {
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'subject_id', '3': 2, '4': 1, '5': 9, '10': 'subjectId'},
     {'1': 'route_id', '3': 3, '4': 1, '5': 9, '10': 'routeId'},
-    {'1': 'event_type', '3': 4, '4': 1, '5': 14, '6': '.geolocation.v1.RouteDeviationEventType', '10': 'eventType'},
+    {
+      '1': 'event_type',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.geolocation.v1.RouteDeviationEventType',
+      '10': 'eventType'
+    },
     {'1': 'distance_meters', '3': 5, '4': 1, '5': 1, '10': 'distanceMeters'},
     {'1': 'latitude', '3': 6, '4': 1, '5': 1, '10': 'latitude'},
     {'1': 'longitude', '3': 7, '4': 1, '5': 1, '10': 'longitude'},
-    {'1': 'timestamp', '3': 8, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'timestamp'},
-    {'1': 'extra', '3': 9, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
+    {
+      '1': 'timestamp',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'timestamp'
+    },
+    {
+      '1': 'extra',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
   ],
 };
 
@@ -352,7 +588,14 @@ const IngestLocationsRequest$json = {
   '1': 'IngestLocationsRequest',
   '2': [
     {'1': 'subject_id', '3': 1, '4': 1, '5': 9, '10': 'subjectId'},
-    {'1': 'points', '3': 2, '4': 3, '5': 11, '6': '.geolocation.v1.LocationPointInput', '10': 'points'},
+    {
+      '1': 'points',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.LocationPointInput',
+      '10': 'points'
+    },
   ],
 };
 
@@ -372,15 +615,23 @@ const IngestLocationsResponse$json = {
 };
 
 /// Descriptor for `IngestLocationsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List ingestLocationsResponseDescriptor = $convert.base64Decode(
-    'ChdJbmdlc3RMb2NhdGlvbnNSZXNwb25zZRIaCghhY2NlcHRlZBgBIAEoBVIIYWNjZXB0ZWQSGg'
-    'oIcmVqZWN0ZWQYAiABKAVSCHJlamVjdGVk');
+final $typed_data.Uint8List ingestLocationsResponseDescriptor =
+    $convert.base64Decode(
+        'ChdJbmdlc3RMb2NhdGlvbnNSZXNwb25zZRIaCghhY2NlcHRlZBgBIAEoBVIIYWNjZXB0ZWQSGg'
+        'oIcmVqZWN0ZWQYAiABKAVSCHJlamVjdGVk');
 
 @$core.Deprecated('Use createAreaRequestDescriptor instead')
 const CreateAreaRequest$json = {
   '1': 'CreateAreaRequest',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.AreaObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.AreaObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -393,7 +644,14 @@ final $typed_data.Uint8List createAreaRequestDescriptor = $convert.base64Decode(
 const CreateAreaResponse$json = {
   '1': 'CreateAreaResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.AreaObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.AreaObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -411,14 +669,21 @@ const GetAreaRequest$json = {
 };
 
 /// Descriptor for `GetAreaRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getAreaRequestDescriptor = $convert.base64Decode(
-    'Cg5HZXRBcmVhUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
+final $typed_data.Uint8List getAreaRequestDescriptor =
+    $convert.base64Decode('Cg5HZXRBcmVhUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
 
 @$core.Deprecated('Use getAreaResponseDescriptor instead')
 const GetAreaResponse$json = {
   '1': 'GetAreaResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.AreaObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.AreaObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -433,10 +698,42 @@ const UpdateAreaRequest$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'name', '17': true},
-    {'1': 'description', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'description', '17': true},
-    {'1': 'area_type', '3': 4, '4': 1, '5': 14, '6': '.geolocation.v1.AreaType', '9': 2, '10': 'areaType', '17': true},
-    {'1': 'geometry', '3': 5, '4': 1, '5': 9, '9': 3, '10': 'geometry', '17': true},
-    {'1': 'extra', '3': 6, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
+    {
+      '1': 'description',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'description',
+      '17': true
+    },
+    {
+      '1': 'area_type',
+      '3': 4,
+      '4': 1,
+      '5': 14,
+      '6': '.geolocation.v1.AreaType',
+      '9': 2,
+      '10': 'areaType',
+      '17': true
+    },
+    {
+      '1': 'geometry',
+      '3': 5,
+      '4': 1,
+      '5': 9,
+      '9': 3,
+      '10': 'geometry',
+      '17': true
+    },
+    {
+      '1': 'extra',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
   ],
   '8': [
     {'1': '_name'},
@@ -459,7 +756,14 @@ final $typed_data.Uint8List updateAreaRequestDescriptor = $convert.base64Decode(
 const UpdateAreaResponse$json = {
   '1': 'UpdateAreaResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.AreaObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.AreaObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -477,8 +781,8 @@ const DeleteAreaRequest$json = {
 };
 
 /// Descriptor for `DeleteAreaRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List deleteAreaRequestDescriptor = $convert.base64Decode(
-    'ChFEZWxldGVBcmVhUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
+final $typed_data.Uint8List deleteAreaRequestDescriptor =
+    $convert.base64Decode('ChFEZWxldGVBcmVhUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
 
 @$core.Deprecated('Use searchAreasRequestDescriptor instead')
 const SearchAreasRequest$json = {
@@ -499,7 +803,14 @@ final $typed_data.Uint8List searchAreasRequestDescriptor = $convert.base64Decode
 const SearchAreasResponse$json = {
   '1': 'SearchAreasResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.geolocation.v1.AreaObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.AreaObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -512,7 +823,14 @@ final $typed_data.Uint8List searchAreasResponseDescriptor = $convert.base64Decod
 const CreateRouteRequest$json = {
   '1': 'CreateRouteRequest',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.RouteObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.RouteObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -525,7 +843,14 @@ final $typed_data.Uint8List createRouteRequestDescriptor = $convert.base64Decode
 const CreateRouteResponse$json = {
   '1': 'CreateRouteResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.RouteObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.RouteObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -543,14 +868,21 @@ const GetRouteRequest$json = {
 };
 
 /// Descriptor for `GetRouteRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getRouteRequestDescriptor = $convert.base64Decode(
-    'Cg9HZXRSb3V0ZVJlcXVlc3QSDgoCaWQYASABKAlSAmlk');
+final $typed_data.Uint8List getRouteRequestDescriptor =
+    $convert.base64Decode('Cg9HZXRSb3V0ZVJlcXVlc3QSDgoCaWQYASABKAlSAmlk');
 
 @$core.Deprecated('Use getRouteResponseDescriptor instead')
 const GetRouteResponse$json = {
   '1': 'GetRouteResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.RouteObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.RouteObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -565,12 +897,59 @@ const UpdateRouteRequest$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '10': 'id'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '9': 0, '10': 'name', '17': true},
-    {'1': 'description', '3': 3, '4': 1, '5': 9, '9': 1, '10': 'description', '17': true},
-    {'1': 'geometry', '3': 4, '4': 1, '5': 9, '9': 2, '10': 'geometry', '17': true},
-    {'1': 'deviation_threshold_m', '3': 5, '4': 1, '5': 1, '9': 3, '10': 'deviationThresholdM', '17': true},
-    {'1': 'deviation_consecutive_count', '3': 6, '4': 1, '5': 5, '9': 4, '10': 'deviationConsecutiveCount', '17': true},
-    {'1': 'deviation_cooldown_sec', '3': 7, '4': 1, '5': 5, '9': 5, '10': 'deviationCooldownSec', '17': true},
-    {'1': 'extra', '3': 8, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
+    {
+      '1': 'description',
+      '3': 3,
+      '4': 1,
+      '5': 9,
+      '9': 1,
+      '10': 'description',
+      '17': true
+    },
+    {
+      '1': 'geometry',
+      '3': 4,
+      '4': 1,
+      '5': 9,
+      '9': 2,
+      '10': 'geometry',
+      '17': true
+    },
+    {
+      '1': 'deviation_threshold_m',
+      '3': 5,
+      '4': 1,
+      '5': 1,
+      '9': 3,
+      '10': 'deviationThresholdM',
+      '17': true
+    },
+    {
+      '1': 'deviation_consecutive_count',
+      '3': 6,
+      '4': 1,
+      '5': 5,
+      '9': 4,
+      '10': 'deviationConsecutiveCount',
+      '17': true
+    },
+    {
+      '1': 'deviation_cooldown_sec',
+      '3': 7,
+      '4': 1,
+      '5': 5,
+      '9': 5,
+      '10': 'deviationCooldownSec',
+      '17': true
+    },
+    {
+      '1': 'extra',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
   ],
   '8': [
     {'1': '_name'},
@@ -598,7 +977,14 @@ final $typed_data.Uint8List updateRouteRequestDescriptor = $convert.base64Decode
 const UpdateRouteResponse$json = {
   '1': 'UpdateRouteResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.RouteObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.RouteObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -616,8 +1002,8 @@ const DeleteRouteRequest$json = {
 };
 
 /// Descriptor for `DeleteRouteRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List deleteRouteRequestDescriptor = $convert.base64Decode(
-    'ChJEZWxldGVSb3V0ZVJlcXVlc3QSDgoCaWQYASABKAlSAmlk');
+final $typed_data.Uint8List deleteRouteRequestDescriptor =
+    $convert.base64Decode('ChJEZWxldGVSb3V0ZVJlcXVlc3QSDgoCaWQYASABKAlSAmlk');
 
 @$core.Deprecated('Use searchRoutesRequestDescriptor instead')
 const SearchRoutesRequest$json = {
@@ -637,7 +1023,14 @@ final $typed_data.Uint8List searchRoutesRequestDescriptor = $convert.base64Decod
 const SearchRoutesResponse$json = {
   '1': 'SearchRoutesResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.geolocation.v1.RouteObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.RouteObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -652,8 +1045,22 @@ const AssignRouteRequest$json = {
   '2': [
     {'1': 'subject_id', '3': 1, '4': 1, '5': 9, '10': 'subjectId'},
     {'1': 'route_id', '3': 2, '4': 1, '5': 9, '10': 'routeId'},
-    {'1': 'valid_from', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'validFrom'},
-    {'1': 'valid_until', '3': 4, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'validUntil'},
+    {
+      '1': 'valid_from',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'validFrom'
+    },
+    {
+      '1': 'valid_until',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'validUntil'
+    },
   ],
 };
 
@@ -668,7 +1075,14 @@ final $typed_data.Uint8List assignRouteRequestDescriptor = $convert.base64Decode
 const AssignRouteResponse$json = {
   '1': 'AssignRouteResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.geolocation.v1.RouteAssignmentObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.geolocation.v1.RouteAssignmentObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -686,8 +1100,8 @@ const UnassignRouteRequest$json = {
 };
 
 /// Descriptor for `UnassignRouteRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List unassignRouteRequestDescriptor = $convert.base64Decode(
-    'ChRVbmFzc2lnblJvdXRlUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
+final $typed_data.Uint8List unassignRouteRequestDescriptor = $convert
+    .base64Decode('ChRVbmFzc2lnblJvdXRlUmVxdWVzdBIOCgJpZBgBIAEoCVICaWQ=');
 
 @$core.Deprecated('Use getSubjectRouteAssignmentsRequestDescriptor instead')
 const GetSubjectRouteAssignmentsRequest$json = {
@@ -698,30 +1112,53 @@ const GetSubjectRouteAssignmentsRequest$json = {
 };
 
 /// Descriptor for `GetSubjectRouteAssignmentsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSubjectRouteAssignmentsRequestDescriptor = $convert.base64Decode(
-    'CiFHZXRTdWJqZWN0Um91dGVBc3NpZ25tZW50c1JlcXVlc3QSHQoKc3ViamVjdF9pZBgBIAEoCV'
-    'IJc3ViamVjdElk');
+final $typed_data.Uint8List getSubjectRouteAssignmentsRequestDescriptor =
+    $convert.base64Decode(
+        'CiFHZXRTdWJqZWN0Um91dGVBc3NpZ25tZW50c1JlcXVlc3QSHQoKc3ViamVjdF9pZBgBIAEoCV'
+        'IJc3ViamVjdElk');
 
 @$core.Deprecated('Use getSubjectRouteAssignmentsResponseDescriptor instead')
 const GetSubjectRouteAssignmentsResponse$json = {
   '1': 'GetSubjectRouteAssignmentsResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.geolocation.v1.RouteAssignmentObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.RouteAssignmentObject',
+      '10': 'data'
+    },
   ],
 };
 
 /// Descriptor for `GetSubjectRouteAssignmentsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSubjectRouteAssignmentsResponseDescriptor = $convert.base64Decode(
-    'CiJHZXRTdWJqZWN0Um91dGVBc3NpZ25tZW50c1Jlc3BvbnNlEjkKBGRhdGEYASADKAsyJS5nZW'
-    '9sb2NhdGlvbi52MS5Sb3V0ZUFzc2lnbm1lbnRPYmplY3RSBGRhdGE=');
+final $typed_data.Uint8List getSubjectRouteAssignmentsResponseDescriptor =
+    $convert.base64Decode(
+        'CiJHZXRTdWJqZWN0Um91dGVBc3NpZ25tZW50c1Jlc3BvbnNlEjkKBGRhdGEYASADKAsyJS5nZW'
+        '9sb2NhdGlvbi52MS5Sb3V0ZUFzc2lnbm1lbnRPYmplY3RSBGRhdGE=');
 
 @$core.Deprecated('Use getTrackRequestDescriptor instead')
 const GetTrackRequest$json = {
   '1': 'GetTrackRequest',
   '2': [
     {'1': 'subject_id', '3': 1, '4': 1, '5': 9, '10': 'subjectId'},
-    {'1': 'from', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'from'},
-    {'1': 'to', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'to'},
+    {
+      '1': 'from',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'from'
+    },
+    {
+      '1': 'to',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'to'
+    },
     {'1': 'limit', '3': 4, '4': 1, '5': 5, '10': 'limit'},
     {'1': 'offset', '3': 5, '4': 1, '5': 5, '10': 'offset'},
   ],
@@ -738,7 +1175,14 @@ final $typed_data.Uint8List getTrackRequestDescriptor = $convert.base64Decode(
 const GetTrackResponse$json = {
   '1': 'GetTrackResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.geolocation.v1.LocationPointObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.LocationPointObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -752,8 +1196,22 @@ const GetSubjectEventsRequest$json = {
   '1': 'GetSubjectEventsRequest',
   '2': [
     {'1': 'subject_id', '3': 1, '4': 1, '5': 9, '10': 'subjectId'},
-    {'1': 'from', '3': 2, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'from'},
-    {'1': 'to', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Timestamp', '10': 'to'},
+    {
+      '1': 'from',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'from'
+    },
+    {
+      '1': 'to',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Timestamp',
+      '10': 'to'
+    },
     {'1': 'limit', '3': 4, '4': 1, '5': 5, '10': 'limit'},
     {'1': 'offset', '3': 5, '4': 1, '5': 5, '10': 'offset'},
   ],
@@ -770,14 +1228,22 @@ final $typed_data.Uint8List getSubjectEventsRequestDescriptor = $convert.base64D
 const GetSubjectEventsResponse$json = {
   '1': 'GetSubjectEventsResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.geolocation.v1.GeoEventObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.GeoEventObject',
+      '10': 'data'
+    },
   ],
 };
 
 /// Descriptor for `GetSubjectEventsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getSubjectEventsResponseDescriptor = $convert.base64Decode(
-    'ChhHZXRTdWJqZWN0RXZlbnRzUmVzcG9uc2USMgoEZGF0YRgBIAMoCzIeLmdlb2xvY2F0aW9uLn'
-    'YxLkdlb0V2ZW50T2JqZWN0UgRkYXRh');
+final $typed_data.Uint8List getSubjectEventsResponseDescriptor =
+    $convert.base64Decode(
+        'ChhHZXRTdWJqZWN0RXZlbnRzUmVzcG9uc2USMgoEZGF0YRgBIAMoCzIeLmdlb2xvY2F0aW9uLn'
+        'YxLkdlb0V2ZW50T2JqZWN0UgRkYXRh');
 
 @$core.Deprecated('Use getAreaSubjectsRequestDescriptor instead')
 const GetAreaSubjectsRequest$json = {
@@ -788,21 +1254,30 @@ const GetAreaSubjectsRequest$json = {
 };
 
 /// Descriptor for `GetAreaSubjectsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getAreaSubjectsRequestDescriptor = $convert.base64Decode(
-    'ChZHZXRBcmVhU3ViamVjdHNSZXF1ZXN0EhcKB2FyZWFfaWQYASABKAlSBmFyZWFJZA==');
+final $typed_data.Uint8List getAreaSubjectsRequestDescriptor =
+    $convert.base64Decode(
+        'ChZHZXRBcmVhU3ViamVjdHNSZXF1ZXN0EhcKB2FyZWFfaWQYASABKAlSBmFyZWFJZA==');
 
 @$core.Deprecated('Use getAreaSubjectsResponseDescriptor instead')
 const GetAreaSubjectsResponse$json = {
   '1': 'GetAreaSubjectsResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.geolocation.v1.AreaSubjectObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.AreaSubjectObject',
+      '10': 'data'
+    },
   ],
 };
 
 /// Descriptor for `GetAreaSubjectsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getAreaSubjectsResponseDescriptor = $convert.base64Decode(
-    'ChdHZXRBcmVhU3ViamVjdHNSZXNwb25zZRI1CgRkYXRhGAEgAygLMiEuZ2VvbG9jYXRpb24udj'
-    'EuQXJlYVN1YmplY3RPYmplY3RSBGRhdGE=');
+final $typed_data.Uint8List getAreaSubjectsResponseDescriptor =
+    $convert.base64Decode(
+        'ChdHZXRBcmVhU3ViamVjdHNSZXNwb25zZRI1CgRkYXRhGAEgAygLMiEuZ2VvbG9jYXRpb24udj'
+        'EuQXJlYVN1YmplY3RPYmplY3RSBGRhdGE=');
 
 @$core.Deprecated('Use getNearbySubjectsRequestDescriptor instead')
 const GetNearbySubjectsRequest$json = {
@@ -824,14 +1299,22 @@ final $typed_data.Uint8List getNearbySubjectsRequestDescriptor = $convert.base64
 const GetNearbySubjectsResponse$json = {
   '1': 'GetNearbySubjectsResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.geolocation.v1.NearbySubjectObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.NearbySubjectObject',
+      '10': 'data'
+    },
   ],
 };
 
 /// Descriptor for `GetNearbySubjectsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getNearbySubjectsResponseDescriptor = $convert.base64Decode(
-    'ChlHZXROZWFyYnlTdWJqZWN0c1Jlc3BvbnNlEjcKBGRhdGEYASADKAsyIy5nZW9sb2NhdGlvbi'
-    '52MS5OZWFyYnlTdWJqZWN0T2JqZWN0UgRkYXRh');
+final $typed_data.Uint8List getNearbySubjectsResponseDescriptor =
+    $convert.base64Decode(
+        'ChlHZXROZWFyYnlTdWJqZWN0c1Jlc3BvbnNlEjcKBGRhdGEYASADKAsyIy5nZW9sb2NhdGlvbi'
+        '52MS5OZWFyYnlTdWJqZWN0T2JqZWN0UgRkYXRh');
 
 @$core.Deprecated('Use getNearbyAreasRequestDescriptor instead')
 const GetNearbyAreasRequest$json = {
@@ -854,43 +1337,147 @@ final $typed_data.Uint8List getNearbyAreasRequestDescriptor = $convert.base64Dec
 const GetNearbyAreasResponse$json = {
   '1': 'GetNearbyAreasResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.geolocation.v1.NearbyAreaObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.geolocation.v1.NearbyAreaObject',
+      '10': 'data'
+    },
   ],
 };
 
 /// Descriptor for `GetNearbyAreasResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getNearbyAreasResponseDescriptor = $convert.base64Decode(
-    'ChZHZXROZWFyYnlBcmVhc1Jlc3BvbnNlEjQKBGRhdGEYASADKAsyIC5nZW9sb2NhdGlvbi52MS'
-    '5OZWFyYnlBcmVhT2JqZWN0UgRkYXRh');
+final $typed_data.Uint8List getNearbyAreasResponseDescriptor =
+    $convert.base64Decode(
+        'ChZHZXROZWFyYnlBcmVhc1Jlc3BvbnNlEjQKBGRhdGEYASADKAsyIC5nZW9sb2NhdGlvbi52MS'
+        '5OZWFyYnlBcmVhT2JqZWN0UgRkYXRh');
 
 const $core.Map<$core.String, $core.dynamic> GeolocationServiceBase$json = {
   '1': 'GeolocationService',
   '2': [
-    {'1': 'IngestLocations', '2': '.geolocation.v1.IngestLocationsRequest', '3': '.geolocation.v1.IngestLocationsResponse', '4': {}},
-    {'1': 'CreateArea', '2': '.geolocation.v1.CreateAreaRequest', '3': '.geolocation.v1.CreateAreaResponse', '4': {}},
-    {'1': 'GetArea', '2': '.geolocation.v1.GetAreaRequest', '3': '.geolocation.v1.GetAreaResponse', '4': {}},
-    {'1': 'UpdateArea', '2': '.geolocation.v1.UpdateAreaRequest', '3': '.geolocation.v1.UpdateAreaResponse', '4': {}},
-    {'1': 'DeleteArea', '2': '.geolocation.v1.DeleteAreaRequest', '3': '.google.protobuf.Empty', '4': {}},
-    {'1': 'SearchAreas', '2': '.geolocation.v1.SearchAreasRequest', '3': '.geolocation.v1.SearchAreasResponse', '4': {}},
-    {'1': 'CreateRoute', '2': '.geolocation.v1.CreateRouteRequest', '3': '.geolocation.v1.CreateRouteResponse', '4': {}},
-    {'1': 'GetRoute', '2': '.geolocation.v1.GetRouteRequest', '3': '.geolocation.v1.GetRouteResponse', '4': {}},
-    {'1': 'UpdateRoute', '2': '.geolocation.v1.UpdateRouteRequest', '3': '.geolocation.v1.UpdateRouteResponse', '4': {}},
-    {'1': 'DeleteRoute', '2': '.geolocation.v1.DeleteRouteRequest', '3': '.google.protobuf.Empty', '4': {}},
-    {'1': 'SearchRoutes', '2': '.geolocation.v1.SearchRoutesRequest', '3': '.geolocation.v1.SearchRoutesResponse', '4': {}},
-    {'1': 'AssignRoute', '2': '.geolocation.v1.AssignRouteRequest', '3': '.geolocation.v1.AssignRouteResponse', '4': {}},
-    {'1': 'UnassignRoute', '2': '.geolocation.v1.UnassignRouteRequest', '3': '.google.protobuf.Empty', '4': {}},
-    {'1': 'GetSubjectRouteAssignments', '2': '.geolocation.v1.GetSubjectRouteAssignmentsRequest', '3': '.geolocation.v1.GetSubjectRouteAssignmentsResponse', '4': {}},
-    {'1': 'GetTrack', '2': '.geolocation.v1.GetTrackRequest', '3': '.geolocation.v1.GetTrackResponse', '4': {}},
-    {'1': 'GetSubjectEvents', '2': '.geolocation.v1.GetSubjectEventsRequest', '3': '.geolocation.v1.GetSubjectEventsResponse', '4': {}},
-    {'1': 'GetAreaSubjects', '2': '.geolocation.v1.GetAreaSubjectsRequest', '3': '.geolocation.v1.GetAreaSubjectsResponse', '4': {}},
-    {'1': 'GetNearbySubjects', '2': '.geolocation.v1.GetNearbySubjectsRequest', '3': '.geolocation.v1.GetNearbySubjectsResponse', '4': {}},
-    {'1': 'GetNearbyAreas', '2': '.geolocation.v1.GetNearbyAreasRequest', '3': '.geolocation.v1.GetNearbyAreasResponse', '4': {}},
+    {
+      '1': 'IngestLocations',
+      '2': '.geolocation.v1.IngestLocationsRequest',
+      '3': '.geolocation.v1.IngestLocationsResponse',
+      '4': {}
+    },
+    {
+      '1': 'CreateArea',
+      '2': '.geolocation.v1.CreateAreaRequest',
+      '3': '.geolocation.v1.CreateAreaResponse',
+      '4': {}
+    },
+    {
+      '1': 'GetArea',
+      '2': '.geolocation.v1.GetAreaRequest',
+      '3': '.geolocation.v1.GetAreaResponse',
+      '4': {}
+    },
+    {
+      '1': 'UpdateArea',
+      '2': '.geolocation.v1.UpdateAreaRequest',
+      '3': '.geolocation.v1.UpdateAreaResponse',
+      '4': {}
+    },
+    {
+      '1': 'DeleteArea',
+      '2': '.geolocation.v1.DeleteAreaRequest',
+      '3': '.google.protobuf.Empty',
+      '4': {}
+    },
+    {
+      '1': 'SearchAreas',
+      '2': '.geolocation.v1.SearchAreasRequest',
+      '3': '.geolocation.v1.SearchAreasResponse',
+      '4': {}
+    },
+    {
+      '1': 'CreateRoute',
+      '2': '.geolocation.v1.CreateRouteRequest',
+      '3': '.geolocation.v1.CreateRouteResponse',
+      '4': {}
+    },
+    {
+      '1': 'GetRoute',
+      '2': '.geolocation.v1.GetRouteRequest',
+      '3': '.geolocation.v1.GetRouteResponse',
+      '4': {}
+    },
+    {
+      '1': 'UpdateRoute',
+      '2': '.geolocation.v1.UpdateRouteRequest',
+      '3': '.geolocation.v1.UpdateRouteResponse',
+      '4': {}
+    },
+    {
+      '1': 'DeleteRoute',
+      '2': '.geolocation.v1.DeleteRouteRequest',
+      '3': '.google.protobuf.Empty',
+      '4': {}
+    },
+    {
+      '1': 'SearchRoutes',
+      '2': '.geolocation.v1.SearchRoutesRequest',
+      '3': '.geolocation.v1.SearchRoutesResponse',
+      '4': {}
+    },
+    {
+      '1': 'AssignRoute',
+      '2': '.geolocation.v1.AssignRouteRequest',
+      '3': '.geolocation.v1.AssignRouteResponse',
+      '4': {}
+    },
+    {
+      '1': 'UnassignRoute',
+      '2': '.geolocation.v1.UnassignRouteRequest',
+      '3': '.google.protobuf.Empty',
+      '4': {}
+    },
+    {
+      '1': 'GetSubjectRouteAssignments',
+      '2': '.geolocation.v1.GetSubjectRouteAssignmentsRequest',
+      '3': '.geolocation.v1.GetSubjectRouteAssignmentsResponse',
+      '4': {}
+    },
+    {
+      '1': 'GetTrack',
+      '2': '.geolocation.v1.GetTrackRequest',
+      '3': '.geolocation.v1.GetTrackResponse',
+      '4': {}
+    },
+    {
+      '1': 'GetSubjectEvents',
+      '2': '.geolocation.v1.GetSubjectEventsRequest',
+      '3': '.geolocation.v1.GetSubjectEventsResponse',
+      '4': {}
+    },
+    {
+      '1': 'GetAreaSubjects',
+      '2': '.geolocation.v1.GetAreaSubjectsRequest',
+      '3': '.geolocation.v1.GetAreaSubjectsResponse',
+      '4': {}
+    },
+    {
+      '1': 'GetNearbySubjects',
+      '2': '.geolocation.v1.GetNearbySubjectsRequest',
+      '3': '.geolocation.v1.GetNearbySubjectsResponse',
+      '4': {}
+    },
+    {
+      '1': 'GetNearbyAreas',
+      '2': '.geolocation.v1.GetNearbyAreasRequest',
+      '3': '.geolocation.v1.GetNearbyAreasResponse',
+      '4': {}
+    },
   ],
   '3': {},
 };
 
 @$core.Deprecated('Use geolocationServiceDescriptor instead')
-const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> GeolocationServiceBase$messageJson = {
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    GeolocationServiceBase$messageJson = {
   '.geolocation.v1.IngestLocationsRequest': IngestLocationsRequest$json,
   '.geolocation.v1.LocationPointInput': LocationPointInput$json,
   '.google.protobuf.Timestamp': $0.Timestamp$json,
@@ -924,8 +1511,10 @@ const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> Geolocatio
   '.geolocation.v1.AssignRouteResponse': AssignRouteResponse$json,
   '.geolocation.v1.RouteAssignmentObject': RouteAssignmentObject$json,
   '.geolocation.v1.UnassignRouteRequest': UnassignRouteRequest$json,
-  '.geolocation.v1.GetSubjectRouteAssignmentsRequest': GetSubjectRouteAssignmentsRequest$json,
-  '.geolocation.v1.GetSubjectRouteAssignmentsResponse': GetSubjectRouteAssignmentsResponse$json,
+  '.geolocation.v1.GetSubjectRouteAssignmentsRequest':
+      GetSubjectRouteAssignmentsRequest$json,
+  '.geolocation.v1.GetSubjectRouteAssignmentsResponse':
+      GetSubjectRouteAssignmentsResponse$json,
   '.geolocation.v1.GetTrackRequest': GetTrackRequest$json,
   '.geolocation.v1.GetTrackResponse': GetTrackResponse$json,
   '.geolocation.v1.LocationPointObject': LocationPointObject$json,
@@ -982,16 +1571,15 @@ final $typed_data.Uint8List geolocationServiceDescriptor = $convert.base64Decode
     'LnYxLkdldE5lYXJieVN1YmplY3RzUmVxdWVzdBopLmdlb2xvY2F0aW9uLnYxLkdldE5lYXJieV'
     'N1YmplY3RzUmVzcG9uc2UiEYK1GA0KC25lYXJieV92aWV3EnIKDkdldE5lYXJieUFyZWFzEiUu'
     'Z2VvbG9jYXRpb24udjEuR2V0TmVhcmJ5QXJlYXNSZXF1ZXN0GiYuZ2VvbG9jYXRpb24udjEuR2'
-    'V0TmVhcmJ5QXJlYXNSZXNwb25zZSIRgrUYDQoLbmVhcmJ5X3ZpZXcavwSCtRi6BAoPc2Vydmlj'
-    'ZV9wcm9maWxlEg9sb2NhdGlvbl9pbmdlc3QSCWFyZWFfdmlldxILYXJlYV9tYW5hZ2USCnJvdX'
-    'RlX3ZpZXcSDHJvdXRlX21hbmFnZRIKdHJhY2tfdmlldxILbmVhcmJ5X3ZpZXcaXggBEg9sb2Nh'
-    'dGlvbl9pbmdlc3QSCWFyZWFfdmlldxILYXJlYV9tYW5hZ2USCnJvdXRlX3ZpZXcSDHJvdXRlX2'
-    '1hbmFnZRIKdHJhY2tfdmlldxILbmVhcmJ5X3ZpZXcaXggCEg9sb2NhdGlvbl9pbmdlc3QSCWFy'
-    'ZWFfdmlldxILYXJlYV9tYW5hZ2USCnJvdXRlX3ZpZXcSDHJvdXRlX21hbmFnZRIKdHJhY2tfdm'
-    'lldxILbmVhcmJ5X3ZpZXcaQwgDEg9sb2NhdGlvbl9pbmdlc3QSCWFyZWFfdmlldxIKcm91dGVf'
-    'dmlldxIKdHJhY2tfdmlldxILbmVhcmJ5X3ZpZXcaMggEEglhcmVhX3ZpZXcSCnJvdXRlX3ZpZX'
-    'cSCnRyYWNrX3ZpZXcSC25lYXJieV92aWV3GjIIBRIJYXJlYV92aWV3Egpyb3V0ZV92aWV3Egp0'
-    'cmFja192aWV3EgtuZWFyYnlfdmlldxpeCAYSD2xvY2F0aW9uX2luZ2VzdBIJYXJlYV92aWV3Eg'
-    'thcmVhX21hbmFnZRIKcm91dGVfdmlldxIMcm91dGVfbWFuYWdlEgp0cmFja192aWV3EgtuZWFy'
-    'Ynlfdmlldw==');
-
+    'V0TmVhcmJ5QXJlYXNSZXNwb25zZSIRgrUYDQoLbmVhcmJ5X3ZpZXca1ASCtRjPBAoTc2Vydmlj'
+    'ZV9nZW9sb2NhdGlvbhIPbG9jYXRpb25faW5nZXN0EglhcmVhX3ZpZXcSC2FyZWFfbWFuYWdlEg'
+    'pyb3V0ZV92aWV3Egxyb3V0ZV9tYW5hZ2USCnRyYWNrX3ZpZXcSC25lYXJieV92aWV3Gl4IARIP'
+    'bG9jYXRpb25faW5nZXN0EglhcmVhX3ZpZXcSC2FyZWFfbWFuYWdlEgpyb3V0ZV92aWV3Egxyb3'
+    'V0ZV9tYW5hZ2USCnRyYWNrX3ZpZXcSC25lYXJieV92aWV3Gl4IAhIPbG9jYXRpb25faW5nZXN0'
+    'EglhcmVhX3ZpZXcSC2FyZWFfbWFuYWdlEgpyb3V0ZV92aWV3Egxyb3V0ZV9tYW5hZ2USCnRyYW'
+    'NrX3ZpZXcSC25lYXJieV92aWV3GkMIAxIPbG9jYXRpb25faW5nZXN0EglhcmVhX3ZpZXcSCnJv'
+    'dXRlX3ZpZXcSCnRyYWNrX3ZpZXcSC25lYXJieV92aWV3GjIIBBIJYXJlYV92aWV3Egpyb3V0ZV'
+    '92aWV3Egp0cmFja192aWV3EgtuZWFyYnlfdmlldxpDCAUSD2xvY2F0aW9uX2luZ2VzdBIJYXJl'
+    'YV92aWV3Egpyb3V0ZV92aWV3Egp0cmFja192aWV3EgtuZWFyYnlfdmlldxpeCAYSD2xvY2F0aW'
+    '9uX2luZ2VzdBIJYXJlYV92aWV3EgthcmVhX21hbmFnZRIKcm91dGVfdmlldxIMcm91dGVfbWFu'
+    'YWdlEgp0cmFja192aWV3EgtuZWFyYnlfdmlldw==');

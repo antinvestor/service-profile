@@ -5,16 +5,16 @@ import (
 	"math"
 	"time"
 
-	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
-	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/v2/notification/v1/notificationv1connect"
+	"buf.build/gen/go/antinvestor/profile/connectrpc/go/v2/profile/v1/profilev1connect"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	auditlib "github.com/antinvestor/common/audit"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/security/authorizer"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/security/authorizer"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
@@ -121,21 +121,20 @@ func NewProfileServer(
 
 //nolint:revive,staticcheck // server implementation
 func (ps *ProfileServer) GetById(ctx context.Context,
-	request *connect.Request[profilev1.GetByIdRequest]) (
-	*connect.Response[profilev1.GetByIdResponse], error) {
+	request *profilev1.GetByIdRequest) (*profilev1.GetByIdResponse, error) {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
+	if sub, _ := claims.GetSubject(); sub != request.GetId() {
 		if err := ps.checker.Check(ctx, "profile_view"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
 
-	profileObj, err := ps.profileBusiness.GetByID(ctx, request.Msg.GetId())
+	profileObj, err := ps.profileBusiness.GetByID(ctx, request.GetId())
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&profilev1.GetByIdResponse{Data: profileObj}), nil
+	return &profilev1.GetByIdResponse{Data: profileObj}, nil
 }
 
 // ResolveAccounts maps chain account addresses to the profiles that own them.
@@ -143,13 +142,12 @@ func (ps *ProfileServer) GetById(ctx context.Context,
 // refused; it is checked here (and excluded from the interceptor map) so the
 // rule is enforced on every path into the handler.
 func (ps *ProfileServer) ResolveAccounts(ctx context.Context,
-	request *connect.Request[profilev1.ResolveAccountsRequest]) (
-	*connect.Response[profilev1.ResolveAccountsResponse], error) {
+	request *profilev1.ResolveAccountsRequest) (*profilev1.ResolveAccountsResponse, error) {
 	if err := ps.checker.Check(ctx, authz.PermissionAccountResolve); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
 
-	found, err := ps.accountBusiness.Resolve(ctx, request.Msg.GetAddresses())
+	found, err := ps.accountBusiness.Resolve(ctx, request.GetAddresses())
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
@@ -161,29 +159,28 @@ func (ps *ProfileServer) ResolveAccounts(ctx context.Context,
 			ProfileId: a.ProfileID,
 		})
 	}
-	return connect.NewResponse(&profilev1.ResolveAccountsResponse{Data: owners}), nil
+	return &profilev1.ResolveAccountsResponse{Data: owners}, nil
 }
 
 func (ps *ProfileServer) GetByContact(ctx context.Context,
-	request *connect.Request[profilev1.GetByContactRequest]) (
-	*connect.Response[profilev1.GetByContactResponse], error) {
-	profileObj, err := ps.profileBusiness.GetByContact(ctx, request.Msg.GetContact())
+	request *profilev1.GetByContactRequest) (*profilev1.GetByContactResponse, error) {
+	profileObj, err := ps.profileBusiness.GetByContact(ctx, request.GetContact())
 
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&profilev1.GetByContactResponse{Data: profileObj}), nil
+	return &profilev1.GetByContactResponse{Data: profileObj}, nil
 }
 
 func (ps *ProfileServer) Search(ctx context.Context,
-	request *connect.Request[profilev1.SearchRequest],
-	stream *connect.ServerStream[profilev1.SearchResponse],
+	request *profilev1.SearchRequest,
+	stream profilev1connect.ProfileServiceSearchServerStream,
 ) error {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	jobResult, err := ps.profileBusiness.SearchProfile(ctx, request.Msg)
+	jobResult, err := ps.profileBusiness.SearchProfile(ctx, request)
 	if err != nil {
 		return errorutil.CleanErr(err)
 	}
@@ -216,75 +213,75 @@ func (ps *ProfileServer) Search(ctx context.Context,
 
 func (ps *ProfileServer) Merge(
 	ctx context.Context,
-	request *connect.Request[profilev1.MergeRequest],
-) (*connect.Response[profilev1.MergeResponse], error) {
-	profileObj, err := ps.profileBusiness.MergeProfile(ctx, request.Msg)
+	request *profilev1.MergeRequest,
+) (*profilev1.MergeResponse, error) {
+	profileObj, err := ps.profileBusiness.MergeProfile(ctx, request)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&profilev1.MergeResponse{Data: profileObj}), nil
+	return &profilev1.MergeResponse{Data: profileObj}, nil
 }
 
 func (ps *ProfileServer) Create(
 	ctx context.Context,
-	request *connect.Request[profilev1.CreateRequest],
-) (*connect.Response[profilev1.CreateResponse], error) {
-	profileObj, err := ps.profileBusiness.CreateProfile(ctx, request.Msg)
+	request *profilev1.CreateRequest,
+) (*profilev1.CreateResponse, error) {
+	profileObj, err := ps.profileBusiness.CreateProfile(ctx, request)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
 	auditlib.WithResource(ctx, auditlib.ResourceProfile, profileObj.GetId())
-	auditlib.WithDetail(ctx, "profile_type", request.Msg.GetType().String())
-	auditlib.WithDetail(ctx, "contact", request.Msg.GetContact())
+	auditlib.WithDetail(ctx, "profile_type", request.GetType().String())
+	auditlib.WithDetail(ctx, "contact", request.GetContact())
 
-	return connect.NewResponse(&profilev1.CreateResponse{Data: profileObj}), nil
+	return &profilev1.CreateResponse{Data: profileObj}, nil
 }
 
 func (ps *ProfileServer) Update(
 	ctx context.Context,
-	request *connect.Request[profilev1.UpdateRequest],
-) (*connect.Response[profilev1.UpdateResponse], error) {
+	request *profilev1.UpdateRequest,
+) (*profilev1.UpdateResponse, error) {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
+	if sub, _ := claims.GetSubject(); sub != request.GetId() {
 		if err := ps.checker.Check(ctx, "profile_update"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
 
-	profileObj, err := ps.profileBusiness.UpdateProfile(ctx, request.Msg)
+	profileObj, err := ps.profileBusiness.UpdateProfile(ctx, request)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.GetId())
 
-	return connect.NewResponse(&profilev1.UpdateResponse{Data: profileObj}), nil
+	return &profilev1.UpdateResponse{Data: profileObj}, nil
 }
 
 func (ps *ProfileServer) GetByIDAndPartition(
 	ctx context.Context,
-	request *connect.Request[profilev1.GetByIDAndPartitionRequest],
-) (*connect.Response[profilev1.GetByIDAndPartitionResponse], error) {
+	request *profilev1.GetByIDAndPartitionRequest,
+) (*profilev1.GetByIDAndPartitionResponse, error) {
 	profileObj, err := ps.profileBusiness.GetByIDAndPartition(
 		ctx,
-		request.Msg.GetId(),
-		request.Msg.GetPartitionId(),
+		request.GetId(),
+		request.GetPartitionId(),
 	)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.GetId())
 
-	return connect.NewResponse(&profilev1.GetByIDAndPartitionResponse{Data: profileObj}), nil
+	return &profilev1.GetByIDAndPartitionResponse{Data: profileObj}, nil
 }
 
 func (ps *ProfileServer) PropertyHistory(
 	ctx context.Context,
-	request *connect.Request[profilev1.PropertyHistoryRequest],
-) (*connect.Response[profilev1.PropertyHistoryResponse], error) {
+	request *profilev1.PropertyHistoryRequest,
+) (*profilev1.PropertyHistoryResponse, error) {
 	claims := security.ClaimsFromContext(ctx)
 	callerTenantID := ""
 	if claims != nil {
@@ -293,8 +290,8 @@ func (ps *ProfileServer) PropertyHistory(
 
 	entries, err := ps.profileBusiness.GetPropertyHistory(
 		ctx,
-		request.Msg.GetId(),
-		request.Msg.GetKey(),
+		request.GetId(),
+		request.GetKey(),
 		callerTenantID,
 	)
 	if err != nil {
@@ -313,76 +310,74 @@ func (ps *ProfileServer) PropertyHistory(
 		})
 	}
 
-	return connect.NewResponse(&profilev1.PropertyHistoryResponse{Entries: protoEntries}), nil
+	return &profilev1.PropertyHistoryResponse{Entries: protoEntries}, nil
 }
 
 // AddAddress Adds a new address based on the request.
 func (ps *ProfileServer) AddAddress(
 	ctx context.Context,
-	request *connect.Request[profilev1.AddAddressRequest],
-) (*connect.Response[profilev1.AddAddressResponse], error) {
+	request *profilev1.AddAddressRequest,
+) (*profilev1.AddAddressResponse, error) {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
+	if sub, _ := claims.GetSubject(); sub != request.GetId() {
 		if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
 
-	profileObj, err := ps.profileBusiness.AddAddress(ctx, request.Msg)
+	profileObj, err := ps.profileBusiness.AddAddress(ctx, request)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.GetId())
 	auditlib.WithRelation(ctx, auditlib.Relation{
 		ParentType: auditlib.ResourceProfile,
-		ParentID:   request.Msg.GetId(),
+		ParentID:   request.GetId(),
 		ChildType:  auditlib.ResourceAddress,
 		ChildID:    "", // address ID not returned in this response
 		Action:     auditlib.RelationAdded,
 	})
 
-	return connect.NewResponse(&profilev1.AddAddressResponse{Data: profileObj}), nil
+	return &profilev1.AddAddressResponse{Data: profileObj}, nil
 }
 
 func (ps *ProfileServer) AddContact(
 	ctx context.Context,
-	request *connect.Request[profilev1.AddContactRequest],
-) (*connect.Response[profilev1.AddContactResponse], error) {
+	request *profilev1.AddContactRequest,
+) (*profilev1.AddContactResponse, error) {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
+	if sub, _ := claims.GetSubject(); sub != request.GetId() {
 		if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
 
-	profileObj, verificationID, err := ps.profileBusiness.AddContact(ctx, request.Msg)
+	profileObj, verificationID, err := ps.profileBusiness.AddContact(ctx, request)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.GetId())
 	auditlib.WithRelation(ctx, auditlib.Relation{
 		ParentType: auditlib.ResourceProfile,
-		ParentID:   request.Msg.GetId(),
+		ParentID:   request.GetId(),
 		ChildType:  auditlib.ResourceContact,
-		ChildID:    request.Msg.GetContact(),
+		ChildID:    request.GetContact(),
 		Action:     auditlib.RelationAdded,
 	})
 
-	return connect.NewResponse(
-		&profilev1.AddContactResponse{Data: profileObj, VerificationId: verificationID},
-	), nil
+	return &profilev1.AddContactResponse{Data: profileObj, VerificationId: verificationID}, nil
 }
 
 func (ps *ProfileServer) CreateContact(
 	ctx context.Context,
-	request *connect.Request[profilev1.CreateContactRequest],
-) (*connect.Response[profilev1.CreateContactResponse], error) {
+	request *profilev1.CreateContactRequest,
+) (*profilev1.CreateContactResponse, error) {
 	if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
-	createReq := request.Msg
+	createReq := request
 
 	contactList, err := ps.contactBusiness.GetByDetail(ctx, createReq.GetContact())
 
@@ -397,7 +392,7 @@ func (ps *ProfileServer) CreateContact(
 		if decryptErr != nil {
 			return nil, errorutil.CleanErr(decryptErr)
 		}
-		return connect.NewResponse(&profilev1.CreateContactResponse{Data: contact}), nil
+		return &profilev1.CreateContactResponse{Data: contact}, nil
 	}
 
 	requestProperties := data.JSONMap{}
@@ -415,62 +410,61 @@ func (ps *ProfileServer) CreateContact(
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&profilev1.CreateContactResponse{Data: contactObj}), nil
+	return &profilev1.CreateContactResponse{Data: contactObj}, nil
 }
 
 // GetContacts resolves one or many contact ids (standalone or attached).
 func (ps *ProfileServer) GetContacts(
 	ctx context.Context,
-	request *connect.Request[profilev1.GetContactsRequest],
-) (*connect.Response[profilev1.GetContactsResponse], error) {
+	request *profilev1.GetContactsRequest,
+) (*profilev1.GetContactsResponse, error) {
 	if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
 		return nil, authorizer.ToConnectError(err)
 	}
-	found, missing, err := ps.profileBusiness.GetContacts(ctx, request.Msg.GetIds())
+	found, missing, err := ps.profileBusiness.GetContacts(ctx, request.GetIds())
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(&profilev1.GetContactsResponse{
+	return &profilev1.GetContactsResponse{
 		Data:       found,
 		MissingIds: missing,
-	}), nil
+	}, nil
 }
 
 func (ps *ProfileServer) CreateContactVerification(
 	ctx context.Context,
-	request *connect.Request[profilev1.CreateContactVerificationRequest]) (
-	*connect.Response[profilev1.CreateContactVerificationResponse], error) {
-	expiryDuration, err := time.ParseDuration(request.Msg.GetDurationToExpire())
+	request *profilev1.CreateContactVerificationRequest) (*profilev1.CreateContactVerificationResponse, error) {
+	expiryDuration, err := time.ParseDuration(request.GetDurationToExpire())
 	if err != nil {
 		expiryDuration = 0
 	}
 
 	verificationID, err := ps.profileBusiness.VerifyContact(
 		ctx,
-		request.Msg.GetContactId(),
-		request.Msg.GetId(),
-		request.Msg.GetCode(),
+		request.GetContactId(),
+		request.GetId(),
+		request.GetCode(),
 		expiryDuration,
 	)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&profilev1.CreateContactVerificationResponse{
+	return &profilev1.CreateContactVerificationResponse{
 		Id:      verificationID,
 		Success: true,
-	}), nil
+	}, nil
 }
 
 func (ps *ProfileServer) CheckVerification(
 	ctx context.Context,
-	request *connect.Request[profilev1.CheckVerificationRequest],
-) (*connect.Response[profilev1.CheckVerificationResponse], error) {
+	request *profilev1.CheckVerificationRequest,
+) (*profilev1.CheckVerificationResponse, error) {
 	verificationAttempts, verified, err := ps.profileBusiness.CheckVerification(
 		ctx,
-		request.Msg.GetId(),
-		request.Msg.GetCode(),
-		request.Peer().Addr,
+		request.GetId(),
+		request.GetCode(),
+		peerAddr(ctx),
 	)
 
 	if err != nil {
@@ -478,45 +472,44 @@ func (ps *ProfileServer) CheckVerification(
 	}
 
 	// #nosec G115: verificationAttempts is bounded by business logic constraints
-	return connect.NewResponse(
-		&profilev1.CheckVerificationResponse{
-			Id: request.Msg.GetId(),
-			CheckAttempts: int32(
-				verificationAttempts,
-			),
-			Success: verified,
-		}), nil
+	return &profilev1.CheckVerificationResponse{
+		Id: request.GetId(),
+		CheckAttempts: int32(
+			verificationAttempts,
+		),
+		Success: verified,
+	}, nil
 }
 
 func (ps *ProfileServer) RemoveContact(
 	ctx context.Context,
-	request *connect.Request[profilev1.RemoveContactRequest],
-) (*connect.Response[profilev1.RemoveContactResponse], error) {
+	request *profilev1.RemoveContactRequest,
+) (*profilev1.RemoveContactResponse, error) {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
+	if sub, _ := claims.GetSubject(); sub != request.GetId() {
 		if err := ps.checker.Check(ctx, "contact_manage"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
 
-	profileObj, err := ps.profileBusiness.RemoveContact(ctx, request.Msg)
+	profileObj, err := ps.profileBusiness.RemoveContact(ctx, request)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	auditlib.WithResource(ctx, auditlib.ResourceContact, request.Msg.GetId())
+	auditlib.WithResource(ctx, auditlib.ResourceContact, request.GetId())
 	auditlib.WithAction(ctx, auditlib.ActionRemove)
 
-	return connect.NewResponse(&profilev1.RemoveContactResponse{Data: profileObj}), nil
+	return &profilev1.RemoveContactResponse{Data: profileObj}, nil
 }
 
 func (ps *ProfileServer) SearchRoster(
 	ctx context.Context,
-	request *connect.Request[profilev1.SearchRosterRequest],
-	stream *connect.ServerStream[profilev1.SearchRosterResponse],
+	request *profilev1.SearchRosterRequest,
+	stream profilev1connect.ProfileServiceSearchRosterServerStream,
 ) error {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != request.Msg.GetProfileId() {
+	if sub, _ := claims.GetSubject(); sub != request.GetProfileId() {
 		if err := ps.checker.Check(ctx, "roster_manage"); err != nil {
 			return authorizer.ToConnectError(err)
 		}
@@ -525,7 +518,7 @@ func (ps *ProfileServer) SearchRoster(
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	jobResult, err := ps.rosterBusiness.Search(ctx, request.Msg)
+	jobResult, err := ps.rosterBusiness.Search(ctx, request)
 	if err != nil {
 		return errorutil.CleanErr(err)
 	}
@@ -561,92 +554,88 @@ func (ps *ProfileServer) SearchRoster(
 
 func (ps *ProfileServer) AddRoster(
 	ctx context.Context,
-	request *connect.Request[profilev1.AddRosterRequest],
-) (*connect.Response[profilev1.AddRosterResponse], error) {
-	roster, err := ps.rosterBusiness.CreateRoster(ctx, request.Msg)
+	request *profilev1.AddRosterRequest,
+) (*profilev1.AddRosterResponse, error) {
+	roster, err := ps.rosterBusiness.CreateRoster(ctx, request)
 
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(
-		&profilev1.AddRosterResponse{
-			Data: roster,
-		}), nil
+	return &profilev1.AddRosterResponse{
+		Data: roster,
+	}, nil
 }
 
 func (ps *ProfileServer) RemoveRoster(
 	ctx context.Context,
-	request *connect.Request[profilev1.RemoveRosterRequest],
-) (*connect.Response[profilev1.RemoveRosterResponse], error) {
-	roster, err := ps.rosterBusiness.RemoveRoster(ctx, request.Msg.GetId())
+	request *profilev1.RemoveRosterRequest,
+) (*profilev1.RemoveRosterResponse, error) {
+	roster, err := ps.rosterBusiness.RemoveRoster(ctx, request.GetId())
 
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(
-		&profilev1.RemoveRosterResponse{
-			Roster: roster,
-		}), nil
+	return &profilev1.RemoveRosterResponse{
+		Roster: roster,
+	}, nil
 }
 
 func (ps *ProfileServer) AddRelationship(
 	ctx context.Context,
-	request *connect.Request[profilev1.AddRelationshipRequest],
-) (*connect.Response[profilev1.AddRelationshipResponse], error) {
+	request *profilev1.AddRelationshipRequest,
+) (*profilev1.AddRelationshipResponse, error) {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != request.Msg.GetId() {
+	if sub, _ := claims.GetSubject(); sub != request.GetId() {
 		if err := ps.checker.Check(ctx, "relationship_manage"); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
 
-	relationshipObj, err := ps.relationshipBusiness.CreateRelationship(ctx, request.Msg)
+	relationshipObj, err := ps.relationshipBusiness.CreateRelationship(ctx, request)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.Msg.GetId())
+	auditlib.WithResource(ctx, auditlib.ResourceProfile, request.GetId())
 	auditlib.WithRelation(ctx, auditlib.Relation{
 		ParentType: auditlib.ResourceProfile,
-		ParentID:   request.Msg.GetId(),
+		ParentID:   request.GetId(),
 		ChildType:  auditlib.ResourceRelationship,
 		ChildID:    relationshipObj.GetId(),
 		Action:     auditlib.RelationAdded,
 	})
-	auditlib.WithDetail(ctx, "relationship_type", request.Msg.GetType().String())
+	auditlib.WithDetail(ctx, "relationship_type", request.GetType().String())
 
-	return connect.NewResponse(
-		&profilev1.AddRelationshipResponse{Data: relationshipObj}), nil
+	return &profilev1.AddRelationshipResponse{Data: relationshipObj}, nil
 }
 
 func (ps *ProfileServer) DeleteRelationship(
 	ctx context.Context,
-	request *connect.Request[profilev1.DeleteRelationshipRequest],
-) (*connect.Response[profilev1.DeleteRelationshipResponse], error) {
-	relationshipObj, err := ps.relationshipBusiness.DeleteRelationship(ctx, request.Msg)
+	request *profilev1.DeleteRelationshipRequest,
+) (*profilev1.DeleteRelationshipResponse, error) {
+	relationshipObj, err := ps.relationshipBusiness.DeleteRelationship(ctx, request)
 
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(
-		&profilev1.DeleteRelationshipResponse{Data: relationshipObj}), nil
+	return &profilev1.DeleteRelationshipResponse{Data: relationshipObj}, nil
 }
 
-func (ps *ProfileServer) ListRelationships(
+func (ps *ProfileServer) ListRelationship(
 	ctx context.Context,
-	request *connect.Request[profilev1.ListRelationshipRequest],
-	stream *connect.ServerStream[profilev1.ListRelationshipResponse],
+	request *profilev1.ListRelationshipRequest,
+	stream profilev1connect.ProfileServiceListRelationshipServerStream,
 ) error {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != request.Msg.GetPeerId() {
+	if sub, _ := claims.GetSubject(); sub != request.GetPeerId() {
 		if err := ps.checker.Check(ctx, "relationship_manage"); err != nil {
 			return authorizer.ToConnectError(err)
 		}
 	}
 
 	totalSent := 0
-	requiredCount := int(request.Msg.GetCount())
+	requiredCount := int(request.GetCount())
 	if requiredCount == 0 {
 		requiredCount = 1000000
 	}
@@ -657,13 +646,13 @@ func (ps *ProfileServer) ListRelationships(
 		}
 		// Apply count limits with bounds check
 		if remainingCount > math.MaxInt32 {
-			request.Msg.Count = math.MaxInt32
+			request.Count = math.MaxInt32
 		} else {
 			// Safe conversion with bounds check
-			request.Msg.Count = int32(remainingCount) // #nosec G115 -- bounds checked above
+			request.Count = int32(remainingCount) // #nosec G115 -- bounds checked above
 		}
 
-		relationships, err := ps.relationshipBusiness.ListRelationships(ctx, request.Msg)
+		relationships, err := ps.relationshipBusiness.ListRelationships(ctx, request)
 		if err != nil {
 			return errorutil.CleanErr(err)
 		}
@@ -687,4 +676,13 @@ func (ps *ProfileServer) ListRelationships(
 	}
 
 	return nil
+}
+
+// peerAddr returns the remote address of the current RPC, or "" when the
+// context carries no server call info.
+func peerAddr(ctx context.Context) string {
+	if info, ok := connect.CallInfoForServerContext(ctx); ok {
+		return info.PeerAddr
+	}
+	return ""
 }

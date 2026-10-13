@@ -3,9 +3,9 @@ package events_test
 import (
 	"testing"
 
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/frametests/definition"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/frametests/definition"
 	"github.com/stretchr/testify/suite"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/events"

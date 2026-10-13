@@ -26,8 +26,8 @@ import (
 	"strings"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -198,7 +198,7 @@ func ValidateKeyMaterial(
 func badKeyMaterial(format string, args ...any) error {
 	return connect.NewError(
 		connect.CodeInvalidArgument,
-		fmt.Errorf("%w: %s", ErrInvalidKeyMaterial, fmt.Sprintf(format, args...)),
+		fmt.Errorf("%w: %s", ErrInvalidKeyMaterial, fmt.Sprintf(format, args...)).Error(),
 	)
 }
 

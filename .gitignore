@@ -32,3 +32,6 @@ WORK_STATE.md
 
 # Local-only pub dependency overrides (unpublished ui_core)
 pubspec_overrides.yaml
+
+# Dart tool state (machine-specific paths)
+sdk/dart/*/.dart_tool/

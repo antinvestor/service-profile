@@ -4,19 +4,20 @@ import (
 	"context"
 	"net/http"
 
-	"connectrpc.com/connect"
-	"github.com/antinvestor/common/v2/permissions"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/config"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/datastore/pool"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/security/authorizer"
-	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
-	"github.com/pitabwire/frame/v2/setup"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
+	"github.com/antinvestor/common/v3/permissions"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/config"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/datastore/pool"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/security/authorizer"
+	connectInterceptors "github.com/pitabwire/frame/v3/security/interceptors/connect"
+	"github.com/pitabwire/frame/v3/setup"
 	"github.com/pitabwire/util"
 
-	"buf.build/gen/go/antinvestor/geolocation/connectrpc/go/geolocation/v1/geolocationv1connect"
+	"buf.build/gen/go/antinvestor/geolocation/connectrpc/go/v2/geolocation/v1/geolocationv1connect"
 	geolocationv1 "buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go/geolocation/v1"
 
 	aconfig "github.com/antinvestor/service-profile/apps/geolocation/config"
@@ -196,10 +197,11 @@ func setupConnectServer(
 		util.Log(ctx).WithError(err).Fatal("main -- Could not create default interceptors")
 	}
 
-	_, handler := geolocationv1connect.NewGeolocationServiceHandler(
-		implementation,
-		connect.WithInterceptors(defaultInterceptorList...),
-	)
+	server := connect.NewServer(defaultInterceptorList...)
+	geolocationv1connect.RegisterGeolocationServiceHandler(server, implementation)
 
-	return handler
+	mux := http.NewServeMux()
+	connecthttp.Mount(mux, server)
+
+	return mux
 }

@@ -1,6 +1,6 @@
 package authz
 
-import "github.com/pitabwire/frame/v2/security"
+import "github.com/pitabwire/frame/v3/security"
 
 const (
 	NamespaceChatAgent     = "service_chat_agent"

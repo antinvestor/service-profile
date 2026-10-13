@@ -21,9 +21,9 @@ import (
 	"time"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"github.com/pitabwire/frame/v2/data"
-	frevents "github.com/pitabwire/frame/v2/events"
-	"github.com/pitabwire/frame/v2/frametests/definition"
+	"github.com/pitabwire/frame/v3/data"
+	frevents "github.com/pitabwire/frame/v3/events"
+	"github.com/pitabwire/frame/v3/frametests/definition"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

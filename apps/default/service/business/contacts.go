@@ -2,15 +2,14 @@ package business
 
 import (
 	"context"
-	"errors"
 	"regexp"
 	"strings"
 	"time"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
-	frevents "github.com/pitabwire/frame/v2/events"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
+	frevents "github.com/pitabwire/frame/v3/events"
 	"github.com/pitabwire/util"
 	"github.com/ttacon/libphonenumber"
 
@@ -85,7 +84,7 @@ func ContactTypeFromDetail(ctx context.Context, detail string) (string, error) {
 		return profilev1.ContactType_MSISDN.String(), nil
 	}
 
-	return "", connect.NewError(connect.CodeInvalidArgument, errors.New("contact details are invalid"))
+	return "", connect.NewError(connect.CodeInvalidArgument, "contact details are invalid")
 }
 
 func Normalize(_ context.Context, detail string) string {
@@ -164,7 +163,7 @@ func (cb *contactBusiness) GetByDetailMap(
 
 func (cb *contactBusiness) GetByProfile(ctx context.Context, profileID string) ([]*models.Contact, error) {
 	if profileID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("profile ID is empty"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "profile ID is empty")
 	}
 
 	contacts, err := cb.contactRepository.GetByProfileID(ctx, profileID)
@@ -282,7 +281,7 @@ func (cb *contactBusiness) VerifyContact(
 	durationToExpiry time.Duration,
 ) (*models.Verification, error) {
 	if contact == nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no contact specified"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "no contact specified")
 	}
 
 	logger := util.Log(ctx).WithField("contact_id", contact.GetID())

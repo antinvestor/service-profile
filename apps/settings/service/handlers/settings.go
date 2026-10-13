@@ -4,11 +4,10 @@ import (
 	"context"
 
 	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
-	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/settings/v1/settingsv1connect"
+	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/v2/settings/v1/settingsv1connect"
 	settingsv1 "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/datastore"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/datastore"
 
 	"github.com/antinvestor/service-profile/apps/settings/service/business"
 	"github.com/antinvestor/service-profile/apps/settings/service/repository"
@@ -35,34 +34,34 @@ func NewSettingsServer(ctx context.Context, svc *frame.Service) *SettingsServer 
 // Get a single setting and its stored value.
 func (s *SettingsServer) Get(
 	ctx context.Context,
-	req *connect.Request[settingsv1.GetRequest],
-) (*connect.Response[settingsv1.GetResponse], error) {
-	resp, err := s.settingBusiness.Get(ctx, req.Msg)
+	req *settingsv1.GetRequest,
+) (*settingsv1.GetResponse, error) {
+	resp, err := s.settingBusiness.Get(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 // Set save the setting value appropriately.
 func (s *SettingsServer) Set(
 	ctx context.Context,
-	req *connect.Request[settingsv1.SetRequest],
-) (*connect.Response[settingsv1.SetResponse], error) {
-	resp, err := s.settingBusiness.Set(ctx, req.Msg)
+	req *settingsv1.SetRequest,
+) (*settingsv1.SetResponse, error) {
+	resp, err := s.settingBusiness.Set(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 // List Pulls all setting values that match some criteria in the name & any other setting properties.
 func (s *SettingsServer) List(
 	ctx context.Context,
-	req *connect.Request[settingsv1.ListRequest],
-	stream *connect.ServerStream[settingsv1.ListResponse],
+	req *settingsv1.ListRequest,
+	stream settingsv1connect.SettingsServiceListServerStream,
 ) error {
-	response, err := s.settingBusiness.List(ctx, req.Msg)
+	response, err := s.settingBusiness.List(ctx, req)
 
 	if err != nil {
 		return errorutil.CleanErr(err)
@@ -73,10 +72,10 @@ func (s *SettingsServer) List(
 // Search Streams setting values that match some criteria in the name & any other setting properties.
 func (s *SettingsServer) Search(
 	ctx context.Context,
-	req *connect.Request[commonv1.SearchRequest],
-	stream *connect.ServerStream[settingsv1.SearchResponse],
+	req *commonv1.SearchRequest,
+	stream settingsv1connect.SettingsServiceSearchServerStream,
 ) error {
-	resp, err := s.settingBusiness.Search(ctx, req.Msg)
+	resp, err := s.settingBusiness.Search(ctx, req)
 
 	if err != nil {
 		return errorutil.CleanErr(err)

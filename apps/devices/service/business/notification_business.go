@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"github.com/pitabwire/frame/v2/queue"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"github.com/pitabwire/frame/v3/queue"
+	"github.com/pitabwire/frame/v3/workerpool"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 	"github.com/antinvestor/service-profile/apps/devices/service/business/notifier"

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v3/data"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	chatagentv1 "github.com/antinvestor/service-profile/gen/go/chatagent/v1"

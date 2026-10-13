@@ -17,14 +17,13 @@ package business
 import (
 	"context"
 
-	"errors"
 	"fmt"
 	"strings"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
 
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/security"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/security"
 	"github.com/pitabwire/util"
 	"gorm.io/gorm"
 
@@ -140,18 +139,18 @@ func (ab *accountBusiness) ListByProfile(ctx context.Context, profileID string) 
 func (ab *accountBusiness) Resolve(ctx context.Context, addresses []string) ([]*models.ProfileAccount, error) {
 	addresses = normalizeAddressList(addresses)
 	if len(addresses) == 0 {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("at least one address is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "at least one address is required")
 	}
 	if len(addresses) > MaxResolveAddresses {
-		return nil, connect.NewError(connect.CodeInvalidArgument,
-			fmt.Errorf("at most %d addresses may be resolved at once", MaxResolveAddresses))
+		return nil, connect.Errorf(connect.CodeInvalidArgument,
+			"at most %d addresses may be resolved at once", MaxResolveAddresses)
 	}
 	seen := make(map[[20]byte]struct{}, len(addresses))
 	raw := make([][]byte, 0, len(addresses))
 	for _, s := range addresses {
 		addr, err := accounts.ParseAddress(s)
 		if err != nil {
-			return nil, connect.NewError(connect.CodeInvalidArgument, err)
+			return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 		}
 		if _, dup := seen[addr]; dup {
 			continue

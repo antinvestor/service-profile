@@ -8,11 +8,11 @@ import (
 	"time"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/queue"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/queue"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"github.com/pitabwire/util"
 	"go.opentelemetry.io/otel/attribute"
 	"golang.org/x/sync/singleflight"
@@ -114,7 +114,7 @@ func (b *deviceBusiness) LogDeviceActivity(
 				"count":     count,
 			}).Warn("device log rate limited")
 			return nil, connect.NewError(connect.CodeResourceExhausted,
-				errors.New("device log rate limit exceeded"))
+				"device log rate limit exceeded")
 		}
 	}
 
@@ -191,7 +191,7 @@ func (b *deviceBusiness) SaveDevice(
 ) (*devicev1.DeviceObject, error) {
 	// Validate ID before doing any work.
 	if id == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("device ID is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "device ID is required")
 	}
 
 	sessionID := extra.GetString("session_id")

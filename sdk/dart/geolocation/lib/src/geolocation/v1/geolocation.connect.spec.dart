@@ -5,7 +5,7 @@
 
 import "package:connectrpc/connect.dart" as connect;
 import "geolocation.pb.dart" as geolocationv1geolocation;
-import "../../google/protobuf/empty.pb.dart" as googleprotobufempty;
+import "package:protobuf/well_known_types/google/protobuf/empty.pb.dart" as googleprotobufempty;
 
 abstract final class GeolocationService {
   /// Fully-qualified name of the GeolocationService service.

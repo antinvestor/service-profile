@@ -2,13 +2,12 @@ package business
 
 import (
 	"context"
-	"errors"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/default/config"
@@ -100,7 +99,7 @@ func (rb *rosterBusiness) CreateRoster(
 	claims := security.ClaimsFromContext(ctx)
 
 	if claims == nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("no claims found in context"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "no claims found in context")
 	}
 
 	profileID, err := claims.GetSubject()

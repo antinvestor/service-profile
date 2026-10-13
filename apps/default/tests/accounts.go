@@ -24,9 +24,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/tenancy"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/tenancy"
 	"github.com/stretchr/testify/require"
 
 	"github.com/antinvestor/service-profile/apps/default/service/accounts"

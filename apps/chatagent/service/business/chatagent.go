@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"strings"
 
-	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/v2/notification/v1/notificationv1connect"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
 	"github.com/pitabwire/util"
 	"gorm.io/gorm"
 
@@ -63,7 +63,7 @@ func (b *chatAgentBusiness) UpsertContext(
 ) (*chatagentv1.UpsertContextResponse, error) {
 	def := protoToContextDef(req.GetDefinition())
 	if vErr := validateContextDef(def); vErr != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, vErr)
+		return nil, connect.NewError(connect.CodeInvalidArgument, vErr.Error()).WithCause(vErr)
 	}
 	ver, err := b.contexts.NextVersion(ctx, def.Key)
 	if err != nil {
@@ -71,7 +71,7 @@ func (b *chatAgentBusiness) UpsertContext(
 	}
 	snap, err := contextDefToJSONMap(def)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	}
 	row := &models.IntakeContext{
 		ContextKey:     def.Key,
@@ -95,7 +95,7 @@ func (b *chatAgentBusiness) GetContext(
 ) (*chatagentv1.GetContextResponse, error) {
 	key := strings.TrimSpace(req.GetContextKey())
 	if key == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("context_key required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "context_key required")
 	}
 	var row *models.IntakeContext
 	var err error
@@ -106,7 +106,7 @@ func (b *chatAgentBusiness) GetContext(
 	}
 	if err != nil {
 		if data.ErrorIsNoRows(err) || errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("context not found"))
+			return nil, connect.NewError(connect.CodeNotFound, "context not found")
 		}
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (b *chatAgentBusiness) CreateSession(
 ) (*chatagentv1.CreateSessionResponse, error) {
 	subject := strings.TrimSpace(req.GetSubjectId())
 	if subject == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("subject_id required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "subject_id required")
 	}
 
 	def, version, err := b.resolveConfig(ctx, req.GetContextKey(), int(req.GetContextVersion()), req.GetInlineConfig())
@@ -154,12 +154,12 @@ func (b *chatAgentBusiness) CreateSession(
 		return nil, err
 	}
 	if vErr := validateContextDef(def); vErr != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, vErr)
+		return nil, connect.NewError(connect.CodeInvalidArgument, vErr.Error()).WithCause(vErr)
 	}
 
 	snap, err := contextDefToJSONMap(def)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, err)
+		return nil, connect.NewError(connect.CodeInvalidArgument, err.Error()).WithCause(err)
 	}
 
 	seed := structToFields(req.GetSeedFields())
@@ -286,7 +286,7 @@ func (b *chatAgentBusiness) Turn(
 		return nil, err
 	}
 	if sess.Status == models.SessionStatusEnded {
-		return nil, connect.NewError(connect.CodeFailedPrecondition, errors.New("session ended"))
+		return nil, connect.NewError(connect.CodeFailedPrecondition, "session ended")
 	}
 
 	newDocs := protoDocs(req.GetDocuments())
@@ -362,11 +362,11 @@ func (b *chatAgentBusiness) IngestMessage(
 ) (*chatagentv1.IngestMessageResponse, error) {
 	notifTarget := normalizeNotificationTarget(req.GetNotification(), strings.TrimSpace(req.GetSubjectId()))
 	if notifTarget == nil {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("notification target required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "notification target required")
 	}
 	msg := strings.TrimSpace(req.GetMessage())
 	if msg == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("message required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "message required")
 	}
 
 	sessionCreated := false
@@ -377,7 +377,7 @@ func (b *chatAgentBusiness) IngestMessage(
 		sess, err = b.sessions.GetByID(ctx, id)
 		if err != nil {
 			if data.ErrorIsNoRows(err) || errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, connect.NewError(connect.CodeNotFound, errors.New("session not found"))
+				return nil, connect.NewError(connect.CodeNotFound, "session not found")
 			}
 			return nil, err
 		}
@@ -390,7 +390,7 @@ func (b *chatAgentBusiness) IngestMessage(
 		contactID := notificationContactID(notifTarget)
 		if subject == "" && contactID == "" {
 			return nil, connect.NewError(connect.CodeInvalidArgument,
-				errors.New("session_id or subject_id/notification.recipient required"))
+				"session_id or subject_id/notification.recipient required")
 		}
 		sess, err = b.sessions.GetActiveByChannel(ctx, subject, contextKey, notificationType(notifTarget), contactID)
 		if err != nil {
@@ -402,11 +402,11 @@ func (b *chatAgentBusiness) IngestMessage(
 		if sess == nil {
 			if !req.GetCreateIfMissing() {
 				return nil, connect.NewError(connect.CodeNotFound,
-					errors.New("no active session for notification target; set create_if_missing or session_id"))
+					"no active session for notification target; set create_if_missing or session_id")
 			}
 			if subject == "" {
 				return nil, connect.NewError(connect.CodeInvalidArgument,
-					errors.New("subject_id required to create session"))
+					"subject_id required to create session")
 			}
 			createResp, cErr := b.CreateSession(ctx, &chatagentv1.CreateSessionRequest{
 				SubjectId:        subject,
@@ -496,7 +496,7 @@ func (b *chatAgentBusiness) resolveConfig(
 		if err != nil {
 			if inline == nil {
 				if data.ErrorIsNoRows(err) || errors.Is(err, gorm.ErrRecordNotFound) {
-					return engine.ContextDef{}, 0, connect.NewError(connect.CodeNotFound, errors.New("context not found"))
+					return engine.ContextDef{}, 0, connect.NewError(connect.CodeNotFound, "context not found")
 				}
 				return engine.ContextDef{}, 0, err
 			}
@@ -518,7 +518,7 @@ func (b *chatAgentBusiness) resolveConfig(
 	}
 	if base.Key == "" {
 		return engine.ContextDef{}, 0, connect.NewError(connect.CodeInvalidArgument,
-			errors.New("context_key or inline_config required"))
+			"context_key or inline_config required")
 	}
 	return base, ver, nil
 }
@@ -575,12 +575,12 @@ func (b *chatAgentBusiness) loadSessionBundle(
 ) (*models.Session, engine.ContextDef, engine.Fields, []engine.Message, error) {
 	id := strings.TrimSpace(sessionID)
 	if id == "" {
-		return nil, engine.ContextDef{}, nil, nil, connect.NewError(connect.CodeInvalidArgument, errors.New("session_id required"))
+		return nil, engine.ContextDef{}, nil, nil, connect.NewError(connect.CodeInvalidArgument, "session_id required")
 	}
 	sess, err := b.sessions.GetByID(ctx, id)
 	if err != nil {
 		if data.ErrorIsNoRows(err) || errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, engine.ContextDef{}, nil, nil, connect.NewError(connect.CodeNotFound, errors.New("session not found"))
+			return nil, engine.ContextDef{}, nil, nil, connect.NewError(connect.CodeNotFound, "session not found")
 		}
 		return nil, engine.ContextDef{}, nil, nil, err
 	}

@@ -9,11 +9,11 @@ import (
 	"time"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/frametests"
-	"github.com/pitabwire/frame/v2/frametests/definition"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/frametests"
+	"github.com/pitabwire/frame/v3/frametests/definition"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1227,7 +1227,19 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 		assert.Equal(t, logData.GetString("userAgent"), sessionCreated.UserAgent)
 		assert.Equal(t, logData.GetString("ip"), sessionCreated.IP)
 
-		deviceCreated, cErr := deviceRepo.GetByID(ctx, deviceID)
+		// The handler stores the session before the device, so wait for the
+		// device as well rather than reading it once.
+		deviceCreated, cErr := frametests.WaitForCheckedConditionWithResult(
+			ctx,
+			func() (*models.Device, error) {
+				return deviceRepo.GetByID(ctx, deviceID)
+			},
+			func(dev *models.Device, err error) bool {
+				return err == nil && dev != nil
+			},
+			5*time.Second,
+			100*time.Millisecond,
+		)
 		require.NoError(t, cErr)
 		require.NotNil(t, deviceCreated)
 		assert.Equal(t, deviceID, deviceCreated.GetID())

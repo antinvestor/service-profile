@@ -31,12 +31,11 @@ import (
 	"fmt"
 	"strings"
 
-	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
+	"buf.build/gen/go/antinvestor/profile/connectrpc/go/v2/profile/v1/profilev1connect"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
-	common "github.com/antinvestor/common/v2"
-	"github.com/antinvestor/common/v2/connection"
-	"github.com/antinvestor/common/v2/servicecatalog"
+	common "github.com/antinvestor/common/v3"
+	"github.com/antinvestor/common/v3/connection"
+	"github.com/antinvestor/common/v3/servicecatalog"
 )
 
 // ErrNotOwned is returned when no profile owns the address, or the named
@@ -53,12 +52,12 @@ const saltHashLen = 32
 type API interface {
 	ResolveAccounts(
 		ctx context.Context,
-		req *connect.Request[profilev1.ResolveAccountsRequest],
-	) (*connect.Response[profilev1.ResolveAccountsResponse], error)
+		req *profilev1.ResolveAccountsRequest,
+	) (*profilev1.ResolveAccountsResponse, error)
 	GetById(
 		ctx context.Context,
-		req *connect.Request[profilev1.GetByIdRequest],
-	) (*connect.Response[profilev1.GetByIdResponse], error)
+		req *profilev1.GetByIdRequest,
+	) (*profilev1.GetByIdResponse, error)
 }
 
 // Account is one of a profile's accounts.
@@ -111,11 +110,11 @@ func (c *Client) Resolve(ctx context.Context, addresses []string) (map[string]st
 			batch = append(batch, strings.ToLower(a))
 		}
 		res, err := c.api.ResolveAccounts(ctx,
-			connect.NewRequest(&profilev1.ResolveAccountsRequest{Addresses: batch}))
+			&profilev1.ResolveAccountsRequest{Addresses: batch})
 		if err != nil {
 			return nil, fmt.Errorf("accounts: resolve: %w", err)
 		}
-		for _, o := range res.Msg.GetData() {
+		for _, o := range res.GetData() {
 			out[strings.ToLower(o.GetAddress())] = o.GetProfileId()
 		}
 	}
@@ -137,11 +136,11 @@ func (c *Client) ProfileOf(ctx context.Context, address string) (string, error) 
 }
 
 func (c *Client) profile(ctx context.Context, profileID string) (*profilev1.ProfileObject, error) {
-	res, err := c.api.GetById(ctx, connect.NewRequest(&profilev1.GetByIdRequest{Id: profileID}))
+	res, err := c.api.GetById(ctx, &profilev1.GetByIdRequest{Id: profileID})
 	if err != nil {
 		return nil, fmt.Errorf("accounts: profile %s: %w", profileID, err)
 	}
-	return res.Msg.GetData(), nil
+	return res.GetData(), nil
 }
 
 // Accounts lists the profile's accounts, primary first.

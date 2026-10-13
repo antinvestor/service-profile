@@ -2,12 +2,13 @@ package business
 
 import (
 	"context"
+	"errors"
+	"io"
 	"strings"
 
 	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
 	notificationv1 "buf.build/gen/go/antinvestor/notification/protocolbuffers/go/notification/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v3/data"
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -51,9 +52,9 @@ func (b *chatAgentBusiness) deliverReply(
 	}
 
 	n := buildOutboundNotification(target, subjectID, sessionID, reply)
-	stream, err := b.notificationCli.Send(ctx, connect.NewRequest(&notificationv1.SendRequest{
+	stream, err := b.notificationCli.Send(ctx, &notificationv1.SendRequest{
 		Data: []*notificationv1.Notification{n},
-	}))
+	})
 	if err != nil {
 		util.Log(ctx).WithError(err).WithFields(map[string]any{
 			"session_id": sessionID,
@@ -61,22 +62,18 @@ func (b *chatAgentBusiness) deliverReply(
 		}).Warn("chatagent: Notification.Send failed (turn still succeeded)")
 		return false
 	}
-	if stream == nil {
-		// Test stubs often return nil stream (same as profile verification tests).
-		return true
-	}
-	for stream.Receive() {
-		if rerr := stream.Err(); rerr != nil {
+	defer func() { _ = stream.Close() }()
+	for {
+		if _, rerr := stream.Receive(); rerr != nil {
+			if errors.Is(rerr, io.EOF) {
+				break
+			}
 			util.Log(ctx).WithError(rerr).WithField("session_id", sessionID).
 				Warn("chatagent: Notification.Send stream error (turn still succeeded)")
 			return false
 		}
 	}
-	if rerr := stream.Err(); rerr != nil {
-		util.Log(ctx).WithError(rerr).WithField("session_id", sessionID).
-			Warn("chatagent: Notification.Send stream error (turn still succeeded)")
-		return false
-	}
+
 	util.Log(ctx).WithFields(map[string]any{
 		"session_id": sessionID,
 		"type":       n.GetType(),

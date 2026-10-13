@@ -7,12 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/frametests/definition"
-	"github.com/pitabwire/frame/v2/security/authorizer"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/frametests/definition"
+	"github.com/pitabwire/frame/v3/security/authorizer"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -127,158 +127,156 @@ func (s *HandlerSuite) TestGeolocationServerFlow() {
 
 		server := stack.GeoServer
 
-		ingestResp, err := server.IngestLocations(ctx, connect.NewRequest(&geolocationv1.IngestLocationsRequest{
+		ingestResp, err := server.IngestLocations(ctx, &geolocationv1.IngestLocationsRequest{
 			SubjectId: "profile-1",
 			Points: []*geolocationv1.LocationPointInput{{
 				DeviceId: "device-profile-1",
 				Latitude: 0.3500, Longitude: 32.5900, Accuracy: 4, Timestamp: timestamppb.New(time.Now().UTC()),
 			}},
-		}))
+		})
 		require.NoError(t, err)
-		require.EqualValues(t, 1, ingestResp.Msg.GetAccepted())
+		require.EqualValues(t, 1, ingestResp.GetAccepted())
 
-		areaResp, err := server.CreateArea(ctx, connect.NewRequest(&geolocationv1.CreateAreaRequest{
+		areaResp, err := server.CreateArea(ctx, &geolocationv1.CreateAreaRequest{
 			Data: &geolocationv1.AreaObject{OwnerId: "owner-1", Name: "Handler Area", Geometry: handlerAreaGeometry},
-		}))
+		})
 		require.NoError(t, err)
-		areaID := areaResp.Msg.GetData().GetId()
+		areaID := areaResp.GetData().GetId()
 
-		_, err = server.GetArea(ctx, connect.NewRequest(&geolocationv1.GetAreaRequest{Id: areaID}))
+		_, err = server.GetArea(ctx, &geolocationv1.GetAreaRequest{Id: areaID})
 		require.NoError(t, err)
 
 		updatedArea, err := server.UpdateArea(
 			ctx,
-			connect.NewRequest(&geolocationv1.UpdateAreaRequest{Id: areaID, Name: ptr("Handler Area Updated")}),
+			&geolocationv1.UpdateAreaRequest{Id: areaID, Name: ptr("Handler Area Updated")},
 		)
 		require.NoError(t, err)
-		require.Equal(t, "Handler Area Updated", updatedArea.Msg.GetData().GetName())
+		require.Equal(t, "Handler Area Updated", updatedArea.GetData().GetName())
 
 		searchedAreas, err := server.SearchAreas(
 			ctx,
-			connect.NewRequest(&geolocationv1.SearchAreasRequest{OwnerId: "owner-1", Limit: 10}),
+			&geolocationv1.SearchAreasRequest{OwnerId: "owner-1", Limit: 10},
 		)
 		require.NoError(t, err)
-		require.Len(t, searchedAreas.Msg.GetData(), 1)
+		require.Len(t, searchedAreas.GetData(), 1)
 
 		// Empty filter lists all areas (admin console list view).
 		allAreas, err := server.SearchAreas(
 			ctx,
-			connect.NewRequest(&geolocationv1.SearchAreasRequest{Limit: 10}),
+			&geolocationv1.SearchAreasRequest{Limit: 10},
 		)
 		require.NoError(t, err)
-		require.Len(t, allAreas.Msg.GetData(), 1)
+		require.Len(t, allAreas.GetData(), 1)
 
-		routeResp, err := server.CreateRoute(ctx, connect.NewRequest(&geolocationv1.CreateRouteRequest{
+		routeResp, err := server.CreateRoute(ctx, &geolocationv1.CreateRouteRequest{
 			Data: &geolocationv1.RouteObject{
 				OwnerId: "owner-1", Name: "Handler Route",
 				Geometry:            `{"type":"LineString","coordinates":[[32.58,0.35],[32.60,0.35]]}`,
 				DeviationThresholdM: float64Ptr(20),
 			},
-		}))
+		})
 		require.NoError(t, err)
-		routeID := routeResp.Msg.GetData().GetId()
+		routeID := routeResp.GetData().GetId()
 
-		_, err = server.GetRoute(ctx, connect.NewRequest(&geolocationv1.GetRouteRequest{Id: routeID}))
+		_, err = server.GetRoute(ctx, &geolocationv1.GetRouteRequest{Id: routeID})
 		require.NoError(t, err)
 
 		updatedRoute, err := server.UpdateRoute(
 			ctx,
-			connect.NewRequest(&geolocationv1.UpdateRouteRequest{Id: routeID, Name: ptr("Handler Route Updated")}),
+			&geolocationv1.UpdateRouteRequest{Id: routeID, Name: ptr("Handler Route Updated")},
 		)
 		require.NoError(t, err)
-		require.Equal(t, "Handler Route Updated", updatedRoute.Msg.GetData().GetName())
+		require.Equal(t, "Handler Route Updated", updatedRoute.GetData().GetName())
 
 		searchedRoutes, err := server.SearchRoutes(
 			ctx,
-			connect.NewRequest(&geolocationv1.SearchRoutesRequest{OwnerId: "owner-1", Limit: 10}),
+			&geolocationv1.SearchRoutesRequest{OwnerId: "owner-1", Limit: 10},
 		)
 		require.NoError(t, err)
-		require.Len(t, searchedRoutes.Msg.GetData(), 1)
+		require.Len(t, searchedRoutes.GetData(), 1)
 
 		// Empty filter lists all routes (admin console list view).
 		allRoutes, err := server.SearchRoutes(
 			ctx,
-			connect.NewRequest(&geolocationv1.SearchRoutesRequest{Limit: 10}),
+			&geolocationv1.SearchRoutesRequest{Limit: 10},
 		)
 		require.NoError(t, err)
-		require.Len(t, allRoutes.Msg.GetData(), 1)
+		require.Len(t, allRoutes.GetData(), 1)
 
 		assignResp, err := server.AssignRoute(
 			ctx,
-			connect.NewRequest(&geolocationv1.AssignRouteRequest{SubjectId: "profile-1", RouteId: routeID}),
+			&geolocationv1.AssignRouteRequest{SubjectId: "profile-1", RouteId: routeID},
 		)
 		require.NoError(t, err)
-		assignmentID := assignResp.Msg.GetData().GetId()
+		assignmentID := assignResp.GetData().GetId()
 
 		assignments, err := server.GetSubjectRouteAssignments(
 			ctx,
-			connect.NewRequest(&geolocationv1.GetSubjectRouteAssignmentsRequest{SubjectId: "profile-1"}),
+			&geolocationv1.GetSubjectRouteAssignmentsRequest{SubjectId: "profile-1"},
 		)
 		require.NoError(t, err)
-		require.Len(t, assignments.Msg.GetData(), 1)
+		require.Len(t, assignments.GetData(), 1)
 
 		trackResp, err := server.GetTrack(
 			ctx,
-			connect.NewRequest(&geolocationv1.GetTrackRequest{SubjectId: "profile-1", Limit: 10}),
+			&geolocationv1.GetTrackRequest{SubjectId: "profile-1", Limit: 10},
 		)
 		require.NoError(t, err)
-		require.Len(t, trackResp.Msg.GetData(), 1)
+		require.Len(t, trackResp.GetData(), 1)
 
 		nearbyAreas, err := server.GetNearbyAreas(
 			ctx,
-			connect.NewRequest(
-				&geolocationv1.GetNearbyAreasRequest{Latitude: 0.35, Longitude: 32.59, RadiusMeters: 1000},
-			),
+			&geolocationv1.GetNearbyAreasRequest{Latitude: 0.35, Longitude: 32.59, RadiusMeters: 1000},
 		)
 		require.NoError(t, err)
-		require.Len(t, nearbyAreas.Msg.GetData(), 1)
+		require.Len(t, nearbyAreas.GetData(), 1)
 
 		eventsResp, err := server.GetSubjectEvents(
 			ctx,
-			connect.NewRequest(&geolocationv1.GetSubjectEventsRequest{SubjectId: "profile-1", Limit: 10}),
+			&geolocationv1.GetSubjectEventsRequest{SubjectId: "profile-1", Limit: 10},
 		)
 		require.NoError(t, err)
-		require.NotNil(t, eventsResp.Msg)
+		require.NotNil(t, eventsResp)
 
 		subjectsResp, err := server.GetAreaSubjects(
 			ctx,
-			connect.NewRequest(&geolocationv1.GetAreaSubjectsRequest{AreaId: areaID}),
+			&geolocationv1.GetAreaSubjectsRequest{AreaId: areaID},
 		)
 		require.NoError(t, err)
-		require.NotNil(t, subjectsResp.Msg)
+		require.NotNil(t, subjectsResp)
 
-		var nearbySubjects *connect.Response[geolocationv1.GetNearbySubjectsResponse]
+		var nearbySubjects *geolocationv1.GetNearbySubjectsResponse
 		require.Eventually(t, func() bool {
 			var nearErr error
 			nearbySubjects, nearErr = server.GetNearbySubjects(
 				ctx,
-				connect.NewRequest(&geolocationv1.GetNearbySubjectsRequest{
+				&geolocationv1.GetNearbySubjectsRequest{
 					SubjectId:    "profile-1",
 					RadiusMeters: 1000,
 					Limit:        10,
-				}),
+				},
 			)
 			return nearErr == nil
 		}, 5*time.Second, 100*time.Millisecond)
-		require.Empty(t, nearbySubjects.Msg.GetData())
+		require.Empty(t, nearbySubjects.GetData())
 
 		unassignResp, err := server.UnassignRoute(
 			ctx,
-			connect.NewRequest(&geolocationv1.UnassignRouteRequest{Id: assignmentID}),
+			&geolocationv1.UnassignRouteRequest{Id: assignmentID},
 		)
 		require.NoError(t, err)
-		require.IsType(t, &emptypb.Empty{}, unassignResp.Msg)
+		require.IsType(t, &emptypb.Empty{}, unassignResp)
 
 		deleteRouteResp, err := server.DeleteRoute(
 			ctx,
-			connect.NewRequest(&geolocationv1.DeleteRouteRequest{Id: routeID}),
+			&geolocationv1.DeleteRouteRequest{Id: routeID},
 		)
 		require.NoError(t, err)
-		require.IsType(t, &emptypb.Empty{}, deleteRouteResp.Msg)
+		require.IsType(t, &emptypb.Empty{}, deleteRouteResp)
 
-		deleteAreaResp, err := server.DeleteArea(ctx, connect.NewRequest(&geolocationv1.DeleteAreaRequest{Id: areaID}))
+		deleteAreaResp, err := server.DeleteArea(ctx, &geolocationv1.DeleteAreaRequest{Id: areaID})
 		require.NoError(t, err)
-		require.IsType(t, &emptypb.Empty{}, deleteAreaResp.Msg)
+		require.IsType(t, &emptypb.Empty{}, deleteAreaResp)
 	})
 }
 
@@ -291,24 +289,24 @@ func (s *HandlerSuite) TestGeolocationServerAuthorization() {
 
 		server := stack.GeoServer
 
-		resp, err := server.IngestLocations(ctx, connect.NewRequest(&geolocationv1.IngestLocationsRequest{
+		resp, err := server.IngestLocations(ctx, &geolocationv1.IngestLocationsRequest{
 			SubjectId: "profile-2",
 			Points: []*geolocationv1.LocationPointInput{
 				{DeviceId: "device-profile-2", Latitude: 0.35, Longitude: 32.59, Accuracy: 4},
 			},
-		}))
+		})
 		require.NoError(t, err)
-		require.EqualValues(t, 1, resp.Msg.GetAccepted())
+		require.EqualValues(t, 1, resp.GetAccepted())
 
-		_, err = server.CreateArea(ctx, connect.NewRequest(&geolocationv1.CreateAreaRequest{
+		_, err = server.CreateArea(ctx, &geolocationv1.CreateAreaRequest{
 			Data: &geolocationv1.AreaObject{OwnerId: "owner", Name: "x", Geometry: handlerAreaGeometry},
-		}))
+		})
 		require.Error(t, err)
 		require.Equal(t, connect.CodePermissionDenied, connect.CodeOf(err))
 
 		_, err = server.GetNearbySubjects(
 			ctx,
-			connect.NewRequest(&geolocationv1.GetNearbySubjectsRequest{SubjectId: "someone-else"}),
+			&geolocationv1.GetNearbySubjectsRequest{SubjectId: "someone-else"},
 		)
 		require.Error(t, err)
 		require.Equal(t, connect.CodePermissionDenied, connect.CodeOf(err))
@@ -333,13 +331,13 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 			{
 				name: "create invalid area",
 				run: func() error {
-					_, err := server.CreateArea(ctx, connect.NewRequest(&geolocationv1.CreateAreaRequest{
+					_, err := server.CreateArea(ctx, &geolocationv1.CreateAreaRequest{
 						Data: &geolocationv1.AreaObject{
 							OwnerId:  "owner",
 							Name:     "x",
 							Geometry: `{"type":"Point","coordinates":[32.58,0.35]}`,
 						},
-					}))
+					})
 					return err
 				},
 				code: connect.CodeInvalidArgument,
@@ -347,7 +345,7 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 			{
 				name: "get missing area",
 				run: func() error {
-					_, err := server.GetArea(ctx, connect.NewRequest(&geolocationv1.GetAreaRequest{Id: "missing"}))
+					_, err := server.GetArea(ctx, &geolocationv1.GetAreaRequest{Id: "missing"})
 					return err
 				},
 				code: connect.CodeNotFound,
@@ -357,7 +355,7 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 				run: func() error {
 					_, err := server.UpdateArea(
 						ctx,
-						connect.NewRequest(&geolocationv1.UpdateAreaRequest{Id: "missing", Name: ptr("x")}),
+						&geolocationv1.UpdateAreaRequest{Id: "missing", Name: ptr("x")},
 					)
 					return err
 				},
@@ -368,7 +366,7 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 				run: func() error {
 					_, err := server.DeleteArea(
 						ctx,
-						connect.NewRequest(&geolocationv1.DeleteAreaRequest{Id: "missing"}),
+						&geolocationv1.DeleteAreaRequest{Id: "missing"},
 					)
 					return err
 				},
@@ -377,13 +375,13 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 			{
 				name: "create invalid route",
 				run: func() error {
-					_, err := server.CreateRoute(ctx, connect.NewRequest(&geolocationv1.CreateRouteRequest{
+					_, err := server.CreateRoute(ctx, &geolocationv1.CreateRouteRequest{
 						Data: &geolocationv1.RouteObject{
 							OwnerId:  "owner",
 							Name:     "x",
 							Geometry: `{"type":"Polygon","coordinates":[]}`,
 						},
-					}))
+					})
 					return err
 				},
 				code: connect.CodeInvalidArgument,
@@ -391,7 +389,7 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 			{
 				name: "get missing route",
 				run: func() error {
-					_, err := server.GetRoute(ctx, connect.NewRequest(&geolocationv1.GetRouteRequest{Id: "missing"}))
+					_, err := server.GetRoute(ctx, &geolocationv1.GetRouteRequest{Id: "missing"})
 					return err
 				},
 				code: connect.CodeNotFound,
@@ -401,7 +399,7 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 				run: func() error {
 					_, err := server.UpdateRoute(
 						ctx,
-						connect.NewRequest(&geolocationv1.UpdateRouteRequest{Id: "missing", Name: ptr("x")}),
+						&geolocationv1.UpdateRouteRequest{Id: "missing", Name: ptr("x")},
 					)
 					return err
 				},
@@ -412,7 +410,7 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 				run: func() error {
 					_, err := server.DeleteRoute(
 						ctx,
-						connect.NewRequest(&geolocationv1.DeleteRouteRequest{Id: "missing"}),
+						&geolocationv1.DeleteRouteRequest{Id: "missing"},
 					)
 					return err
 				},
@@ -421,7 +419,7 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 			{
 				name: "assign route missing ids",
 				run: func() error {
-					_, err := server.AssignRoute(ctx, connect.NewRequest(&geolocationv1.AssignRouteRequest{}))
+					_, err := server.AssignRoute(ctx, &geolocationv1.AssignRouteRequest{})
 					return err
 				},
 				code: connect.CodeInvalidArgument,
@@ -431,7 +429,7 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 				run: func() error {
 					_, err := server.UnassignRoute(
 						ctx,
-						connect.NewRequest(&geolocationv1.UnassignRouteRequest{Id: "missing"}),
+						&geolocationv1.UnassignRouteRequest{Id: "missing"},
 					)
 					return err
 				},
@@ -440,9 +438,9 @@ func (s *HandlerSuite) TestGeolocationServerErrorPaths() {
 			{
 				name: "nearby areas invalid radius",
 				run: func() error {
-					_, err := server.GetNearbyAreas(ctx, connect.NewRequest(&geolocationv1.GetNearbyAreasRequest{
+					_, err := server.GetNearbyAreas(ctx, &geolocationv1.GetNearbyAreasRequest{
 						Latitude: 0.35, Longitude: 32.59, RadiusMeters: models.MaxProximityRadiusMeters + 1,
-					}))
+					})
 					return err
 				},
 				code: connect.CodeInvalidArgument,

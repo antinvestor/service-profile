@@ -5,17 +5,18 @@ import (
 	"net/http"
 	"strings"
 
-	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
-	"connectrpc.com/connect"
-	apis "github.com/antinvestor/common/v2"
-	"github.com/antinvestor/common/v2/connection"
-	"github.com/antinvestor/common/v2/permissions"
-	"github.com/antinvestor/common/v2/servicecatalog"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/config"
-	"github.com/pitabwire/frame/v2/security/authorizer"
-	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
-	"github.com/pitabwire/frame/v2/setup"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/v2/notification/v1/notificationv1connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
+	apis "github.com/antinvestor/common/v3"
+	"github.com/antinvestor/common/v3/connection"
+	"github.com/antinvestor/common/v3/permissions"
+	"github.com/antinvestor/common/v3/servicecatalog"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/config"
+	"github.com/pitabwire/frame/v3/security/authorizer"
+	connectInterceptors "github.com/pitabwire/frame/v3/security/interceptors/connect"
+	"github.com/pitabwire/frame/v3/setup"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/chatagent/config"
@@ -118,10 +119,13 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, cfg *aconfig.Ch
 		NotificationClient: notificationCli,
 	})
 
-	_, serverHandler := chatagentv1connect.NewChatAgentServiceHandler(
-		implementation, connect.WithInterceptors(defaultInterceptorList...))
+	server := connect.NewServer(defaultInterceptorList...)
+	chatagentv1connect.RegisterChatAgentServiceHandler(server, implementation)
 
-	return serverHandler
+	mux := http.NewServeMux()
+	connecthttp.Mount(mux, server)
+
+	return mux
 }
 
 // setupNotificationClient creates the Notification service client for omnichannel reply delivery.

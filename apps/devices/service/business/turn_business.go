@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pitabwire/frame/v2/client"
+	"github.com/pitabwire/frame/v3/client"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
 )

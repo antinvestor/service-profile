@@ -19,9 +19,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/datastore/pool"
-	"github.com/pitabwire/frame/v2/queue"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/datastore/pool"
+	"github.com/pitabwire/frame/v3/queue"
 	"github.com/pitabwire/util"
 )
 

@@ -16,13 +16,12 @@ package accounts_test
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"testing"
 
-	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
+	"buf.build/gen/go/antinvestor/profile/connectrpc/go/v2/profile/v1/profilev1connect"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -39,28 +38,28 @@ type fakeProfiles struct {
 
 func (f *fakeProfiles) ResolveAccounts(
 	_ context.Context,
-	req *connect.Request[profilev1.ResolveAccountsRequest],
-) (*connect.Response[profilev1.ResolveAccountsResponse], error) {
-	f.batches = append(f.batches, len(req.Msg.GetAddresses()))
+	req *profilev1.ResolveAccountsRequest,
+) (*profilev1.ResolveAccountsResponse, error) {
+	f.batches = append(f.batches, len(req.GetAddresses()))
 	out := &profilev1.ResolveAccountsResponse{}
-	for _, a := range req.Msg.GetAddresses() {
+	for _, a := range req.GetAddresses() {
 		if p, ok := f.owners[a]; ok {
 			out.Data = append(out.Data, &profilev1.AccountOwner{Address: a, ProfileId: p})
 		}
 	}
-	return connect.NewResponse(out), nil
+	return out, nil
 }
 
 //nolint:revive,staticcheck // generated RPC name
 func (f *fakeProfiles) GetById(
 	_ context.Context,
-	req *connect.Request[profilev1.GetByIdRequest],
-) (*connect.Response[profilev1.GetByIdResponse], error) {
-	p, ok := f.profiles[req.Msg.GetId()]
+	req *profilev1.GetByIdRequest,
+) (*profilev1.GetByIdResponse, error) {
+	p, ok := f.profiles[req.GetId()]
 	if !ok {
-		return nil, connect.NewError(connect.CodeNotFound, errors.New("no profile"))
+		return nil, connect.NewError(connect.CodeNotFound, "no profile")
 	}
-	return connect.NewResponse(&profilev1.GetByIdResponse{Data: p}), nil
+	return &profilev1.GetByIdResponse{Data: p}, nil
 }
 
 const (
