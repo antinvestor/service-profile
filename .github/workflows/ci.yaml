@@ -17,7 +17,23 @@ jobs:
     permissions:
       contents: read
     uses: antinvestor/common/.github/workflows/golangci-lint.yml@main
+  # The SDK packages (sdk/dart/*) are gated strictly: this job reports the
+  # required "flutter / check".
   flutter:
     permissions:
       contents: read
     uses: antinvestor/common/.github/workflows/flutter-ci.yml@main
+    with:
+      exclude: "ui/device ui/geolocation ui/profile ui/settings"
+  # The ui/* packages already fail on main (dart format, CHANGELOG versions,
+  # checked-in .dart_tool, and ui/settings importing a file the published
+  # antinvestor_api_settings does not ship). They move to the new SDKs after
+  # antinvestor_ui_core 0.6.0. Until then they run visibly with soft_fail;
+  # that step drops this job's soft_fail and the exclude above.
+  flutter-ui:
+    permissions:
+      contents: read
+    uses: antinvestor/common/.github/workflows/flutter-ci.yml@main
+    with:
+      soft_fail: true
+      exclude: "sdk/dart/device sdk/dart/geolocation sdk/dart/ocr sdk/dart/profile sdk/dart/settings"

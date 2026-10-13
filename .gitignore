@@ -34,4 +34,4 @@ WORK_STATE.md
 pubspec_overrides.yaml
 
 # Dart tool state (machine-specific paths)
-.dart_tool/
+sdk/dart/*/.dart_tool/
