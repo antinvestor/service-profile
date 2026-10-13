@@ -6,22 +6,23 @@ import (
 	"encoding/base64"
 	"net/http"
 
-	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
-	"buf.build/gen/go/antinvestor/profile/connectrpc/go/profile/v1/profilev1connect"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/v2/notification/v1/notificationv1connect"
+	"buf.build/gen/go/antinvestor/profile/connectrpc/go/v2/profile/v1/profilev1connect"
 	profilepb "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
 	"github.com/antinvestor/common/audit"
-	apis "github.com/antinvestor/common/v2"
-	"github.com/antinvestor/common/v2/connection"
-	"github.com/antinvestor/common/v2/permissions"
-	"github.com/antinvestor/common/v2/servicecatalog"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/config"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/security/authorizer"
-	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
-	securityhttp "github.com/pitabwire/frame/v2/security/interceptors/httptor"
-	"github.com/pitabwire/frame/v2/setup"
+	apis "github.com/antinvestor/common/v3"
+	"github.com/antinvestor/common/v3/connection"
+	"github.com/antinvestor/common/v3/permissions"
+	"github.com/antinvestor/common/v3/servicecatalog"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/config"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/security/authorizer"
+	connectInterceptors "github.com/pitabwire/frame/v3/security/interceptors/connect"
+	securityhttp "github.com/pitabwire/frame/v3/security/interceptors/httptor"
+	"github.com/pitabwire/frame/v3/setup"
 	"github.com/pitabwire/util"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -299,7 +300,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	delete(procMap, "/profile.v1.ProfileService/RemoveContact")
 	delete(procMap, "/profile.v1.ProfileService/SearchRoster")
 	delete(procMap, "/profile.v1.ProfileService/AddRelationship")
-	delete(procMap, "/profile.v1.ProfileService/ListRelationships")
+	delete(procMap, "/profile.v1.ProfileService/ListRelationship")
 	// ResolveAccounts checks account_resolve (service role only) itself.
 	delete(procMap, "/profile.v1.ProfileService/ResolveAccounts")
 
@@ -311,7 +312,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 
 	// Audit interceptor — sends entries to audit service if configured.
 	profileCfg, _ := svc.Config().(*aconfig.ProfileConfig)
-	var auditInterceptor connect.Interceptor
+	var auditInterceptor connect.ServerInterceptor
 	if profileCfg != nil && profileCfg.AuditServiceURI != "" {
 		auditCli, auditErr := connection.NewServiceClient(ctx, profileCfg, apis.ServiceTarget{
 			Endpoint:  profileCfg.AuditServiceURI,
@@ -342,8 +343,8 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 
 	implementation := handlers.NewProfileServer(ctx, svc, dek, notificationCli, functionChecker, deriver)
 
-	_, serverHandler := profilev1connect.NewProfileServiceHandler(
-		implementation, connect.WithInterceptors(defaultInterceptorList...))
+	server := connect.NewServer(defaultInterceptorList...)
+	profilev1connect.RegisterProfileServiceHandler(server, implementation)
 
 	publicRestHandler := securityhttp.AuthenticationMiddleware(
 		implementation.NewSecureRouterV1(),
@@ -351,7 +352,7 @@ func setupConnectServer(ctx context.Context, svc *frame.Service, dek *aconfig.DE
 	)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", serverHandler)
+	connecthttp.Mount(mux, server)
 	mux.Handle("/public/", http.StripPrefix("/public", publicRestHandler))
 	mux.Handle("/openapi.yaml", apis.NewOpenAPIHandler(profileAPISpecFile, nil))
 

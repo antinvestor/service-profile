@@ -20,210 +20,282 @@ package settingsv1connect
 
 import (
 	v11 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "github.com/antinvestor/service-profile/settings/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// SettingsServiceName is the fully-qualified name of the SettingsService service.
 	SettingsServiceName = "settings.v1.SettingsService"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// SettingsServiceGetProcedure is the fully-qualified name of the SettingsService's Get RPC.
+	// SettingsServiceGetProcedure is the procedure name of the SettingsService's Get RPC.
 	SettingsServiceGetProcedure = "/settings.v1.SettingsService/Get"
-	// SettingsServiceListProcedure is the fully-qualified name of the SettingsService's List RPC.
+	// SettingsServiceListProcedure is the procedure name of the SettingsService's List RPC.
 	SettingsServiceListProcedure = "/settings.v1.SettingsService/List"
-	// SettingsServiceSearchProcedure is the fully-qualified name of the SettingsService's Search RPC.
+	// SettingsServiceSearchProcedure is the procedure name of the SettingsService's Search RPC.
 	SettingsServiceSearchProcedure = "/settings.v1.SettingsService/Search"
-	// SettingsServiceSetProcedure is the fully-qualified name of the SettingsService's Set RPC.
+	// SettingsServiceSetProcedure is the procedure name of the SettingsService's Set RPC.
 	SettingsServiceSetProcedure = "/settings.v1.SettingsService/Set"
+)
+
+var (
+	settingsServiceGetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_settings_v1_settings_proto.Services().ByName("SettingsService").Methods().ByName("Get"),
+			Procedure:        SettingsServiceGetProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	settingsServiceListSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeServer,
+			Schema:           v1.File_settings_v1_settings_proto.Services().ByName("SettingsService").Methods().ByName("List"),
+			Procedure:        SettingsServiceListProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	settingsServiceSearchSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeServer,
+			Schema:           v1.File_settings_v1_settings_proto.Services().ByName("SettingsService").Methods().ByName("Search"),
+			Procedure:        SettingsServiceSearchProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	settingsServiceSetSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_settings_v1_settings_proto.Services().ByName("SettingsService").Methods().ByName("Set"),
+			Procedure:  SettingsServiceSetProcedure,
+		}
+	})
 )
 
 // SettingsServiceClient is a client for the settings.v1.SettingsService service.
 type SettingsServiceClient interface {
 	// Get retrieves a single setting value by its hierarchical key.
 	// Returns the most specific matching setting based on the key hierarchy.
-	Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error)
+	Get(context.Context, *v1.GetRequest) (*v1.GetResponse, error)
 	// List retrieves all settings matching a partial key.
 	// Empty fields in the key act as wildcards.
-	List(context.Context, *connect.Request[v1.ListRequest]) (*connect.ServerStreamForClient[v1.ListResponse], error)
+	List(context.Context, *v1.ListRequest) (SettingsServiceListClientStream, error)
 	// Search finds settings matching specified criteria.
 	// Supports full-text search and filtering.
-	Search(context.Context, *connect.Request[v11.SearchRequest]) (*connect.ServerStreamForClient[v1.SearchResponse], error)
+	Search(context.Context, *v11.SearchRequest) (SettingsServiceSearchClientStream, error)
 	// Set creates or updates a setting value.
 	// Creates a new setting if it doesn't exist, updates if it does.
-	Set(context.Context, *connect.Request[v1.SetRequest]) (*connect.Response[v1.SetResponse], error)
+	Set(context.Context, *v1.SetRequest) (*v1.SetResponse, error)
 }
 
-// NewSettingsServiceClient constructs a client for the settings.v1.SettingsService service. By
-// default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses,
-// and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
-// connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewSettingsServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) SettingsServiceClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	settingsServiceMethods := v1.File_settings_v1_settings_proto.Services().ByName("SettingsService").Methods()
-	return &settingsServiceClient{
-		get: connect.NewClient[v1.GetRequest, v1.GetResponse](
-			httpClient,
-			baseURL+SettingsServiceGetProcedure,
-			connect.WithSchema(settingsServiceMethods.ByName("Get")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		list: connect.NewClient[v1.ListRequest, v1.ListResponse](
-			httpClient,
-			baseURL+SettingsServiceListProcedure,
-			connect.WithSchema(settingsServiceMethods.ByName("List")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		search: connect.NewClient[v11.SearchRequest, v1.SearchResponse](
-			httpClient,
-			baseURL+SettingsServiceSearchProcedure,
-			connect.WithSchema(settingsServiceMethods.ByName("Search")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		set: connect.NewClient[v1.SetRequest, v1.SetResponse](
-			httpClient,
-			baseURL+SettingsServiceSetProcedure,
-			connect.WithSchema(settingsServiceMethods.ByName("Set")),
-			connect.WithClientOptions(opts...),
-		),
+// NewSettingsServiceClient constructs a client for the settings.v1.SettingsService service.
+// Multiple service clients may share a single connect.Client.
+func NewSettingsServiceClient(client *connect.Client) SettingsServiceClient {
+	return &settingsServiceClient{client: client}
+}
+
+// SettingsServiceListClientStream is the client stream for the SettingsService's List RPC.
+type SettingsServiceListClientStream struct {
+	stream connect.ClientStream
+}
+
+// Receive returns the next response message from the server.
+func (s SettingsServiceListClientStream) Receive() (*v1.ListResponse, error) {
+	var res v1.ListResponse
+	if err := s.stream.Receive(&res); err != nil {
+		return nil, err
 	}
+	return &res, nil
 }
 
-// settingsServiceClient implements SettingsServiceClient.
-type settingsServiceClient struct {
-	get    *connect.Client[v1.GetRequest, v1.GetResponse]
-	list   *connect.Client[v1.ListRequest, v1.ListResponse]
-	search *connect.Client[v11.SearchRequest, v1.SearchResponse]
-	set    *connect.Client[v1.SetRequest, v1.SetResponse]
+// Close releases the stream's resources. It is idempotent and is typically deferred to clean up a
+// stream abandoned before io.EOF.
+func (s SettingsServiceListClientStream) Close() error {
+	return s.stream.Close()
 }
 
-// Get calls settings.v1.SettingsService.Get.
-func (c *settingsServiceClient) Get(ctx context.Context, req *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error) {
-	return c.get.CallUnary(ctx, req)
+// SettingsServiceSearchClientStream is the client stream for the SettingsService's Search RPC.
+type SettingsServiceSearchClientStream struct {
+	stream connect.ClientStream
 }
 
-// List calls settings.v1.SettingsService.List.
-func (c *settingsServiceClient) List(ctx context.Context, req *connect.Request[v1.ListRequest]) (*connect.ServerStreamForClient[v1.ListResponse], error) {
-	return c.list.CallServerStream(ctx, req)
+// Receive returns the next response message from the server.
+func (s SettingsServiceSearchClientStream) Receive() (*v1.SearchResponse, error) {
+	var res v1.SearchResponse
+	if err := s.stream.Receive(&res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-// Search calls settings.v1.SettingsService.Search.
-func (c *settingsServiceClient) Search(ctx context.Context, req *connect.Request[v11.SearchRequest]) (*connect.ServerStreamForClient[v1.SearchResponse], error) {
-	return c.search.CallServerStream(ctx, req)
-}
-
-// Set calls settings.v1.SettingsService.Set.
-func (c *settingsServiceClient) Set(ctx context.Context, req *connect.Request[v1.SetRequest]) (*connect.Response[v1.SetResponse], error) {
-	return c.set.CallUnary(ctx, req)
+// Close releases the stream's resources. It is idempotent and is typically deferred to clean up a
+// stream abandoned before io.EOF.
+func (s SettingsServiceSearchClientStream) Close() error {
+	return s.stream.Close()
 }
 
 // SettingsServiceHandler is an implementation of the settings.v1.SettingsService service.
 type SettingsServiceHandler interface {
 	// Get retrieves a single setting value by its hierarchical key.
 	// Returns the most specific matching setting based on the key hierarchy.
-	Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error)
+	Get(context.Context, *v1.GetRequest) (*v1.GetResponse, error)
 	// List retrieves all settings matching a partial key.
 	// Empty fields in the key act as wildcards.
-	List(context.Context, *connect.Request[v1.ListRequest], *connect.ServerStream[v1.ListResponse]) error
+	List(context.Context, *v1.ListRequest, SettingsServiceListServerStream) error
 	// Search finds settings matching specified criteria.
 	// Supports full-text search and filtering.
-	Search(context.Context, *connect.Request[v11.SearchRequest], *connect.ServerStream[v1.SearchResponse]) error
+	Search(context.Context, *v11.SearchRequest, SettingsServiceSearchServerStream) error
 	// Set creates or updates a setting value.
 	// Creates a new setting if it doesn't exist, updates if it does.
-	Set(context.Context, *connect.Request[v1.SetRequest]) (*connect.Response[v1.SetResponse], error)
+	Set(context.Context, *v1.SetRequest) (*v1.SetResponse, error)
 }
 
-// NewSettingsServiceHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewSettingsServiceHandler(svc SettingsServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	settingsServiceMethods := v1.File_settings_v1_settings_proto.Services().ByName("SettingsService").Methods()
-	settingsServiceGetHandler := connect.NewUnaryHandler(
-		SettingsServiceGetProcedure,
-		svc.Get,
-		connect.WithSchema(settingsServiceMethods.ByName("Get")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
+// RegisterSettingsServiceHandler registers svc as the settings.v1.SettingsService implementation on
+// server.
+func RegisterSettingsServiceHandler(server *connect.Server, svc SettingsServiceHandler) {
+	adapter := settingsServiceHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: settingsServiceGetSpec(), Handler: adapter.get},
+		connect.Method{Spec: settingsServiceListSpec(), Handler: adapter.list},
+		connect.Method{Spec: settingsServiceSearchSpec(), Handler: adapter.search},
+		connect.Method{Spec: settingsServiceSetSpec(), Handler: adapter.set},
 	)
-	settingsServiceListHandler := connect.NewServerStreamHandler(
-		SettingsServiceListProcedure,
-		svc.List,
-		connect.WithSchema(settingsServiceMethods.ByName("List")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	settingsServiceSearchHandler := connect.NewServerStreamHandler(
-		SettingsServiceSearchProcedure,
-		svc.Search,
-		connect.WithSchema(settingsServiceMethods.ByName("Search")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	settingsServiceSetHandler := connect.NewUnaryHandler(
-		SettingsServiceSetProcedure,
-		svc.Set,
-		connect.WithSchema(settingsServiceMethods.ByName("Set")),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/settings.v1.SettingsService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case SettingsServiceGetProcedure:
-			settingsServiceGetHandler.ServeHTTP(w, r)
-		case SettingsServiceListProcedure:
-			settingsServiceListHandler.ServeHTTP(w, r)
-		case SettingsServiceSearchProcedure:
-			settingsServiceSearchHandler.ServeHTTP(w, r)
-		case SettingsServiceSetProcedure:
-			settingsServiceSetHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
+}
+
+// SettingsServiceListServerStream is the server stream for the SettingsService's List RPC.
+type SettingsServiceListServerStream struct {
+	stream connect.ServerStream
+}
+
+// SendHeaders flushes the response headers without a message. The first Send does this implicitly.
+func (s SettingsServiceListServerStream) SendHeaders() error {
+	return s.stream.SendHeaders()
+}
+
+// Send sends a response message to the client.
+func (s SettingsServiceListServerStream) Send(res *v1.ListResponse) error {
+	return s.stream.Send(res)
+}
+
+// SettingsServiceSearchServerStream is the server stream for the SettingsService's Search RPC.
+type SettingsServiceSearchServerStream struct {
+	stream connect.ServerStream
+}
+
+// SendHeaders flushes the response headers without a message. The first Send does this implicitly.
+func (s SettingsServiceSearchServerStream) SendHeaders() error {
+	return s.stream.SendHeaders()
+}
+
+// Send sends a response message to the client.
+func (s SettingsServiceSearchServerStream) Send(res *v1.SearchResponse) error {
+	return s.stream.Send(res)
 }
 
 // UnimplementedSettingsServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedSettingsServiceHandler struct{}
 
-func (UnimplementedSettingsServiceHandler) Get(context.Context, *connect.Request[v1.GetRequest]) (*connect.Response[v1.GetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("settings.v1.SettingsService.Get is not implemented"))
+func (UnimplementedSettingsServiceHandler) Get(context.Context, *v1.GetRequest) (*v1.GetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "settings.v1.SettingsService.Get is not implemented")
 }
 
-func (UnimplementedSettingsServiceHandler) List(context.Context, *connect.Request[v1.ListRequest], *connect.ServerStream[v1.ListResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("settings.v1.SettingsService.List is not implemented"))
+func (UnimplementedSettingsServiceHandler) List(context.Context, *v1.ListRequest, SettingsServiceListServerStream) error {
+	return connect.NewError(connect.CodeUnimplemented, "settings.v1.SettingsService.List is not implemented")
 }
 
-func (UnimplementedSettingsServiceHandler) Search(context.Context, *connect.Request[v11.SearchRequest], *connect.ServerStream[v1.SearchResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("settings.v1.SettingsService.Search is not implemented"))
+func (UnimplementedSettingsServiceHandler) Search(context.Context, *v11.SearchRequest, SettingsServiceSearchServerStream) error {
+	return connect.NewError(connect.CodeUnimplemented, "settings.v1.SettingsService.Search is not implemented")
 }
 
-func (UnimplementedSettingsServiceHandler) Set(context.Context, *connect.Request[v1.SetRequest]) (*connect.Response[v1.SetResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("settings.v1.SettingsService.Set is not implemented"))
+func (UnimplementedSettingsServiceHandler) Set(context.Context, *v1.SetRequest) (*v1.SetResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "settings.v1.SettingsService.Set is not implemented")
+}
+
+type settingsServiceClient struct {
+	client *connect.Client
+}
+
+func (c *settingsServiceClient) Get(ctx context.Context, req *v1.GetRequest) (*v1.GetResponse, error) {
+	var res v1.GetResponse
+	if err := c.client.CallUnary(ctx, settingsServiceGetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *settingsServiceClient) List(ctx context.Context, req *v1.ListRequest) (SettingsServiceListClientStream, error) {
+	stream, err := c.client.CallServerStream(ctx, settingsServiceListSpec(), req)
+	if err != nil {
+		return SettingsServiceListClientStream{}, err
+	}
+	return SettingsServiceListClientStream{stream: stream}, nil
+}
+
+func (c *settingsServiceClient) Search(ctx context.Context, req *v11.SearchRequest) (SettingsServiceSearchClientStream, error) {
+	stream, err := c.client.CallServerStream(ctx, settingsServiceSearchSpec(), req)
+	if err != nil {
+		return SettingsServiceSearchClientStream{}, err
+	}
+	return SettingsServiceSearchClientStream{stream: stream}, nil
+}
+
+func (c *settingsServiceClient) Set(ctx context.Context, req *v1.SetRequest) (*v1.SetResponse, error) {
+	var res v1.SetResponse
+	if err := c.client.CallUnary(ctx, settingsServiceSetSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type settingsServiceHandler struct{ svc SettingsServiceHandler }
+
+func (h settingsServiceHandler) get(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Get(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h settingsServiceHandler) list(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	return h.svc.List(ctx, &req, SettingsServiceListServerStream{stream: stream})
+}
+
+func (h settingsServiceHandler) search(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v11.SearchRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	return h.svc.Search(ctx, &req, SettingsServiceSearchServerStream{stream: stream})
+}
+
+func (h settingsServiceHandler) set(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SetRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Set(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

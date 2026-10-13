@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/pitabwire/frame/v2/config"
+	"github.com/pitabwire/frame/v3/config"
 	"github.com/stretchr/testify/require"
 
 	aconfig "github.com/antinvestor/service-profile/apps/chatagent/config"

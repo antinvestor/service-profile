@@ -4,15 +4,16 @@ import (
 	"context"
 	"net/http"
 
-	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/settings/v1/settingsv1connect"
+	"buf.build/gen/go/antinvestor/settingz/connectrpc/go/v2/settings/v1/settingsv1connect"
 	settingspb "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
-	"connectrpc.com/connect"
-	"github.com/antinvestor/common/v2/permissions"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/config"
-	"github.com/pitabwire/frame/v2/security/authorizer"
-	connectInterceptors "github.com/pitabwire/frame/v2/security/interceptors/connect"
-	"github.com/pitabwire/frame/v2/setup"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connecthttp"
+	"github.com/antinvestor/common/v3/permissions"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/config"
+	"github.com/pitabwire/frame/v3/security/authorizer"
+	connectInterceptors "github.com/pitabwire/frame/v3/security/interceptors/connect"
+	"github.com/pitabwire/frame/v3/setup"
 	"github.com/pitabwire/util"
 
 	aconfig "github.com/antinvestor/service-profile/apps/settings/config"
@@ -103,8 +104,11 @@ func setupConnectServer(ctx context.Context, svc *frame.Service) http.Handler {
 
 	implementation := handlers.NewSettingsServer(ctx, svc)
 
-	_, serverHandler := settingsv1connect.NewSettingsServiceHandler(
-		implementation, connect.WithInterceptors(defaultInterceptorList...))
+	server := connect.NewServer(defaultInterceptorList...)
+	settingsv1connect.RegisterSettingsServiceHandler(server, implementation)
 
-	return serverHandler
+	mux := http.NewServeMux()
+	connecthttp.Mount(mux, server)
+
+	return mux
 }

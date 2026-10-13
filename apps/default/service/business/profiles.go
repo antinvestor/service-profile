@@ -8,12 +8,12 @@ import (
 	"time"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/data"
-	frevents "github.com/pitabwire/frame/v2/events"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/data"
+	frevents "github.com/pitabwire/frame/v3/events"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"github.com/pitabwire/util"
 	"gorm.io/gorm"
 
@@ -192,7 +192,7 @@ func (pb *profileBusiness) GetByContact(
 		}
 
 		if len(contactList) == 0 {
-			return nil, connect.NewError(connect.CodeNotFound, ErrContactNotFound)
+			return nil, connect.NewError(connect.CodeNotFound, ErrContactNotFound.Error()).WithCause(ErrContactNotFound)
 		}
 		contact = contactList[0]
 	} else {
@@ -251,7 +251,7 @@ func (pb *profileBusiness) SearchProfile(ctx context.Context,
 func (pb *profileBusiness) MergeProfile(ctx context.Context,
 	request *profilev1.MergeRequest) (*profilev1.ProfileObject, error) {
 	if request.GetId() == request.GetMergeid() {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("a profile cannot be merged into itself"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "a profile cannot be merged into itself")
 	}
 	target, err := pb.profileRepo.GetByID(ctx, request.GetId())
 	if err != nil {
@@ -303,13 +303,13 @@ func checkMergeTenancy(ctx context.Context, target, merging *models.Profile) err
 	if claims := security.ClaimsFromContext(ctx); claims != nil && claims.GetTenantID() != "" {
 		for _, p := range []*models.Profile{target, merging} {
 			if p.TenantID != claims.GetTenantID() || p.PartitionID != claims.GetPartitionID() {
-				return connect.NewError(connect.CodeNotFound, errors.New("profile not found"))
+				return connect.NewError(connect.CodeNotFound, "profile not found")
 			}
 		}
 	}
 	if target.TenantID != merging.TenantID || target.PartitionID != merging.PartitionID {
 		return connect.NewError(connect.CodeFailedPrecondition,
-			errors.New("profiles in different tenants or partitions cannot be merged"))
+			"profiles in different tenants or partitions cannot be merged")
 	}
 	return nil
 }
@@ -450,7 +450,7 @@ func (pb *profileBusiness) CreateProfile(
 	if contactDetail == "" {
 		return nil, connect.NewError(
 			connect.CodeInvalidArgument,
-			errors.New("contact details are invalid"),
+			"contact details are invalid",
 		)
 	}
 
@@ -486,7 +486,7 @@ func (pb *profileBusiness) CreateProfile(
 		var accountErr error
 		account, accountErr = pb.accountBusiness.NewPrimary(ctx, p.GetID())
 		if accountErr != nil {
-			return nil, connect.NewError(connect.CodeUnavailable, accountErr)
+			return nil, connect.NewError(connect.CodeUnavailable, accountErr.Error()).WithCause(accountErr)
 		}
 	}
 
@@ -611,7 +611,7 @@ func (pb *profileBusiness) AddContact(
 	if profileID == "" {
 		return nil, "", connect.NewError(
 			connect.CodeInvalidArgument,
-			errors.New("profile id is required"),
+			"profile id is required",
 		)
 	}
 
@@ -704,7 +704,7 @@ func (pb *profileBusiness) GetContacts(
 	if len(reqIDs) == 0 {
 		return nil, nil, connect.NewError(
 			connect.CodeInvalidArgument,
-			errors.New("at least one contact id is required"),
+			"at least one contact id is required",
 		)
 	}
 

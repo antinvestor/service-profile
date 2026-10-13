@@ -7,10 +7,10 @@ import (
 	"time"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/queue"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/queue"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"github.com/pitabwire/util"
 	"go.opentelemetry.io/otel/attribute"
 
@@ -74,7 +74,7 @@ func (p *presenceBusiness) UpdatePresence(
 
 	deviceID := req.GetDeviceId()
 	if deviceID == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("device ID is required"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "device ID is required")
 	}
 
 	ctx, span := caching.StartSpan(ctx, "UpdatePresence",
@@ -92,7 +92,7 @@ func (p *presenceBusiness) UpdatePresence(
 				"count":     count,
 			}).Warn("presence update rate limited")
 			return nil, connect.NewError(connect.CodeResourceExhausted,
-				errors.New("presence update rate limit exceeded"))
+				"presence update rate limit exceeded")
 		}
 	}
 

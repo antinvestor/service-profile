@@ -2,14 +2,13 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"strings"
 
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/datastore/pool"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/datastore/pool"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"gorm.io/gorm/clause"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -108,7 +107,7 @@ func (ar *addressRepository) CountryGetByAny(
 	if c == "" {
 		return nil, connect.NewError(
 			connect.CodeNotFound,
-			errors.New("specified country does not exist"),
+			"specified country does not exist",
 		)
 	}
 

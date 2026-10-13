@@ -2,11 +2,10 @@ package business
 
 import (
 	"context"
-	"errors"
 
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/default/service/models"
@@ -70,7 +69,7 @@ func (rb *relationshipBusiness) ListRelationships(
 		}
 
 		if profileObj == nil {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("profile does not exist"))
+			return nil, connect.NewError(connect.CodeNotFound, "profile does not exist")
 		}
 	}
 
@@ -160,7 +159,7 @@ func (rb *relationshipBusiness) DeleteRelationship(
 	relationship, err := rb.relationshipRepo.GetByID(ctx, request.GetId())
 	if err != nil {
 		if data.ErrorIsNoRows(err) {
-			return nil, connect.NewError(connect.CodeNotFound, errors.New("relationship not found"))
+			return nil, connect.NewError(connect.CodeNotFound, "relationship not found")
 		}
 		return nil, err
 	}
@@ -180,7 +179,7 @@ func (rb *relationshipBusiness) DeleteRelationship(
 
 // Define sentinel errors.
 var (
-	ErrNilRelationship = connect.NewError(connect.CodeInvalidArgument, errors.New("relationship is nil"))
+	ErrNilRelationship = connect.NewError(connect.CodeInvalidArgument, "relationship is nil")
 )
 
 func (rb *relationshipBusiness) ToAPI(

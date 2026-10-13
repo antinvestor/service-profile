@@ -7,10 +7,10 @@ import (
 	"slices"
 
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/queue"
-	"github.com/pitabwire/frame/v2/workerpool"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/queue"
+	"github.com/pitabwire/frame/v3/workerpool"
 	"golang.org/x/sync/singleflight"
 
 	"github.com/antinvestor/service-profile/apps/devices/config"
@@ -131,7 +131,7 @@ func (b *keysBusiness) resolveDuplicateKey(
 	}
 	return nil, connect.NewError(
 		connect.CodeAlreadyExists,
-		errors.New("key material is already registered to another device"),
+		"key material is already registered to another device",
 	)
 }
 

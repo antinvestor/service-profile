@@ -19,7 +19,7 @@ import (
 	"encoding/base64"
 	"time"
 
-	"github.com/pitabwire/frame/v2/data"
+	"github.com/pitabwire/frame/v3/data"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/models"
 	"github.com/antinvestor/service-profile/internal/outbox"

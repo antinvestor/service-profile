@@ -1,20 +1,24 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: ocr/v1/ocr.proto
-//
-// @dart = 2.12
+// Generated from ocr/v1/ocr.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import '../../common/v1/common.pbjson.dart' as $7;
-import '../../google/protobuf/struct.pbjson.dart' as $6;
+import 'package:protobuf/well_known_types/google/protobuf/struct.pbjson.dart'
+    as $0;
+
+import '../../common/v1/common.pbjson.dart' as $1;
 
 @$core.Deprecated('Use oCRFileDescriptor instead')
 const OCRFile$json = {
@@ -22,9 +26,23 @@ const OCRFile$json = {
   '2': [
     {'1': 'file_id', '3': 1, '4': 1, '5': 9, '10': 'fileId'},
     {'1': 'language', '3': 2, '4': 1, '5': 9, '10': 'language'},
-    {'1': 'status', '3': 3, '4': 1, '5': 14, '6': '.common.v1.STATUS', '10': 'status'},
+    {
+      '1': 'status',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.common.v1.STATUS',
+      '10': 'status'
+    },
     {'1': 'text', '3': 4, '4': 1, '5': 9, '10': 'text'},
-    {'1': 'properties', '3': 5, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'properties'},
+    {
+      '1': 'properties',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'properties'
+    },
   ],
 };
 
@@ -41,7 +59,14 @@ const RecognizeRequest$json = {
   '2': [
     {'1': 'reference_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'referenceId'},
     {'1': 'language_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'languageId'},
-    {'1': 'properties', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'properties'},
+    {
+      '1': 'properties',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'properties'
+    },
     {'1': 'async', '3': 4, '4': 1, '5': 8, '10': 'async'},
     {'1': 'file_id', '3': 5, '4': 3, '5': 9, '8': {}, '10': 'fileId'},
   ],
@@ -61,7 +86,14 @@ const RecognizeResponse$json = {
   '1': 'RecognizeResponse',
   '2': [
     {'1': 'reference_id', '3': 1, '4': 1, '5': 9, '10': 'referenceId'},
-    {'1': 'result', '3': 2, '4': 3, '5': 11, '6': '.ocr.v1.OCRFile', '10': 'result'},
+    {
+      '1': 'result',
+      '3': 2,
+      '4': 3,
+      '5': 11,
+      '6': '.ocr.v1.OCRFile',
+      '10': 'result'
+    },
   ],
 };
 
@@ -74,7 +106,14 @@ final $typed_data.Uint8List recognizeResponseDescriptor = $convert.base64Decode(
 const StatusResponse$json = {
   '1': 'StatusResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.ocr.v1.RecognizeResponse', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.ocr.v1.RecognizeResponse',
+      '10': 'data'
+    },
   ],
 };
 
@@ -86,7 +125,12 @@ final $typed_data.Uint8List statusResponseDescriptor = $convert.base64Decode(
 const $core.Map<$core.String, $core.dynamic> OCRServiceBase$json = {
   '1': 'OCRService',
   '2': [
-    {'1': 'Recognize', '2': '.ocr.v1.RecognizeRequest', '3': '.ocr.v1.RecognizeResponse', '4': {}},
+    {
+      '1': 'Recognize',
+      '2': '.ocr.v1.RecognizeRequest',
+      '3': '.ocr.v1.RecognizeResponse',
+      '4': {}
+    },
     {
       '1': 'Status',
       '2': '.common.v1.StatusRequest',
@@ -98,15 +142,16 @@ const $core.Map<$core.String, $core.dynamic> OCRServiceBase$json = {
 };
 
 @$core.Deprecated('Use oCRServiceDescriptor instead')
-const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> OCRServiceBase$messageJson = {
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    OCRServiceBase$messageJson = {
   '.ocr.v1.RecognizeRequest': RecognizeRequest$json,
-  '.google.protobuf.Struct': $6.Struct$json,
-  '.google.protobuf.Struct.FieldsEntry': $6.Struct_FieldsEntry$json,
-  '.google.protobuf.Value': $6.Value$json,
-  '.google.protobuf.ListValue': $6.ListValue$json,
+  '.google.protobuf.Struct': $0.Struct$json,
+  '.google.protobuf.Struct.FieldsEntry': $0.Struct_FieldsEntry$json,
+  '.google.protobuf.Value': $0.Value$json,
+  '.google.protobuf.ListValue': $0.ListValue$json,
   '.ocr.v1.RecognizeResponse': RecognizeResponse$json,
   '.ocr.v1.OCRFile': OCRFile$json,
-  '.common.v1.StatusRequest': $7.StatusRequest$json,
+  '.common.v1.StatusRequest': $1.StatusRequest$json,
   '.ocr.v1.StatusResponse': StatusResponse$json,
 };
 
@@ -125,9 +170,8 @@ final $typed_data.Uint8List oCRServiceDescriptor = $convert.base64Decode(
     'Y2hyb25vdXMgT0NSIHJlcXVlc3QuIFJldHVybnMgcHJvY2Vzc2luZyBzdGF0dXMgKHF1ZXVlZC'
     'wgaW4tcHJvY2Vzcywgc3VjY2Vzc2Z1bCwgZmFpbGVkKSBhbmQgZXh0cmFjdGVkIHRleHQgaWYg'
     'cHJvY2Vzc2luZyBpcyBjb21wbGV0ZS4qDGdldE9DUlN0YXR1c4K1GBEKD29jcl9zdGF0dXNfdm'
-    'lldxrdAYK1GNgBCgtzZXJ2aWNlX29jchIKb2NyX3N1Ym1pdBIPb2NyX3N0YXR1c192aWV3Gh8I'
+    'lldxrpAYK1GOQBCgtzZXJ2aWNlX29jchIKb2NyX3N1Ym1pdBIPb2NyX3N0YXR1c192aWV3Gh8I'
     'ARIKb2NyX3N1Ym1pdBIPb2NyX3N0YXR1c192aWV3Gh8IAhIKb2NyX3N1Ym1pdBIPb2NyX3N0YX'
     'R1c192aWV3Gh8IAxIKb2NyX3N1Ym1pdBIPb2NyX3N0YXR1c192aWV3GhMIBBIPb2NyX3N0YXR1'
-    'c192aWV3GhMIBRIPb2NyX3N0YXR1c192aWV3Gh8IBhIKb2NyX3N1Ym1pdBIPb2NyX3N0YXR1c1'
-    '92aWV3');
-
+    'c192aWV3Gh8IBRIKb2NyX3N1Ym1pdBIPb2NyX3N0YXR1c192aWV3Gh8IBhIKb2NyX3N1Ym1pdB'
+    'IPb2NyX3N0YXR1c192aWV3');

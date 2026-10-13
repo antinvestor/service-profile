@@ -20,142 +20,137 @@ package ocrv1connect
 
 import (
 	v11 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "github.com/antinvestor/service-profile/ocr/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// OCRServiceName is the fully-qualified name of the OCRService service.
 	OCRServiceName = "ocr.v1.OCRService"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// OCRServiceRecognizeProcedure is the fully-qualified name of the OCRService's Recognize RPC.
+	// OCRServiceRecognizeProcedure is the procedure name of the OCRService's Recognize RPC.
 	OCRServiceRecognizeProcedure = "/ocr.v1.OCRService/Recognize"
-	// OCRServiceStatusProcedure is the fully-qualified name of the OCRService's Status RPC.
+	// OCRServiceStatusProcedure is the procedure name of the OCRService's Status RPC.
 	OCRServiceStatusProcedure = "/ocr.v1.OCRService/Status"
+)
+
+var (
+	oCRServiceRecognizeSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_ocr_v1_ocr_proto.Services().ByName("OCRService").Methods().ByName("Recognize"),
+			Procedure:  OCRServiceRecognizeProcedure,
+		}
+	})
+	oCRServiceStatusSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_ocr_v1_ocr_proto.Services().ByName("OCRService").Methods().ByName("Status"),
+			Procedure:        OCRServiceStatusProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
 )
 
 // OCRServiceClient is a client for the ocr.v1.OCRService service.
 type OCRServiceClient interface {
 	// Recognize performs OCR on one or more files.
 	// Supports both synchronous and asynchronous processing.
-	Recognize(context.Context, *connect.Request[v1.RecognizeRequest]) (*connect.Response[v1.RecognizeResponse], error)
+	Recognize(context.Context, *v1.RecognizeRequest) (*v1.RecognizeResponse, error)
 	// Status retrieves the current status of an async OCR request.
 	// Returns processing status and results if available.
-	Status(context.Context, *connect.Request[v11.StatusRequest]) (*connect.Response[v1.StatusResponse], error)
+	Status(context.Context, *v11.StatusRequest) (*v1.StatusResponse, error)
 }
 
-// NewOCRServiceClient constructs a client for the ocr.v1.OCRService service. By default, it uses
-// the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
-// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
-// connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewOCRServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) OCRServiceClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	oCRServiceMethods := v1.File_ocr_v1_ocr_proto.Services().ByName("OCRService").Methods()
-	return &oCRServiceClient{
-		recognize: connect.NewClient[v1.RecognizeRequest, v1.RecognizeResponse](
-			httpClient,
-			baseURL+OCRServiceRecognizeProcedure,
-			connect.WithSchema(oCRServiceMethods.ByName("Recognize")),
-			connect.WithClientOptions(opts...),
-		),
-		status: connect.NewClient[v11.StatusRequest, v1.StatusResponse](
-			httpClient,
-			baseURL+OCRServiceStatusProcedure,
-			connect.WithSchema(oCRServiceMethods.ByName("Status")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-	}
-}
-
-// oCRServiceClient implements OCRServiceClient.
-type oCRServiceClient struct {
-	recognize *connect.Client[v1.RecognizeRequest, v1.RecognizeResponse]
-	status    *connect.Client[v11.StatusRequest, v1.StatusResponse]
-}
-
-// Recognize calls ocr.v1.OCRService.Recognize.
-func (c *oCRServiceClient) Recognize(ctx context.Context, req *connect.Request[v1.RecognizeRequest]) (*connect.Response[v1.RecognizeResponse], error) {
-	return c.recognize.CallUnary(ctx, req)
-}
-
-// Status calls ocr.v1.OCRService.Status.
-func (c *oCRServiceClient) Status(ctx context.Context, req *connect.Request[v11.StatusRequest]) (*connect.Response[v1.StatusResponse], error) {
-	return c.status.CallUnary(ctx, req)
+// NewOCRServiceClient constructs a client for the ocr.v1.OCRService service. Multiple service
+// clients may share a single connect.Client.
+func NewOCRServiceClient(client *connect.Client) OCRServiceClient {
+	return &oCRServiceClient{client: client}
 }
 
 // OCRServiceHandler is an implementation of the ocr.v1.OCRService service.
 type OCRServiceHandler interface {
 	// Recognize performs OCR on one or more files.
 	// Supports both synchronous and asynchronous processing.
-	Recognize(context.Context, *connect.Request[v1.RecognizeRequest]) (*connect.Response[v1.RecognizeResponse], error)
+	Recognize(context.Context, *v1.RecognizeRequest) (*v1.RecognizeResponse, error)
 	// Status retrieves the current status of an async OCR request.
 	// Returns processing status and results if available.
-	Status(context.Context, *connect.Request[v11.StatusRequest]) (*connect.Response[v1.StatusResponse], error)
+	Status(context.Context, *v11.StatusRequest) (*v1.StatusResponse, error)
 }
 
-// NewOCRServiceHandler builds an HTTP handler from the service implementation. It returns the path
-// on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewOCRServiceHandler(svc OCRServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	oCRServiceMethods := v1.File_ocr_v1_ocr_proto.Services().ByName("OCRService").Methods()
-	oCRServiceRecognizeHandler := connect.NewUnaryHandler(
-		OCRServiceRecognizeProcedure,
-		svc.Recognize,
-		connect.WithSchema(oCRServiceMethods.ByName("Recognize")),
-		connect.WithHandlerOptions(opts...),
+// RegisterOCRServiceHandler registers svc as the ocr.v1.OCRService implementation on server.
+func RegisterOCRServiceHandler(server *connect.Server, svc OCRServiceHandler) {
+	adapter := oCRServiceHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: oCRServiceRecognizeSpec(), Handler: adapter.recognize},
+		connect.Method{Spec: oCRServiceStatusSpec(), Handler: adapter.status},
 	)
-	oCRServiceStatusHandler := connect.NewUnaryHandler(
-		OCRServiceStatusProcedure,
-		svc.Status,
-		connect.WithSchema(oCRServiceMethods.ByName("Status")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/ocr.v1.OCRService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case OCRServiceRecognizeProcedure:
-			oCRServiceRecognizeHandler.ServeHTTP(w, r)
-		case OCRServiceStatusProcedure:
-			oCRServiceStatusHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
 }
 
 // UnimplementedOCRServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedOCRServiceHandler struct{}
 
-func (UnimplementedOCRServiceHandler) Recognize(context.Context, *connect.Request[v1.RecognizeRequest]) (*connect.Response[v1.RecognizeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("ocr.v1.OCRService.Recognize is not implemented"))
+func (UnimplementedOCRServiceHandler) Recognize(context.Context, *v1.RecognizeRequest) (*v1.RecognizeResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "ocr.v1.OCRService.Recognize is not implemented")
 }
 
-func (UnimplementedOCRServiceHandler) Status(context.Context, *connect.Request[v11.StatusRequest]) (*connect.Response[v1.StatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("ocr.v1.OCRService.Status is not implemented"))
+func (UnimplementedOCRServiceHandler) Status(context.Context, *v11.StatusRequest) (*v1.StatusResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "ocr.v1.OCRService.Status is not implemented")
+}
+
+type oCRServiceClient struct {
+	client *connect.Client
+}
+
+func (c *oCRServiceClient) Recognize(ctx context.Context, req *v1.RecognizeRequest) (*v1.RecognizeResponse, error) {
+	var res v1.RecognizeResponse
+	if err := c.client.CallUnary(ctx, oCRServiceRecognizeSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *oCRServiceClient) Status(ctx context.Context, req *v11.StatusRequest) (*v1.StatusResponse, error) {
+	var res v1.StatusResponse
+	if err := c.client.CallUnary(ctx, oCRServiceStatusSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type oCRServiceHandler struct{ svc OCRServiceHandler }
+
+func (h oCRServiceHandler) recognize(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RecognizeRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Recognize(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h oCRServiceHandler) status(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v11.StatusRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Status(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

@@ -2,16 +2,15 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"slices"
 	"time"
 
-	"buf.build/gen/go/antinvestor/device/connectrpc/go/device/v1/devicev1connect"
+	"buf.build/gen/go/antinvestor/device/connectrpc/go/v2/device/v1/devicev1connect"
 	devicev1 "buf.build/gen/go/antinvestor/device/protocolbuffers/go/device/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/security/authorizer"
+	"connectrpc.com/connect/v2"
+	"github.com/pitabwire/frame/v3/data"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/security/authorizer"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/devices/service/authz"
@@ -60,11 +59,11 @@ func NewDeviceServer(_ context.Context, checker *authorizer.FunctionChecker,
 // nolint: revive,staticcheck,nolintlint // This is an api implementation
 func (ds *DevicesServer) GetById(
 	ctx context.Context,
-	req *connect.Request[devicev1.GetByIdRequest],
-) (*connect.Response[devicev1.GetByIdResponse], error) {
-	ids := req.Msg.GetId()
+	req *devicev1.GetByIdRequest,
+) (*devicev1.GetByIdResponse, error) {
+	ids := req.GetId()
 	if slices.Contains(ids, "") {
-		return nil, connect.NewError(connect.CodeInvalidArgument, errors.New("device ID cannot be empty"))
+		return nil, connect.NewError(connect.CodeInvalidArgument, "device ID cannot be empty")
 	}
 
 	devicesList, err := ds.deviceBusiness.GetDevicesByIDs(ctx, ids)
@@ -72,33 +71,33 @@ func (ds *DevicesServer) GetById(
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&devicev1.GetByIdResponse{
+	return &devicev1.GetByIdResponse{
 		Data: devicesList,
-	}), nil
+	}, nil
 }
 
 // GetBySessionId retrieves a device by session ID
 // nolint: revive,staticcheck,nolintlint // This is an api implementation
 func (ds *DevicesServer) GetBySessionId(
 	ctx context.Context,
-	req *connect.Request[devicev1.GetBySessionIdRequest]) (*connect.Response[devicev1.GetBySessionIdResponse], error) {
-	device, err := ds.deviceBusiness.GetDeviceBySessionID(ctx, req.Msg.GetId())
+	req *devicev1.GetBySessionIdRequest) (*devicev1.GetBySessionIdResponse, error) {
+	device, err := ds.deviceBusiness.GetDeviceBySessionID(ctx, req.GetId())
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&devicev1.GetBySessionIdResponse{
+	return &devicev1.GetBySessionIdResponse{
 		Data: device,
-	}), nil
+	}, nil
 }
 
 func (ds *DevicesServer) Search(
 	ctx context.Context,
-	req *connect.Request[devicev1.SearchRequest],
-	stream *connect.ServerStream[devicev1.SearchResponse],
+	req *devicev1.SearchRequest,
+	stream devicev1connect.DeviceServiceSearchServerStream,
 ) error {
 	// Always process the search, even for empty queries
-	response, err := ds.deviceBusiness.SearchDevices(ctx, req.Msg)
+	response, err := ds.deviceBusiness.SearchDevices(ctx, req)
 	if err != nil {
 		return errorutil.CleanErr(err)
 	}
@@ -124,12 +123,12 @@ func (ds *DevicesServer) Search(
 
 func (ds *DevicesServer) Create(
 	ctx context.Context,
-	req *connect.Request[devicev1.CreateRequest],
-) (*connect.Response[devicev1.CreateResponse], error) {
+	req *devicev1.CreateRequest,
+) (*devicev1.CreateResponse, error) {
 	// Generate a device ID for tracking
 	deviceID := util.IDString()
 
-	msg := req.Msg
+	msg := req
 
 	// Add device name to properties if provided
 	var properties data.JSONMap = msg.GetProperties().AsMap()
@@ -141,7 +140,7 @@ func (ds *DevicesServer) Create(
 	properties["ip"] = GetClientIP(ctx)
 
 	// Extract Cloudflare geo headers so the queue handler can skip external GeoIP lookups.
-	if cfGeo := ExtractCloudflareGeo(ctx, req.Header()); len(cfGeo) > 0 {
+	if cfGeo := ExtractCloudflareGeo(ctx); len(cfGeo) > 0 {
 		properties["cf_geo"] = cfGeo
 	}
 
@@ -155,19 +154,19 @@ func (ds *DevicesServer) Create(
 
 	// The device will be created asynchronously by the queue handler
 	// For now, return a response indicating the device creation is in progress
-	return connect.NewResponse(&devicev1.CreateResponse{
+	return &devicev1.CreateResponse{
 		Data: &devicev1.DeviceObject{
 			Id:   deviceID,
 			Name: msg.GetName(),
 		},
-	}), nil
+	}, nil
 }
 
 func (ds *DevicesServer) Update(
 	ctx context.Context,
-	req *connect.Request[devicev1.UpdateRequest],
-) (*connect.Response[devicev1.UpdateResponse], error) {
-	msg := req.Msg
+	req *devicev1.UpdateRequest,
+) (*devicev1.UpdateResponse, error) {
+	msg := req
 	device, err := ds.deviceBusiness.SaveDevice(
 		ctx, msg.GetId(), msg.GetName(), msg.GetProperties().AsMap(),
 	)
@@ -175,23 +174,23 @@ func (ds *DevicesServer) Update(
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&devicev1.UpdateResponse{
+	return &devicev1.UpdateResponse{
 		Data: device,
-	}), nil
+	}, nil
 }
 
 func (ds *DevicesServer) Link(
 	ctx context.Context,
-	req *connect.Request[devicev1.LinkRequest],
-) (*connect.Response[devicev1.LinkResponse], error) {
+	req *devicev1.LinkRequest,
+) (*devicev1.LinkResponse, error) {
 	claims := security.ClaimsFromContext(ctx)
-	if sub, _ := claims.GetSubject(); sub != req.Msg.GetProfileId() {
+	if sub, _ := claims.GetSubject(); sub != req.GetProfileId() {
 		if err := ds.checker.Check(ctx, authz.PermissionDevicesManage); err != nil {
 			return nil, authorizer.ToConnectError(err)
 		}
 	}
 
-	msg := req.Msg
+	msg := req
 	device, err := ds.deviceBusiness.LinkDeviceToProfile(
 		ctx, msg.GetId(), msg.GetProfileId(), msg.GetProperties().AsMap(),
 	)
@@ -199,39 +198,39 @@ func (ds *DevicesServer) Link(
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&devicev1.LinkResponse{
+	return &devicev1.LinkResponse{
 		Data: device,
-	}), nil
+	}, nil
 }
 
 func (ds *DevicesServer) Remove(
 	ctx context.Context,
-	req *connect.Request[devicev1.RemoveRequest],
-) (*connect.Response[devicev1.RemoveResponse], error) {
-	msg := req.Msg
+	req *devicev1.RemoveRequest,
+) (*devicev1.RemoveResponse, error) {
+	msg := req
 
 	dev, err := ds.deviceBusiness.RemoveDevice(ctx, msg.GetId())
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&devicev1.RemoveResponse{
+	return &devicev1.RemoveResponse{
 		Data: dev,
-	}), nil
+	}, nil
 }
 
 func (ds *DevicesServer) Log(
 	ctx context.Context,
-	req *connect.Request[devicev1.LogRequest],
-) (*connect.Response[devicev1.LogResponse], error) {
-	msg := req.Msg
+	req *devicev1.LogRequest,
+) (*devicev1.LogResponse, error) {
+	msg := req
 
 	payload := msg.GetExtras().AsMap()
 
 	payload["ip"] = GetClientIP(ctx)
 
 	// Extract Cloudflare geo headers so the queue handler can skip external GeoIP lookups.
-	if cfGeo := ExtractCloudflareGeo(ctx, req.Header()); len(cfGeo) > 0 {
+	if cfGeo := ExtractCloudflareGeo(ctx); len(cfGeo) > 0 {
 		payload["cf_geo"] = cfGeo
 	}
 
@@ -240,17 +239,17 @@ func (ds *DevicesServer) Log(
 		return nil, errorutil.CleanErr(err)
 	}
 
-	return connect.NewResponse(&devicev1.LogResponse{
+	return &devicev1.LogResponse{
 		Data: deviceLog,
-	}), nil
+	}, nil
 }
 
 func (ds *DevicesServer) ListLogs(
 	ctx context.Context,
-	req *connect.Request[devicev1.ListLogsRequest],
-	stream *connect.ServerStream[devicev1.ListLogsResponse],
+	req *devicev1.ListLogsRequest,
+	stream devicev1connect.DeviceServiceListLogsServerStream,
 ) error {
-	response, err := ds.deviceBusiness.GetDeviceLogs(ctx, req.Msg.GetDeviceId())
+	response, err := ds.deviceBusiness.GetDeviceLogs(ctx, req.GetDeviceId())
 	if err != nil {
 		return errorutil.CleanErr(err)
 	}
@@ -276,10 +275,10 @@ func (ds *DevicesServer) ListLogs(
 
 func (ds *DevicesServer) GetTurnCredentials(
 	ctx context.Context,
-	_ *connect.Request[devicev1.GetTurnCredentialsRequest],
-) (*connect.Response[devicev1.GetTurnCredentialsResponse], error) {
+	_ *devicev1.GetTurnCredentialsRequest,
+) (*devicev1.GetTurnCredentialsResponse, error) {
 	if ds.turnBusiness == nil {
-		return nil, connect.NewError(connect.CodeUnavailable, errors.New("TURN credentials provider is not configured"))
+		return nil, connect.NewError(connect.CodeUnavailable, "TURN credentials provider is not configured")
 	}
 
 	// Per-caller rate limiting.
@@ -296,14 +295,14 @@ func (ds *DevicesServer) GetTurnCredentials(
 		if !allowed {
 			return nil, connect.NewError(
 				connect.CodeResourceExhausted,
-				errors.New("TURN credential rate limit exceeded"),
+				"TURN credential rate limit exceeded",
 			)
 		}
 	}
 
 	credentials, err := ds.turnBusiness.GetTurnCredentials(ctx)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, errors.New("failed to generate TURN credentials"))
+		return nil, connect.NewError(connect.CodeInternal, "failed to generate TURN credentials")
 	}
 
 	expiresAt := time.Now().Unix() + int64(ds.turnTTL)
@@ -320,8 +319,8 @@ func (ds *DevicesServer) GetTurnCredentials(
 		}
 	}
 
-	return connect.NewResponse(&devicev1.GetTurnCredentialsResponse{
+	return &devicev1.GetTurnCredentialsResponse{
 		Servers:    servers,
 		TtlSeconds: ds.turnTTL,
-	}), nil
+	}, nil
 }

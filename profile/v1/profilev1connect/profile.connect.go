@@ -19,779 +19,1020 @@
 package profilev1connect
 
 import (
-	connect "connectrpc.com/connect"
+	connect "connectrpc.com/connect/v2"
 	context "context"
-	errors "errors"
 	v1 "github.com/antinvestor/service-profile/profile/v1"
-	http "net/http"
-	strings "strings"
+	sync "sync"
 )
-
-// This is a compile-time assertion to ensure that this generated file and the connect package are
-// compatible. If you get a compiler error that this constant is not defined, this code was
-// generated with a version of connect newer than the one compiled into your binary. You can fix the
-// problem by either regenerating this code with an older version of connect or updating the connect
-// version compiled into your binary.
-const _ = connect.IsAtLeastVersion1_13_0
 
 const (
 	// ProfileServiceName is the fully-qualified name of the ProfileService service.
 	ProfileServiceName = "profile.v1.ProfileService"
 )
 
-// These constants are the fully-qualified names of the RPCs defined in this package. They're
-// exposed at runtime as Spec.Procedure and as the final two segments of the HTTP route.
+// These constants are the procedure names of the RPCs defined in this package. They're exposed at
+// runtime as Spec.Procedure and as the final two segments of the HTTP route.
 //
 // Note that these are different from the fully-qualified method names used by
 // google.golang.org/protobuf/reflect/protoreflect. To convert from these constants to
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// ProfileServiceGetByIdProcedure is the fully-qualified name of the ProfileService's GetById RPC.
+	// ProfileServiceGetByIdProcedure is the procedure name of the ProfileService's GetById RPC.
 	ProfileServiceGetByIdProcedure = "/profile.v1.ProfileService/GetById"
-	// ProfileServiceGetByContactProcedure is the fully-qualified name of the ProfileService's
-	// GetByContact RPC.
-	ProfileServiceGetByContactProcedure = "/profile.v1.ProfileService/GetByContact"
-	// ProfileServiceSearchProcedure is the fully-qualified name of the ProfileService's Search RPC.
-	ProfileServiceSearchProcedure = "/profile.v1.ProfileService/Search"
-	// ProfileServiceMergeProcedure is the fully-qualified name of the ProfileService's Merge RPC.
-	ProfileServiceMergeProcedure = "/profile.v1.ProfileService/Merge"
-	// ProfileServiceCreateProcedure is the fully-qualified name of the ProfileService's Create RPC.
-	ProfileServiceCreateProcedure = "/profile.v1.ProfileService/Create"
-	// ProfileServiceUpdateProcedure is the fully-qualified name of the ProfileService's Update RPC.
-	ProfileServiceUpdateProcedure = "/profile.v1.ProfileService/Update"
-	// ProfileServiceAddContactProcedure is the fully-qualified name of the ProfileService's AddContact
+	// ProfileServiceGetByContactProcedure is the procedure name of the ProfileService's GetByContact
 	// RPC.
+	ProfileServiceGetByContactProcedure = "/profile.v1.ProfileService/GetByContact"
+	// ProfileServiceSearchProcedure is the procedure name of the ProfileService's Search RPC.
+	ProfileServiceSearchProcedure = "/profile.v1.ProfileService/Search"
+	// ProfileServiceMergeProcedure is the procedure name of the ProfileService's Merge RPC.
+	ProfileServiceMergeProcedure = "/profile.v1.ProfileService/Merge"
+	// ProfileServiceCreateProcedure is the procedure name of the ProfileService's Create RPC.
+	ProfileServiceCreateProcedure = "/profile.v1.ProfileService/Create"
+	// ProfileServiceUpdateProcedure is the procedure name of the ProfileService's Update RPC.
+	ProfileServiceUpdateProcedure = "/profile.v1.ProfileService/Update"
+	// ProfileServiceAddContactProcedure is the procedure name of the ProfileService's AddContact RPC.
 	ProfileServiceAddContactProcedure = "/profile.v1.ProfileService/AddContact"
-	// ProfileServiceCreateContactProcedure is the fully-qualified name of the ProfileService's
-	// CreateContact RPC.
+	// ProfileServiceCreateContactProcedure is the procedure name of the ProfileService's CreateContact
+	// RPC.
 	ProfileServiceCreateContactProcedure = "/profile.v1.ProfileService/CreateContact"
-	// ProfileServiceGetContactsProcedure is the fully-qualified name of the ProfileService's
-	// GetContacts RPC.
+	// ProfileServiceGetContactsProcedure is the procedure name of the ProfileService's GetContacts RPC.
 	ProfileServiceGetContactsProcedure = "/profile.v1.ProfileService/GetContacts"
-	// ProfileServiceCreateContactVerificationProcedure is the fully-qualified name of the
-	// ProfileService's CreateContactVerification RPC.
+	// ProfileServiceCreateContactVerificationProcedure is the procedure name of the ProfileService's
+	// CreateContactVerification RPC.
 	ProfileServiceCreateContactVerificationProcedure = "/profile.v1.ProfileService/CreateContactVerification"
-	// ProfileServiceCheckVerificationProcedure is the fully-qualified name of the ProfileService's
+	// ProfileServiceCheckVerificationProcedure is the procedure name of the ProfileService's
 	// CheckVerification RPC.
 	ProfileServiceCheckVerificationProcedure = "/profile.v1.ProfileService/CheckVerification"
-	// ProfileServiceRemoveContactProcedure is the fully-qualified name of the ProfileService's
-	// RemoveContact RPC.
+	// ProfileServiceRemoveContactProcedure is the procedure name of the ProfileService's RemoveContact
+	// RPC.
 	ProfileServiceRemoveContactProcedure = "/profile.v1.ProfileService/RemoveContact"
-	// ProfileServiceSearchRosterProcedure is the fully-qualified name of the ProfileService's
-	// SearchRoster RPC.
+	// ProfileServiceSearchRosterProcedure is the procedure name of the ProfileService's SearchRoster
+	// RPC.
 	ProfileServiceSearchRosterProcedure = "/profile.v1.ProfileService/SearchRoster"
-	// ProfileServiceAddRosterProcedure is the fully-qualified name of the ProfileService's AddRoster
-	// RPC.
+	// ProfileServiceAddRosterProcedure is the procedure name of the ProfileService's AddRoster RPC.
 	ProfileServiceAddRosterProcedure = "/profile.v1.ProfileService/AddRoster"
-	// ProfileServiceRemoveRosterProcedure is the fully-qualified name of the ProfileService's
-	// RemoveRoster RPC.
-	ProfileServiceRemoveRosterProcedure = "/profile.v1.ProfileService/RemoveRoster"
-	// ProfileServiceAddAddressProcedure is the fully-qualified name of the ProfileService's AddAddress
+	// ProfileServiceRemoveRosterProcedure is the procedure name of the ProfileService's RemoveRoster
 	// RPC.
+	ProfileServiceRemoveRosterProcedure = "/profile.v1.ProfileService/RemoveRoster"
+	// ProfileServiceAddAddressProcedure is the procedure name of the ProfileService's AddAddress RPC.
 	ProfileServiceAddAddressProcedure = "/profile.v1.ProfileService/AddAddress"
-	// ProfileServiceAddRelationshipProcedure is the fully-qualified name of the ProfileService's
+	// ProfileServiceAddRelationshipProcedure is the procedure name of the ProfileService's
 	// AddRelationship RPC.
 	ProfileServiceAddRelationshipProcedure = "/profile.v1.ProfileService/AddRelationship"
-	// ProfileServiceDeleteRelationshipProcedure is the fully-qualified name of the ProfileService's
+	// ProfileServiceDeleteRelationshipProcedure is the procedure name of the ProfileService's
 	// DeleteRelationship RPC.
 	ProfileServiceDeleteRelationshipProcedure = "/profile.v1.ProfileService/DeleteRelationship"
-	// ProfileServiceListRelationshipProcedure is the fully-qualified name of the ProfileService's
+	// ProfileServiceListRelationshipProcedure is the procedure name of the ProfileService's
 	// ListRelationship RPC.
 	ProfileServiceListRelationshipProcedure = "/profile.v1.ProfileService/ListRelationship"
-	// ProfileServiceGetByIDAndPartitionProcedure is the fully-qualified name of the ProfileService's
+	// ProfileServiceGetByIDAndPartitionProcedure is the procedure name of the ProfileService's
 	// GetByIDAndPartition RPC.
 	ProfileServiceGetByIDAndPartitionProcedure = "/profile.v1.ProfileService/GetByIDAndPartition"
-	// ProfileServicePropertyHistoryProcedure is the fully-qualified name of the ProfileService's
+	// ProfileServicePropertyHistoryProcedure is the procedure name of the ProfileService's
 	// PropertyHistory RPC.
 	ProfileServicePropertyHistoryProcedure = "/profile.v1.ProfileService/PropertyHistory"
-	// ProfileServiceResolveAccountsProcedure is the fully-qualified name of the ProfileService's
+	// ProfileServiceResolveAccountsProcedure is the procedure name of the ProfileService's
 	// ResolveAccounts RPC.
 	ProfileServiceResolveAccountsProcedure = "/profile.v1.ProfileService/ResolveAccounts"
+)
+
+var (
+	profileServiceGetByIdSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("GetById"),
+			Procedure:        ProfileServiceGetByIdProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServiceGetByContactSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("GetByContact"),
+			Procedure:        ProfileServiceGetByContactProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServiceSearchSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeServer,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("Search"),
+			Procedure:        ProfileServiceSearchProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServiceMergeSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("Merge"),
+			Procedure:  ProfileServiceMergeProcedure,
+		}
+	})
+	profileServiceCreateSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("Create"),
+			Procedure:  ProfileServiceCreateProcedure,
+		}
+	})
+	profileServiceUpdateSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("Update"),
+			Procedure:  ProfileServiceUpdateProcedure,
+		}
+	})
+	profileServiceAddContactSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("AddContact"),
+			Procedure:  ProfileServiceAddContactProcedure,
+		}
+	})
+	profileServiceCreateContactSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("CreateContact"),
+			Procedure:  ProfileServiceCreateContactProcedure,
+		}
+	})
+	profileServiceGetContactsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("GetContacts"),
+			Procedure:        ProfileServiceGetContactsProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServiceCreateContactVerificationSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("CreateContactVerification"),
+			Procedure:  ProfileServiceCreateContactVerificationProcedure,
+		}
+	})
+	profileServiceCheckVerificationSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("CheckVerification"),
+			Procedure:  ProfileServiceCheckVerificationProcedure,
+		}
+	})
+	profileServiceRemoveContactSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("RemoveContact"),
+			Procedure:  ProfileServiceRemoveContactProcedure,
+		}
+	})
+	profileServiceSearchRosterSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeServer,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("SearchRoster"),
+			Procedure:        ProfileServiceSearchRosterProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServiceAddRosterSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("AddRoster"),
+			Procedure:  ProfileServiceAddRosterProcedure,
+		}
+	})
+	profileServiceRemoveRosterSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("RemoveRoster"),
+			Procedure:  ProfileServiceRemoveRosterProcedure,
+		}
+	})
+	profileServiceAddAddressSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("AddAddress"),
+			Procedure:  ProfileServiceAddAddressProcedure,
+		}
+	})
+	profileServiceAddRelationshipSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("AddRelationship"),
+			Procedure:  ProfileServiceAddRelationshipProcedure,
+		}
+	})
+	profileServiceDeleteRelationshipSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType: connect.StreamTypeUnary,
+			Schema:     v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("DeleteRelationship"),
+			Procedure:  ProfileServiceDeleteRelationshipProcedure,
+		}
+	})
+	profileServiceListRelationshipSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeServer,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("ListRelationship"),
+			Procedure:        ProfileServiceListRelationshipProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServiceGetByIDAndPartitionSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("GetByIDAndPartition"),
+			Procedure:        ProfileServiceGetByIDAndPartitionProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServicePropertyHistorySpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("PropertyHistory"),
+			Procedure:        ProfileServicePropertyHistoryProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServiceResolveAccountsSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("ResolveAccounts"),
+			Procedure:        ProfileServiceResolveAccountsProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
 )
 
 // ProfileServiceClient is a client for the profile.v1.ProfileService service.
 type ProfileServiceClient interface {
 	// GetById retrieves a profile by its unique ID.
-	GetById(context.Context, *connect.Request[v1.GetByIdRequest]) (*connect.Response[v1.GetByIdResponse], error)
+	GetById(context.Context, *v1.GetByIdRequest) (*v1.GetByIdResponse, error)
 	// GetByContact retrieves a profile by contact information.
-	GetByContact(context.Context, *connect.Request[v1.GetByContactRequest]) (*connect.Response[v1.GetByContactResponse], error)
+	GetByContact(context.Context, *v1.GetByContactRequest) (*v1.GetByContactResponse, error)
 	// Search finds profiles matching specified criteria.
-	Search(context.Context, *connect.Request[v1.SearchRequest]) (*connect.ServerStreamForClient[v1.SearchResponse], error)
+	Search(context.Context, *v1.SearchRequest) (ProfileServiceSearchClientStream, error)
 	// Merge combines two profiles into one.
-	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
+	Merge(context.Context, *v1.MergeRequest) (*v1.MergeResponse, error)
 	// Create creates a new profile.
-	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error)
+	Create(context.Context, *v1.CreateRequest) (*v1.CreateResponse, error)
 	// Update updates an existing profile's properties.
-	Update(context.Context, *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error)
+	Update(context.Context, *v1.UpdateRequest) (*v1.UpdateResponse, error)
 	// AddContact adds a new contact to a profile with automatic verification.
-	AddContact(context.Context, *connect.Request[v1.AddContactRequest]) (*connect.Response[v1.AddContactResponse], error)
+	AddContact(context.Context, *v1.AddContactRequest) (*v1.AddContactResponse, error)
 	// CreateContact creates a standalone contact not linked to a profile.
-	CreateContact(context.Context, *connect.Request[v1.CreateContactRequest]) (*connect.Response[v1.CreateContactResponse], error)
+	CreateContact(context.Context, *v1.CreateContactRequest) (*v1.CreateContactResponse, error)
 	// GetContacts resolves one or many contacts by id, whether standalone or
 	// attached to a profile. Missing ids are listed in missing_ids; found
 	// contacts are returned in data (order not guaranteed).
-	GetContacts(context.Context, *connect.Request[v1.GetContactsRequest]) (*connect.Response[v1.GetContactsResponse], error)
+	GetContacts(context.Context, *v1.GetContactsRequest) (*v1.GetContactsResponse, error)
 	// CreateContactVerification initiates contact verification.
-	CreateContactVerification(context.Context, *connect.Request[v1.CreateContactVerificationRequest]) (*connect.Response[v1.CreateContactVerificationResponse], error)
+	CreateContactVerification(context.Context, *v1.CreateContactVerificationRequest) (*v1.CreateContactVerificationResponse, error)
 	// CheckVerification verifies a contact using the provided code.
-	CheckVerification(context.Context, *connect.Request[v1.CheckVerificationRequest]) (*connect.Response[v1.CheckVerificationResponse], error)
+	CheckVerification(context.Context, *v1.CheckVerificationRequest) (*v1.CheckVerificationResponse, error)
 	// RemoveContact removes a contact from a profile.
-	RemoveContact(context.Context, *connect.Request[v1.RemoveContactRequest]) (*connect.Response[v1.RemoveContactResponse], error)
+	RemoveContact(context.Context, *v1.RemoveContactRequest) (*v1.RemoveContactResponse, error)
 	// SearchRoster searches a user's contact roster.
-	SearchRoster(context.Context, *connect.Request[v1.SearchRosterRequest]) (*connect.ServerStreamForClient[v1.SearchRosterResponse], error)
+	SearchRoster(context.Context, *v1.SearchRosterRequest) (ProfileServiceSearchRosterClientStream, error)
 	// AddRoster adds multiple contacts to a user's roster.
-	AddRoster(context.Context, *connect.Request[v1.AddRosterRequest]) (*connect.Response[v1.AddRosterResponse], error)
+	AddRoster(context.Context, *v1.AddRosterRequest) (*v1.AddRosterResponse, error)
 	// RemoveRoster removes a contact from a user's roster.
-	RemoveRoster(context.Context, *connect.Request[v1.RemoveRosterRequest]) (*connect.Response[v1.RemoveRosterResponse], error)
+	RemoveRoster(context.Context, *v1.RemoveRosterRequest) (*v1.RemoveRosterResponse, error)
 	// AddAddress adds a new address to a profile.
-	AddAddress(context.Context, *connect.Request[v1.AddAddressRequest]) (*connect.Response[v1.AddAddressResponse], error)
+	AddAddress(context.Context, *v1.AddAddressRequest) (*v1.AddAddressResponse, error)
 	// AddRelationship creates a relationship between profiles.
-	AddRelationship(context.Context, *connect.Request[v1.AddRelationshipRequest]) (*connect.Response[v1.AddRelationshipResponse], error)
+	AddRelationship(context.Context, *v1.AddRelationshipRequest) (*v1.AddRelationshipResponse, error)
 	// DeleteRelationship removes a relationship between profiles.
-	DeleteRelationship(context.Context, *connect.Request[v1.DeleteRelationshipRequest]) (*connect.Response[v1.DeleteRelationshipResponse], error)
+	DeleteRelationship(context.Context, *v1.DeleteRelationshipRequest) (*v1.DeleteRelationshipResponse, error)
 	// ListRelationship lists all relationships for a profile.
-	ListRelationship(context.Context, *connect.Request[v1.ListRelationshipRequest]) (*connect.ServerStreamForClient[v1.ListRelationshipResponse], error)
+	ListRelationship(context.Context, *v1.ListRelationshipRequest) (ProfileServiceListRelationshipClientStream, error)
 	// GetByIDAndPartition retrieves a profile with partition-scoped properties merged in.
-	GetByIDAndPartition(context.Context, *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error)
+	GetByIDAndPartition(context.Context, *v1.GetByIDAndPartitionRequest) (*v1.GetByIDAndPartitionResponse, error)
 	// PropertyHistory returns the change history for a specific property key on a profile.
-	PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error)
+	PropertyHistory(context.Context, *v1.PropertyHistoryRequest) (*v1.PropertyHistoryResponse, error)
 	// ResolveAccounts maps chain account addresses to the profiles that own
 	// them. Service-to-service only (account_resolve is bound to ROLE_SERVICE
 	// alone); unknown addresses are omitted from the response.
-	ResolveAccounts(context.Context, *connect.Request[v1.ResolveAccountsRequest]) (*connect.Response[v1.ResolveAccountsResponse], error)
+	ResolveAccounts(context.Context, *v1.ResolveAccountsRequest) (*v1.ResolveAccountsResponse, error)
 }
 
-// NewProfileServiceClient constructs a client for the profile.v1.ProfileService service. By
-// default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses,
-// and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
-// connect.WithGRPC() or connect.WithGRPCWeb() options.
-//
-// The URL supplied here should be the base URL for the Connect or gRPC server (for example,
-// http://api.acme.com or https://acme.com/grpc).
-func NewProfileServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) ProfileServiceClient {
-	baseURL = strings.TrimRight(baseURL, "/")
-	profileServiceMethods := v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods()
-	return &profileServiceClient{
-		getById: connect.NewClient[v1.GetByIdRequest, v1.GetByIdResponse](
-			httpClient,
-			baseURL+ProfileServiceGetByIdProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("GetById")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		getByContact: connect.NewClient[v1.GetByContactRequest, v1.GetByContactResponse](
-			httpClient,
-			baseURL+ProfileServiceGetByContactProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("GetByContact")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		search: connect.NewClient[v1.SearchRequest, v1.SearchResponse](
-			httpClient,
-			baseURL+ProfileServiceSearchProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("Search")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		merge: connect.NewClient[v1.MergeRequest, v1.MergeResponse](
-			httpClient,
-			baseURL+ProfileServiceMergeProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("Merge")),
-			connect.WithClientOptions(opts...),
-		),
-		create: connect.NewClient[v1.CreateRequest, v1.CreateResponse](
-			httpClient,
-			baseURL+ProfileServiceCreateProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("Create")),
-			connect.WithClientOptions(opts...),
-		),
-		update: connect.NewClient[v1.UpdateRequest, v1.UpdateResponse](
-			httpClient,
-			baseURL+ProfileServiceUpdateProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("Update")),
-			connect.WithClientOptions(opts...),
-		),
-		addContact: connect.NewClient[v1.AddContactRequest, v1.AddContactResponse](
-			httpClient,
-			baseURL+ProfileServiceAddContactProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("AddContact")),
-			connect.WithClientOptions(opts...),
-		),
-		createContact: connect.NewClient[v1.CreateContactRequest, v1.CreateContactResponse](
-			httpClient,
-			baseURL+ProfileServiceCreateContactProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("CreateContact")),
-			connect.WithClientOptions(opts...),
-		),
-		getContacts: connect.NewClient[v1.GetContactsRequest, v1.GetContactsResponse](
-			httpClient,
-			baseURL+ProfileServiceGetContactsProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("GetContacts")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		createContactVerification: connect.NewClient[v1.CreateContactVerificationRequest, v1.CreateContactVerificationResponse](
-			httpClient,
-			baseURL+ProfileServiceCreateContactVerificationProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("CreateContactVerification")),
-			connect.WithClientOptions(opts...),
-		),
-		checkVerification: connect.NewClient[v1.CheckVerificationRequest, v1.CheckVerificationResponse](
-			httpClient,
-			baseURL+ProfileServiceCheckVerificationProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("CheckVerification")),
-			connect.WithClientOptions(opts...),
-		),
-		removeContact: connect.NewClient[v1.RemoveContactRequest, v1.RemoveContactResponse](
-			httpClient,
-			baseURL+ProfileServiceRemoveContactProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("RemoveContact")),
-			connect.WithClientOptions(opts...),
-		),
-		searchRoster: connect.NewClient[v1.SearchRosterRequest, v1.SearchRosterResponse](
-			httpClient,
-			baseURL+ProfileServiceSearchRosterProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("SearchRoster")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		addRoster: connect.NewClient[v1.AddRosterRequest, v1.AddRosterResponse](
-			httpClient,
-			baseURL+ProfileServiceAddRosterProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("AddRoster")),
-			connect.WithClientOptions(opts...),
-		),
-		removeRoster: connect.NewClient[v1.RemoveRosterRequest, v1.RemoveRosterResponse](
-			httpClient,
-			baseURL+ProfileServiceRemoveRosterProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("RemoveRoster")),
-			connect.WithClientOptions(opts...),
-		),
-		addAddress: connect.NewClient[v1.AddAddressRequest, v1.AddAddressResponse](
-			httpClient,
-			baseURL+ProfileServiceAddAddressProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("AddAddress")),
-			connect.WithClientOptions(opts...),
-		),
-		addRelationship: connect.NewClient[v1.AddRelationshipRequest, v1.AddRelationshipResponse](
-			httpClient,
-			baseURL+ProfileServiceAddRelationshipProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("AddRelationship")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteRelationship: connect.NewClient[v1.DeleteRelationshipRequest, v1.DeleteRelationshipResponse](
-			httpClient,
-			baseURL+ProfileServiceDeleteRelationshipProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("DeleteRelationship")),
-			connect.WithClientOptions(opts...),
-		),
-		listRelationship: connect.NewClient[v1.ListRelationshipRequest, v1.ListRelationshipResponse](
-			httpClient,
-			baseURL+ProfileServiceListRelationshipProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("ListRelationship")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		getByIDAndPartition: connect.NewClient[v1.GetByIDAndPartitionRequest, v1.GetByIDAndPartitionResponse](
-			httpClient,
-			baseURL+ProfileServiceGetByIDAndPartitionProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("GetByIDAndPartition")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		propertyHistory: connect.NewClient[v1.PropertyHistoryRequest, v1.PropertyHistoryResponse](
-			httpClient,
-			baseURL+ProfileServicePropertyHistoryProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("PropertyHistory")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
-		resolveAccounts: connect.NewClient[v1.ResolveAccountsRequest, v1.ResolveAccountsResponse](
-			httpClient,
-			baseURL+ProfileServiceResolveAccountsProcedure,
-			connect.WithSchema(profileServiceMethods.ByName("ResolveAccounts")),
-			connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-			connect.WithClientOptions(opts...),
-		),
+// NewProfileServiceClient constructs a client for the profile.v1.ProfileService service. Multiple
+// service clients may share a single connect.Client.
+func NewProfileServiceClient(client *connect.Client) ProfileServiceClient {
+	return &profileServiceClient{client: client}
+}
+
+// ProfileServiceSearchClientStream is the client stream for the ProfileService's Search RPC.
+type ProfileServiceSearchClientStream struct {
+	stream connect.ClientStream
+}
+
+// Receive returns the next response message from the server.
+func (s ProfileServiceSearchClientStream) Receive() (*v1.SearchResponse, error) {
+	var res v1.SearchResponse
+	if err := s.stream.Receive(&res); err != nil {
+		return nil, err
 	}
+	return &res, nil
 }
 
-// profileServiceClient implements ProfileServiceClient.
-type profileServiceClient struct {
-	getById                   *connect.Client[v1.GetByIdRequest, v1.GetByIdResponse]
-	getByContact              *connect.Client[v1.GetByContactRequest, v1.GetByContactResponse]
-	search                    *connect.Client[v1.SearchRequest, v1.SearchResponse]
-	merge                     *connect.Client[v1.MergeRequest, v1.MergeResponse]
-	create                    *connect.Client[v1.CreateRequest, v1.CreateResponse]
-	update                    *connect.Client[v1.UpdateRequest, v1.UpdateResponse]
-	addContact                *connect.Client[v1.AddContactRequest, v1.AddContactResponse]
-	createContact             *connect.Client[v1.CreateContactRequest, v1.CreateContactResponse]
-	getContacts               *connect.Client[v1.GetContactsRequest, v1.GetContactsResponse]
-	createContactVerification *connect.Client[v1.CreateContactVerificationRequest, v1.CreateContactVerificationResponse]
-	checkVerification         *connect.Client[v1.CheckVerificationRequest, v1.CheckVerificationResponse]
-	removeContact             *connect.Client[v1.RemoveContactRequest, v1.RemoveContactResponse]
-	searchRoster              *connect.Client[v1.SearchRosterRequest, v1.SearchRosterResponse]
-	addRoster                 *connect.Client[v1.AddRosterRequest, v1.AddRosterResponse]
-	removeRoster              *connect.Client[v1.RemoveRosterRequest, v1.RemoveRosterResponse]
-	addAddress                *connect.Client[v1.AddAddressRequest, v1.AddAddressResponse]
-	addRelationship           *connect.Client[v1.AddRelationshipRequest, v1.AddRelationshipResponse]
-	deleteRelationship        *connect.Client[v1.DeleteRelationshipRequest, v1.DeleteRelationshipResponse]
-	listRelationship          *connect.Client[v1.ListRelationshipRequest, v1.ListRelationshipResponse]
-	getByIDAndPartition       *connect.Client[v1.GetByIDAndPartitionRequest, v1.GetByIDAndPartitionResponse]
-	propertyHistory           *connect.Client[v1.PropertyHistoryRequest, v1.PropertyHistoryResponse]
-	resolveAccounts           *connect.Client[v1.ResolveAccountsRequest, v1.ResolveAccountsResponse]
+// Close releases the stream's resources. It is idempotent and is typically deferred to clean up a
+// stream abandoned before io.EOF.
+func (s ProfileServiceSearchClientStream) Close() error {
+	return s.stream.Close()
 }
 
-// GetById calls profile.v1.ProfileService.GetById.
-func (c *profileServiceClient) GetById(ctx context.Context, req *connect.Request[v1.GetByIdRequest]) (*connect.Response[v1.GetByIdResponse], error) {
-	return c.getById.CallUnary(ctx, req)
+// ProfileServiceSearchRosterClientStream is the client stream for the ProfileService's SearchRoster
+// RPC.
+type ProfileServiceSearchRosterClientStream struct {
+	stream connect.ClientStream
 }
 
-// GetByContact calls profile.v1.ProfileService.GetByContact.
-func (c *profileServiceClient) GetByContact(ctx context.Context, req *connect.Request[v1.GetByContactRequest]) (*connect.Response[v1.GetByContactResponse], error) {
-	return c.getByContact.CallUnary(ctx, req)
+// Receive returns the next response message from the server.
+func (s ProfileServiceSearchRosterClientStream) Receive() (*v1.SearchRosterResponse, error) {
+	var res v1.SearchRosterResponse
+	if err := s.stream.Receive(&res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-// Search calls profile.v1.ProfileService.Search.
-func (c *profileServiceClient) Search(ctx context.Context, req *connect.Request[v1.SearchRequest]) (*connect.ServerStreamForClient[v1.SearchResponse], error) {
-	return c.search.CallServerStream(ctx, req)
+// Close releases the stream's resources. It is idempotent and is typically deferred to clean up a
+// stream abandoned before io.EOF.
+func (s ProfileServiceSearchRosterClientStream) Close() error {
+	return s.stream.Close()
 }
 
-// Merge calls profile.v1.ProfileService.Merge.
-func (c *profileServiceClient) Merge(ctx context.Context, req *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error) {
-	return c.merge.CallUnary(ctx, req)
+// ProfileServiceListRelationshipClientStream is the client stream for the ProfileService's
+// ListRelationship RPC.
+type ProfileServiceListRelationshipClientStream struct {
+	stream connect.ClientStream
 }
 
-// Create calls profile.v1.ProfileService.Create.
-func (c *profileServiceClient) Create(ctx context.Context, req *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error) {
-	return c.create.CallUnary(ctx, req)
+// Receive returns the next response message from the server.
+func (s ProfileServiceListRelationshipClientStream) Receive() (*v1.ListRelationshipResponse, error) {
+	var res v1.ListRelationshipResponse
+	if err := s.stream.Receive(&res); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
-// Update calls profile.v1.ProfileService.Update.
-func (c *profileServiceClient) Update(ctx context.Context, req *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error) {
-	return c.update.CallUnary(ctx, req)
-}
-
-// AddContact calls profile.v1.ProfileService.AddContact.
-func (c *profileServiceClient) AddContact(ctx context.Context, req *connect.Request[v1.AddContactRequest]) (*connect.Response[v1.AddContactResponse], error) {
-	return c.addContact.CallUnary(ctx, req)
-}
-
-// CreateContact calls profile.v1.ProfileService.CreateContact.
-func (c *profileServiceClient) CreateContact(ctx context.Context, req *connect.Request[v1.CreateContactRequest]) (*connect.Response[v1.CreateContactResponse], error) {
-	return c.createContact.CallUnary(ctx, req)
-}
-
-// GetContacts calls profile.v1.ProfileService.GetContacts.
-func (c *profileServiceClient) GetContacts(ctx context.Context, req *connect.Request[v1.GetContactsRequest]) (*connect.Response[v1.GetContactsResponse], error) {
-	return c.getContacts.CallUnary(ctx, req)
-}
-
-// CreateContactVerification calls profile.v1.ProfileService.CreateContactVerification.
-func (c *profileServiceClient) CreateContactVerification(ctx context.Context, req *connect.Request[v1.CreateContactVerificationRequest]) (*connect.Response[v1.CreateContactVerificationResponse], error) {
-	return c.createContactVerification.CallUnary(ctx, req)
-}
-
-// CheckVerification calls profile.v1.ProfileService.CheckVerification.
-func (c *profileServiceClient) CheckVerification(ctx context.Context, req *connect.Request[v1.CheckVerificationRequest]) (*connect.Response[v1.CheckVerificationResponse], error) {
-	return c.checkVerification.CallUnary(ctx, req)
-}
-
-// RemoveContact calls profile.v1.ProfileService.RemoveContact.
-func (c *profileServiceClient) RemoveContact(ctx context.Context, req *connect.Request[v1.RemoveContactRequest]) (*connect.Response[v1.RemoveContactResponse], error) {
-	return c.removeContact.CallUnary(ctx, req)
-}
-
-// SearchRoster calls profile.v1.ProfileService.SearchRoster.
-func (c *profileServiceClient) SearchRoster(ctx context.Context, req *connect.Request[v1.SearchRosterRequest]) (*connect.ServerStreamForClient[v1.SearchRosterResponse], error) {
-	return c.searchRoster.CallServerStream(ctx, req)
-}
-
-// AddRoster calls profile.v1.ProfileService.AddRoster.
-func (c *profileServiceClient) AddRoster(ctx context.Context, req *connect.Request[v1.AddRosterRequest]) (*connect.Response[v1.AddRosterResponse], error) {
-	return c.addRoster.CallUnary(ctx, req)
-}
-
-// RemoveRoster calls profile.v1.ProfileService.RemoveRoster.
-func (c *profileServiceClient) RemoveRoster(ctx context.Context, req *connect.Request[v1.RemoveRosterRequest]) (*connect.Response[v1.RemoveRosterResponse], error) {
-	return c.removeRoster.CallUnary(ctx, req)
-}
-
-// AddAddress calls profile.v1.ProfileService.AddAddress.
-func (c *profileServiceClient) AddAddress(ctx context.Context, req *connect.Request[v1.AddAddressRequest]) (*connect.Response[v1.AddAddressResponse], error) {
-	return c.addAddress.CallUnary(ctx, req)
-}
-
-// AddRelationship calls profile.v1.ProfileService.AddRelationship.
-func (c *profileServiceClient) AddRelationship(ctx context.Context, req *connect.Request[v1.AddRelationshipRequest]) (*connect.Response[v1.AddRelationshipResponse], error) {
-	return c.addRelationship.CallUnary(ctx, req)
-}
-
-// DeleteRelationship calls profile.v1.ProfileService.DeleteRelationship.
-func (c *profileServiceClient) DeleteRelationship(ctx context.Context, req *connect.Request[v1.DeleteRelationshipRequest]) (*connect.Response[v1.DeleteRelationshipResponse], error) {
-	return c.deleteRelationship.CallUnary(ctx, req)
-}
-
-// ListRelationship calls profile.v1.ProfileService.ListRelationship.
-func (c *profileServiceClient) ListRelationship(ctx context.Context, req *connect.Request[v1.ListRelationshipRequest]) (*connect.ServerStreamForClient[v1.ListRelationshipResponse], error) {
-	return c.listRelationship.CallServerStream(ctx, req)
-}
-
-// GetByIDAndPartition calls profile.v1.ProfileService.GetByIDAndPartition.
-func (c *profileServiceClient) GetByIDAndPartition(ctx context.Context, req *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error) {
-	return c.getByIDAndPartition.CallUnary(ctx, req)
-}
-
-// PropertyHistory calls profile.v1.ProfileService.PropertyHistory.
-func (c *profileServiceClient) PropertyHistory(ctx context.Context, req *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error) {
-	return c.propertyHistory.CallUnary(ctx, req)
-}
-
-// ResolveAccounts calls profile.v1.ProfileService.ResolveAccounts.
-func (c *profileServiceClient) ResolveAccounts(ctx context.Context, req *connect.Request[v1.ResolveAccountsRequest]) (*connect.Response[v1.ResolveAccountsResponse], error) {
-	return c.resolveAccounts.CallUnary(ctx, req)
+// Close releases the stream's resources. It is idempotent and is typically deferred to clean up a
+// stream abandoned before io.EOF.
+func (s ProfileServiceListRelationshipClientStream) Close() error {
+	return s.stream.Close()
 }
 
 // ProfileServiceHandler is an implementation of the profile.v1.ProfileService service.
 type ProfileServiceHandler interface {
 	// GetById retrieves a profile by its unique ID.
-	GetById(context.Context, *connect.Request[v1.GetByIdRequest]) (*connect.Response[v1.GetByIdResponse], error)
+	GetById(context.Context, *v1.GetByIdRequest) (*v1.GetByIdResponse, error)
 	// GetByContact retrieves a profile by contact information.
-	GetByContact(context.Context, *connect.Request[v1.GetByContactRequest]) (*connect.Response[v1.GetByContactResponse], error)
+	GetByContact(context.Context, *v1.GetByContactRequest) (*v1.GetByContactResponse, error)
 	// Search finds profiles matching specified criteria.
-	Search(context.Context, *connect.Request[v1.SearchRequest], *connect.ServerStream[v1.SearchResponse]) error
+	Search(context.Context, *v1.SearchRequest, ProfileServiceSearchServerStream) error
 	// Merge combines two profiles into one.
-	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
+	Merge(context.Context, *v1.MergeRequest) (*v1.MergeResponse, error)
 	// Create creates a new profile.
-	Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error)
+	Create(context.Context, *v1.CreateRequest) (*v1.CreateResponse, error)
 	// Update updates an existing profile's properties.
-	Update(context.Context, *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error)
+	Update(context.Context, *v1.UpdateRequest) (*v1.UpdateResponse, error)
 	// AddContact adds a new contact to a profile with automatic verification.
-	AddContact(context.Context, *connect.Request[v1.AddContactRequest]) (*connect.Response[v1.AddContactResponse], error)
+	AddContact(context.Context, *v1.AddContactRequest) (*v1.AddContactResponse, error)
 	// CreateContact creates a standalone contact not linked to a profile.
-	CreateContact(context.Context, *connect.Request[v1.CreateContactRequest]) (*connect.Response[v1.CreateContactResponse], error)
+	CreateContact(context.Context, *v1.CreateContactRequest) (*v1.CreateContactResponse, error)
 	// GetContacts resolves one or many contacts by id, whether standalone or
 	// attached to a profile. Missing ids are listed in missing_ids; found
 	// contacts are returned in data (order not guaranteed).
-	GetContacts(context.Context, *connect.Request[v1.GetContactsRequest]) (*connect.Response[v1.GetContactsResponse], error)
+	GetContacts(context.Context, *v1.GetContactsRequest) (*v1.GetContactsResponse, error)
 	// CreateContactVerification initiates contact verification.
-	CreateContactVerification(context.Context, *connect.Request[v1.CreateContactVerificationRequest]) (*connect.Response[v1.CreateContactVerificationResponse], error)
+	CreateContactVerification(context.Context, *v1.CreateContactVerificationRequest) (*v1.CreateContactVerificationResponse, error)
 	// CheckVerification verifies a contact using the provided code.
-	CheckVerification(context.Context, *connect.Request[v1.CheckVerificationRequest]) (*connect.Response[v1.CheckVerificationResponse], error)
+	CheckVerification(context.Context, *v1.CheckVerificationRequest) (*v1.CheckVerificationResponse, error)
 	// RemoveContact removes a contact from a profile.
-	RemoveContact(context.Context, *connect.Request[v1.RemoveContactRequest]) (*connect.Response[v1.RemoveContactResponse], error)
+	RemoveContact(context.Context, *v1.RemoveContactRequest) (*v1.RemoveContactResponse, error)
 	// SearchRoster searches a user's contact roster.
-	SearchRoster(context.Context, *connect.Request[v1.SearchRosterRequest], *connect.ServerStream[v1.SearchRosterResponse]) error
+	SearchRoster(context.Context, *v1.SearchRosterRequest, ProfileServiceSearchRosterServerStream) error
 	// AddRoster adds multiple contacts to a user's roster.
-	AddRoster(context.Context, *connect.Request[v1.AddRosterRequest]) (*connect.Response[v1.AddRosterResponse], error)
+	AddRoster(context.Context, *v1.AddRosterRequest) (*v1.AddRosterResponse, error)
 	// RemoveRoster removes a contact from a user's roster.
-	RemoveRoster(context.Context, *connect.Request[v1.RemoveRosterRequest]) (*connect.Response[v1.RemoveRosterResponse], error)
+	RemoveRoster(context.Context, *v1.RemoveRosterRequest) (*v1.RemoveRosterResponse, error)
 	// AddAddress adds a new address to a profile.
-	AddAddress(context.Context, *connect.Request[v1.AddAddressRequest]) (*connect.Response[v1.AddAddressResponse], error)
+	AddAddress(context.Context, *v1.AddAddressRequest) (*v1.AddAddressResponse, error)
 	// AddRelationship creates a relationship between profiles.
-	AddRelationship(context.Context, *connect.Request[v1.AddRelationshipRequest]) (*connect.Response[v1.AddRelationshipResponse], error)
+	AddRelationship(context.Context, *v1.AddRelationshipRequest) (*v1.AddRelationshipResponse, error)
 	// DeleteRelationship removes a relationship between profiles.
-	DeleteRelationship(context.Context, *connect.Request[v1.DeleteRelationshipRequest]) (*connect.Response[v1.DeleteRelationshipResponse], error)
+	DeleteRelationship(context.Context, *v1.DeleteRelationshipRequest) (*v1.DeleteRelationshipResponse, error)
 	// ListRelationship lists all relationships for a profile.
-	ListRelationship(context.Context, *connect.Request[v1.ListRelationshipRequest], *connect.ServerStream[v1.ListRelationshipResponse]) error
+	ListRelationship(context.Context, *v1.ListRelationshipRequest, ProfileServiceListRelationshipServerStream) error
 	// GetByIDAndPartition retrieves a profile with partition-scoped properties merged in.
-	GetByIDAndPartition(context.Context, *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error)
+	GetByIDAndPartition(context.Context, *v1.GetByIDAndPartitionRequest) (*v1.GetByIDAndPartitionResponse, error)
 	// PropertyHistory returns the change history for a specific property key on a profile.
-	PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error)
+	PropertyHistory(context.Context, *v1.PropertyHistoryRequest) (*v1.PropertyHistoryResponse, error)
 	// ResolveAccounts maps chain account addresses to the profiles that own
 	// them. Service-to-service only (account_resolve is bound to ROLE_SERVICE
 	// alone); unknown addresses are omitted from the response.
-	ResolveAccounts(context.Context, *connect.Request[v1.ResolveAccountsRequest]) (*connect.Response[v1.ResolveAccountsResponse], error)
+	ResolveAccounts(context.Context, *v1.ResolveAccountsRequest) (*v1.ResolveAccountsResponse, error)
 }
 
-// NewProfileServiceHandler builds an HTTP handler from the service implementation. It returns the
-// path on which to mount the handler and the handler itself.
-//
-// By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
-// and JSON codecs. They also support gzip compression.
-func NewProfileServiceHandler(svc ProfileServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	profileServiceMethods := v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods()
-	profileServiceGetByIdHandler := connect.NewUnaryHandler(
-		ProfileServiceGetByIdProcedure,
-		svc.GetById,
-		connect.WithSchema(profileServiceMethods.ByName("GetById")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
+// RegisterProfileServiceHandler registers svc as the profile.v1.ProfileService implementation on
+// server.
+func RegisterProfileServiceHandler(server *connect.Server, svc ProfileServiceHandler) {
+	adapter := profileServiceHandler{svc: svc}
+	server.Register(
+		connect.Method{Spec: profileServiceGetByIdSpec(), Handler: adapter.getById},
+		connect.Method{Spec: profileServiceGetByContactSpec(), Handler: adapter.getByContact},
+		connect.Method{Spec: profileServiceSearchSpec(), Handler: adapter.search},
+		connect.Method{Spec: profileServiceMergeSpec(), Handler: adapter.merge},
+		connect.Method{Spec: profileServiceCreateSpec(), Handler: adapter.create},
+		connect.Method{Spec: profileServiceUpdateSpec(), Handler: adapter.update},
+		connect.Method{Spec: profileServiceAddContactSpec(), Handler: adapter.addContact},
+		connect.Method{Spec: profileServiceCreateContactSpec(), Handler: adapter.createContact},
+		connect.Method{Spec: profileServiceGetContactsSpec(), Handler: adapter.getContacts},
+		connect.Method{Spec: profileServiceCreateContactVerificationSpec(), Handler: adapter.createContactVerification},
+		connect.Method{Spec: profileServiceCheckVerificationSpec(), Handler: adapter.checkVerification},
+		connect.Method{Spec: profileServiceRemoveContactSpec(), Handler: adapter.removeContact},
+		connect.Method{Spec: profileServiceSearchRosterSpec(), Handler: adapter.searchRoster},
+		connect.Method{Spec: profileServiceAddRosterSpec(), Handler: adapter.addRoster},
+		connect.Method{Spec: profileServiceRemoveRosterSpec(), Handler: adapter.removeRoster},
+		connect.Method{Spec: profileServiceAddAddressSpec(), Handler: adapter.addAddress},
+		connect.Method{Spec: profileServiceAddRelationshipSpec(), Handler: adapter.addRelationship},
+		connect.Method{Spec: profileServiceDeleteRelationshipSpec(), Handler: adapter.deleteRelationship},
+		connect.Method{Spec: profileServiceListRelationshipSpec(), Handler: adapter.listRelationship},
+		connect.Method{Spec: profileServiceGetByIDAndPartitionSpec(), Handler: adapter.getByIDAndPartition},
+		connect.Method{Spec: profileServicePropertyHistorySpec(), Handler: adapter.propertyHistory},
+		connect.Method{Spec: profileServiceResolveAccountsSpec(), Handler: adapter.resolveAccounts},
 	)
-	profileServiceGetByContactHandler := connect.NewUnaryHandler(
-		ProfileServiceGetByContactProcedure,
-		svc.GetByContact,
-		connect.WithSchema(profileServiceMethods.ByName("GetByContact")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceSearchHandler := connect.NewServerStreamHandler(
-		ProfileServiceSearchProcedure,
-		svc.Search,
-		connect.WithSchema(profileServiceMethods.ByName("Search")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceMergeHandler := connect.NewUnaryHandler(
-		ProfileServiceMergeProcedure,
-		svc.Merge,
-		connect.WithSchema(profileServiceMethods.ByName("Merge")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceCreateHandler := connect.NewUnaryHandler(
-		ProfileServiceCreateProcedure,
-		svc.Create,
-		connect.WithSchema(profileServiceMethods.ByName("Create")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceUpdateHandler := connect.NewUnaryHandler(
-		ProfileServiceUpdateProcedure,
-		svc.Update,
-		connect.WithSchema(profileServiceMethods.ByName("Update")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceAddContactHandler := connect.NewUnaryHandler(
-		ProfileServiceAddContactProcedure,
-		svc.AddContact,
-		connect.WithSchema(profileServiceMethods.ByName("AddContact")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceCreateContactHandler := connect.NewUnaryHandler(
-		ProfileServiceCreateContactProcedure,
-		svc.CreateContact,
-		connect.WithSchema(profileServiceMethods.ByName("CreateContact")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceGetContactsHandler := connect.NewUnaryHandler(
-		ProfileServiceGetContactsProcedure,
-		svc.GetContacts,
-		connect.WithSchema(profileServiceMethods.ByName("GetContacts")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceCreateContactVerificationHandler := connect.NewUnaryHandler(
-		ProfileServiceCreateContactVerificationProcedure,
-		svc.CreateContactVerification,
-		connect.WithSchema(profileServiceMethods.ByName("CreateContactVerification")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceCheckVerificationHandler := connect.NewUnaryHandler(
-		ProfileServiceCheckVerificationProcedure,
-		svc.CheckVerification,
-		connect.WithSchema(profileServiceMethods.ByName("CheckVerification")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceRemoveContactHandler := connect.NewUnaryHandler(
-		ProfileServiceRemoveContactProcedure,
-		svc.RemoveContact,
-		connect.WithSchema(profileServiceMethods.ByName("RemoveContact")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceSearchRosterHandler := connect.NewServerStreamHandler(
-		ProfileServiceSearchRosterProcedure,
-		svc.SearchRoster,
-		connect.WithSchema(profileServiceMethods.ByName("SearchRoster")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceAddRosterHandler := connect.NewUnaryHandler(
-		ProfileServiceAddRosterProcedure,
-		svc.AddRoster,
-		connect.WithSchema(profileServiceMethods.ByName("AddRoster")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceRemoveRosterHandler := connect.NewUnaryHandler(
-		ProfileServiceRemoveRosterProcedure,
-		svc.RemoveRoster,
-		connect.WithSchema(profileServiceMethods.ByName("RemoveRoster")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceAddAddressHandler := connect.NewUnaryHandler(
-		ProfileServiceAddAddressProcedure,
-		svc.AddAddress,
-		connect.WithSchema(profileServiceMethods.ByName("AddAddress")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceAddRelationshipHandler := connect.NewUnaryHandler(
-		ProfileServiceAddRelationshipProcedure,
-		svc.AddRelationship,
-		connect.WithSchema(profileServiceMethods.ByName("AddRelationship")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceDeleteRelationshipHandler := connect.NewUnaryHandler(
-		ProfileServiceDeleteRelationshipProcedure,
-		svc.DeleteRelationship,
-		connect.WithSchema(profileServiceMethods.ByName("DeleteRelationship")),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceListRelationshipHandler := connect.NewServerStreamHandler(
-		ProfileServiceListRelationshipProcedure,
-		svc.ListRelationship,
-		connect.WithSchema(profileServiceMethods.ByName("ListRelationship")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceGetByIDAndPartitionHandler := connect.NewUnaryHandler(
-		ProfileServiceGetByIDAndPartitionProcedure,
-		svc.GetByIDAndPartition,
-		connect.WithSchema(profileServiceMethods.ByName("GetByIDAndPartition")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServicePropertyHistoryHandler := connect.NewUnaryHandler(
-		ProfileServicePropertyHistoryProcedure,
-		svc.PropertyHistory,
-		connect.WithSchema(profileServiceMethods.ByName("PropertyHistory")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	profileServiceResolveAccountsHandler := connect.NewUnaryHandler(
-		ProfileServiceResolveAccountsProcedure,
-		svc.ResolveAccounts,
-		connect.WithSchema(profileServiceMethods.ByName("ResolveAccounts")),
-		connect.WithIdempotency(connect.IdempotencyNoSideEffects),
-		connect.WithHandlerOptions(opts...),
-	)
-	return "/profile.v1.ProfileService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case ProfileServiceGetByIdProcedure:
-			profileServiceGetByIdHandler.ServeHTTP(w, r)
-		case ProfileServiceGetByContactProcedure:
-			profileServiceGetByContactHandler.ServeHTTP(w, r)
-		case ProfileServiceSearchProcedure:
-			profileServiceSearchHandler.ServeHTTP(w, r)
-		case ProfileServiceMergeProcedure:
-			profileServiceMergeHandler.ServeHTTP(w, r)
-		case ProfileServiceCreateProcedure:
-			profileServiceCreateHandler.ServeHTTP(w, r)
-		case ProfileServiceUpdateProcedure:
-			profileServiceUpdateHandler.ServeHTTP(w, r)
-		case ProfileServiceAddContactProcedure:
-			profileServiceAddContactHandler.ServeHTTP(w, r)
-		case ProfileServiceCreateContactProcedure:
-			profileServiceCreateContactHandler.ServeHTTP(w, r)
-		case ProfileServiceGetContactsProcedure:
-			profileServiceGetContactsHandler.ServeHTTP(w, r)
-		case ProfileServiceCreateContactVerificationProcedure:
-			profileServiceCreateContactVerificationHandler.ServeHTTP(w, r)
-		case ProfileServiceCheckVerificationProcedure:
-			profileServiceCheckVerificationHandler.ServeHTTP(w, r)
-		case ProfileServiceRemoveContactProcedure:
-			profileServiceRemoveContactHandler.ServeHTTP(w, r)
-		case ProfileServiceSearchRosterProcedure:
-			profileServiceSearchRosterHandler.ServeHTTP(w, r)
-		case ProfileServiceAddRosterProcedure:
-			profileServiceAddRosterHandler.ServeHTTP(w, r)
-		case ProfileServiceRemoveRosterProcedure:
-			profileServiceRemoveRosterHandler.ServeHTTP(w, r)
-		case ProfileServiceAddAddressProcedure:
-			profileServiceAddAddressHandler.ServeHTTP(w, r)
-		case ProfileServiceAddRelationshipProcedure:
-			profileServiceAddRelationshipHandler.ServeHTTP(w, r)
-		case ProfileServiceDeleteRelationshipProcedure:
-			profileServiceDeleteRelationshipHandler.ServeHTTP(w, r)
-		case ProfileServiceListRelationshipProcedure:
-			profileServiceListRelationshipHandler.ServeHTTP(w, r)
-		case ProfileServiceGetByIDAndPartitionProcedure:
-			profileServiceGetByIDAndPartitionHandler.ServeHTTP(w, r)
-		case ProfileServicePropertyHistoryProcedure:
-			profileServicePropertyHistoryHandler.ServeHTTP(w, r)
-		case ProfileServiceResolveAccountsProcedure:
-			profileServiceResolveAccountsHandler.ServeHTTP(w, r)
-		default:
-			http.NotFound(w, r)
-		}
-	})
+}
+
+// ProfileServiceSearchServerStream is the server stream for the ProfileService's Search RPC.
+type ProfileServiceSearchServerStream struct {
+	stream connect.ServerStream
+}
+
+// SendHeaders flushes the response headers without a message. The first Send does this implicitly.
+func (s ProfileServiceSearchServerStream) SendHeaders() error {
+	return s.stream.SendHeaders()
+}
+
+// Send sends a response message to the client.
+func (s ProfileServiceSearchServerStream) Send(res *v1.SearchResponse) error {
+	return s.stream.Send(res)
+}
+
+// ProfileServiceSearchRosterServerStream is the server stream for the ProfileService's SearchRoster
+// RPC.
+type ProfileServiceSearchRosterServerStream struct {
+	stream connect.ServerStream
+}
+
+// SendHeaders flushes the response headers without a message. The first Send does this implicitly.
+func (s ProfileServiceSearchRosterServerStream) SendHeaders() error {
+	return s.stream.SendHeaders()
+}
+
+// Send sends a response message to the client.
+func (s ProfileServiceSearchRosterServerStream) Send(res *v1.SearchRosterResponse) error {
+	return s.stream.Send(res)
+}
+
+// ProfileServiceListRelationshipServerStream is the server stream for the ProfileService's
+// ListRelationship RPC.
+type ProfileServiceListRelationshipServerStream struct {
+	stream connect.ServerStream
+}
+
+// SendHeaders flushes the response headers without a message. The first Send does this implicitly.
+func (s ProfileServiceListRelationshipServerStream) SendHeaders() error {
+	return s.stream.SendHeaders()
+}
+
+// Send sends a response message to the client.
+func (s ProfileServiceListRelationshipServerStream) Send(res *v1.ListRelationshipResponse) error {
+	return s.stream.Send(res)
 }
 
 // UnimplementedProfileServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedProfileServiceHandler struct{}
 
-func (UnimplementedProfileServiceHandler) GetById(context.Context, *connect.Request[v1.GetByIdRequest]) (*connect.Response[v1.GetByIdResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.GetById is not implemented"))
+func (UnimplementedProfileServiceHandler) GetById(context.Context, *v1.GetByIdRequest) (*v1.GetByIdResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.GetById is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) GetByContact(context.Context, *connect.Request[v1.GetByContactRequest]) (*connect.Response[v1.GetByContactResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.GetByContact is not implemented"))
+func (UnimplementedProfileServiceHandler) GetByContact(context.Context, *v1.GetByContactRequest) (*v1.GetByContactResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.GetByContact is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) Search(context.Context, *connect.Request[v1.SearchRequest], *connect.ServerStream[v1.SearchResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.Search is not implemented"))
+func (UnimplementedProfileServiceHandler) Search(context.Context, *v1.SearchRequest, ProfileServiceSearchServerStream) error {
+	return connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.Search is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.Merge is not implemented"))
+func (UnimplementedProfileServiceHandler) Merge(context.Context, *v1.MergeRequest) (*v1.MergeResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.Merge is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) Create(context.Context, *connect.Request[v1.CreateRequest]) (*connect.Response[v1.CreateResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.Create is not implemented"))
+func (UnimplementedProfileServiceHandler) Create(context.Context, *v1.CreateRequest) (*v1.CreateResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.Create is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) Update(context.Context, *connect.Request[v1.UpdateRequest]) (*connect.Response[v1.UpdateResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.Update is not implemented"))
+func (UnimplementedProfileServiceHandler) Update(context.Context, *v1.UpdateRequest) (*v1.UpdateResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.Update is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) AddContact(context.Context, *connect.Request[v1.AddContactRequest]) (*connect.Response[v1.AddContactResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.AddContact is not implemented"))
+func (UnimplementedProfileServiceHandler) AddContact(context.Context, *v1.AddContactRequest) (*v1.AddContactResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.AddContact is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) CreateContact(context.Context, *connect.Request[v1.CreateContactRequest]) (*connect.Response[v1.CreateContactResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.CreateContact is not implemented"))
+func (UnimplementedProfileServiceHandler) CreateContact(context.Context, *v1.CreateContactRequest) (*v1.CreateContactResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.CreateContact is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) GetContacts(context.Context, *connect.Request[v1.GetContactsRequest]) (*connect.Response[v1.GetContactsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.GetContacts is not implemented"))
+func (UnimplementedProfileServiceHandler) GetContacts(context.Context, *v1.GetContactsRequest) (*v1.GetContactsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.GetContacts is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) CreateContactVerification(context.Context, *connect.Request[v1.CreateContactVerificationRequest]) (*connect.Response[v1.CreateContactVerificationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.CreateContactVerification is not implemented"))
+func (UnimplementedProfileServiceHandler) CreateContactVerification(context.Context, *v1.CreateContactVerificationRequest) (*v1.CreateContactVerificationResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.CreateContactVerification is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) CheckVerification(context.Context, *connect.Request[v1.CheckVerificationRequest]) (*connect.Response[v1.CheckVerificationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.CheckVerification is not implemented"))
+func (UnimplementedProfileServiceHandler) CheckVerification(context.Context, *v1.CheckVerificationRequest) (*v1.CheckVerificationResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.CheckVerification is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) RemoveContact(context.Context, *connect.Request[v1.RemoveContactRequest]) (*connect.Response[v1.RemoveContactResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.RemoveContact is not implemented"))
+func (UnimplementedProfileServiceHandler) RemoveContact(context.Context, *v1.RemoveContactRequest) (*v1.RemoveContactResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.RemoveContact is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) SearchRoster(context.Context, *connect.Request[v1.SearchRosterRequest], *connect.ServerStream[v1.SearchRosterResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.SearchRoster is not implemented"))
+func (UnimplementedProfileServiceHandler) SearchRoster(context.Context, *v1.SearchRosterRequest, ProfileServiceSearchRosterServerStream) error {
+	return connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.SearchRoster is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) AddRoster(context.Context, *connect.Request[v1.AddRosterRequest]) (*connect.Response[v1.AddRosterResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.AddRoster is not implemented"))
+func (UnimplementedProfileServiceHandler) AddRoster(context.Context, *v1.AddRosterRequest) (*v1.AddRosterResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.AddRoster is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) RemoveRoster(context.Context, *connect.Request[v1.RemoveRosterRequest]) (*connect.Response[v1.RemoveRosterResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.RemoveRoster is not implemented"))
+func (UnimplementedProfileServiceHandler) RemoveRoster(context.Context, *v1.RemoveRosterRequest) (*v1.RemoveRosterResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.RemoveRoster is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) AddAddress(context.Context, *connect.Request[v1.AddAddressRequest]) (*connect.Response[v1.AddAddressResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.AddAddress is not implemented"))
+func (UnimplementedProfileServiceHandler) AddAddress(context.Context, *v1.AddAddressRequest) (*v1.AddAddressResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.AddAddress is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) AddRelationship(context.Context, *connect.Request[v1.AddRelationshipRequest]) (*connect.Response[v1.AddRelationshipResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.AddRelationship is not implemented"))
+func (UnimplementedProfileServiceHandler) AddRelationship(context.Context, *v1.AddRelationshipRequest) (*v1.AddRelationshipResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.AddRelationship is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) DeleteRelationship(context.Context, *connect.Request[v1.DeleteRelationshipRequest]) (*connect.Response[v1.DeleteRelationshipResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.DeleteRelationship is not implemented"))
+func (UnimplementedProfileServiceHandler) DeleteRelationship(context.Context, *v1.DeleteRelationshipRequest) (*v1.DeleteRelationshipResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.DeleteRelationship is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) ListRelationship(context.Context, *connect.Request[v1.ListRelationshipRequest], *connect.ServerStream[v1.ListRelationshipResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.ListRelationship is not implemented"))
+func (UnimplementedProfileServiceHandler) ListRelationship(context.Context, *v1.ListRelationshipRequest, ProfileServiceListRelationshipServerStream) error {
+	return connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.ListRelationship is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) GetByIDAndPartition(context.Context, *connect.Request[v1.GetByIDAndPartitionRequest]) (*connect.Response[v1.GetByIDAndPartitionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.GetByIDAndPartition is not implemented"))
+func (UnimplementedProfileServiceHandler) GetByIDAndPartition(context.Context, *v1.GetByIDAndPartitionRequest) (*v1.GetByIDAndPartitionResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.GetByIDAndPartition is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) PropertyHistory(context.Context, *connect.Request[v1.PropertyHistoryRequest]) (*connect.Response[v1.PropertyHistoryResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.PropertyHistory is not implemented"))
+func (UnimplementedProfileServiceHandler) PropertyHistory(context.Context, *v1.PropertyHistoryRequest) (*v1.PropertyHistoryResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.PropertyHistory is not implemented")
 }
 
-func (UnimplementedProfileServiceHandler) ResolveAccounts(context.Context, *connect.Request[v1.ResolveAccountsRequest]) (*connect.Response[v1.ResolveAccountsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("profile.v1.ProfileService.ResolveAccounts is not implemented"))
+func (UnimplementedProfileServiceHandler) ResolveAccounts(context.Context, *v1.ResolveAccountsRequest) (*v1.ResolveAccountsResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.ResolveAccounts is not implemented")
+}
+
+type profileServiceClient struct {
+	client *connect.Client
+}
+
+func (c *profileServiceClient) GetById(ctx context.Context, req *v1.GetByIdRequest) (*v1.GetByIdResponse, error) {
+	var res v1.GetByIdResponse
+	if err := c.client.CallUnary(ctx, profileServiceGetByIdSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) GetByContact(ctx context.Context, req *v1.GetByContactRequest) (*v1.GetByContactResponse, error) {
+	var res v1.GetByContactResponse
+	if err := c.client.CallUnary(ctx, profileServiceGetByContactSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) Search(ctx context.Context, req *v1.SearchRequest) (ProfileServiceSearchClientStream, error) {
+	stream, err := c.client.CallServerStream(ctx, profileServiceSearchSpec(), req)
+	if err != nil {
+		return ProfileServiceSearchClientStream{}, err
+	}
+	return ProfileServiceSearchClientStream{stream: stream}, nil
+}
+
+func (c *profileServiceClient) Merge(ctx context.Context, req *v1.MergeRequest) (*v1.MergeResponse, error) {
+	var res v1.MergeResponse
+	if err := c.client.CallUnary(ctx, profileServiceMergeSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) Create(ctx context.Context, req *v1.CreateRequest) (*v1.CreateResponse, error) {
+	var res v1.CreateResponse
+	if err := c.client.CallUnary(ctx, profileServiceCreateSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) Update(ctx context.Context, req *v1.UpdateRequest) (*v1.UpdateResponse, error) {
+	var res v1.UpdateResponse
+	if err := c.client.CallUnary(ctx, profileServiceUpdateSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) AddContact(ctx context.Context, req *v1.AddContactRequest) (*v1.AddContactResponse, error) {
+	var res v1.AddContactResponse
+	if err := c.client.CallUnary(ctx, profileServiceAddContactSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) CreateContact(ctx context.Context, req *v1.CreateContactRequest) (*v1.CreateContactResponse, error) {
+	var res v1.CreateContactResponse
+	if err := c.client.CallUnary(ctx, profileServiceCreateContactSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) GetContacts(ctx context.Context, req *v1.GetContactsRequest) (*v1.GetContactsResponse, error) {
+	var res v1.GetContactsResponse
+	if err := c.client.CallUnary(ctx, profileServiceGetContactsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) CreateContactVerification(ctx context.Context, req *v1.CreateContactVerificationRequest) (*v1.CreateContactVerificationResponse, error) {
+	var res v1.CreateContactVerificationResponse
+	if err := c.client.CallUnary(ctx, profileServiceCreateContactVerificationSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) CheckVerification(ctx context.Context, req *v1.CheckVerificationRequest) (*v1.CheckVerificationResponse, error) {
+	var res v1.CheckVerificationResponse
+	if err := c.client.CallUnary(ctx, profileServiceCheckVerificationSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) RemoveContact(ctx context.Context, req *v1.RemoveContactRequest) (*v1.RemoveContactResponse, error) {
+	var res v1.RemoveContactResponse
+	if err := c.client.CallUnary(ctx, profileServiceRemoveContactSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) SearchRoster(ctx context.Context, req *v1.SearchRosterRequest) (ProfileServiceSearchRosterClientStream, error) {
+	stream, err := c.client.CallServerStream(ctx, profileServiceSearchRosterSpec(), req)
+	if err != nil {
+		return ProfileServiceSearchRosterClientStream{}, err
+	}
+	return ProfileServiceSearchRosterClientStream{stream: stream}, nil
+}
+
+func (c *profileServiceClient) AddRoster(ctx context.Context, req *v1.AddRosterRequest) (*v1.AddRosterResponse, error) {
+	var res v1.AddRosterResponse
+	if err := c.client.CallUnary(ctx, profileServiceAddRosterSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) RemoveRoster(ctx context.Context, req *v1.RemoveRosterRequest) (*v1.RemoveRosterResponse, error) {
+	var res v1.RemoveRosterResponse
+	if err := c.client.CallUnary(ctx, profileServiceRemoveRosterSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) AddAddress(ctx context.Context, req *v1.AddAddressRequest) (*v1.AddAddressResponse, error) {
+	var res v1.AddAddressResponse
+	if err := c.client.CallUnary(ctx, profileServiceAddAddressSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) AddRelationship(ctx context.Context, req *v1.AddRelationshipRequest) (*v1.AddRelationshipResponse, error) {
+	var res v1.AddRelationshipResponse
+	if err := c.client.CallUnary(ctx, profileServiceAddRelationshipSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) DeleteRelationship(ctx context.Context, req *v1.DeleteRelationshipRequest) (*v1.DeleteRelationshipResponse, error) {
+	var res v1.DeleteRelationshipResponse
+	if err := c.client.CallUnary(ctx, profileServiceDeleteRelationshipSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) ListRelationship(ctx context.Context, req *v1.ListRelationshipRequest) (ProfileServiceListRelationshipClientStream, error) {
+	stream, err := c.client.CallServerStream(ctx, profileServiceListRelationshipSpec(), req)
+	if err != nil {
+		return ProfileServiceListRelationshipClientStream{}, err
+	}
+	return ProfileServiceListRelationshipClientStream{stream: stream}, nil
+}
+
+func (c *profileServiceClient) GetByIDAndPartition(ctx context.Context, req *v1.GetByIDAndPartitionRequest) (*v1.GetByIDAndPartitionResponse, error) {
+	var res v1.GetByIDAndPartitionResponse
+	if err := c.client.CallUnary(ctx, profileServiceGetByIDAndPartitionSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) PropertyHistory(ctx context.Context, req *v1.PropertyHistoryRequest) (*v1.PropertyHistoryResponse, error) {
+	var res v1.PropertyHistoryResponse
+	if err := c.client.CallUnary(ctx, profileServicePropertyHistorySpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) ResolveAccounts(ctx context.Context, req *v1.ResolveAccountsRequest) (*v1.ResolveAccountsResponse, error) {
+	var res v1.ResolveAccountsResponse
+	if err := c.client.CallUnary(ctx, profileServiceResolveAccountsSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+type profileServiceHandler struct{ svc ProfileServiceHandler }
+
+func (h profileServiceHandler) getById(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetByIdRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetById(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) getByContact(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetByContactRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetByContact(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) search(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SearchRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	return h.svc.Search(ctx, &req, ProfileServiceSearchServerStream{stream: stream})
+}
+
+func (h profileServiceHandler) merge(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.MergeRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Merge(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) create(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Create(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) update(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.UpdateRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.Update(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) addContact(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.AddContactRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.AddContact(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) createContact(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateContactRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateContact(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) getContacts(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetContactsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetContacts(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) createContactVerification(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CreateContactVerificationRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CreateContactVerification(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) checkVerification(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.CheckVerificationRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.CheckVerification(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) removeContact(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RemoveContactRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.RemoveContact(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) searchRoster(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.SearchRosterRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	return h.svc.SearchRoster(ctx, &req, ProfileServiceSearchRosterServerStream{stream: stream})
+}
+
+func (h profileServiceHandler) addRoster(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.AddRosterRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.AddRoster(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) removeRoster(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.RemoveRosterRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.RemoveRoster(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) addAddress(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.AddAddressRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.AddAddress(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) addRelationship(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.AddRelationshipRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.AddRelationship(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) deleteRelationship(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.DeleteRelationshipRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.DeleteRelationship(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) listRelationship(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ListRelationshipRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	return h.svc.ListRelationship(ctx, &req, ProfileServiceListRelationshipServerStream{stream: stream})
+}
+
+func (h profileServiceHandler) getByIDAndPartition(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetByIDAndPartitionRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetByIDAndPartition(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) propertyHistory(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.PropertyHistoryRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.PropertyHistory(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) resolveAccounts(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.ResolveAccountsRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.ResolveAccounts(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
 }

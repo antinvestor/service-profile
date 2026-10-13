@@ -2,27 +2,26 @@ package tests
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/url"
 	"testing"
 
-	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
-	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/v2/notification/v1/notificationv1connect"
 	notificationv1 "buf.build/gen/go/antinvestor/notification/protocolbuffers/go/notification/v1"
 	profilev1 "buf.build/gen/go/antinvestor/profile/protocolbuffers/go/profile/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2"
-	"github.com/pitabwire/frame/v2/config"
-	"github.com/pitabwire/frame/v2/datastore"
-	"github.com/pitabwire/frame/v2/datastore/pool"
-	"github.com/pitabwire/frame/v2/frametests"
-	"github.com/pitabwire/frame/v2/frametests/definition"
-	"github.com/pitabwire/frame/v2/frametests/deps/testpostgres"
-	"github.com/pitabwire/frame/v2/frametests/rlstest"
-	"github.com/pitabwire/frame/v2/security"
-	"github.com/pitabwire/frame/v2/security/authorizer"
-	"github.com/pitabwire/frame/v2/tenancy"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connectinprocess"
+	"github.com/pitabwire/frame/v3"
+	"github.com/pitabwire/frame/v3/config"
+	"github.com/pitabwire/frame/v3/datastore"
+	"github.com/pitabwire/frame/v3/datastore/pool"
+	"github.com/pitabwire/frame/v3/frametests"
+	"github.com/pitabwire/frame/v3/frametests/definition"
+	"github.com/pitabwire/frame/v3/frametests/deps/testpostgres"
+	"github.com/pitabwire/frame/v3/frametests/rlstest"
+	"github.com/pitabwire/frame/v3/security"
+	"github.com/pitabwire/frame/v3/security/authorizer"
+	"github.com/pitabwire/frame/v3/tenancy"
 	"github.com/pitabwire/util"
 	"github.com/stretchr/testify/require"
 
@@ -207,70 +206,26 @@ func (bs *ProfileBaseTestSuite) CreateService(
 	return ctx, svc
 }
 
-// noopNotificationClient is a minimal stub that satisfies
-// notificationv1connect.NotificationServiceClient for testing.
-// All methods return nil/zero values.
-type noopNotificationClient struct{}
-
-func (n *noopNotificationClient) Send(
-	_ context.Context,
-	_ *connect.Request[notificationv1.SendRequest],
-) (*connect.ServerStreamForClient[notificationv1.SendResponse], error) {
-	// Return nil response — Execute() already handles nil gracefully.
-	return nil, nil //nolint:nilnil // test stub; caller checks for nil stream
+// noopNotificationHandler accepts every Send and streams no responses. Every
+// other RPC answers CodeUnimplemented.
+type noopNotificationHandler struct {
+	notificationv1connect.UnimplementedNotificationServiceHandler
 }
 
-func (n *noopNotificationClient) Release(
+func (noopNotificationHandler) Send(
 	_ context.Context,
-	_ *connect.Request[notificationv1.ReleaseRequest],
-) (*connect.ServerStreamForClient[notificationv1.ReleaseResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
+	_ *notificationv1.SendRequest,
+	_ notificationv1connect.NotificationServiceSendServerStream,
+) error {
+	return nil
 }
 
-func (n *noopNotificationClient) Receive(
-	_ context.Context,
-	_ *connect.Request[notificationv1.ReceiveRequest],
-) (*connect.ServerStreamForClient[notificationv1.ReceiveResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
-}
-
-func (n *noopNotificationClient) Search(
-	_ context.Context,
-	_ *connect.Request[commonv1.SearchRequest],
-) (*connect.ServerStreamForClient[notificationv1.SearchResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
-}
-
-func (n *noopNotificationClient) Status(
-	_ context.Context,
-	_ *connect.Request[commonv1.StatusRequest],
-) (*connect.Response[commonv1.StatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
-}
-
-func (n *noopNotificationClient) StatusUpdate(
-	_ context.Context,
-	_ *connect.Request[commonv1.StatusUpdateRequest],
-) (*connect.Response[commonv1.StatusUpdateResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
-}
-
-func (n *noopNotificationClient) TemplateSearch(
-	_ context.Context,
-	_ *connect.Request[notificationv1.TemplateSearchRequest],
-) (*connect.ServerStreamForClient[notificationv1.TemplateSearchResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
-}
-
-func (n *noopNotificationClient) TemplateSave(
-	_ context.Context,
-	_ *connect.Request[notificationv1.TemplateSaveRequest],
-) (*connect.Response[notificationv1.TemplateSaveResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("not implemented"))
-}
-
+// GetNotificationCli returns a notification client wired in-process to a
+// handler that accepts every Send.
 func (bs *ProfileBaseTestSuite) GetNotificationCli(_ *testing.T) notificationv1connect.NotificationServiceClient {
-	return &noopNotificationClient{}
+	server := connect.NewServer()
+	notificationv1connect.RegisterNotificationServiceHandler(server, noopNotificationHandler{})
+	return notificationv1connect.NewNotificationServiceClient(connect.NewClient(connectinprocess.New(server)))
 }
 
 func (bs *ProfileBaseTestSuite) CreateTestProfiles(

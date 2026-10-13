@@ -11,8 +11,6 @@ export 'src/geolocation/v1/geolocation.pbenum.dart';
 export 'src/geolocation/v1/geolocation.pbjson.dart';
 export 'src/geolocation/v1/geolocation.pbserver.dart';
 
-// Common types
-export 'src/common/v1/common.pb.dart';
-export 'src/common/v1/common.pbenum.dart';
-export 'src/google/protobuf/struct.pb.dart';
-export 'src/google/protobuf/timestamp.pb.dart';
+// Well-known types
+export 'package:protobuf/well_known_types/google/protobuf/struct.pb.dart';
+export 'package:protobuf/well_known_types/google/protobuf/timestamp.pb.dart';

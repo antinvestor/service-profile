@@ -6,7 +6,7 @@
 import "package:connectrpc/connect.dart" as connect;
 import "geolocation.pb.dart" as geolocationv1geolocation;
 import "geolocation.connect.spec.dart" as specs;
-import "../../google/protobuf/empty.pb.dart" as googleprotobufempty;
+import "package:protobuf/well_known_types/google/protobuf/empty.pb.dart" as googleprotobufempty;
 
 extension type GeolocationServiceClient (connect.Transport _transport) {
   Future<geolocationv1geolocation.IngestLocationsResponse> ingestLocations(

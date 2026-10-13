@@ -3,11 +3,10 @@ package handlers
 import (
 	"context"
 
-	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2"
-	frameclient "github.com/pitabwire/frame/v2/client"
-	"github.com/pitabwire/frame/v2/datastore"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/v2/notification/v1/notificationv1connect"
+	"github.com/pitabwire/frame/v3"
+	frameclient "github.com/pitabwire/frame/v3/client"
+	"github.com/pitabwire/frame/v3/datastore"
 	"github.com/pitabwire/util"
 
 	"github.com/antinvestor/service-profile/apps/chatagent/service/business"
@@ -98,88 +97,88 @@ func NewChatAgentServer(ctx context.Context, svc *frame.Service, deps ServerDeps
 
 func (s *ChatAgentServer) UpsertContext(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.UpsertContextRequest],
-) (*connect.Response[chatagentv1.UpsertContextResponse], error) {
-	resp, err := s.biz.UpsertContext(ctx, req.Msg)
+	req *chatagentv1.UpsertContextRequest,
+) (*chatagentv1.UpsertContextResponse, error) {
+	resp, err := s.biz.UpsertContext(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 func (s *ChatAgentServer) GetContext(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.GetContextRequest],
-) (*connect.Response[chatagentv1.GetContextResponse], error) {
-	resp, err := s.biz.GetContext(ctx, req.Msg)
+	req *chatagentv1.GetContextRequest,
+) (*chatagentv1.GetContextResponse, error) {
+	resp, err := s.biz.GetContext(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 func (s *ChatAgentServer) ListContexts(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.ListContextsRequest],
-) (*connect.Response[chatagentv1.ListContextsResponse], error) {
-	resp, err := s.biz.ListContexts(ctx, req.Msg)
+	req *chatagentv1.ListContextsRequest,
+) (*chatagentv1.ListContextsResponse, error) {
+	resp, err := s.biz.ListContexts(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 func (s *ChatAgentServer) CreateSession(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.CreateSessionRequest],
-) (*connect.Response[chatagentv1.CreateSessionResponse], error) {
-	resp, err := s.biz.CreateSession(ctx, req.Msg)
+	req *chatagentv1.CreateSessionRequest,
+) (*chatagentv1.CreateSessionResponse, error) {
+	resp, err := s.biz.CreateSession(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 func (s *ChatAgentServer) GetSession(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.GetSessionRequest],
-) (*connect.Response[chatagentv1.GetSessionResponse], error) {
-	resp, err := s.biz.GetSession(ctx, req.Msg)
+	req *chatagentv1.GetSessionRequest,
+) (*chatagentv1.GetSessionResponse, error) {
+	resp, err := s.biz.GetSession(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 func (s *ChatAgentServer) Turn(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.TurnRequest],
-) (*connect.Response[chatagentv1.TurnResponse], error) {
-	resp, err := s.biz.Turn(ctx, req.Msg)
+	req *chatagentv1.TurnRequest,
+) (*chatagentv1.TurnResponse, error) {
+	resp, err := s.biz.Turn(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 func (s *ChatAgentServer) EndSession(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.EndSessionRequest],
-) (*connect.Response[chatagentv1.EndSessionResponse], error) {
-	resp, err := s.biz.EndSession(ctx, req.Msg)
+	req *chatagentv1.EndSessionRequest,
+) (*chatagentv1.EndSessionResponse, error) {
+	resp, err := s.biz.EndSession(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }
 
 func (s *ChatAgentServer) IngestMessage(
 	ctx context.Context,
-	req *connect.Request[chatagentv1.IngestMessageRequest],
-) (*connect.Response[chatagentv1.IngestMessageResponse], error) {
-	resp, err := s.biz.IngestMessage(ctx, req.Msg)
+	req *chatagentv1.IngestMessageRequest,
+) (*chatagentv1.IngestMessageResponse, error) {
+	resp, err := s.biz.IngestMessage(ctx, req)
 	if err != nil {
 		return nil, errorutil.CleanErr(err)
 	}
-	return connect.NewResponse(resp), nil
+	return resp, nil
 }

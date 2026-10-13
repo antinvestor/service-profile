@@ -1,19 +1,22 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: device/v1/device.proto
-//
-// @dart = 2.12
+// Generated from device/v1/device.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import '../../google/protobuf/struct.pbjson.dart' as $6;
+import 'package:protobuf/well_known_types/google/protobuf/struct.pbjson.dart'
+    as $0;
 
 @$core.Deprecated('Use keyTypeDescriptor instead')
 const KeyType$json = {
@@ -80,12 +83,26 @@ const KeyObject$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'id'},
     {'1': 'device_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
-    {'1': 'key_type', '3': 3, '4': 1, '5': 14, '6': '.device.v1.KeyType', '10': 'keyType'},
+    {
+      '1': 'key_type',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.device.v1.KeyType',
+      '10': 'keyType'
+    },
     {'1': 'key', '3': 4, '4': 1, '5': 12, '10': 'key'},
     {'1': 'created_at', '3': 5, '4': 1, '5': 9, '10': 'createdAt'},
     {'1': 'expires_at', '3': 6, '4': 1, '5': 9, '10': 'expiresAt'},
     {'1': 'is_active', '3': 7, '4': 1, '5': 8, '10': 'isActive'},
-    {'1': 'extra', '3': 8, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
+    {
+      '1': 'extra',
+      '3': 8,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
   ],
 };
 
@@ -106,12 +123,33 @@ const DeviceLog$json = {
     {'1': 'device_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
     {'1': 'session_id', '3': 3, '4': 1, '5': 9, '10': 'sessionId'},
     {'1': 'ip', '3': 4, '4': 1, '5': 9, '10': 'ip'},
-    {'1': 'locale', '3': 5, '4': 1, '5': 11, '6': '.device.v1.Locale', '10': 'locale'},
+    {
+      '1': 'locale',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.Locale',
+      '10': 'locale'
+    },
     {'1': 'user_agent', '3': 6, '4': 1, '5': 9, '10': 'userAgent'},
     {'1': 'os', '3': 7, '4': 1, '5': 9, '10': 'os'},
     {'1': 'last_seen', '3': 8, '4': 1, '5': 9, '10': 'lastSeen'},
-    {'1': 'location', '3': 9, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'location'},
-    {'1': 'extra', '3': 10, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extra'},
+    {
+      '1': 'location',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'location'
+    },
+    {
+      '1': 'extra',
+      '3': 10,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extra'
+    },
   ],
 };
 
@@ -137,10 +175,38 @@ const DeviceObject$json = {
     {'1': 'os', '3': 6, '4': 1, '5': 9, '10': 'os'},
     {'1': 'last_seen', '3': 7, '4': 1, '5': 9, '10': 'lastSeen'},
     {'1': 'profile_id', '3': 8, '4': 1, '5': 9, '10': 'profileId'},
-    {'1': 'locale', '3': 9, '4': 1, '5': 11, '6': '.device.v1.Locale', '10': 'locale'},
-    {'1': 'presence', '3': 10, '4': 1, '5': 14, '6': '.device.v1.PresenceStatus', '10': 'presence'},
-    {'1': 'location', '3': 11, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'location'},
-    {'1': 'properties', '3': 15, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'properties'},
+    {
+      '1': 'locale',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.Locale',
+      '10': 'locale'
+    },
+    {
+      '1': 'presence',
+      '3': 10,
+      '4': 1,
+      '5': 14,
+      '6': '.device.v1.PresenceStatus',
+      '10': 'presence'
+    },
+    {
+      '1': 'location',
+      '3': 11,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'location'
+    },
+    {
+      '1': 'properties',
+      '3': 15,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'properties'
+    },
   ],
 };
 
@@ -161,11 +227,25 @@ const PresenceObject$json = {
   '2': [
     {'1': 'device_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
     {'1': 'profile_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'profileId'},
-    {'1': 'status', '3': 3, '4': 1, '5': 14, '6': '.device.v1.PresenceStatus', '10': 'status'},
+    {
+      '1': 'status',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.device.v1.PresenceStatus',
+      '10': 'status'
+    },
     {'1': 'status_message', '3': 4, '4': 1, '5': 9, '10': 'statusMessage'},
     {'1': 'last_active', '3': 5, '4': 1, '5': 9, '10': 'lastActive'},
     {'1': 'updated_at', '3': 6, '4': 1, '5': 9, '10': 'updatedAt'},
-    {'1': 'extras', '3': 7, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
+    {
+      '1': 'extras',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extras'
+    },
   ],
 };
 
@@ -197,7 +277,14 @@ final $typed_data.Uint8List getByIdRequestDescriptor = $convert.base64Decode(
 const GetByIdResponse$json = {
   '1': 'GetByIdResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.device.v1.DeviceObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.device.v1.DeviceObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -223,14 +310,22 @@ final $typed_data.Uint8List getBySessionIdRequestDescriptor = $convert.base64Dec
 const GetBySessionIdResponse$json = {
   '1': 'GetBySessionIdResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.DeviceObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.DeviceObject',
+      '10': 'data'
+    },
   ],
 };
 
 /// Descriptor for `GetBySessionIdResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getBySessionIdResponseDescriptor = $convert.base64Decode(
-    'ChZHZXRCeVNlc3Npb25JZFJlc3BvbnNlEisKBGRhdGEYASABKAsyFy5kZXZpY2UudjEuRGV2aW'
-    'NlT2JqZWN0UgRkYXRh');
+final $typed_data.Uint8List getBySessionIdResponseDescriptor =
+    $convert.base64Decode(
+        'ChZHZXRCeVNlc3Npb25JZFJlc3BvbnNlEisKBGRhdGEYASABKAsyFy5kZXZpY2UudjEuRGV2aW'
+        'NlT2JqZWN0UgRkYXRh');
 
 @$core.Deprecated('Use searchRequestDescriptor instead')
 const SearchRequest$json = {
@@ -242,7 +337,14 @@ const SearchRequest$json = {
     {'1': 'start_date', '3': 4, '4': 1, '5': 9, '10': 'startDate'},
     {'1': 'end_date', '3': 5, '4': 1, '5': 9, '10': 'endDate'},
     {'1': 'properties', '3': 6, '4': 3, '5': 9, '10': 'properties'},
-    {'1': 'extras', '3': 7, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
+    {
+      '1': 'extras',
+      '3': 7,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extras'
+    },
   ],
 };
 
@@ -257,7 +359,14 @@ final $typed_data.Uint8List searchRequestDescriptor = $convert.base64Decode(
 const SearchResponse$json = {
   '1': 'SearchResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.device.v1.DeviceObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.device.v1.DeviceObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -271,7 +380,14 @@ const CreateRequest$json = {
   '1': 'CreateRequest',
   '2': [
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'properties', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'properties'},
+    {
+      '1': 'properties',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'properties'
+    },
   ],
 };
 
@@ -284,7 +400,14 @@ final $typed_data.Uint8List createRequestDescriptor = $convert.base64Decode(
 const CreateResponse$json = {
   '1': 'CreateResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.DeviceObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.DeviceObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -299,7 +422,14 @@ const UpdateRequest$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'id'},
     {'1': 'name', '3': 2, '4': 1, '5': 9, '10': 'name'},
-    {'1': 'properties', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'properties'},
+    {
+      '1': 'properties',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'properties'
+    },
   ],
 };
 
@@ -313,7 +443,14 @@ final $typed_data.Uint8List updateRequestDescriptor = $convert.base64Decode(
 const UpdateResponse$json = {
   '1': 'UpdateResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.DeviceObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.DeviceObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -328,7 +465,14 @@ const LinkRequest$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'id'},
     {'1': 'profile_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'profileId'},
-    {'1': 'properties', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'properties'},
+    {
+      '1': 'properties',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'properties'
+    },
   ],
 };
 
@@ -343,7 +487,14 @@ final $typed_data.Uint8List linkRequestDescriptor = $convert.base64Decode(
 const LinkResponse$json = {
   '1': 'LinkResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.DeviceObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.DeviceObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -369,7 +520,14 @@ final $typed_data.Uint8List removeRequestDescriptor = $convert.base64Decode(
 const RemoveResponse$json = {
   '1': 'RemoveResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.DeviceObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.DeviceObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -389,7 +547,14 @@ const LogRequest$json = {
     {'1': 'user_agent', '3': 6, '4': 1, '5': 9, '10': 'userAgent'},
     {'1': 'os', '3': 7, '4': 1, '5': 9, '10': 'os'},
     {'1': 'last_seen', '3': 8, '4': 1, '5': 9, '10': 'lastSeen'},
-    {'1': 'extras', '3': 9, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
+    {
+      '1': 'extras',
+      '3': 9,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extras'
+    },
   ],
 };
 
@@ -406,7 +571,14 @@ final $typed_data.Uint8List logRequestDescriptor = $convert.base64Decode(
 const LogResponse$json = {
   '1': 'LogResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.DeviceLog', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.DeviceLog',
+      '10': 'data'
+    },
   ],
 };
 
@@ -433,7 +605,14 @@ final $typed_data.Uint8List listLogsRequestDescriptor = $convert.base64Decode(
 const ListLogsResponse$json = {
   '1': 'ListLogsResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.device.v1.DeviceLog', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.device.v1.DeviceLog',
+      '10': 'data'
+    },
   ],
 };
 
@@ -448,10 +627,24 @@ const AddKeyRequest$json = {
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'id'},
     {'1': 'device_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
-    {'1': 'key_type', '3': 3, '4': 1, '5': 14, '6': '.device.v1.KeyType', '10': 'keyType'},
+    {
+      '1': 'key_type',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.device.v1.KeyType',
+      '10': 'keyType'
+    },
     {'1': 'data', '3': 4, '4': 1, '5': 12, '10': 'data'},
     {'1': 'expires_at', '3': 5, '4': 1, '5': 9, '10': 'expiresAt'},
-    {'1': 'extras', '3': 6, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
+    {
+      '1': 'extras',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extras'
+    },
   ],
 };
 
@@ -467,7 +660,14 @@ final $typed_data.Uint8List addKeyRequestDescriptor = $convert.base64Decode(
 const AddKeyResponse$json = {
   '1': 'AddKeyResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.KeyObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.KeyObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -498,8 +698,8 @@ const RemoveKeyResponse$json = {
 };
 
 /// Descriptor for `RemoveKeyResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List removeKeyResponseDescriptor = $convert.base64Decode(
-    'ChFSZW1vdmVLZXlSZXNwb25zZRIOCgJpZBgBIAMoCVICaWQ=');
+final $typed_data.Uint8List removeKeyResponseDescriptor =
+    $convert.base64Decode('ChFSZW1vdmVLZXlSZXNwb25zZRIOCgJpZBgBIAMoCVICaWQ=');
 
 @$core.Deprecated('Use searchKeyRequestDescriptor instead')
 const SearchKeyRequest$json = {
@@ -507,7 +707,14 @@ const SearchKeyRequest$json = {
   '2': [
     {'1': 'query', '3': 1, '4': 1, '5': 9, '10': 'query'},
     {'1': 'device_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
-    {'1': 'key_types', '3': 3, '4': 3, '5': 14, '6': '.device.v1.KeyType', '10': 'keyTypes'},
+    {
+      '1': 'key_types',
+      '3': 3,
+      '4': 3,
+      '5': 14,
+      '6': '.device.v1.KeyType',
+      '10': 'keyTypes'
+    },
     {'1': 'include_expired', '3': 4, '4': 1, '5': 8, '10': 'includeExpired'},
     {'1': 'page', '3': 5, '4': 1, '5': 5, '10': 'page'},
     {'1': 'count', '3': 6, '4': 1, '5': 5, '10': 'count'},
@@ -526,7 +733,14 @@ final $typed_data.Uint8List searchKeyRequestDescriptor = $convert.base64Decode(
 const SearchKeyResponse$json = {
   '1': 'SearchKeyResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.device.v1.KeyObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.device.v1.KeyObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -540,8 +754,22 @@ const RegisterKeyRequest$json = {
   '1': 'RegisterKeyRequest',
   '2': [
     {'1': 'device_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
-    {'1': 'key_type', '3': 2, '4': 1, '5': 14, '6': '.device.v1.KeyType', '10': 'keyType'},
-    {'1': 'extras', '3': 3, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
+    {
+      '1': 'key_type',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.device.v1.KeyType',
+      '10': 'keyType'
+    },
+    {
+      '1': 'extras',
+      '3': 3,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extras'
+    },
   ],
 };
 
@@ -556,7 +784,14 @@ final $typed_data.Uint8List registerKeyRequestDescriptor = $convert.base64Decode
 const RegisterKeyResponse$json = {
   '1': 'RegisterKeyResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.KeyObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.KeyObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -597,9 +832,23 @@ const UpdatePresenceRequest$json = {
   '1': 'UpdatePresenceRequest',
   '2': [
     {'1': 'device_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
-    {'1': 'status', '3': 2, '4': 1, '5': 14, '6': '.device.v1.PresenceStatus', '10': 'status'},
+    {
+      '1': 'status',
+      '3': 2,
+      '4': 1,
+      '5': 14,
+      '6': '.device.v1.PresenceStatus',
+      '10': 'status'
+    },
     {'1': 'status_message', '3': 3, '4': 1, '5': 9, '10': 'statusMessage'},
-    {'1': 'extras', '3': 4, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
+    {
+      '1': 'extras',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extras'
+    },
   ],
 };
 
@@ -614,14 +863,22 @@ final $typed_data.Uint8List updatePresenceRequestDescriptor = $convert.base64Dec
 const UpdatePresenceResponse$json = {
   '1': 'UpdatePresenceResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.device.v1.PresenceObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.device.v1.PresenceObject',
+      '10': 'data'
+    },
   ],
 };
 
 /// Descriptor for `UpdatePresenceResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List updatePresenceResponseDescriptor = $convert.base64Decode(
-    'ChZVcGRhdGVQcmVzZW5jZVJlc3BvbnNlEi0KBGRhdGEYASABKAsyGS5kZXZpY2UudjEuUHJlc2'
-    'VuY2VPYmplY3RSBGRhdGE=');
+final $typed_data.Uint8List updatePresenceResponseDescriptor =
+    $convert.base64Decode(
+        'ChZVcGRhdGVQcmVzZW5jZVJlc3BvbnNlEi0KBGRhdGEYASABKAsyGS5kZXZpY2UudjEuUHJlc2'
+        'VuY2VPYmplY3RSBGRhdGE=');
 
 @$core.Deprecated('Use notifyMessageDescriptor instead')
 const NotifyMessage$json = {
@@ -630,8 +887,22 @@ const NotifyMessage$json = {
     {'1': 'id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'id'},
     {'1': 'title', '3': 3, '4': 1, '5': 9, '10': 'title'},
     {'1': 'body', '3': 4, '4': 1, '5': 9, '10': 'body'},
-    {'1': 'data', '3': 5, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'data'},
-    {'1': 'extras', '3': 6, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
+    {
+      '1': 'data',
+      '3': 5,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'data'
+    },
+    {
+      '1': 'extras',
+      '3': 6,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extras'
+    },
   ],
 };
 
@@ -648,8 +919,23 @@ const NotifyRequest$json = {
   '2': [
     {'1': 'device_id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'deviceId'},
     {'1': 'key_id', '3': 2, '4': 1, '5': 9, '8': {}, '10': 'keyId'},
-    {'1': 'key_type', '3': 3, '4': 1, '5': 14, '6': '.device.v1.KeyType', '10': 'keyType'},
-    {'1': 'notifications', '3': 8, '4': 3, '5': 11, '6': '.device.v1.NotifyMessage', '8': {}, '10': 'notifications'},
+    {
+      '1': 'key_type',
+      '3': 3,
+      '4': 1,
+      '5': 14,
+      '6': '.device.v1.KeyType',
+      '10': 'keyType'
+    },
+    {
+      '1': 'notifications',
+      '3': 8,
+      '4': 3,
+      '5': 11,
+      '6': '.device.v1.NotifyMessage',
+      '8': {},
+      '10': 'notifications'
+    },
   ],
 };
 
@@ -668,7 +954,14 @@ const NotifyResult$json = {
     {'1': 'success', '3': 1, '4': 1, '5': 8, '10': 'success'},
     {'1': 'message', '3': 2, '4': 1, '5': 9, '10': 'message'},
     {'1': 'notification_id', '3': 3, '4': 1, '5': 9, '10': 'notificationId'},
-    {'1': 'extras', '3': 4, '4': 1, '5': 11, '6': '.google.protobuf.Struct', '10': 'extras'},
+    {
+      '1': 'extras',
+      '3': 4,
+      '4': 1,
+      '5': 11,
+      '6': '.google.protobuf.Struct',
+      '10': 'extras'
+    },
   ],
 };
 
@@ -682,7 +975,14 @@ final $typed_data.Uint8List notifyResultDescriptor = $convert.base64Decode(
 const NotifyResponse$json = {
   '1': 'NotifyResponse',
   '2': [
-    {'1': 'results', '3': 5, '4': 3, '5': 11, '6': '.device.v1.NotifyResult', '10': 'results'},
+    {
+      '1': 'results',
+      '3': 5,
+      '4': 3,
+      '5': 11,
+      '6': '.device.v1.NotifyResult',
+      '10': 'results'
+    },
   ],
 };
 
@@ -700,9 +1000,10 @@ const GetTurnCredentialsRequest$json = {
 };
 
 /// Descriptor for `GetTurnCredentialsRequest`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getTurnCredentialsRequestDescriptor = $convert.base64Decode(
-    'ChlHZXRUdXJuQ3JlZGVudGlhbHNSZXF1ZXN0EhsKCWRldmljZV9pZBgBIAEoCVIIZGV2aWNlSW'
-    'Q=');
+final $typed_data.Uint8List getTurnCredentialsRequestDescriptor =
+    $convert.base64Decode(
+        'ChlHZXRUdXJuQ3JlZGVudGlhbHNSZXF1ZXN0EhsKCWRldmljZV9pZBgBIAEoCVIIZGV2aWNlSW'
+        'Q=');
 
 @$core.Deprecated('Use turnServerDescriptor instead')
 const TurnServer$json = {
@@ -725,15 +1026,23 @@ final $typed_data.Uint8List turnServerDescriptor = $convert.base64Decode(
 const GetTurnCredentialsResponse$json = {
   '1': 'GetTurnCredentialsResponse',
   '2': [
-    {'1': 'servers', '3': 1, '4': 3, '5': 11, '6': '.device.v1.TurnServer', '10': 'servers'},
+    {
+      '1': 'servers',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.device.v1.TurnServer',
+      '10': 'servers'
+    },
     {'1': 'ttl_seconds', '3': 2, '4': 1, '5': 5, '10': 'ttlSeconds'},
   ],
 };
 
 /// Descriptor for `GetTurnCredentialsResponse`. Decode as a `google.protobuf.DescriptorProto`.
-final $typed_data.Uint8List getTurnCredentialsResponseDescriptor = $convert.base64Decode(
-    'ChpHZXRUdXJuQ3JlZGVudGlhbHNSZXNwb25zZRIvCgdzZXJ2ZXJzGAEgAygLMhUuZGV2aWNlLn'
-    'YxLlR1cm5TZXJ2ZXJSB3NlcnZlcnMSHwoLdHRsX3NlY29uZHMYAiABKAVSCnR0bFNlY29uZHM=');
+final $typed_data.Uint8List getTurnCredentialsResponseDescriptor =
+    $convert.base64Decode(
+        'ChpHZXRUdXJuQ3JlZGVudGlhbHNSZXNwb25zZRIvCgdzZXJ2ZXJzGAEgAygLMhUuZGV2aWNlLn'
+        'YxLlR1cm5TZXJ2ZXJSB3NlcnZlcnMSHwoLdHRsX3NlY29uZHMYAiABKAVSCnR0bFNlY29uZHM=');
 
 const $core.Map<$core.String, $core.dynamic> DeviceServiceBase$json = {
   '1': 'DeviceService',
@@ -757,11 +1066,36 @@ const $core.Map<$core.String, $core.dynamic> DeviceServiceBase$json = {
       '4': {'34': 1},
       '6': true,
     },
-    {'1': 'Create', '2': '.device.v1.CreateRequest', '3': '.device.v1.CreateResponse', '4': {}},
-    {'1': 'Update', '2': '.device.v1.UpdateRequest', '3': '.device.v1.UpdateResponse', '4': {}},
-    {'1': 'Link', '2': '.device.v1.LinkRequest', '3': '.device.v1.LinkResponse', '4': {}},
-    {'1': 'Remove', '2': '.device.v1.RemoveRequest', '3': '.device.v1.RemoveResponse', '4': {}},
-    {'1': 'Log', '2': '.device.v1.LogRequest', '3': '.device.v1.LogResponse', '4': {}},
+    {
+      '1': 'Create',
+      '2': '.device.v1.CreateRequest',
+      '3': '.device.v1.CreateResponse',
+      '4': {}
+    },
+    {
+      '1': 'Update',
+      '2': '.device.v1.UpdateRequest',
+      '3': '.device.v1.UpdateResponse',
+      '4': {}
+    },
+    {
+      '1': 'Link',
+      '2': '.device.v1.LinkRequest',
+      '3': '.device.v1.LinkResponse',
+      '4': {}
+    },
+    {
+      '1': 'Remove',
+      '2': '.device.v1.RemoveRequest',
+      '3': '.device.v1.RemoveResponse',
+      '4': {}
+    },
+    {
+      '1': 'Log',
+      '2': '.device.v1.LogRequest',
+      '3': '.device.v1.LogResponse',
+      '4': {}
+    },
     {
       '1': 'ListLogs',
       '2': '.device.v1.ListLogsRequest',
@@ -769,33 +1103,69 @@ const $core.Map<$core.String, $core.dynamic> DeviceServiceBase$json = {
       '4': {'34': 1},
       '6': true,
     },
-    {'1': 'AddKey', '2': '.device.v1.AddKeyRequest', '3': '.device.v1.AddKeyResponse', '4': {}},
-    {'1': 'RemoveKey', '2': '.device.v1.RemoveKeyRequest', '3': '.device.v1.RemoveKeyResponse', '4': {}},
+    {
+      '1': 'AddKey',
+      '2': '.device.v1.AddKeyRequest',
+      '3': '.device.v1.AddKeyResponse',
+      '4': {}
+    },
+    {
+      '1': 'RemoveKey',
+      '2': '.device.v1.RemoveKeyRequest',
+      '3': '.device.v1.RemoveKeyResponse',
+      '4': {}
+    },
     {
       '1': 'SearchKey',
       '2': '.device.v1.SearchKeyRequest',
       '3': '.device.v1.SearchKeyResponse',
       '4': {'34': 1},
     },
-    {'1': 'RegisterKey', '2': '.device.v1.RegisterKeyRequest', '3': '.device.v1.RegisterKeyResponse', '4': {}},
-    {'1': 'DeRegisterKey', '2': '.device.v1.DeRegisterKeyRequest', '3': '.device.v1.DeRegisterKeyResponse', '4': {}},
-    {'1': 'GetTurnCredentials', '2': '.device.v1.GetTurnCredentialsRequest', '3': '.device.v1.GetTurnCredentialsResponse', '4': {}},
-    {'1': 'Notify', '2': '.device.v1.NotifyRequest', '3': '.device.v1.NotifyResponse', '4': {}},
-    {'1': 'UpdatePresence', '2': '.device.v1.UpdatePresenceRequest', '3': '.device.v1.UpdatePresenceResponse', '4': {}},
+    {
+      '1': 'RegisterKey',
+      '2': '.device.v1.RegisterKeyRequest',
+      '3': '.device.v1.RegisterKeyResponse',
+      '4': {}
+    },
+    {
+      '1': 'DeRegisterKey',
+      '2': '.device.v1.DeRegisterKeyRequest',
+      '3': '.device.v1.DeRegisterKeyResponse',
+      '4': {}
+    },
+    {
+      '1': 'GetTurnCredentials',
+      '2': '.device.v1.GetTurnCredentialsRequest',
+      '3': '.device.v1.GetTurnCredentialsResponse',
+      '4': {}
+    },
+    {
+      '1': 'Notify',
+      '2': '.device.v1.NotifyRequest',
+      '3': '.device.v1.NotifyResponse',
+      '4': {}
+    },
+    {
+      '1': 'UpdatePresence',
+      '2': '.device.v1.UpdatePresenceRequest',
+      '3': '.device.v1.UpdatePresenceResponse',
+      '4': {}
+    },
   ],
   '3': {},
 };
 
 @$core.Deprecated('Use deviceServiceDescriptor instead')
-const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> DeviceServiceBase$messageJson = {
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    DeviceServiceBase$messageJson = {
   '.device.v1.GetByIdRequest': GetByIdRequest$json,
   '.device.v1.GetByIdResponse': GetByIdResponse$json,
   '.device.v1.DeviceObject': DeviceObject$json,
   '.device.v1.Locale': Locale$json,
-  '.google.protobuf.Struct': $6.Struct$json,
-  '.google.protobuf.Struct.FieldsEntry': $6.Struct_FieldsEntry$json,
-  '.google.protobuf.Value': $6.Value$json,
-  '.google.protobuf.ListValue': $6.ListValue$json,
+  '.google.protobuf.Struct': $0.Struct$json,
+  '.google.protobuf.Struct.FieldsEntry': $0.Struct_FieldsEntry$json,
+  '.google.protobuf.Value': $0.Value$json,
+  '.google.protobuf.ListValue': $0.ListValue$json,
   '.device.v1.GetBySessionIdRequest': GetBySessionIdRequest$json,
   '.device.v1.GetBySessionIdResponse': GetBySessionIdResponse$json,
   '.device.v1.SearchRequest': SearchRequest$json,
@@ -940,4 +1310,3 @@ final $typed_data.Uint8List deviceServiceDescriptor = $convert.base64Decode(
     'FkZXZpY2Vfa2V5X21hbmFnZRIPZGV2aWNlX2xvZ192aWV3EhFkZXZpY2VfbG9nX21hbmFnZRpm'
     'CAYSC2RldmljZV92aWV3Eg1kZXZpY2VfbWFuYWdlEg9kZXZpY2Vfa2V5X3ZpZXcSEWRldmljZV'
     '9rZXlfbWFuYWdlEg9kZXZpY2VfbG9nX3ZpZXcSEWRldmljZV9sb2dfbWFuYWdl');
-

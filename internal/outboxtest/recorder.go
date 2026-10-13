@@ -22,7 +22,7 @@ import (
 	"encoding/json"
 	"sync"
 
-	"github.com/pitabwire/frame/v2/queue"
+	"github.com/pitabwire/frame/v3/queue"
 )
 
 // Fact is one message seen on a facts topic.

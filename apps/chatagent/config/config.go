@@ -1,6 +1,6 @@
 package config
 
-import "github.com/pitabwire/frame/v2/config"
+import "github.com/pitabwire/frame/v3/config"
 
 // ChatAgentConfig holds env configuration for the chatagent app.
 // Tags use Frame's caarlos0/env (`env` / `envDefault`), not legacy envconfig.

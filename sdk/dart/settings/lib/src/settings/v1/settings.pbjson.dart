@@ -1,20 +1,24 @@
+// This is a generated file - do not edit.
 //
-//  Generated code. Do not modify.
-//  source: settings/v1/settings.proto
-//
-// @dart = 2.12
+// Generated from settings/v1/settings.proto.
+
+// @dart = 3.3
 
 // ignore_for_file: annotate_overrides, camel_case_types, comment_references
-// ignore_for_file: constant_identifier_names, library_prefixes
-// ignore_for_file: non_constant_identifier_names, prefer_final_fields
-// ignore_for_file: unnecessary_import, unnecessary_this, unused_import
+// ignore_for_file: constant_identifier_names
+// ignore_for_file: curly_braces_in_flow_control_structures
+// ignore_for_file: deprecated_member_use_from_same_package, library_prefixes
+// ignore_for_file: non_constant_identifier_names, prefer_relative_imports
+// ignore_for_file: unused_import
 
 import 'dart:convert' as $convert;
 import 'dart:core' as $core;
 import 'dart:typed_data' as $typed_data;
 
-import '../../common/v1/common.pbjson.dart' as $7;
-import '../../google/protobuf/struct.pbjson.dart' as $6;
+import 'package:protobuf/well_known_types/google/protobuf/struct.pbjson.dart'
+    as $1;
+
+import '../../common/v1/common.pbjson.dart' as $0;
 
 @$core.Deprecated('Use settingDescriptor instead')
 const Setting$json = {
@@ -30,17 +34,24 @@ const Setting$json = {
 
 /// Descriptor for `Setting`. Decode as a `google.protobuf.DescriptorProto`.
 final $typed_data.Uint8List settingDescriptor = $convert.base64Decode(
-    'CgdTZXR0aW5nEhsKBG5hbWUYASABKAlCB7pIBHICEAJSBG5hbWUSIgoGb2JqZWN0GAIgASgJQg'
-    'q6SAfYAQFyAhACUgZvYmplY3QSOwoJb2JqZWN0X2lkGAMgASgJQh66SBvYAQFyFhADGCgyEFsw'
-    'LTlhLXpfLV17Myw0MH1SCG9iamVjdElkEh4KBGxhbmcYBCABKAlCCrpIB9gBAXICEAJSBGxhbm'
-    'cSIgoGbW9kdWxlGAUgASgJQgq6SAfYAQFyAhADUgZtb2R1bGU=');
+    'CgdTZXR0aW5nEh4KBG5hbWUYASABKAlCCrpIB9gBAXICEAJSBG5hbWUSIgoGb2JqZWN0GAIgAS'
+    'gJQgq6SAfYAQFyAhACUgZvYmplY3QSOwoJb2JqZWN0X2lkGAMgASgJQh66SBvYAQFyFhADGCgy'
+    'EFswLTlhLXpfLV17Myw0MH1SCG9iamVjdElkEh4KBGxhbmcYBCABKAlCCrpIB9gBAXICEAJSBG'
+    'xhbmcSIgoGbW9kdWxlGAUgASgJQgq6SAfYAQFyAhADUgZtb2R1bGU=');
 
 @$core.Deprecated('Use settingObjectDescriptor instead')
 const SettingObject$json = {
   '1': 'SettingObject',
   '2': [
     {'1': 'id', '3': 1, '4': 1, '5': 9, '8': {}, '10': 'id'},
-    {'1': 'key', '3': 2, '4': 1, '5': 11, '6': '.settings.v1.Setting', '10': 'key'},
+    {
+      '1': 'key',
+      '3': 2,
+      '4': 1,
+      '5': 11,
+      '6': '.settings.v1.Setting',
+      '10': 'key'
+    },
     {'1': 'value', '3': 3, '4': 1, '5': 9, '10': 'value'},
     {'1': 'updated', '3': 4, '4': 1, '5': 9, '10': 'updated'},
   ],
@@ -56,7 +67,14 @@ final $typed_data.Uint8List settingObjectDescriptor = $convert.base64Decode(
 const GetRequest$json = {
   '1': 'GetRequest',
   '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 11, '6': '.settings.v1.Setting', '10': 'key'},
+    {
+      '1': 'key',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.settings.v1.Setting',
+      '10': 'key'
+    },
   ],
 };
 
@@ -68,7 +86,14 @@ final $typed_data.Uint8List getRequestDescriptor = $convert.base64Decode(
 const GetResponse$json = {
   '1': 'GetResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.settings.v1.SettingObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.settings.v1.SettingObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -81,7 +106,14 @@ final $typed_data.Uint8List getResponseDescriptor = $convert.base64Decode(
 const SearchResponse$json = {
   '1': 'SearchResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.settings.v1.SettingObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.settings.v1.SettingObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -94,7 +126,14 @@ final $typed_data.Uint8List searchResponseDescriptor = $convert.base64Decode(
 const ListRequest$json = {
   '1': 'ListRequest',
   '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 11, '6': '.settings.v1.Setting', '10': 'key'},
+    {
+      '1': 'key',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.settings.v1.Setting',
+      '10': 'key'
+    },
   ],
 };
 
@@ -106,7 +145,14 @@ final $typed_data.Uint8List listRequestDescriptor = $convert.base64Decode(
 const ListResponse$json = {
   '1': 'ListResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 3, '5': 11, '6': '.settings.v1.SettingObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 3,
+      '5': 11,
+      '6': '.settings.v1.SettingObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -119,7 +165,14 @@ final $typed_data.Uint8List listResponseDescriptor = $convert.base64Decode(
 const SetRequest$json = {
   '1': 'SetRequest',
   '2': [
-    {'1': 'key', '3': 1, '4': 1, '5': 11, '6': '.settings.v1.Setting', '10': 'key'},
+    {
+      '1': 'key',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.settings.v1.Setting',
+      '10': 'key'
+    },
     {'1': 'value', '3': 2, '4': 1, '5': 9, '10': 'value'},
   ],
 };
@@ -133,7 +186,14 @@ final $typed_data.Uint8List setRequestDescriptor = $convert.base64Decode(
 const SetResponse$json = {
   '1': 'SetResponse',
   '2': [
-    {'1': 'data', '3': 1, '4': 1, '5': 11, '6': '.settings.v1.SettingObject', '10': 'data'},
+    {
+      '1': 'data',
+      '3': 1,
+      '4': 1,
+      '5': 11,
+      '6': '.settings.v1.SettingObject',
+      '10': 'data'
+    },
   ],
 };
 
@@ -165,25 +225,31 @@ const $core.Map<$core.String, $core.dynamic> SettingsServiceBase$json = {
       '4': {'34': 1},
       '6': true,
     },
-    {'1': 'Set', '2': '.settings.v1.SetRequest', '3': '.settings.v1.SetResponse', '4': {}},
+    {
+      '1': 'Set',
+      '2': '.settings.v1.SetRequest',
+      '3': '.settings.v1.SetResponse',
+      '4': {}
+    },
   ],
   '3': {},
 };
 
 @$core.Deprecated('Use settingsServiceDescriptor instead')
-const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>> SettingsServiceBase$messageJson = {
+const $core.Map<$core.String, $core.Map<$core.String, $core.dynamic>>
+    SettingsServiceBase$messageJson = {
   '.settings.v1.GetRequest': GetRequest$json,
   '.settings.v1.Setting': Setting$json,
   '.settings.v1.GetResponse': GetResponse$json,
   '.settings.v1.SettingObject': SettingObject$json,
   '.settings.v1.ListRequest': ListRequest$json,
   '.settings.v1.ListResponse': ListResponse$json,
-  '.common.v1.SearchRequest': $7.SearchRequest$json,
-  '.common.v1.PageCursor': $7.PageCursor$json,
-  '.google.protobuf.Struct': $6.Struct$json,
-  '.google.protobuf.Struct.FieldsEntry': $6.Struct_FieldsEntry$json,
-  '.google.protobuf.Value': $6.Value$json,
-  '.google.protobuf.ListValue': $6.ListValue$json,
+  '.common.v1.SearchRequest': $0.SearchRequest$json,
+  '.common.v1.PageCursor': $0.PageCursor$json,
+  '.google.protobuf.Struct': $1.Struct$json,
+  '.google.protobuf.Struct.FieldsEntry': $1.Struct_FieldsEntry$json,
+  '.google.protobuf.Value': $1.Value$json,
+  '.google.protobuf.ListValue': $1.ListValue$json,
   '.settings.v1.SearchResponse': SearchResponse$json,
   '.settings.v1.SetRequest': SetRequest$json,
   '.settings.v1.SetResponse': SetResponse$json,
@@ -213,9 +279,8 @@ final $typed_data.Uint8List settingsServiceDescriptor = $convert.base64Decode(
     'NyZWF0ZXMgb3IgdXBkYXRlcyBhIHNldHRpbmcgdmFsdWUuIElmIHRoZSBzZXR0aW5nIGV4aXN0'
     'cywgaXQgaXMgdXBkYXRlZCB3aXRoIHRoZSBuZXcgdmFsdWUgYW5kIHRpbWVzdGFtcC4gSWYgaX'
     'QgZG9lc24ndCBleGlzdCwgYSBuZXcgc2V0dGluZyBpcyBjcmVhdGVkLioKc2V0U2V0dGluZ4K1'
-    'GBAKDnNldHRpbmdfbWFuYWdlGtABgrUYywEKD3NlcnZpY2Vfc2V0dGluZxIMc2V0dGluZ192aW'
+    'GBAKDnNldHRpbmdfbWFuYWdlGuABgrUY2wEKD3NlcnZpY2Vfc2V0dGluZxIMc2V0dGluZ192aW'
     'V3Eg5zZXR0aW5nX21hbmFnZRogCAESDHNldHRpbmdfdmlldxIOc2V0dGluZ19tYW5hZ2UaIAgC'
     'EgxzZXR0aW5nX3ZpZXcSDnNldHRpbmdfbWFuYWdlGhAIAxIMc2V0dGluZ192aWV3GhAIBBIMc2'
-    'V0dGluZ192aWV3GhAIBRIMc2V0dGluZ192aWV3GiAIBhIMc2V0dGluZ192aWV3Eg5zZXR0aW5n'
-    'X21hbmFnZQ==');
-
+    'V0dGluZ192aWV3GiAIBRIMc2V0dGluZ192aWV3Eg5zZXR0aW5nX21hbmFnZRogCAYSDHNldHRp'
+    'bmdfdmlldxIOc2V0dGluZ19tYW5hZ2U=');

@@ -2,14 +2,14 @@ package business //nolint:testpackage // tests unexported NotificationTarget hel
 
 import (
 	"context"
-	"errors"
 	"testing"
 
 	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
-	"buf.build/gen/go/antinvestor/notification/connectrpc/go/notification/v1/notificationv1connect"
+	"buf.build/gen/go/antinvestor/notification/connectrpc/go/v2/notification/v1/notificationv1connect"
 	notificationv1 "buf.build/gen/go/antinvestor/notification/protocolbuffers/go/notification/v1"
-	"connectrpc.com/connect"
-	"github.com/pitabwire/frame/v2/data"
+	"connectrpc.com/connect/v2"
+	"connectrpc.com/connect/v2/connectinprocess"
+	"github.com/pitabwire/frame/v3/data"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -128,52 +128,36 @@ func TestMergeNotificationTargets(t *testing.T) {
 	require.True(t, out.GetSkip())
 }
 
-// capturingNotificationClient records Send requests — same stub style as profile tests.
-type capturingNotificationClient struct {
+// capturingNotificationHandler records the last Send request it serves.
+type capturingNotificationHandler struct {
+	notificationv1connect.UnimplementedNotificationServiceHandler
+
 	last *notificationv1.SendRequest
-	err  error
 }
 
-var _ notificationv1connect.NotificationServiceClient = (*capturingNotificationClient)(nil)
-
-func (c *capturingNotificationClient) Send(
+func (c *capturingNotificationHandler) Send(
 	_ context.Context,
-	req *connect.Request[notificationv1.SendRequest],
-) (*connect.ServerStreamForClient[notificationv1.SendResponse], error) {
-	if c.err != nil {
-		return nil, c.err
-	}
-	c.last = req.Msg
-	return nil, nil //nolint:nilnil // test stub: deliverReply accepts nil stream
-}
-func (c *capturingNotificationClient) Release(context.Context, *connect.Request[notificationv1.ReleaseRequest]) (*connect.ServerStreamForClient[notificationv1.ReleaseResponse], error) {
-	return nil, errUnused
-}
-func (c *capturingNotificationClient) Receive(context.Context, *connect.Request[notificationv1.ReceiveRequest]) (*connect.ServerStreamForClient[notificationv1.ReceiveResponse], error) {
-	return nil, errUnused
-}
-func (c *capturingNotificationClient) Search(context.Context, *connect.Request[commonv1.SearchRequest]) (*connect.ServerStreamForClient[notificationv1.SearchResponse], error) {
-	return nil, errUnused
-}
-func (c *capturingNotificationClient) Status(context.Context, *connect.Request[commonv1.StatusRequest]) (*connect.Response[commonv1.StatusResponse], error) {
-	return nil, errUnused
-}
-func (c *capturingNotificationClient) StatusUpdate(context.Context, *connect.Request[commonv1.StatusUpdateRequest]) (*connect.Response[commonv1.StatusUpdateResponse], error) {
-	return nil, errUnused
-}
-func (c *capturingNotificationClient) TemplateSearch(context.Context, *connect.Request[notificationv1.TemplateSearchRequest]) (*connect.ServerStreamForClient[notificationv1.TemplateSearchResponse], error) {
-	return nil, errUnused
-}
-func (c *capturingNotificationClient) TemplateSave(context.Context, *connect.Request[notificationv1.TemplateSaveRequest]) (*connect.Response[notificationv1.TemplateSaveResponse], error) {
-	return nil, errUnused
+	req *notificationv1.SendRequest,
+	_ notificationv1connect.NotificationServiceSendServerStream,
+) error {
+	c.last = req
+	return nil
 }
 
-var errUnused = errors.New("unused in this test")
+// inProcessNotificationClient serves handler in-process through a real
+// Connect client, so deliverReply drives a genuine response stream.
+func inProcessNotificationClient(
+	handler notificationv1connect.NotificationServiceHandler,
+) notificationv1connect.NotificationServiceClient {
+	server := connect.NewServer()
+	notificationv1connect.RegisterNotificationServiceHandler(server, handler)
+	return notificationv1connect.NewNotificationServiceClient(connect.NewClient(connectinprocess.New(server)))
+}
 
 func TestDeliverReply_UsesNotificationClientSend(t *testing.T) {
 	t.Parallel()
-	stub := &capturingNotificationClient{}
-	b := &chatAgentBusiness{notificationCli: stub}
+	stub := &capturingNotificationHandler{}
+	b := &chatAgentBusiness{notificationCli: inProcessNotificationClient(stub)}
 	ok := b.deliverReply(context.Background(), &chatagentv1.NotificationTarget{
 		Type: "sms",
 		Recipient: &commonv1.ContactLink{
