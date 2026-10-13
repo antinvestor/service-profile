@@ -14,8 +14,7 @@ class ProfileTypeBadge extends StatelessWidget {
       value: type,
       mapper: (t) => switch (t) {
         ProfileType.PERSON => ('Person', Colors.blue, Icons.person),
-        ProfileType.INSTITUTION =>
-          ('Institution', Colors.teal, Icons.business),
+        ProfileType.INSTITUTION => ('Institution', Colors.teal, Icons.business),
         ProfileType.BOT => ('Bot', Colors.purple, Icons.smart_toy),
         _ => ('Unknown', Colors.grey, Icons.help_outline),
       },

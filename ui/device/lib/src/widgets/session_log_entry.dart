@@ -4,10 +4,7 @@ import 'package:flutter/material.dart';
 /// A widget displaying a single device session log entry with IP,
 /// user agent, OS, and timestamp information.
 class SessionLogEntry extends StatelessWidget {
-  const SessionLogEntry({
-    super.key,
-    required this.log,
-  });
+  const SessionLogEntry({super.key, required this.log});
 
   final DeviceLog log;
 

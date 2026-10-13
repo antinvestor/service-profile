@@ -25,10 +25,8 @@ class _SettingsListScreenState extends ConsumerState<SettingsListScreen> {
   String _searchQuery = '';
   bool _scopeExpanded = true;
 
-  SettingListParams get _listParams => SettingListParams(
-        object: _scope.object,
-        objectId: _scope.objectId,
-      );
+  SettingListParams get _listParams =>
+      SettingListParams(object: _scope.object, objectId: _scope.objectId);
 
   /// Extracts a module/group name from the setting key.
   String _extractModule(String key) {
@@ -84,9 +82,7 @@ class _SettingsListScreenState extends ConsumerState<SettingsListScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      _scopeExpanded
-                          ? Icons.expand_less
-                          : Icons.expand_more,
+                      _scopeExpanded ? Icons.expand_less : Icons.expand_more,
                       size: 20,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -114,9 +110,7 @@ class _SettingsListScreenState extends ConsumerState<SettingsListScreen> {
         ),
 
         // Main table
-        Expanded(
-          child: _buildContent(items, isLoading, error),
-        ),
+        Expanded(child: _buildContent(items, isLoading, error)),
       ],
     );
   }
@@ -137,10 +131,7 @@ class _SettingsListScreenState extends ConsumerState<SettingsListScreen> {
           children: [
             Text(error),
             const SizedBox(height: 12),
-            FilledButton.tonal(
-              onPressed: _refresh,
-              child: const Text('Retry'),
-            ),
+            FilledButton.tonal(onPressed: _refresh, child: const Text('Retry')),
           ],
         ),
       );
@@ -173,18 +164,22 @@ class _SettingsListScreenState extends ConsumerState<SettingsListScreen> {
           selected: selected,
           onSelectChanged: (_) => onSelect(),
           cells: [
-            DataCell(Text(
-              setting.key.name,
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            )),
-            DataCell(ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 250),
-              child: Text(
-                _valuePreview(setting.value),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+            DataCell(
+              Text(
+                setting.key.name,
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-            )),
+            ),
+            DataCell(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 250),
+                child: Text(
+                  _valuePreview(setting.value),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ),
             DataCell(Text(_extractModule(setting.key.name))),
             DataCell(Text(_formatUpdated(setting))),
           ],

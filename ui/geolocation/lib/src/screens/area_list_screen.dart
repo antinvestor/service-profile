@@ -86,27 +86,29 @@ class _AreaListScreenState extends ConsumerState<AreaListScreen> {
       onAdd: () => context.go('/geo/areas/new'),
       addLabel: 'New Area',
       onRowNavigate: (area) => context.go('/geo/areas/${area.id}'),
-      actions: [
-        _buildTypeFilter(),
-      ],
+      actions: [_buildTypeFilter()],
       rowBuilder: (area, selected, onSelect) {
         return DataRow(
           selected: selected,
           onSelectChanged: (_) => onSelect(),
           cells: [
-            DataCell(Text(
-              area.name.isNotEmpty ? area.name : 'Unnamed Area',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            )),
-            DataCell(AreaTypeBadge(areaType: area.areaType)),
-            DataCell(ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 200),
-              child: Text(
-                area.description.isNotEmpty ? area.description : '-',
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+            DataCell(
+              Text(
+                area.name.isNotEmpty ? area.name : 'Unnamed Area',
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-            )),
+            ),
+            DataCell(AreaTypeBadge(areaType: area.areaType)),
+            DataCell(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Text(
+                  area.description.isNotEmpty ? area.description : '-',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ),
             DataCell(Text(_stateLabel(area.state))),
           ],
         );

@@ -1,5 +1,6 @@
 // ignore: implementation_imports
-import 'package:antinvestor_api_settings/src/common/v1/common.pb.dart' show SearchRequest;
+import 'package:antinvestor_api_settings/src/common/v1/common.pb.dart'
+    show SearchRequest;
 import 'package:antinvestor_api_settings/antinvestor_api_settings.dart';
 import 'package:antinvestor_ui_core/api/stream_helpers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,8 +62,10 @@ class SettingListParams {
 }
 
 /// Get a single setting by key.
-final settingByKeyProvider =
-    FutureProvider.family<SettingObject, SettingKey>((ref, key) async {
+final settingByKeyProvider = FutureProvider.family<SettingObject, SettingKey>((
+  ref,
+  key,
+) async {
   final client = ref.watch(settingsServiceClientProvider);
   final request = GetRequest()
     ..key = (Setting()
@@ -76,40 +79,42 @@ final settingByKeyProvider =
 });
 
 /// List settings for a given object/instance, optionally filtered by module.
-final settingsListProvider = FutureProvider.family<List<SettingObject>,
-    SettingListParams>((ref, params) async {
-  final client = ref.watch(settingsServiceClientProvider);
-  final request = ListRequest()
-    ..key = (Setting()
-      ..object = params.object
-      ..objectId = params.objectId
-      ..module = params.module);
-  final stream = client.list(request);
-  return collectStream<ListResponse, SettingObject>(
-    stream,
-    extract: (r) => r.data,
-  );
-});
+final settingsListProvider =
+    FutureProvider.family<List<SettingObject>, SettingListParams>((
+      ref,
+      params,
+    ) async {
+      final client = ref.watch(settingsServiceClientProvider);
+      final request = ListRequest()
+        ..key = (Setting()
+          ..object = params.object
+          ..objectId = params.objectId
+          ..module = params.module);
+      final stream = client.list(request);
+      return collectStream<ListResponse, SettingObject>(
+        stream,
+        extract: (r) => r.data,
+      );
+    });
 
 /// Search settings by query string.
 final settingsSearchProvider =
     FutureProvider.family<List<SettingObject>, String>((ref, query) async {
-  final client = ref.watch(settingsServiceClientProvider);
-  final request = SearchRequest()..query = query;
-  final stream = client.search(request);
-  return collectStream<SearchResponse, SettingObject>(
-    stream,
-    extract: (r) => r.data,
-  );
-});
+      final client = ref.watch(settingsServiceClientProvider);
+      final request = SearchRequest()..query = query;
+      final stream = client.search(request);
+      return collectStream<SearchResponse, SettingObject>(
+        stream,
+        extract: (r) => r.data,
+      );
+    });
 
 /// Notifier for setting mutations (set / update).
 class SettingsNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
 
-  SettingsServiceClient get _client =>
-      ref.read(settingsServiceClientProvider);
+  SettingsServiceClient get _client => ref.read(settingsServiceClientProvider);
 
   Future<SettingObject> set(SetRequest request) async {
     state = const AsyncValue.loading();
@@ -125,5 +130,4 @@ class SettingsNotifier extends Notifier<AsyncValue<void>> {
 }
 
 final settingsNotifierProvider =
-    NotifierProvider<SettingsNotifier, AsyncValue<void>>(
-        SettingsNotifier.new);
+    NotifierProvider<SettingsNotifier, AsyncValue<void>>(SettingsNotifier.new);

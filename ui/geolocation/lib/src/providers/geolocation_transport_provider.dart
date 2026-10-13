@@ -13,8 +13,9 @@ final geolocationTransportProvider = Provider<Transport>((ref) {
   return createTransport(tokenProvider, baseUrl: _geolocationUrl);
 });
 
-final geolocationServiceClientProvider =
-    Provider<GeolocationServiceClient>((ref) {
+final geolocationServiceClientProvider = Provider<GeolocationServiceClient>((
+  ref,
+) {
   final transport = ref.watch(geolocationTransportProvider);
   return GeolocationServiceClient(transport);
 });

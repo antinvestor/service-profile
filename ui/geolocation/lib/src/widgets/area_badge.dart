@@ -49,7 +49,8 @@ class AreaBadge extends ConsumerWidget {
             Flexible(
               child: Text(
                 name,
-                style: style ??
+                style:
+                    style ??
                     theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w500,
                     ),

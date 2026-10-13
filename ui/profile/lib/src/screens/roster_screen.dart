@@ -52,11 +52,13 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
         content: Text('Remove "${entry.contact.detail}" from roster?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Remove')),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Remove'),
+          ),
         ],
       ),
     );
@@ -68,14 +70,15 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
           .remove(RemoveRosterRequest(id: entry.id));
       ref.invalidate(rosterSearchProvider(_activeProfileId));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Roster entry removed')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Roster entry removed')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -92,13 +95,19 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
           // Header
           Row(
             children: [
-              Icon(Icons.contacts_outlined,
-                  size: 28, color: theme.colorScheme.primary),
+              Icon(
+                Icons.contacts_outlined,
+                size: 28,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text('Roster',
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Roster',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -114,9 +123,12 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Search Roster',
-                    style: theme.textTheme.titleSmall
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  'Search Roster',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
@@ -160,10 +172,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
 
           // Results
           if (_activeProfileId.isNotEmpty)
-            _RosterResults(
-              profileId: _activeProfileId,
-              onRemove: _removeEntry,
-            ),
+            _RosterResults(profileId: _activeProfileId, onRemove: _removeEntry),
         ],
       ),
     );
@@ -171,10 +180,7 @@ class _RosterScreenState extends ConsumerState<RosterScreen> {
 }
 
 class _RosterResults extends ConsumerWidget {
-  const _RosterResults({
-    required this.profileId,
-    required this.onRemove,
-  });
+  const _RosterResults({required this.profileId, required this.onRemove});
 
   final String profileId;
   final void Function(RosterObject entry) onRemove;
@@ -197,8 +203,7 @@ class _RosterResults extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.error_outline,
-                size: 20, color: theme.colorScheme.error),
+            Icon(Icons.error_outline, size: 20, color: theme.colorScheme.error),
             const SizedBox(width: 8),
             Expanded(child: Text(friendlyError(error))),
           ],
@@ -211,13 +216,16 @@ class _RosterResults extends ConsumerWidget {
               padding: const EdgeInsets.all(48),
               child: Column(
                 children: [
-                  Icon(Icons.contacts_outlined,
-                      size: 48,
-                      color: theme.colorScheme.onSurfaceVariant),
+                  Icon(
+                    Icons.contacts_outlined,
+                    size: 48,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                   const SizedBox(height: 12),
-                  Text('No roster entries found',
-                      style: TextStyle(
-                          color: theme.colorScheme.onSurfaceVariant)),
+                  Text(
+                    'No roster entries found',
+                    style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                  ),
                 ],
               ),
             ),
@@ -227,16 +235,18 @@ class _RosterResults extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('${entries.length} roster entries found',
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            Text(
+              '${entries.length} roster entries found',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: theme.colorScheme.outlineVariant),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -275,22 +285,29 @@ class _RosterEntryTile extends StatelessWidget {
         size: 20,
         color: theme.colorScheme.primary,
       ),
-      title: Text(contact.detail,
-          style: const TextStyle(fontWeight: FontWeight.w500)),
-      subtitle: ProfileBadgeById(
-          profileId: entry.profileId, avatarSize: 20),
+      title: Text(
+        contact.detail,
+        style: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      subtitle: ProfileBadgeById(profileId: entry.profileId, avatarSize: 20),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (contact.verified)
             const Icon(Icons.verified, size: 16, color: Colors.green)
           else
-            Icon(Icons.pending_outlined,
-                size: 16, color: theme.colorScheme.onSurfaceVariant),
+            Icon(
+              Icons.pending_outlined,
+              size: 16,
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           const SizedBox(width: 8),
           IconButton(
-            icon: Icon(Icons.delete_outline,
-                size: 18, color: theme.colorScheme.error),
+            icon: Icon(
+              Icons.delete_outline,
+              size: 18,
+              color: theme.colorScheme.error,
+            ),
             tooltip: 'Remove',
             onPressed: onRemove,
           ),

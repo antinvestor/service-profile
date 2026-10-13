@@ -58,9 +58,7 @@ class RouteAssignmentChip extends StatelessWidget {
             ),
         ],
       ),
-      deleteIcon: onRemove != null
-          ? const Icon(Icons.close, size: 16)
-          : null,
+      deleteIcon: onRemove != null ? const Icon(Icons.close, size: 16) : null,
       onDeleted: onRemove,
     );
   }

@@ -54,7 +54,8 @@ class _SettingDetailScreenState extends ConsumerState<SettingDetailScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/settings'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/settings'),
         ),
         title: Text(
           setting.key.name,
@@ -166,22 +167,22 @@ class _SettingDetailScreenState extends ConsumerState<SettingDetailScreen> {
                     onPressed: _saving
                         ? null
                         : () => setState(() {
-                              _editing = false;
-                              _error = null;
-                              _editedValue = setting.value;
-                            }),
+                            _editing = false;
+                            _error = null;
+                            _editedValue = setting.value;
+                          }),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 12),
                   FilledButton.icon(
-                    onPressed:
-                        _saving || mutationState.isLoading ? null : _save,
+                    onPressed: _saving || mutationState.isLoading
+                        ? null
+                        : _save,
                     icon: _saving
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.save, size: 18),
                     label: Text(_saving ? 'Saving...' : 'Save'),
@@ -282,7 +283,8 @@ class _SettingDetailScreenState extends ConsumerState<SettingDetailScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.canPop() ? context.pop() : context.go('/settings'),
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/settings'),
         ),
         title: const Text('Setting Not Found'),
       ),

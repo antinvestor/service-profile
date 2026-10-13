@@ -133,7 +133,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     child: TextFormField(
                       controller: entry.value,
                       decoration: InputDecoration(
-                        hintText: 'Enter ${_formatLabel(entry.key).toLowerCase()}...',
+                        hintText:
+                            'Enter ${_formatLabel(entry.key).toLowerCase()}...',
                       ),
                     ),
                   );

@@ -174,7 +174,9 @@ class _ContactVerificationDialogState
             ]
           : [
               TextButton(
-                onPressed: _isLoading ? null : () => Navigator.of(context).pop(),
+                onPressed: _isLoading
+                    ? null
+                    : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
               OutlinedButton(

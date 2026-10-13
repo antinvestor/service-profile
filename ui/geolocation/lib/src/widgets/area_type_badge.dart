@@ -14,14 +14,26 @@ class AreaTypeBadge extends StatelessWidget {
       value: areaType,
       mapper: (type) => switch (type) {
         AreaType.AREA_TYPE_LAND => ('Land', Colors.green, Icons.terrain),
-        AreaType.AREA_TYPE_BUILDING =>
-          ('Building', Colors.blue, Icons.apartment),
-        AreaType.AREA_TYPE_ZONE =>
-          ('Zone', Colors.purple, Icons.layers_outlined),
-        AreaType.AREA_TYPE_FENCE =>
-          ('Fence', Colors.orange, Icons.fence_outlined),
-        AreaType.AREA_TYPE_CUSTOM =>
-          ('Custom', Colors.grey, Icons.category_outlined),
+        AreaType.AREA_TYPE_BUILDING => (
+          'Building',
+          Colors.blue,
+          Icons.apartment,
+        ),
+        AreaType.AREA_TYPE_ZONE => (
+          'Zone',
+          Colors.purple,
+          Icons.layers_outlined,
+        ),
+        AreaType.AREA_TYPE_FENCE => (
+          'Fence',
+          Colors.orange,
+          Icons.fence_outlined,
+        ),
+        AreaType.AREA_TYPE_CUSTOM => (
+          'Custom',
+          Colors.grey,
+          Icons.category_outlined,
+        ),
         _ => ('Unknown', Colors.grey, null),
       },
     );

@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:antinvestor_api_profile/antinvestor_api_profile.dart' as profile;
+import 'package:antinvestor_api_profile/antinvestor_api_profile.dart'
+    as profile;
 import 'package:antinvestor_ui_core/widgets/profile_badge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -81,7 +82,10 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
       _foundProfile = widget.resolvedProfile;
       _searched = true;
       _nameCtrl.text = _extractName(widget.resolvedProfile!);
-      _descriptionCtrl.text = _extractProp(widget.resolvedProfile!, 'description');
+      _descriptionCtrl.text = _extractProp(
+        widget.resolvedProfile!,
+        'description',
+      );
     }
   }
 
@@ -156,28 +160,29 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
       if (_avatarBytes != null &&
           _avatarFileName != null &&
           widget.onPickAvatar != null) {
-        avatarUri =
-            await widget.onPickAvatar!(_avatarBytes!, _avatarFileName!);
+        avatarUri = await widget.onPickAvatar!(_avatarBytes!, _avatarFileName!);
       }
 
       final props = <String, profile.Value>{};
       props['name'] = profile.Value(stringValue: name);
       if (_descriptionCtrl.text.trim().isNotEmpty) {
-        props['description'] =
-            profile.Value(stringValue: _descriptionCtrl.text.trim());
+        props['description'] = profile.Value(
+          stringValue: _descriptionCtrl.text.trim(),
+        );
       }
       if (avatarUri != null) {
         props['avatar'] = profile.Value(stringValue: avatarUri);
       }
 
-      final created =
-          await ref.read(profileNotifierProvider.notifier).create(
-                profile.CreateRequest(
-                  type: widget.profileType,
-                  contact: _contactCtrl.text.trim(),
-                  properties: profile.Struct(fields: props),
-                ),
-              );
+      final created = await ref
+          .read(profileNotifierProvider.notifier)
+          .create(
+            profile.CreateRequest(
+              type: widget.profileType,
+              contact: _contactCtrl.text.trim(),
+              properties: profile.Struct(fields: props),
+            ),
+          );
 
       if (mounted) {
         setState(() {
@@ -189,9 +194,9 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
     } catch (e) {
       if (mounted) {
         setState(() => _creating = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to create profile: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to create profile: $e')));
       }
     }
   }
@@ -229,7 +234,8 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
                   hintText: widget.contactLabel,
                   prefixIcon: const Icon(Icons.contact_mail_outlined),
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
                 onSubmitted: (_) => _searchProfile(),
               ),
@@ -242,7 +248,9 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.search, size: 18),
               label: const Text('Search'),
@@ -259,24 +267,29 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
             color: theme.colorScheme.primaryContainer.withAlpha(40),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
-              side: BorderSide(
-                  color: theme.colorScheme.primary.withAlpha(60)),
+              side: BorderSide(color: theme.colorScheme.primary.withAlpha(60)),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  Icon(Icons.check_circle,
-                      color: theme.colorScheme.primary, size: 24),
+                  Icon(
+                    Icons.check_circle,
+                    color: theme.colorScheme.primary,
+                    size: 24,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Profile found',
-                            style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: theme.colorScheme.primary)),
+                        Text(
+                          'Profile found',
+                          style: theme.textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
                         ProfileBadge(
                           profileId: _foundProfile!.id,
                           name: _extractName(_foundProfile!),
@@ -297,7 +310,8 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(8),
               side: BorderSide(
-                  color: theme.colorScheme.outlineVariant.withAlpha(60)),
+                color: theme.colorScheme.outlineVariant.withAlpha(60),
+              ),
             ),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -306,12 +320,18 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.info_outline,
-                          color: theme.colorScheme.secondary, size: 20),
+                      Icon(
+                        Icons.info_outline,
+                        color: theme.colorScheme.secondary,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
-                      Text('No profile found. Create one below.',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.secondary)),
+                      Text(
+                        'No profile found. Create one below.',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.secondary,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -320,15 +340,16 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
                       onTap: _pickAvatar,
                       child: CircleAvatar(
                         radius: 40,
-                        backgroundColor:
-                            theme.colorScheme.primaryContainer,
+                        backgroundColor: theme.colorScheme.primaryContainer,
                         backgroundImage: _avatarBytes != null
                             ? MemoryImage(_avatarBytes!)
                             : null,
                         child: _avatarBytes == null
-                            ? Icon(Icons.add_a_photo,
+                            ? Icon(
+                                Icons.add_a_photo,
                                 color: theme.colorScheme.primary,
-                                size: 24)
+                                size: 24,
+                              )
                             : null,
                       ),
                     ),
@@ -341,7 +362,8 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
                       hintText: widget.nameHint,
                       prefixIcon: const Icon(Icons.business),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -350,10 +372,10 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
                     decoration: InputDecoration(
                       labelText: 'Description',
                       hintText: 'Brief description',
-                      prefixIcon:
-                          const Icon(Icons.description_outlined),
+                      prefixIcon: const Icon(Icons.description_outlined),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     maxLines: 2,
                   ),
@@ -365,7 +387,9 @@ class _ProfileResolverState extends ConsumerState<ProfileResolver> {
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Icon(Icons.person_add, size: 18),
                     label: const Text('Create Profile'),

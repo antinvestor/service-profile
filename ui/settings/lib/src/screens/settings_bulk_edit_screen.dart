@@ -60,10 +60,8 @@ class _SettingsBulkEditScreenState
     _controllers.clear();
   }
 
-  SettingListParams get _listParams => SettingListParams(
-        object: _scope.object,
-        objectId: _scope.objectId,
-      );
+  SettingListParams get _listParams =>
+      SettingListParams(object: _scope.object, objectId: _scope.objectId);
 
   @override
   Widget build(BuildContext context) {
@@ -159,7 +157,8 @@ class _SettingsBulkEditScreenState
               child: _buildBanner(
                 theme,
                 icon: Icons.check_circle_outline,
-                message: '$_savedCount setting${_savedCount == 1 ? '' : 's'} saved successfully.',
+                message:
+                    '$_savedCount setting${_savedCount == 1 ? '' : 's'} saved successfully.',
                 color: theme.colorScheme.primaryContainer,
                 textColor: theme.colorScheme.onPrimaryContainer,
               ),
@@ -168,14 +167,16 @@ class _SettingsBulkEditScreenState
           // Settings table
           Expanded(
             child: asyncSettings.when(
-              loading: () =>
-                  const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator()),
               error: (error, _) => Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error_outline,
-                        size: 48, color: theme.colorScheme.error),
+                    Icon(
+                      Icons.error_outline,
+                      size: 48,
+                      color: theme.colorScheme.error,
+                    ),
                     const SizedBox(height: 16),
                     Text(friendlyError(error)),
                     const SizedBox(height: 12),
@@ -444,7 +445,8 @@ class _SettingsBulkEditScreenState
         _saving = false;
         _savedCount = successCount;
         if (errors.isNotEmpty) {
-          _error = 'Failed to save ${errors.length} setting(s):\n${errors.join('\n')}';
+          _error =
+              'Failed to save ${errors.length} setting(s):\n${errors.join('\n')}';
         } else {
           _edits.clear();
           _clearControllers();

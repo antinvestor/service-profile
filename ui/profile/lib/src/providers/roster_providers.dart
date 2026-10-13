@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'profile_transport_provider.dart';
 
 /// Search roster contacts for a profile.
-final rosterSearchProvider =
-    FutureProvider.family<List<RosterObject>, String>((ref, profileId) async {
+final rosterSearchProvider = FutureProvider.family<List<RosterObject>, String>((
+  ref,
+  profileId,
+) async {
   final client = ref.watch(profileServiceClientProvider);
   final request = SearchRosterRequest()..profileId = profileId;
   final stream = client.searchRoster(request);
@@ -21,8 +23,7 @@ class RosterNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
 
-  ProfileServiceClient get _client =>
-      ref.read(profileServiceClientProvider);
+  ProfileServiceClient get _client => ref.read(profileServiceClientProvider);
 
   Future<RosterObject> add(AddRosterRequest request) async {
     state = const AsyncValue.loading();

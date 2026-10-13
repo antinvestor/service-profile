@@ -8,8 +8,7 @@ class AddressNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
 
-  ProfileServiceClient get _client =>
-      ref.read(profileServiceClientProvider);
+  ProfileServiceClient get _client => ref.read(profileServiceClientProvider);
 
   Future<ProfileObject> addAddress(AddAddressRequest request) async {
     state = const AsyncValue.loading();
