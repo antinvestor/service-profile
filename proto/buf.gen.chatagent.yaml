@@ -1,10 +1,12 @@
 version: v2
 managed:
   enabled: true
+  # Only protovalidate is left untouched. common and gnostic stay managed so
+  # the go_package overrides below apply: the committed chatagent.pb.go must
+  # import the BSR-generated packages (an import of gnostic's own go_package
+  # panics on duplicate extension registration).
   disable:
     - module: buf.build/bufbuild/protovalidate
-    - module: buf.build/antinvestor/common
-    - module: buf.build/gnostic/gnostic
   override:
     - file_option: go_package_prefix
       value: github.com/antinvestor/service-profile/gen/go
@@ -17,13 +19,17 @@ managed:
       value: buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1;commonv1
       module: buf.build/antinvestor/common
       path: common/v1/permissions.proto
+    - file_option: go_package
+      value: buf.build/gen/go/gnostic/gnostic/protocolbuffers/go/gnostic/openapi/v3;v3
+      module: buf.build/gnostic/gnostic
+      path: gnostic/openapi/v3/annotations.proto
 
 plugins:
-  - remote: buf.build/protocolbuffers/go
+  - remote: buf.build/protocolbuffers/go:v1.36.12
     out: ../gen/go
     opt:
       - paths=source_relative
-  - remote: buf.build/connectrpc/go
+  - remote: buf.build/connectrpc/go:v1.21.0
     out: ../gen/go
     opt:
       - paths=source_relative
