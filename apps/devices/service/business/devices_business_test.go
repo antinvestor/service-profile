@@ -1227,7 +1227,19 @@ func (suite *DeviceBusinessTestSuite) TestLogDeviceActivity_AutoCreateDeviceAndS
 		assert.Equal(t, logData.GetString("userAgent"), sessionCreated.UserAgent)
 		assert.Equal(t, logData.GetString("ip"), sessionCreated.IP)
 
-		deviceCreated, cErr := deviceRepo.GetByID(ctx, deviceID)
+		// The handler stores the session before the device, so wait for the
+		// device as well rather than reading it once.
+		deviceCreated, cErr := frametests.WaitForCheckedConditionWithResult(
+			ctx,
+			func() (*models.Device, error) {
+				return deviceRepo.GetByID(ctx, deviceID)
+			},
+			func(dev *models.Device, err error) bool {
+				return err == nil && dev != nil
+			},
+			5*time.Second,
+			100*time.Millisecond,
+		)
 		require.NoError(t, cErr)
 		require.NotNil(t, deviceCreated)
 		assert.Equal(t, deviceID, deviceCreated.GetID())
