@@ -22,11 +22,7 @@ String profileName(ProfileObject profile) {
 
 /// A card widget for displaying a [ProfileObject] in list views.
 class ProfileCard extends StatelessWidget {
-  const ProfileCard({
-    super.key,
-    required this.profile,
-    this.onTap,
-  });
+  const ProfileCard({super.key, required this.profile, this.onTap});
 
   final ProfileObject profile;
   final VoidCallback? onTap;
@@ -49,11 +45,7 @@ class ProfileCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              ProfileAvatar(
-                profileId: profile.id,
-                name: name,
-                size: 44,
-              ),
+              ProfileAvatar(profileId: profile.id, name: name, size: 44),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -72,7 +64,9 @@ class ProfileCard extends StatelessWidget {
                       children: [
                         ProfileTypeBadge(type: profile.type),
                         const SizedBox(width: 8),
-                        StateBadge(state: common.STATE.valueOf(profile.state.value)!),
+                        StateBadge(
+                          state: common.STATE.valueOf(profile.state.value)!,
+                        ),
                       ],
                     ),
                   ],

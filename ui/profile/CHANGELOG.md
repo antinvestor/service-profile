@@ -1,3 +1,11 @@
+## 0.3.0
+
+- **Breaking:** moves to connect-dart 2 and the protobuf 6 runtime:
+  `antinvestor_ui_core ^0.6.0`, `antinvestor_api_profile ^2.0.0`,
+  `antinvestor_api_common ^2.0.0`, `connectrpc ^2.0.0`, `protobuf ^6.1.0`.
+  Apps must use the 2.x `antinvestor_api_*` SDKs. No public API changes.
+- Struct properties are built from map entries, as protobuf 6 requires.
+
 ## 0.2.1
 
 - Add missing image_picker dependency for ProfileResolver

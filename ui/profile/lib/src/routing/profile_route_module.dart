@@ -21,138 +21,135 @@ class ProfileRouteModule extends RouteModule {
 
   @override
   List<RouteBase> buildRoutes() => [
+    GoRoute(
+      path: '/profiles',
+      builder: (context, state) => const ProfileSearchScreen(),
+      routes: [
         GoRoute(
-          path: '/profiles',
-          builder: (context, state) => const ProfileSearchScreen(),
+          path: 'analytics',
+          builder: (context, state) => const ProfileAnalyticsScreen(),
+        ),
+        GoRoute(
+          path: 'new',
+          builder: (context, state) => const ProfileCreateScreen(),
+        ),
+        GoRoute(
+          path: 'merge',
+          builder: (context, state) => const ProfileMergeScreen(),
+        ),
+        GoRoute(
+          path: ':profileId',
+          builder: (context, state) => ProfileDetailScreen(
+            profileId: state.pathParameters['profileId']!,
+          ),
           routes: [
             GoRoute(
-              path: 'analytics',
-              builder: (context, state) =>
-                  const ProfileAnalyticsScreen(),
-            ),
-            GoRoute(
-              path: 'new',
-              builder: (context, state) => const ProfileCreateScreen(),
-            ),
-            GoRoute(
-              path: 'merge',
-              builder: (context, state) => const ProfileMergeScreen(),
-            ),
-            GoRoute(
-              path: ':profileId',
-              builder: (context, state) => ProfileDetailScreen(
+              path: 'edit',
+              builder: (context, state) => ProfileEditScreen(
                 profileId: state.pathParameters['profileId']!,
               ),
-              routes: [
-                GoRoute(
-                  path: 'edit',
-                  builder: (context, state) => ProfileEditScreen(
-                    profileId: state.pathParameters['profileId']!,
-                  ),
-                ),
-                GoRoute(
-                  path: 'contacts',
-                  builder: (context, state) => ContactsScreen(
-                    profileId: state.pathParameters['profileId']!,
-                  ),
-                ),
-                GoRoute(
-                  path: 'addresses',
-                  builder: (context, state) => AddressesScreen(
-                    profileId: state.pathParameters['profileId']!,
-                  ),
-                ),
-                GoRoute(
-                  path: 'relationships',
-                  builder: (context, state) => RelationshipsScreen(
-                    profileId: state.pathParameters['profileId']!,
-                  ),
-                ),
-                GoRoute(
-                  path: 'roster',
-                  builder: (context, state) => RosterScreen(
-                    profileId: state.pathParameters['profileId']!,
-                  ),
-                ),
-              ],
+            ),
+            GoRoute(
+              path: 'contacts',
+              builder: (context, state) =>
+                  ContactsScreen(profileId: state.pathParameters['profileId']!),
+            ),
+            GoRoute(
+              path: 'addresses',
+              builder: (context, state) => AddressesScreen(
+                profileId: state.pathParameters['profileId']!,
+              ),
+            ),
+            GoRoute(
+              path: 'relationships',
+              builder: (context, state) => RelationshipsScreen(
+                profileId: state.pathParameters['profileId']!,
+              ),
+            ),
+            GoRoute(
+              path: 'roster',
+              builder: (context, state) =>
+                  RosterScreen(profileId: state.pathParameters['profileId']!),
             ),
           ],
         ),
-      ];
+      ],
+    ),
+  ];
 
   @override
   List<NavItem> buildNavItems() => [
-        const NavItem(
-          id: 'profiles',
-          label: 'Profiles',
-          icon: Icons.people_outline,
-          activeIcon: Icons.people,
-          route: '/profiles',
-          requiredPermissions: {'profile_view'},
-        ),
-      ];
+    const NavItem(
+      id: 'profiles',
+      label: 'Profiles',
+      icon: Icons.people_outline,
+      activeIcon: Icons.people,
+      route: '/profiles',
+      requiredPermissions: {'profile_view'},
+    ),
+  ];
 
   @override
   Map<String, Set<String>> get routePermissions => {
-        '/profiles': {'profile_view'},
-        '/profiles/new': {'profile_create'},
-        '/profiles/merge': {'profile_merge'},
-      };
+    '/profiles': {'profile_view'},
+    '/profiles/new': {'profile_create'},
+    '/profiles/merge': {'profile_merge'},
+  };
 
   @override
   PermissionManifest get permissionManifest => const PermissionManifest(
-        namespace: 'service_profile',
-        permissions: [
-          PermissionEntry(
-            key: 'profile_view',
-            label: 'View Profiles',
-            scope: PermissionScope.service,
-          ),
-          PermissionEntry(
-            key: 'profile_create',
-            label: 'Create Profiles',
-            scope: PermissionScope.action,
-          ),
-          PermissionEntry(
-            key: 'profile_update',
-            label: 'Update Profiles',
-            scope: PermissionScope.action,
-          ),
-          PermissionEntry(
-            key: 'profile_merge',
-            label: 'Merge Profiles',
-            scope: PermissionScope.action,
-          ),
-          PermissionEntry(
-            key: 'contact_manage',
-            label: 'Manage Contacts',
-            scope: PermissionScope.feature,
-          ),
-          PermissionEntry(
-            key: 'roster_view',
-            label: 'View Roster',
-            scope: PermissionScope.feature,
-          ),
-          PermissionEntry(
-            key: 'roster_manage',
-            label: 'Manage Roster',
-            scope: PermissionScope.action,
-          ),
-          PermissionEntry(
-            key: 'address_manage',
-            label: 'Manage Addresses',
-            scope: PermissionScope.feature,
-          ),
-          PermissionEntry(
-            key: 'relationship_view',
-            label: 'View Relationships',
-            scope: PermissionScope.feature,
-          ),
-          PermissionEntry(
-            key: 'relationship_manage',
-            label: 'Manage Relationships',
-            scope: PermissionScope.action,
-          ),
-        ],
-      );
+    namespace: 'service_profile',
+    permissions: [
+      PermissionEntry(
+        key: 'profile_view',
+        label: 'View Profiles',
+        scope: PermissionScope.service,
+      ),
+      PermissionEntry(
+        key: 'profile_create',
+        label: 'Create Profiles',
+        scope: PermissionScope.action,
+      ),
+      PermissionEntry(
+        key: 'profile_update',
+        label: 'Update Profiles',
+        scope: PermissionScope.action,
+      ),
+      PermissionEntry(
+        key: 'profile_merge',
+        label: 'Merge Profiles',
+        scope: PermissionScope.action,
+      ),
+      PermissionEntry(
+        key: 'contact_manage',
+        label: 'Manage Contacts',
+        scope: PermissionScope.feature,
+      ),
+      PermissionEntry(
+        key: 'roster_view',
+        label: 'View Roster',
+        scope: PermissionScope.feature,
+      ),
+      PermissionEntry(
+        key: 'roster_manage',
+        label: 'Manage Roster',
+        scope: PermissionScope.action,
+      ),
+      PermissionEntry(
+        key: 'address_manage',
+        label: 'Manage Addresses',
+        scope: PermissionScope.feature,
+      ),
+      PermissionEntry(
+        key: 'relationship_view',
+        label: 'View Relationships',
+        scope: PermissionScope.feature,
+      ),
+      PermissionEntry(
+        key: 'relationship_manage',
+        label: 'Manage Relationships',
+        scope: PermissionScope.action,
+      ),
+    ],
+  );
 }

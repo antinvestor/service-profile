@@ -11,10 +11,7 @@ import '../providers/device_key_providers.dart';
 /// Screen displaying keys associated with a device as a paginated DataTable.
 /// Supports adding and removing keys.
 class DeviceKeysScreen extends ConsumerStatefulWidget {
-  const DeviceKeysScreen({
-    super.key,
-    required this.deviceId,
-  });
+  const DeviceKeysScreen({super.key, required this.deviceId});
 
   final String deviceId;
 
@@ -66,8 +63,11 @@ class _DeviceKeysScreenState extends ConsumerState<DeviceKeysScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48,
-                color: Theme.of(context).colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text(friendlyError(error)),
             const SizedBox(height: 12),
@@ -104,19 +104,23 @@ class _DeviceKeysScreenState extends ConsumerState<DeviceKeysScreen> {
           onSelectChanged: (_) => onSelect(),
           cells: [
             DataCell(Text(_keyTypeLabel(keyObj.keyType))),
-            DataCell(Text(
-              _truncateKey(keyObj),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            )),
+            DataCell(
+              Text(
+                _truncateKey(keyObj),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              ),
+            ),
             DataCell(Text(keyObj.createdAt)),
-            DataCell(Text(
-              keyObj.expiresAt.isNotEmpty ? keyObj.expiresAt : '-',
-            )),
-            DataCell(Icon(
-              keyObj.isActive ? Icons.check_circle : Icons.cancel,
-              color: keyObj.isActive ? Colors.green : Colors.red,
-              size: 18,
-            )),
+            DataCell(
+              Text(keyObj.expiresAt.isNotEmpty ? keyObj.expiresAt : '-'),
+            ),
+            DataCell(
+              Icon(
+                keyObj.isActive ? Icons.check_circle : Icons.cancel,
+                color: keyObj.isActive ? Colors.green : Colors.red,
+                size: 18,
+              ),
+            ),
           ],
         );
       },
@@ -133,8 +137,7 @@ class _DeviceKeysScreenState extends ConsumerState<DeviceKeysScreen> {
         IconButton(
           icon: const Icon(Icons.refresh, size: 20),
           tooltip: 'Refresh',
-          onPressed: () =>
-              ref.invalidate(deviceKeysProvider(widget.deviceId)),
+          onPressed: () => ref.invalidate(deviceKeysProvider(widget.deviceId)),
         ),
       ],
     );
@@ -161,10 +164,7 @@ class _DeviceKeysScreenState extends ConsumerState<DeviceKeysScreen> {
                   ),
                 ),
                 items: KeyType.values.map((type) {
-                  return DropdownMenuItem(
-                    value: type,
-                    child: Text(type.name),
-                  );
+                  return DropdownMenuItem(value: type, child: Text(type.name));
                 }).toList(),
                 onChanged: (value) {
                   if (value != null) {

@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'device_transport_provider.dart';
 
 /// Search devices by query string.
-final deviceSearchProvider =
-    FutureProvider.family<List<DeviceObject>, String>((ref, query) async {
+final deviceSearchProvider = FutureProvider.family<List<DeviceObject>, String>((
+  ref,
+  query,
+) async {
   final client = ref.watch(deviceServiceClientProvider);
   final request = SearchRequest()
     ..query = query
@@ -19,8 +21,10 @@ final deviceSearchProvider =
 });
 
 /// Get device(s) by ID.
-final deviceByIdProvider =
-    FutureProvider.family<DeviceObject, String>((ref, id) async {
+final deviceByIdProvider = FutureProvider.family<DeviceObject, String>((
+  ref,
+  id,
+) async {
   final client = ref.watch(deviceServiceClientProvider);
   final request = GetByIdRequest()..id.add(id);
   final response = await client.getById(request);
@@ -35,8 +39,7 @@ class DeviceNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
 
-  DeviceServiceClient get _client =>
-      ref.read(deviceServiceClientProvider);
+  DeviceServiceClient get _client => ref.read(deviceServiceClientProvider);
 
   Future<DeviceObject> create(CreateRequest request) async {
     state = const AsyncValue.loading();

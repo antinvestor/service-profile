@@ -14,8 +14,7 @@ import '../widgets/profile_badge_by_id.dart';
 typedef ProfileContact = ({String profileId, ContactObject contact});
 
 /// Provider that extracts all contacts from loaded profiles into a flat list.
-final allContactsProvider =
-    FutureProvider<List<ProfileContact>>((ref) async {
+final allContactsProvider = FutureProvider<List<ProfileContact>>((ref) async {
   final profiles = await ref.watch(profileSearchProvider('').future);
   final contacts = <ProfileContact>[];
   for (final profile in profiles) {
@@ -56,13 +55,15 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
   void _exportCsv(List<ProfileContact> contacts) {
     final headers = ['Detail', 'Type', 'Verified', 'Profile ID', 'State'];
     final rows = contacts
-        .map((e) => [
-              e.contact.detail,
-              e.contact.type.name,
-              e.contact.verified ? 'Yes' : 'No',
-              e.profileId,
-              e.contact.state.name,
-            ])
+        .map(
+          (e) => [
+            e.contact.detail,
+            e.contact.type.name,
+            e.contact.verified ? 'Yes' : 'No',
+            e.profileId,
+            e.contact.state.name,
+          ],
+        )
         .toList();
     final csv = const CsvEncoder().convert([headers, ...rows]);
     Clipboard.setData(ClipboardData(text: csv));
@@ -74,7 +75,8 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Contacts CSV copied to clipboard (${rows.length} rows)'),
+            'Contacts CSV copied to clipboard (${rows.length} rows)',
+          ),
         ),
       );
     }
@@ -94,11 +96,13 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final asyncContacts = widget.profileId != null
-        ? ref.watch(profileByIdProvider(widget.profileId!)).whenData((p) =>
-            p.contacts
-                .map((c) =>
-                    (profileId: widget.profileId!, contact: c))
-                .toList())
+        ? ref
+              .watch(profileByIdProvider(widget.profileId!))
+              .whenData(
+                (p) => p.contacts
+                    .map((c) => (profileId: widget.profileId!, contact: c))
+                    .toList(),
+              )
         : ref.watch(allContactsProvider);
 
     return asyncContacts.when(
@@ -107,15 +111,16 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline,
-                size: 48, color: theme.colorScheme.error),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
-            Text('Failed to load contacts',
-                style: theme.textTheme.titleMedium),
+            Text('Failed to load contacts', style: theme.textTheme.titleMedium),
             const SizedBox(height: 8),
-            Text(friendlyError(error),
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            Text(
+              friendlyError(error),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () {
@@ -138,8 +143,12 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     );
   }
 
-  Widget _buildContent(BuildContext context, ThemeData theme,
-      List<ProfileContact> contacts, int totalUnfiltered) {
+  Widget _buildContent(
+    BuildContext context,
+    ThemeData theme,
+    List<ProfileContact> contacts,
+    int totalUnfiltered,
+  ) {
     if (_selectedIndex != null && _selectedIndex! >= contacts.length) {
       _selectedIndex = null;
     }
@@ -148,8 +157,9 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
     final totalPages = (contacts.length / _pageSize).ceil();
     final pageStart = _currentPage * _pageSize;
     final pageEnd = (pageStart + _pageSize).clamp(0, contacts.length);
-    final pageItems =
-        contacts.isNotEmpty ? contacts.sublist(pageStart, pageEnd) : [];
+    final pageItems = contacts.isNotEmpty
+        ? contacts.sublist(pageStart, pageEnd)
+        : [];
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,20 +174,28 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                 // Header
                 Row(
                   children: [
-                    Icon(Icons.contact_phone_outlined,
-                        size: 28, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.contact_phone_outlined,
+                      size: 28,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Contacts',
-                              style: theme.textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600)),
-                          Text('$totalUnfiltered contacts',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                  color:
-                                      theme.colorScheme.onSurfaceVariant)),
+                          Text(
+                            'Contacts',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '$totalUnfiltered contacts',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -218,8 +236,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border:
-                        Border.all(color: theme.colorScheme.outlineVariant),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -238,17 +255,15 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                           final entry = pageItems[i];
                           final contact = entry.contact;
                           final globalIndex = pageStart + i;
-                          final typeColor =
-                              contact.type == ContactType.EMAIL
-                                  ? theme.colorScheme.primary
-                                  : Colors.green;
+                          final typeColor = contact.type == ContactType.EMAIL
+                              ? theme.colorScheme.primary
+                              : Colors.green;
 
                           return DataRow(
                             selected: _selectedIndex == globalIndex,
                             onSelectChanged: (_) =>
                                 setState(() => _selectedIndex = globalIndex),
-                            color: WidgetStateProperty.resolveWith(
-                                (states) {
+                            color: WidgetStateProperty.resolveWith((states) {
                               if (states.contains(WidgetState.selected)) {
                                 return theme.colorScheme.primaryContainer
                                     .withAlpha(40);
@@ -256,37 +271,49 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                               return null;
                             }),
                             cells: [
-                              DataCell(Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    contact.type == ContactType.EMAIL
-                                        ? Icons.email_outlined
-                                        : Icons.phone_outlined,
-                                    size: 16,
-                                    color: typeColor,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(contact.detail),
-                                ],
-                              )),
-                              DataCell(_ColorBadge(
-                                  contact.type.name, typeColor)),
-                              DataCell(Icon(
-                                contact.verified
-                                    ? Icons.check_circle
-                                    : Icons.cancel_outlined,
-                                size: 18,
-                                color: contact.verified
-                                    ? Colors.green
-                                    : theme.colorScheme.onSurfaceVariant,
-                              )),
-                              DataCell(ProfileBadgeById(
-                                profileId: entry.profileId,
-                                avatarSize: 24,
-                              )),
                               DataCell(
-                                  StateBadge(state: common.STATE.valueOf(contact.state.value)!)),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      contact.type == ContactType.EMAIL
+                                          ? Icons.email_outlined
+                                          : Icons.phone_outlined,
+                                      size: 16,
+                                      color: typeColor,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(contact.detail),
+                                  ],
+                                ),
+                              ),
+                              DataCell(
+                                _ColorBadge(contact.type.name, typeColor),
+                              ),
+                              DataCell(
+                                Icon(
+                                  contact.verified
+                                      ? Icons.check_circle
+                                      : Icons.cancel_outlined,
+                                  size: 18,
+                                  color: contact.verified
+                                      ? Colors.green
+                                      : theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                              DataCell(
+                                ProfileBadgeById(
+                                  profileId: entry.profileId,
+                                  avatarSize: 24,
+                                ),
+                              ),
+                              DataCell(
+                                StateBadge(
+                                  state: common.STATE.valueOf(
+                                    contact.state.value,
+                                  )!,
+                                ),
+                              ),
                             ],
                           );
                         }),
@@ -302,15 +329,21 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   children: [
                     Row(
                       children: [
-                        Text('Rows per page:',
-                            style: theme.textTheme.bodySmall),
+                        Text(
+                          'Rows per page:',
+                          style: theme.textTheme.bodySmall,
+                        ),
                         const SizedBox(width: 8),
                         DropdownButton<int>(
                           value: _pageSize,
                           underline: const SizedBox(),
                           items: _pageSizeOptions
-                              .map((s) => DropdownMenuItem(
-                                  value: s, child: Text('$s')))
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text('$s'),
+                                ),
+                              )
                               .toList(),
                           onChanged: (v) {
                             if (v != null) {
@@ -357,13 +390,11 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
           SizedBox(
             width: 380,
             child: Container(
-              margin: const EdgeInsets.only(
-                  top: 24, right: 24, bottom: 24),
+              margin: const EdgeInsets.only(top: 24, right: 24, bottom: 24),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: theme.colorScheme.outlineVariant),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -383,8 +414,7 @@ class _ContactsScreenState extends ConsumerState<ContactsScreen> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: _ContactDetail(
-                          entry: contacts[_selectedIndex!]),
+                      child: _ContactDetail(entry: contacts[_selectedIndex!]),
                     ),
                   ),
                 ],
@@ -430,13 +460,19 @@ class _ContactDetail extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(contact.detail,
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                  Text(contact.id,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                          fontFamily: 'monospace')),
+                  Text(
+                    contact.detail,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    contact.id,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -444,13 +480,15 @@ class _ContactDetail extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         _DetailRow(label: 'Type', value: contact.type.name),
-        _DetailRow(
-            label: 'Verified', value: contact.verified ? 'Yes' : 'No'),
+        _DetailRow(label: 'Verified', value: contact.verified ? 'Yes' : 'No'),
         _DetailRow(label: 'State', value: contact.state.name),
         const SizedBox(height: 8),
-        Text('Profile',
-            style: theme.textTheme.labelMedium
-                ?.copyWith(fontWeight: FontWeight.w600)),
+        Text(
+          'Profile',
+          style: theme.textTheme.labelMedium?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(height: 4),
         ProfileBadgeById(profileId: entry.profileId),
       ],
@@ -471,9 +509,14 @@ class _ColorBadge extends StatelessWidget {
         color: color.withAlpha(25),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 }
@@ -493,14 +536,20 @@ class _DetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 120,
-            child: Text(label,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(fontWeight: FontWeight.w500)),
+            child: Text(
+              value,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

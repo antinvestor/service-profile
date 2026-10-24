@@ -102,19 +102,18 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
     if (confirmed != true) return;
 
     try {
-      await ref.read(relationshipNotifierProvider.notifier).delete(
-            DeleteRelationshipRequest(
-              id: rel.id,
-              parentId: widget.profileId,
-            ),
+      await ref
+          .read(relationshipNotifierProvider.notifier)
+          .delete(
+            DeleteRelationshipRequest(id: rel.id, parentId: widget.profileId),
           );
       ref.invalidate(relationshipListProvider(widget.profileId));
       await _search();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(friendlyError(e))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(friendlyError(e))));
       }
     }
   }
@@ -188,25 +187,26 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
                 try {
                   await ref
                       .read(relationshipNotifierProvider.notifier)
-                      .add(AddRelationshipRequest(
-                        id: widget.profileId,
-                        parent: parentController.text.trim(),
-                        parentId: widget.profileId,
-                        child: childController.text.trim(),
-                        childId: childController.text.trim(),
-                        type: type,
-                      ));
-                  ref.invalidate(
-                      relationshipListProvider(widget.profileId));
+                      .add(
+                        AddRelationshipRequest(
+                          id: widget.profileId,
+                          parent: parentController.text.trim(),
+                          parentId: widget.profileId,
+                          child: childController.text.trim(),
+                          childId: childController.text.trim(),
+                          type: type,
+                        ),
+                      );
+                  ref.invalidate(relationshipListProvider(widget.profileId));
                   if (dialogContext.mounted) {
                     Navigator.of(dialogContext).pop();
                   }
                   _search();
                 } catch (e) {
                   if (dialogContext.mounted) {
-                    ScaffoldMessenger.of(dialogContext).showSnackBar(
-                      SnackBar(content: Text(friendlyError(e))),
-                    );
+                    ScaffoldMessenger.of(
+                      dialogContext,
+                    ).showSnackBar(SnackBar(content: Text(friendlyError(e))));
                   }
                 }
               },
@@ -233,13 +233,19 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
           // Header
           Row(
             children: [
-              Icon(Icons.people_alt_outlined,
-                  size: 28, color: theme.colorScheme.primary),
+              Icon(
+                Icons.people_alt_outlined,
+                size: 28,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(width: 12),
               Expanded(
-                child: Text('Relationships',
-                    style: theme.textTheme.headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                child: Text(
+                  'Relationships',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               ElevatedButton.icon(
                 onPressed: _showAddDialog,
@@ -260,14 +266,18 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Search Relationships',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  'Search Relationships',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   'Enter the peer object name and ID to list relationships.',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 Row(
@@ -305,9 +315,12 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
                 ),
                 if (_error != null) ...[
                   const SizedBox(height: 12),
-                  Text(_error!,
-                      style: theme.textTheme.bodySmall
-                          ?.copyWith(color: theme.colorScheme.error)),
+                  Text(
+                    _error!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.error,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -329,22 +342,26 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
                 padding: const EdgeInsets.all(48),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  border:
-                      Border.all(color: theme.colorScheme.outlineVariant),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
                 ),
                 child: Column(
                   children: [
-                    Icon(Icons.group_work_outlined,
-                        size: 48,
-                        color: theme.colorScheme.onSurfaceVariant),
+                    Icon(
+                      Icons.group_work_outlined,
+                      size: 48,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 12),
-                    Text('No relationships found',
-                        style: theme.textTheme.titleMedium),
+                    Text(
+                      'No relationships found',
+                      style: theme.textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       'Try a different peer name or ID.',
                       style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -360,7 +377,8 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: theme.colorScheme.outlineVariant),
+                          color: theme.colorScheme.outlineVariant,
+                        ),
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
@@ -375,19 +393,16 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
                               DataColumn(label: Text('PEER PROFILE')),
                               DataColumn(label: Text('ACTIONS')),
                             ],
-                            rows: List.generate(
-                                _relationships!.length, (i) {
+                            rows: List.generate(_relationships!.length, (i) {
                               final rel = _relationships![i];
                               final typeLabel = rel.type.name;
                               final typeColor = switch (rel.type) {
                                 RelationshipType.MEMBER =>
                                   theme.colorScheme.primary,
-                                RelationshipType.AFFILIATED =>
-                                  Colors.green,
+                                RelationshipType.AFFILIATED => Colors.green,
                                 RelationshipType.BLACK_LISTED =>
                                   theme.colorScheme.error,
-                                _ =>
-                                  theme.colorScheme.onSurfaceVariant,
+                                _ => theme.colorScheme.onSurfaceVariant,
                               };
 
                               final parentDisplay =
@@ -400,44 +415,60 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
 
                               return DataRow(
                                 selected: _selectedIndex == i,
-                                onSelectChanged: (_) =>
-                                    setState(() {
-                                  _selectedIndex =
-                                      _selectedIndex == i ? null : i;
+                                onSelectChanged: (_) => setState(() {
+                                  _selectedIndex = _selectedIndex == i
+                                      ? null
+                                      : i;
                                 }),
-                                color: WidgetStateProperty.resolveWith(
-                                    (states) {
-                                  if (states
-                                      .contains(WidgetState.selected)) {
-                                    return theme
-                                        .colorScheme.primaryContainer
+                                color: WidgetStateProperty.resolveWith((
+                                  states,
+                                ) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return theme.colorScheme.primaryContainer
                                         .withAlpha(40);
                                   }
                                   return null;
                                 }),
                                 cells: [
-                                  DataCell(_ColorBadge(
-                                      typeLabel, typeColor)),
-                                  DataCell(Text(parentDisplay,
+                                  DataCell(_ColorBadge(typeLabel, typeColor)),
+                                  DataCell(
+                                    Text(
+                                      parentDisplay,
                                       style: const TextStyle(
-                                          fontFamily: 'monospace',
-                                          fontSize: 12))),
-                                  DataCell(Text(childDisplay,
+                                        fontFamily: 'monospace',
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      childDisplay,
                                       style: const TextStyle(
-                                          fontFamily: 'monospace',
-                                          fontSize: 12))),
-                                  DataCell(Text(peerDisplay,
+                                        fontFamily: 'monospace',
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      peerDisplay,
                                       style: const TextStyle(
-                                          fontFamily: 'monospace',
-                                          fontSize: 12))),
-                                  DataCell(IconButton(
-                                    icon: Icon(Icons.delete_outline,
+                                        fontFamily: 'monospace',
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                  DataCell(
+                                    IconButton(
+                                      icon: Icon(
+                                        Icons.delete_outline,
                                         size: 18,
-                                        color: theme.colorScheme.error),
-                                    tooltip: 'Delete',
-                                    onPressed: () =>
-                                        _deleteRelationship(rel),
-                                  )),
+                                        color: theme.colorScheme.error,
+                                      ),
+                                      tooltip: 'Delete',
+                                      onPressed: () => _deleteRelationship(rel),
+                                    ),
+                                  ),
                                 ],
                               );
                             }),
@@ -452,10 +483,8 @@ class _RelationshipsScreenState extends ConsumerState<RelationshipsScreen> {
                     SizedBox(
                       width: 380,
                       child: _RelationshipDetail(
-                        relationship:
-                            _relationships![_selectedIndex!],
-                        onClose: () =>
-                            setState(() => _selectedIndex = null),
+                        relationship: _relationships![_selectedIndex!],
+                        onClose: () => setState(() => _selectedIndex = null),
                       ),
                     ),
                   ],
@@ -517,8 +546,7 @@ class _RelationshipDetail extends StatelessWidget {
             ),
           ),
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -527,22 +555,30 @@ class _RelationshipDetail extends StatelessWidget {
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: typeColor.withAlpha(30),
-                      child: Icon(Icons.group_work_outlined,
-                          color: typeColor, size: 20),
+                      child: Icon(
+                        Icons.group_work_outlined,
+                        color: typeColor,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(relationship.type.name,
-                              style: theme.textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600)),
-                          Text(relationship.id,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme
-                                      .colorScheme.onSurfaceVariant,
-                                  fontFamily: 'monospace')),
+                          Text(
+                            relationship.type.name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            relationship.id,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -550,8 +586,7 @@ class _RelationshipDetail extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 _DetailRow(label: 'ID', value: relationship.id),
-                _DetailRow(
-                    label: 'Type', value: relationship.type.name),
+                _DetailRow(label: 'Type', value: relationship.type.name),
                 _DetailRow(
                   label: 'Parent',
                   value:
@@ -589,9 +624,14 @@ class _ColorBadge extends StatelessWidget {
         color: color.withAlpha(25),
         borderRadius: BorderRadius.circular(6),
       ),
-      child: Text(label,
-          style: TextStyle(
-              fontSize: 11, fontWeight: FontWeight.w600, color: color)),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
     );
   }
 }
@@ -611,14 +651,20 @@ class _DetailRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 110,
-            child: Text(label,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(fontWeight: FontWeight.w500)),
+            child: Text(
+              value,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

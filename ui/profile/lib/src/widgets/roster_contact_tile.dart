@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 
 /// A list tile for displaying a [RosterObject].
 class RosterContactTile extends StatelessWidget {
-  const RosterContactTile({
-    super.key,
-    required this.roster,
-    this.onRemove,
-  });
+  const RosterContactTile({super.key, required this.roster, this.onRemove});
 
   final RosterObject roster;
   final VoidCallback? onRemove;
@@ -16,8 +12,7 @@ class RosterContactTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final contact = roster.hasContact() ? roster.contact : null;
-    final displayText =
-        contact != null ? contact.detail : roster.profileId;
+    final displayText = contact != null ? contact.detail : roster.profileId;
 
     return Card(
       elevation: 0,

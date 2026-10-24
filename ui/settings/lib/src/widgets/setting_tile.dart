@@ -4,11 +4,7 @@ import 'package:flutter/material.dart';
 /// A list tile for displaying a single setting with its key, a preview
 /// of the value, and the last-updated timestamp.
 class SettingTile extends StatelessWidget {
-  const SettingTile({
-    super.key,
-    required this.setting,
-    this.onTap,
-  });
+  const SettingTile({super.key, required this.setting, this.onTap});
 
   final SettingObject setting;
   final VoidCallback? onTap;

@@ -6,11 +6,7 @@ import 'presence_indicator.dart';
 /// A card widget displaying a device summary with presence status,
 /// name, OS, IP, and last-seen time.
 class DeviceCard extends StatelessWidget {
-  const DeviceCard({
-    super.key,
-    required this.device,
-    this.onTap,
-  });
+  const DeviceCard({super.key, required this.device, this.onTap});
 
   final DeviceObject device;
   final VoidCallback? onTap;

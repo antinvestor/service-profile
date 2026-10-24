@@ -92,10 +92,7 @@ class _ProfileSearchSelectState extends ConsumerState<ProfileSearchSelect> {
           child: Material(
             elevation: 4,
             borderRadius: BorderRadius.circular(12),
-            child: _ResultsList(
-              query: _query,
-              onSelected: _onProfileSelected,
-            ),
+            child: _ResultsList(query: _query, onSelected: _onProfileSelected),
           ),
         ),
       ),
@@ -130,8 +127,8 @@ class _ProfileSearchSelectState extends ConsumerState<ProfileSearchSelect> {
     } catch (_) {}
     return profile.id.isNotEmpty
         ? (profile.id.length > 12
-            ? '${profile.id.substring(0, 12)}...'
-            : profile.id)
+              ? '${profile.id.substring(0, 12)}...'
+              : profile.id)
         : 'Profile';
   }
 
@@ -148,8 +145,10 @@ class _ProfileSearchSelectState extends ConsumerState<ProfileSearchSelect> {
           labelText: widget.label,
           prefixIcon: const Icon(Icons.search, size: 20),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
           isDense: true,
         ),
       ),

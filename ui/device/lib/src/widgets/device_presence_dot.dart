@@ -48,10 +48,6 @@ class DevicePresenceDot extends ConsumerWidget {
       error: (_, _) => PresenceStatus.OFFLINE,
     );
 
-    return PresenceIndicator(
-      status: status,
-      size: size,
-      showLabel: showLabel,
-    );
+    return PresenceIndicator(status: status, size: size, showLabel: showLabel);
   }
 }

@@ -72,10 +72,13 @@ class AreaPickerField extends ConsumerWidget {
                 ),
               ),
               if (isRequired)
-                Text(' *',
-                    style: TextStyle(
-                        color: theme.colorScheme.error,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  ' *',
+                  style: TextStyle(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
             ],
           ),
         ),
@@ -157,9 +160,8 @@ class AreaPickerField extends ConsumerWidget {
   Future<void> _openPicker(BuildContext context, WidgetRef ref) async {
     final result = await showDialog<AreaObject>(
       context: context,
-      builder: (context) => _AreaSearchDialog(
-        initialSelectedId: selectedAreaId,
-      ),
+      builder: (context) =>
+          _AreaSearchDialog(initialSelectedId: selectedAreaId),
     );
     if (result != null) {
       onSelected(result);
@@ -201,8 +203,9 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final areasAsync =
-        _query.length >= 2 ? ref.watch(searchAreasProvider(_query)) : null;
+    final areasAsync = _query.length >= 2
+        ? ref.watch(searchAreasProvider(_query))
+        : null;
 
     return Dialog(
       clipBehavior: Clip.antiAlias,
@@ -219,7 +222,8 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                      color: theme.colorScheme.outlineVariant.withAlpha(60)),
+                    color: theme.colorScheme.outlineVariant.withAlpha(60),
+                  ),
                 ),
               ),
               child: Column(
@@ -231,8 +235,9 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
                       const SizedBox(width: 8),
                       Text(
                         'Select Area',
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                       const Spacer(),
                       IconButton(
@@ -250,7 +255,8 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
                       prefixIcon: const Icon(Icons.search, size: 20),
                       isDense: true,
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     onChanged: _onSearchChanged,
                   ),
@@ -259,9 +265,7 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
             ),
 
             // Results
-            Expanded(
-              child: _buildResults(theme, areasAsync),
-            ),
+            Expanded(child: _buildResults(theme, areasAsync)),
           ],
         ),
       ),
@@ -269,7 +273,9 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
   }
 
   Widget _buildResults(
-      ThemeData theme, AsyncValue<List<AreaObject>>? areasAsync) {
+    ThemeData theme,
+    AsyncValue<List<AreaObject>>? areasAsync,
+  ) {
     if (_query.length < 2) {
       return Center(
         child: Padding(
@@ -277,9 +283,11 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.search,
-                  size: 48,
-                  color: theme.colorScheme.onSurface.withAlpha(60)),
+              Icon(
+                Icons.search,
+                size: 48,
+                color: theme.colorScheme.onSurface.withAlpha(60),
+              ),
               const SizedBox(height: 12),
               Text(
                 'Type at least 2 characters to search',
@@ -303,11 +311,9 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline,
-                size: 48, color: theme.colorScheme.error),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 12),
-            Text('Failed to search: $e',
-                style: theme.textTheme.bodyMedium),
+            Text('Failed to search: $e', style: theme.textTheme.bodyMedium),
           ],
         ),
       ),
@@ -317,14 +323,18 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.location_off,
-                    size: 48,
-                    color: theme.colorScheme.onSurface.withAlpha(60)),
+                Icon(
+                  Icons.location_off,
+                  size: 48,
+                  color: theme.colorScheme.onSurface.withAlpha(60),
+                ),
                 const SizedBox(height: 12),
-                Text('No areas found for "$_query"',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    )),
+                Text(
+                  'No areas found for "$_query"',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           );
@@ -377,16 +387,21 @@ class _AreaSearchDialogState extends ConsumerState<_AreaSearchDialog> {
                   AreaTypeBadge(areaType: area.areaType),
                   if (isSelected) ...[
                     const SizedBox(width: 8),
-                    Icon(Icons.check_circle,
-                        size: 20, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.check_circle,
+                      size: 20,
+                      color: theme.colorScheme.primary,
+                    ),
                   ],
                 ],
               ),
               selected: isSelected,
-              selectedTileColor:
-                  theme.colorScheme.primaryContainer.withAlpha(40),
+              selectedTileColor: theme.colorScheme.primaryContainer.withAlpha(
+                40,
+              ),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+                borderRadius: BorderRadius.circular(8),
+              ),
               onTap: () => Navigator.pop(context, area),
             );
           },

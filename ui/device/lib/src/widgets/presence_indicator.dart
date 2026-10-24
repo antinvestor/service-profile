@@ -79,9 +79,9 @@ class PresenceIndicator extends StatelessWidget {
         Text(
           _label(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: _color(),
-                fontWeight: FontWeight.w600,
-              ),
+            color: _color(),
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );

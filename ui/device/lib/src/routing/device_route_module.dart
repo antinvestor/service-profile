@@ -29,15 +29,10 @@ class DeviceRouteModule extends RouteModule {
           GoRoute(
             path: 'detail/:id',
             builder: (context, state) {
-              final id = Uri.decodeComponent(
-                state.pathParameters['id'] ?? '',
-              );
+              final id = Uri.decodeComponent(state.pathParameters['id'] ?? '');
               final extra = state.extra;
               final device = extra is DeviceObject ? extra : null;
-              return DeviceDetailScreen(
-                deviceId: id,
-                initialDevice: device,
-              );
+              return DeviceDetailScreen(deviceId: id, initialDevice: device);
             },
           ),
           GoRoute(
@@ -81,45 +76,45 @@ class DeviceRouteModule extends RouteModule {
 
   @override
   Map<String, Set<String>> get routePermissions => {
-        '/devices': {'device_view'},
-        '/devices/detail': {'device_view'},
-        '/devices/link': {'device_create'},
-      };
+    '/devices': {'device_view'},
+    '/devices/detail': {'device_view'},
+    '/devices/link': {'device_create'},
+  };
 
   @override
   PermissionManifest get permissionManifest => const PermissionManifest(
-        namespace: 'service_device',
-        permissions: [
-          PermissionEntry(
-            key: 'device_view',
-            label: 'View Devices',
-            scope: PermissionScope.service,
-          ),
-          PermissionEntry(
-            key: 'device_create',
-            label: 'Create Devices',
-            scope: PermissionScope.action,
-          ),
-          PermissionEntry(
-            key: 'device_update',
-            label: 'Update Devices',
-            scope: PermissionScope.action,
-          ),
-          PermissionEntry(
-            key: 'device_remove',
-            label: 'Remove Devices',
-            scope: PermissionScope.action,
-          ),
-          PermissionEntry(
-            key: 'device_key_manage',
-            label: 'Manage Device Keys',
-            scope: PermissionScope.feature,
-          ),
-          PermissionEntry(
-            key: 'device_log_view',
-            label: 'View Device Logs',
-            scope: PermissionScope.feature,
-          ),
-        ],
-      );
+    namespace: 'service_device',
+    permissions: [
+      PermissionEntry(
+        key: 'device_view',
+        label: 'View Devices',
+        scope: PermissionScope.service,
+      ),
+      PermissionEntry(
+        key: 'device_create',
+        label: 'Create Devices',
+        scope: PermissionScope.action,
+      ),
+      PermissionEntry(
+        key: 'device_update',
+        label: 'Update Devices',
+        scope: PermissionScope.action,
+      ),
+      PermissionEntry(
+        key: 'device_remove',
+        label: 'Remove Devices',
+        scope: PermissionScope.action,
+      ),
+      PermissionEntry(
+        key: 'device_key_manage',
+        label: 'Manage Device Keys',
+        scope: PermissionScope.feature,
+      ),
+      PermissionEntry(
+        key: 'device_log_view',
+        label: 'View Device Logs',
+        scope: PermissionScope.feature,
+      ),
+    ],
+  );
 }

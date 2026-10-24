@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'geolocation_transport_provider.dart';
 
 /// Search areas by query string.
-final searchAreasProvider =
-    FutureProvider.family<List<AreaObject>, String>((ref, query) async {
+final searchAreasProvider = FutureProvider.family<List<AreaObject>, String>((
+  ref,
+  query,
+) async {
   final client = ref.watch(geolocationServiceClientProvider);
   final request = SearchAreasRequest()
     ..query = query
@@ -15,8 +17,10 @@ final searchAreasProvider =
 });
 
 /// Get a single area by ID.
-final getAreaProvider =
-    FutureProvider.family<AreaObject, String>((ref, id) async {
+final getAreaProvider = FutureProvider.family<AreaObject, String>((
+  ref,
+  id,
+) async {
   final client = ref.watch(geolocationServiceClientProvider);
   final request = GetAreaRequest()..id = id;
   final response = await client.getArea(request);
@@ -69,5 +73,6 @@ class AreaNotifier extends Notifier<AsyncValue<void>> {
   }
 }
 
-final areaNotifierProvider =
-    NotifierProvider<AreaNotifier, AsyncValue<void>>(AreaNotifier.new);
+final areaNotifierProvider = NotifierProvider<AreaNotifier, AsyncValue<void>>(
+  AreaNotifier.new,
+);

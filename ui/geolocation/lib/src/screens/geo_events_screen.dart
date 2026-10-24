@@ -86,8 +86,11 @@ class _GeoEventsScreenState extends ConsumerState<GeoEventsScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.event_note, size: 48,
-                  color: theme.colorScheme.primary),
+              Icon(
+                Icons.event_note,
+                size: 48,
+                color: theme.colorScheme.primary,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Enter a Subject ID to view events',
@@ -132,28 +135,30 @@ class _GeoEventsScreenState extends ConsumerState<GeoEventsScreen> {
           setState(() => _subjectId = query.trim());
         }
       },
-      actions: [
-        _buildEventTypeFilter(),
-      ],
+      actions: [_buildEventTypeFilter()],
       rowBuilder: (event, selected, onSelect) {
         return DataRow(
           selected: selected,
           onSelectChanged: (_) => onSelect(),
           cells: [
-            DataCell(Text(
-              event.subjectId.isNotEmpty
-                  ? event.subjectId.length > 16
-                      ? '${event.subjectId.substring(0, 13)}...'
-                      : event.subjectId
-                  : '-',
-            )),
-            DataCell(Text(
-              event.areaId.isNotEmpty
-                  ? event.areaId.length > 16
-                      ? '${event.areaId.substring(0, 13)}...'
-                      : event.areaId
-                  : '-',
-            )),
+            DataCell(
+              Text(
+                event.subjectId.isNotEmpty
+                    ? event.subjectId.length > 16
+                          ? '${event.subjectId.substring(0, 13)}...'
+                          : event.subjectId
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                event.areaId.isNotEmpty
+                    ? event.areaId.length > 16
+                          ? '${event.areaId.substring(0, 13)}...'
+                          : event.areaId
+                    : '-',
+              ),
+            ),
             DataCell(Text(_eventTypeName(event.eventType))),
             DataCell(Text(_formatTimestamp(event))),
           ],

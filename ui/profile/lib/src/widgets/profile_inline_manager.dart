@@ -1,4 +1,5 @@
-import 'package:antinvestor_api_profile/antinvestor_api_profile.dart' as profile;
+import 'package:antinvestor_api_profile/antinvestor_api_profile.dart'
+    as profile;
 import 'package:antinvestor_ui_profile/antinvestor_ui_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,10 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// ProfileInlineManager(profileId: organization.profileId)
 /// ```
 class ProfileInlineManager extends ConsumerStatefulWidget {
-  const ProfileInlineManager({
-    super.key,
-    required this.profileId,
-  });
+  const ProfileInlineManager({super.key, required this.profileId});
 
   final String profileId;
 
@@ -54,24 +52,23 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
     if (value.isEmpty || widget.profileId.isEmpty) return;
     setState(() => _addingContact = true);
     try {
-      await ref.read(contactNotifierProvider.notifier).addContact(
-            profile.AddContactRequest(
-              id: widget.profileId,
-              contact: value,
-            ),
+      await ref
+          .read(contactNotifierProvider.notifier)
+          .addContact(
+            profile.AddContactRequest(id: widget.profileId, contact: value),
           );
       if (mounted) {
         _contactCtrl.clear();
         ref.invalidate(profileByIdProvider(widget.profileId));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Contact added')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Contact added')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add contact: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add contact: $e')));
       }
     } finally {
       if (mounted) setState(() => _addingContact = false);
@@ -82,7 +79,9 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
     if (widget.profileId.isEmpty) return;
     setState(() => _addingAddress = true);
     try {
-      await ref.read(addressNotifierProvider.notifier).addAddress(
+      await ref
+          .read(addressNotifierProvider.notifier)
+          .addAddress(
             profile.AddAddressRequest(
               id: widget.profileId,
               address: profile.AddressObject(
@@ -102,15 +101,15 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
         _postalCodeCtrl.clear();
         setState(() => _showAddressForm = false);
         ref.invalidate(profileByIdProvider(widget.profileId));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Address added')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Address added')));
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add address: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add address: $e')));
       }
     } finally {
       if (mounted) setState(() => _addingAddress = false);
@@ -131,8 +130,10 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
       ),
       error: (e, _) => Padding(
         padding: const EdgeInsets.all(16),
-        child: Text('Could not load profile: $e',
-            style: TextStyle(color: theme.colorScheme.error)),
+        child: Text(
+          'Could not load profile: $e',
+          style: TextStyle(color: theme.colorScheme.error),
+        ),
       ),
       data: (p) => Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -146,13 +147,14 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
   }
 
   Widget _buildContactsSection(
-      ThemeData theme, List<profile.ContactObject> contacts) {
+    ThemeData theme,
+    List<profile.ContactObject> contacts,
+  ) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-            color: theme.colorScheme.outlineVariant.withAlpha(38)),
+        side: BorderSide(color: theme.colorScheme.outlineVariant.withAlpha(38)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -161,16 +163,25 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
           children: [
             Row(
               children: [
-                Icon(Icons.contacts_outlined,
-                    size: 20, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.contacts_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
-                Text('Contacts',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  'Contacts',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const Spacer(),
-                Text('${contacts.length}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant)),
+                Text(
+                  '${contacts.length}',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
             if (contacts.isNotEmpty) ...[
@@ -184,16 +195,14 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                 ChoiceChip(
                   label: const Text('Email'),
                   selected: !_contactIsPhone,
-                  onSelected: (_) =>
-                      setState(() => _contactIsPhone = false),
+                  onSelected: (_) => setState(() => _contactIsPhone = false),
                   visualDensity: VisualDensity.compact,
                 ),
                 const SizedBox(width: 6),
                 ChoiceChip(
                   label: const Text('Phone'),
                   selected: _contactIsPhone,
-                  onSelected: (_) =>
-                      setState(() => _contactIsPhone = true),
+                  onSelected: (_) => setState(() => _contactIsPhone = true),
                   visualDensity: VisualDensity.compact,
                 ),
               ],
@@ -216,7 +225,8 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                       ),
                       isDense: true,
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     keyboardType: _contactIsPhone
                         ? TextInputType.phone
@@ -231,8 +241,7 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                       ? const SizedBox(
                           width: 16,
                           height: 16,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text('Add'),
                 ),
@@ -245,13 +254,14 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
   }
 
   Widget _buildAddressesSection(
-      ThemeData theme, List<profile.AddressObject> addresses) {
+    ThemeData theme,
+    List<profile.AddressObject> addresses,
+  ) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-            color: theme.colorScheme.outlineVariant.withAlpha(38)),
+        side: BorderSide(color: theme.colorScheme.outlineVariant.withAlpha(38)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -260,33 +270,43 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
           children: [
             Row(
               children: [
-                Icon(Icons.location_on_outlined,
-                    size: 20, color: theme.colorScheme.primary),
+                Icon(
+                  Icons.location_on_outlined,
+                  size: 20,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: 8),
-                Text('Addresses',
-                    style: theme.textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  'Addresses',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 const Spacer(),
                 if (!_showAddressForm)
                   FilledButton.tonal(
-                    onPressed: () =>
-                        setState(() => _showAddressForm = true),
+                    onPressed: () => setState(() => _showAddressForm = true),
                     child: const Text('Add Address'),
                   ),
               ],
             ),
             if (addresses.isNotEmpty) ...[
               const SizedBox(height: 8),
-              ...addresses.map((a) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: AddressTile(address: a),
-                  )),
+              ...addresses.map(
+                (a) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: AddressTile(address: a),
+                ),
+              ),
             ] else if (!_showAddressForm)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: Text('No addresses yet',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant)),
+                child: Text(
+                  'No addresses yet',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
               ),
             if (_showAddressForm) ...[
               const SizedBox(height: 12),
@@ -297,7 +317,8 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                   hintText: 'e.g. Head Office',
                   isDense: true,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -308,7 +329,8 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                   hintText: 'e.g. 123 Kenyatta Avenue',
                   isDense: true,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 8),
@@ -322,7 +344,8 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                         hintText: 'e.g. Nairobi',
                         isDense: true,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
@@ -335,7 +358,8 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                         hintText: 'e.g. Kenya',
                         isDense: true,
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ),
@@ -349,7 +373,8 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                   hintText: 'e.g. 00100',
                   isDense: true,
                   border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8)),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -357,8 +382,7 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () =>
-                        setState(() => _showAddressForm = false),
+                    onPressed: () => setState(() => _showAddressForm = false),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 8),
@@ -369,7 +393,9 @@ class _ProfileInlineManagerState extends ConsumerState<ProfileInlineManager> {
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Text('Save Address'),
                   ),

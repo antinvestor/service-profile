@@ -33,8 +33,7 @@ class SettingsRouteModule extends RouteModule {
                 state.pathParameters['key'] ?? '',
               );
               final extra = state.extra;
-              final setting =
-                  extra is SettingObject ? extra : null;
+              final setting = extra is SettingObject ? extra : null;
               return SettingDetailScreen(
                 settingKey: key,
                 initialSetting: setting,
@@ -82,25 +81,25 @@ class SettingsRouteModule extends RouteModule {
 
   @override
   Map<String, Set<String>> get routePermissions => {
-        '/settings': {'setting_view'},
-        '/settings/detail': {'setting_view'},
-        '/settings/bulk-edit': {'setting_update'},
-      };
+    '/settings': {'setting_view'},
+    '/settings/detail': {'setting_view'},
+    '/settings/bulk-edit': {'setting_update'},
+  };
 
   @override
   PermissionManifest get permissionManifest => const PermissionManifest(
-        namespace: 'service_setting',
-        permissions: [
-          PermissionEntry(
-            key: 'setting_view',
-            label: 'View Settings',
-            scope: PermissionScope.service,
-          ),
-          PermissionEntry(
-            key: 'setting_update',
-            label: 'Update Settings',
-            scope: PermissionScope.action,
-          ),
-        ],
-      );
+    namespace: 'service_setting',
+    permissions: [
+      PermissionEntry(
+        key: 'setting_view',
+        label: 'View Settings',
+        scope: PermissionScope.service,
+      ),
+      PermissionEntry(
+        key: 'setting_update',
+        label: 'Update Settings',
+        scope: PermissionScope.action,
+      ),
+    ],
+  );
 }

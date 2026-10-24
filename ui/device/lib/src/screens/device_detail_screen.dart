@@ -220,16 +220,8 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen>
                   _metadataRow(theme, 'Profile ID', device.profileId),
                   _metadataRow(theme, 'Last Seen', device.lastSeen),
                   if (device.hasLocale()) ...[
-                    _metadataRow(
-                      theme,
-                      'Timezone',
-                      device.locale.timezone,
-                    ),
-                    _metadataRow(
-                      theme,
-                      'Currency',
-                      device.locale.currency,
-                    ),
+                    _metadataRow(theme, 'Timezone', device.locale.timezone),
+                    _metadataRow(theme, 'Currency', device.locale.currency),
                   ],
                 ],
               ),
@@ -276,9 +268,9 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen>
                   onPressed: _saving
                       ? null
                       : () => setState(() {
-                            _editing = false;
-                            _error = null;
-                          }),
+                          _editing = false;
+                          _error = null;
+                        }),
                   child: const Text('Cancel'),
                 ),
                 const SizedBox(width: 12),
@@ -376,10 +368,7 @@ class _DeviceDetailScreenState extends ConsumerState<DeviceDetailScreen>
     }
   }
 
-  Future<void> _confirmRemove(
-    BuildContext context,
-    DeviceObject device,
-  ) async {
+  Future<void> _confirmRemove(BuildContext context, DeviceObject device) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(

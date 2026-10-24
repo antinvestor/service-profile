@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'device_transport_provider.dart';
 
 /// Search keys for a device by device ID.
-final deviceKeysProvider =
-    FutureProvider.family<List<KeyObject>, String>((ref, deviceId) async {
+final deviceKeysProvider = FutureProvider.family<List<KeyObject>, String>((
+  ref,
+  deviceId,
+) async {
   final client = ref.watch(deviceServiceClientProvider);
   final request = SearchKeyRequest()..deviceId = deviceId;
   final response = await client.searchKey(request);
@@ -17,8 +19,7 @@ class DeviceKeyNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
 
-  DeviceServiceClient get _client =>
-      ref.read(deviceServiceClientProvider);
+  DeviceServiceClient get _client => ref.read(deviceServiceClientProvider);
 
   Future<KeyObject> addKey(AddKeyRequest request) async {
     state = const AsyncValue.loading();
@@ -46,4 +47,5 @@ class DeviceKeyNotifier extends Notifier<AsyncValue<void>> {
 
 final deviceKeyNotifierProvider =
     NotifierProvider<DeviceKeyNotifier, AsyncValue<void>>(
-        DeviceKeyNotifier.new);
+      DeviceKeyNotifier.new,
+    );

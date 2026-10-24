@@ -68,8 +68,7 @@ class _RouteCreateScreenState extends ConsumerState<RouteCreateScreen> {
               description: 'A descriptive name for this route.',
               child: TextFormField(
                 controller: _nameController,
-                decoration:
-                    const InputDecoration(hintText: 'Enter route name'),
+                decoration: const InputDecoration(hintText: 'Enter route name'),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Name is required' : null,
               ),
@@ -79,30 +78,29 @@ class _RouteCreateScreenState extends ConsumerState<RouteCreateScreen> {
               description: 'Optional description of the route.',
               child: TextFormField(
                 controller: _descriptionController,
-                decoration:
-                    const InputDecoration(hintText: 'Enter description'),
+                decoration: const InputDecoration(
+                  hintText: 'Enter description',
+                ),
                 maxLines: 3,
               ),
             ),
             FormFieldCard(
               label: 'Geometry (GeoJSON)',
-              description:
-                  'Paste GeoJSON geometry or add waypoints below.',
+              description: 'Paste GeoJSON geometry or add waypoints below.',
               child: TextFormField(
                 controller: _geometryController,
                 decoration: const InputDecoration(
-                    hintText: '{"type":"LineString",...}'),
+                  hintText: '{"type":"LineString",...}',
+                ),
                 maxLines: 4,
-                style:
-                    const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
               ),
             ),
 
             // Waypoints section
             FormFieldCard(
               label: 'Waypoints',
-              description:
-                  'Add latitude/longitude pairs for route waypoints.',
+              description: 'Add latitude/longitude pairs for route waypoints.',
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -112,10 +110,10 @@ class _RouteCreateScreenState extends ConsumerState<RouteCreateScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _latController,
-                          decoration:
-                              const InputDecoration(hintText: 'Latitude'),
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
+                          decoration: const InputDecoration(
+                            hintText: 'Latitude',
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                             signed: true,
                           ),
@@ -125,10 +123,10 @@ class _RouteCreateScreenState extends ConsumerState<RouteCreateScreen> {
                       Expanded(
                         child: TextFormField(
                           controller: _lonController,
-                          decoration:
-                              const InputDecoration(hintText: 'Longitude'),
-                          keyboardType:
-                              const TextInputType.numberWithOptions(
+                          decoration: const InputDecoration(
+                            hintText: 'Longitude',
+                          ),
+                          keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                             signed: true,
                           ),
@@ -195,8 +193,7 @@ class _RouteCreateScreenState extends ConsumerState<RouteCreateScreen> {
     final lon = double.tryParse(_lonController.text.trim());
     if (lat == null || lon == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Enter valid latitude and longitude.')),
+        const SnackBar(content: Text('Enter valid latitude and longitude.')),
       );
       return;
     }
@@ -218,17 +215,18 @@ class _RouteCreateScreenState extends ConsumerState<RouteCreateScreen> {
     );
 
     try {
-      final created =
-          await ref.read(routeNotifierProvider.notifier).createRoute(route);
+      final created = await ref
+          .read(routeNotifierProvider.notifier)
+          .createRoute(route);
       if (mounted) {
         context.go('/geo/routes/${created.id}');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${friendlyError(e)}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
       }
     }
   }

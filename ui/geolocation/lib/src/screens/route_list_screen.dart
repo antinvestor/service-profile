@@ -46,8 +46,7 @@ class _RouteListScreenState extends ConsumerState<RouteListScreen> {
             Text(friendlyError(error)),
             const SizedBox(height: 12),
             FilledButton.tonal(
-              onPressed: () =>
-                  ref.invalidate(searchRoutesProvider(_ownerId)),
+              onPressed: () => ref.invalidate(searchRoutesProvider(_ownerId)),
               child: const Text('Retry'),
             ),
           ],
@@ -80,18 +79,22 @@ class _RouteListScreenState extends ConsumerState<RouteListScreen> {
           selected: selected,
           onSelectChanged: (_) => onSelect(),
           cells: [
-            DataCell(Text(
-              route.name.isNotEmpty ? route.name : 'Unnamed Route',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            )),
-            DataCell(ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 200),
-              child: Text(
-                route.description.isNotEmpty ? route.description : '-',
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+            DataCell(
+              Text(
+                route.name.isNotEmpty ? route.name : 'Unnamed Route',
+                style: const TextStyle(fontWeight: FontWeight.w600),
               ),
-            )),
+            ),
+            DataCell(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Text(
+                  route.description.isNotEmpty ? route.description : '-',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
+            ),
             DataCell(Text(_formatLength(route.lengthM))),
             DataCell(Text(_stateLabel(route.state))),
           ],

@@ -8,11 +8,9 @@ class PresenceNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
 
-  DeviceServiceClient get _client =>
-      ref.read(deviceServiceClientProvider);
+  DeviceServiceClient get _client => ref.read(deviceServiceClientProvider);
 
-  Future<PresenceObject> updatePresence(
-      UpdatePresenceRequest request) async {
+  Future<PresenceObject> updatePresence(UpdatePresenceRequest request) async {
     state = const AsyncValue.loading();
     try {
       final response = await _client.updatePresence(request);
@@ -26,5 +24,4 @@ class PresenceNotifier extends Notifier<AsyncValue<void>> {
 }
 
 final presenceNotifierProvider =
-    NotifierProvider<PresenceNotifier, AsyncValue<void>>(
-        PresenceNotifier.new);
+    NotifierProvider<PresenceNotifier, AsyncValue<void>>(PresenceNotifier.new);
