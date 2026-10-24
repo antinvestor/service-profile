@@ -18,8 +18,7 @@ class ProfileMergeScreen extends ConsumerStatefulWidget {
   const ProfileMergeScreen({super.key});
 
   @override
-  ConsumerState<ProfileMergeScreen> createState() =>
-      _ProfileMergeScreenState();
+  ConsumerState<ProfileMergeScreen> createState() => _ProfileMergeScreenState();
 }
 
 class _ProfileMergeScreenState extends ConsumerState<ProfileMergeScreen> {
@@ -49,8 +48,7 @@ class _ProfileMergeScreenState extends ConsumerState<ProfileMergeScreen> {
     });
 
     try {
-      final results =
-          await ref.read(profileSearchProvider(query).future);
+      final results = await ref.read(profileSearchProvider(query).future);
       if (results.isNotEmpty) {
         setState(() => _primaryProfile = results.first);
       } else {
@@ -73,8 +71,7 @@ class _ProfileMergeScreenState extends ConsumerState<ProfileMergeScreen> {
     });
 
     try {
-      final results =
-          await ref.read(profileSearchProvider(query).future);
+      final results = await ref.read(profileSearchProvider(query).future);
       if (results.isNotEmpty) {
         setState(() => _mergeProfile = results.first);
       } else {
@@ -169,14 +166,12 @@ class _ProfileMergeScreenState extends ConsumerState<ProfileMergeScreen> {
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  onPressed:
-                      _isSearchingPrimary ? null : _searchPrimary,
+                  onPressed: _isSearchingPrimary ? null : _searchPrimary,
                   icon: _isSearchingPrimary
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.search),
                 ),
@@ -210,8 +205,7 @@ class _ProfileMergeScreenState extends ConsumerState<ProfileMergeScreen> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(
-                              strokeWidth: 2),
+                          child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.search),
                 ),
@@ -277,7 +271,9 @@ class _ProfileMergeScreenState extends ConsumerState<ProfileMergeScreen> {
                     children: [
                       ProfileTypeBadge(type: profile.type),
                       const SizedBox(width: 8),
-                      StateBadge(state: common.STATE.valueOf(profile.state.value)!),
+                      StateBadge(
+                        state: common.STATE.valueOf(profile.state.value)!,
+                      ),
                     ],
                   ),
                   if (profile.contacts.isNotEmpty) ...[

@@ -16,8 +16,7 @@ typedef ProfileAddress = ({
 });
 
 /// Provider that extracts all addresses from loaded profiles into a flat list.
-final allAddressesProvider =
-    FutureProvider<List<ProfileAddress>>((ref) async {
+final allAddressesProvider = FutureProvider<List<ProfileAddress>>((ref) async {
   final profiles = await ref.watch(profileSearchProvider('').future);
   final addresses = <ProfileAddress>[];
   for (final profile in profiles) {
@@ -63,13 +62,15 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
   void _exportCsv(List<ProfileAddress> addresses) {
     final headers = ['Name', 'City', 'Country', 'Profile', 'Profile ID'];
     final rows = addresses
-        .map((pa) => [
-              pa.address.name,
-              pa.address.city,
-              pa.address.country,
-              pa.profileName,
-              pa.profileId,
-            ])
+        .map(
+          (pa) => [
+            pa.address.name,
+            pa.address.city,
+            pa.address.country,
+            pa.profileName,
+            pa.profileId,
+          ],
+        )
         .toList();
     final csv = const CsvEncoder().convert([headers, ...rows]);
     Clipboard.setData(ClipboardData(text: csv));
@@ -81,7 +82,8 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Addresses CSV copied to clipboard (${rows.length} rows)'),
+            'Addresses CSV copied to clipboard (${rows.length} rows)',
+          ),
         ),
       );
     }
@@ -103,16 +105,16 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
     final theme = Theme.of(context);
 
     final asyncAddresses = widget.profileId != null
-        ? ref
-            .watch(profileByIdProvider(widget.profileId!))
-            .whenData((p) {
+        ? ref.watch(profileByIdProvider(widget.profileId!)).whenData((p) {
             final name = profileName(p);
             return p.addresses
-                .map((a) => (
-                      profileId: widget.profileId!,
-                      profileName: name,
-                      address: a,
-                    ))
+                .map(
+                  (a) => (
+                    profileId: widget.profileId!,
+                    profileName: name,
+                    address: a,
+                  ),
+                )
                 .toList();
           })
         : ref.watch(allAddressesProvider);
@@ -123,11 +125,12 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline,
-                size: 48, color: theme.colorScheme.error),
+            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: 16),
-            Text('Failed to load addresses',
-                style: theme.textTheme.titleMedium),
+            Text(
+              'Failed to load addresses',
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () {
@@ -145,14 +148,17 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
       ),
       data: (allAddresses) {
         final addresses = _filter(allAddresses);
-        return _buildContent(
-            context, theme, addresses, allAddresses.length);
+        return _buildContent(context, theme, addresses, allAddresses.length);
       },
     );
   }
 
-  Widget _buildContent(BuildContext context, ThemeData theme,
-      List<ProfileAddress> addresses, int totalUnfiltered) {
+  Widget _buildContent(
+    BuildContext context,
+    ThemeData theme,
+    List<ProfileAddress> addresses,
+    int totalUnfiltered,
+  ) {
     if (_selectedIndex != null && _selectedIndex! >= addresses.length) {
       _selectedIndex = null;
     }
@@ -161,8 +167,9 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
     final totalPages = (addresses.length / _pageSize).ceil();
     final pageStart = _currentPage * _pageSize;
     final pageEnd = (pageStart + _pageSize).clamp(0, addresses.length);
-    final pageItems =
-        addresses.isNotEmpty ? addresses.sublist(pageStart, pageEnd) : [];
+    final pageItems = addresses.isNotEmpty
+        ? addresses.sublist(pageStart, pageEnd)
+        : [];
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,20 +184,28 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                 // Header
                 Row(
                   children: [
-                    Icon(Icons.location_on_outlined,
-                        size: 28, color: theme.colorScheme.primary),
+                    Icon(
+                      Icons.location_on_outlined,
+                      size: 28,
+                      color: theme.colorScheme.primary,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Addresses',
-                              style: theme.textTheme.headlineSmall
-                                  ?.copyWith(fontWeight: FontWeight.w600)),
-                          Text('$totalUnfiltered addresses',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                  color:
-                                      theme.colorScheme.onSurfaceVariant)),
+                          Text(
+                            'Addresses',
+                            style: theme.textTheme.headlineSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            '$totalUnfiltered addresses',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -231,8 +246,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                   width: double.infinity,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: theme.colorScheme.outlineVariant),
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
@@ -255,10 +269,9 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
 
                           return DataRow(
                             selected: _selectedIndex == globalIndex,
-                            onSelectChanged: (_) => setState(
-                                () => _selectedIndex = globalIndex),
-                            color: WidgetStateProperty.resolveWith(
-                                (states) {
+                            onSelectChanged: (_) =>
+                                setState(() => _selectedIndex = globalIndex),
+                            color: WidgetStateProperty.resolveWith((states) {
                               if (states.contains(WidgetState.selected)) {
                                 return theme.colorScheme.primaryContainer
                                     .withAlpha(40);
@@ -266,28 +279,36 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                               return null;
                             }),
                             cells: [
-                              DataCell(Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.location_on_outlined,
+                              DataCell(
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.location_on_outlined,
                                       size: 16,
-                                      color: theme.colorScheme.primary),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    pa.address.name.isNotEmpty
-                                        ? pa.address.name
-                                        : 'Address',
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              )),
-                              DataCell(Text(
-                                  parts.isNotEmpty ? parts : '\u2014')),
-                              DataCell(ProfileBadgeById(
-                                profileId: pa.profileId,
-                                avatarSize: 24,
-                              )),
+                                      color: theme.colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      pa.address.name.isNotEmpty
+                                          ? pa.address.name
+                                          : 'Address',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              DataCell(
+                                Text(parts.isNotEmpty ? parts : '\u2014'),
+                              ),
+                              DataCell(
+                                ProfileBadgeById(
+                                  profileId: pa.profileId,
+                                  avatarSize: 24,
+                                ),
+                              ),
                             ],
                           );
                         }),
@@ -303,15 +324,21 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                   children: [
                     Row(
                       children: [
-                        Text('Rows per page:',
-                            style: theme.textTheme.bodySmall),
+                        Text(
+                          'Rows per page:',
+                          style: theme.textTheme.bodySmall,
+                        ),
                         const SizedBox(width: 8),
                         DropdownButton<int>(
                           value: _pageSize,
                           underline: const SizedBox(),
                           items: _pageSizeOptions
-                              .map((s) => DropdownMenuItem(
-                                  value: s, child: Text('$s')))
+                              .map(
+                                (s) => DropdownMenuItem(
+                                  value: s,
+                                  child: Text('$s'),
+                                ),
+                              )
                               .toList(),
                           onChanged: (v) {
                             if (v != null) {
@@ -358,13 +385,11 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
           SizedBox(
             width: 380,
             child: Container(
-              margin: const EdgeInsets.only(
-                  top: 24, right: 24, bottom: 24),
+              margin: const EdgeInsets.only(top: 24, right: 24, bottom: 24),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: theme.colorScheme.outlineVariant),
+                border: Border.all(color: theme.colorScheme.outlineVariant),
               ),
               child: Column(
                 children: [
@@ -384,8 +409,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> {
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      child: _AddressDetail(
-                          pa: addresses[_selectedIndex!]),
+                      child: _AddressDetail(pa: addresses[_selectedIndex!]),
                     ),
                   ),
                 ],
@@ -425,19 +449,24 @@ class _AddressDetail extends StatelessWidget {
                 color: theme.colorScheme.primary.withAlpha(25),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.location_on_outlined,
-                  size: 24, color: theme.colorScheme.primary),
+              child: Icon(
+                Icons.location_on_outlined,
+                size: 24,
+                color: theme.colorScheme.primary,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(addr.name.isNotEmpty ? addr.name : 'Address',
-                      style: theme.textTheme.titleMedium
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                  ProfileBadgeById(
-                      profileId: pa.profileId, avatarSize: 20),
+                  Text(
+                    addr.name.isNotEmpty ? addr.name : 'Address',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  ProfileBadgeById(profileId: pa.profileId, avatarSize: 20),
                 ],
               ),
             ),
@@ -451,8 +480,10 @@ class _AddressDetail extends StatelessWidget {
         if (addr.country.isNotEmpty) _Row('Country', addr.country),
         if (addr.postcode.isNotEmpty) _Row('Postcode', addr.postcode),
         if (addr.latitude != 0 || addr.longitude != 0)
-          _Row('Coordinates',
-              '${addr.latitude.toStringAsFixed(5)}, ${addr.longitude.toStringAsFixed(5)}'),
+          _Row(
+            'Coordinates',
+            '${addr.latitude.toStringAsFixed(5)}, ${addr.longitude.toStringAsFixed(5)}',
+          ),
         const SizedBox(height: 4),
         ProfileBadgeById(profileId: pa.profileId),
       ],
@@ -475,14 +506,20 @@ class _Row extends StatelessWidget {
         children: [
           SizedBox(
             width: 100,
-            child: Text(label,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            child: Text(
+              label,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(fontWeight: FontWeight.w500)),
+            child: Text(
+              value,
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
           ),
         ],
       ),

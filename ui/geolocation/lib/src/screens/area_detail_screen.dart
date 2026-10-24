@@ -18,24 +18,24 @@ class AreaDetailScreen extends ConsumerWidget {
     final asyncArea = ref.watch(getAreaProvider(areaId));
 
     return asyncArea.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: const Text('Area')),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(friendlyError(error)),
               const SizedBox(height: 16),
               FilledButton.tonal(
-                onPressed: () =>
-                    ref.invalidate(getAreaProvider(areaId)),
+                onPressed: () => ref.invalidate(getAreaProvider(areaId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -179,8 +179,7 @@ class _AreaDetailBody extends ConsumerWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Area'),
-        content: Text(
-            'Are you sure you want to delete "${area.name}"?'),
+        content: Text('Are you sure you want to delete "${area.name}"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),

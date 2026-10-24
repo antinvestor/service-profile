@@ -113,8 +113,9 @@ class _AreaCreateScreenState extends ConsumerState<AreaCreateScreen> {
               description: 'Optional description of the area.',
               child: TextFormField(
                 controller: _descriptionController,
-                decoration:
-                    const InputDecoration(hintText: 'Enter description'),
+                decoration: const InputDecoration(
+                  hintText: 'Enter description',
+                ),
                 maxLines: 3,
               ),
             ),
@@ -124,8 +125,9 @@ class _AreaCreateScreenState extends ConsumerState<AreaCreateScreen> {
                   'Paste GeoJSON geometry or add boundary points below.',
               child: TextFormField(
                 controller: _geometryController,
-                decoration:
-                    const InputDecoration(hintText: '{"type":"Polygon",...}'),
+                decoration: const InputDecoration(
+                  hintText: '{"type":"Polygon",...}',
+                ),
                 maxLines: 4,
                 style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
               ),
@@ -134,7 +136,8 @@ class _AreaCreateScreenState extends ConsumerState<AreaCreateScreen> {
             // Boundary points section
             FormSection(
               title: 'Boundary Points',
-              description: 'Add latitude/longitude pairs for the area boundary.',
+              description:
+                  'Add latitude/longitude pairs for the area boundary.',
               children: [
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -142,8 +145,7 @@ class _AreaCreateScreenState extends ConsumerState<AreaCreateScreen> {
                     Expanded(
                       child: TextFormField(
                         controller: _latController,
-                        decoration:
-                            const InputDecoration(hintText: 'Latitude'),
+                        decoration: const InputDecoration(hintText: 'Latitude'),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                           signed: true,
@@ -154,8 +156,9 @@ class _AreaCreateScreenState extends ConsumerState<AreaCreateScreen> {
                     Expanded(
                       child: TextFormField(
                         controller: _lonController,
-                        decoration:
-                            const InputDecoration(hintText: 'Longitude'),
+                        decoration: const InputDecoration(
+                          hintText: 'Longitude',
+                        ),
                         keyboardType: const TextInputType.numberWithOptions(
                           decimal: true,
                           signed: true,
@@ -245,17 +248,18 @@ class _AreaCreateScreenState extends ConsumerState<AreaCreateScreen> {
     );
 
     try {
-      final created =
-          await ref.read(areaNotifierProvider.notifier).createArea(area);
+      final created = await ref
+          .read(areaNotifierProvider.notifier)
+          .createArea(area);
       if (mounted) {
         context.go('/geo/areas/${created.id}');
       }
     } catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${friendlyError(e)}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
       }
     }
   }

@@ -4,11 +4,7 @@ import 'package:flutter/material.dart';
 /// A tile displaying a device key with type badge, ID preview,
 /// active status, and expiry info.
 class DeviceKeyTile extends StatelessWidget {
-  const DeviceKeyTile({
-    super.key,
-    required this.keyObject,
-    this.onRemove,
-  });
+  const DeviceKeyTile({super.key, required this.keyObject, this.onRemove});
 
   final KeyObject keyObject;
   final VoidCallback? onRemove;

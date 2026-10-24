@@ -76,9 +76,7 @@ class ContactListTile extends StatelessWidget {
       ),
       trailing: trailing,
       onTap: onTap,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 }

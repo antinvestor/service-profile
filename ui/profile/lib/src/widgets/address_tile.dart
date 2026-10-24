@@ -94,8 +94,7 @@ class AddressTile extends StatelessWidget {
                             child: Text(
                               address.postcode,
                               style: theme.textTheme.labelSmall?.copyWith(
-                                color:
-                                    theme.colorScheme.onSecondaryContainer,
+                                color: theme.colorScheme.onSecondaryContainer,
                               ),
                             ),
                           ),

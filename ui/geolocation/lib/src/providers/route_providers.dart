@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'geolocation_transport_provider.dart';
 
 /// Search routes by owner ID.
-final searchRoutesProvider =
-    FutureProvider.family<List<RouteObject>, String>((ref, ownerId) async {
+final searchRoutesProvider = FutureProvider.family<List<RouteObject>, String>((
+  ref,
+  ownerId,
+) async {
   final client = ref.watch(geolocationServiceClientProvider);
   final request = SearchRoutesRequest()
     ..ownerId = ownerId
@@ -15,8 +17,10 @@ final searchRoutesProvider =
 });
 
 /// Get a single route by ID.
-final getRouteProvider =
-    FutureProvider.family<RouteObject, String>((ref, id) async {
+final getRouteProvider = FutureProvider.family<RouteObject, String>((
+  ref,
+  id,
+) async {
   final client = ref.watch(geolocationServiceClientProvider);
   final request = GetRouteRequest()..id = id;
   final response = await client.getRoute(request);
@@ -25,14 +29,16 @@ final getRouteProvider =
 
 /// Get route assignments for a subject.
 final subjectRouteAssignmentsProvider =
-    FutureProvider.family<List<RouteAssignmentObject>, String>(
-        (ref, subjectId) async {
-  final client = ref.watch(geolocationServiceClientProvider);
-  final request = GetSubjectRouteAssignmentsRequest()
-    ..subjectId = subjectId;
-  final response = await client.getSubjectRouteAssignments(request);
-  return response.data;
-});
+    FutureProvider.family<List<RouteAssignmentObject>, String>((
+      ref,
+      subjectId,
+    ) async {
+      final client = ref.watch(geolocationServiceClientProvider);
+      final request = GetSubjectRouteAssignmentsRequest()
+        ..subjectId = subjectId;
+      final response = await client.getSubjectRouteAssignments(request);
+      return response.data;
+    });
 
 /// Notifier for route mutations.
 class RouteNotifier extends Notifier<AsyncValue<void>> {
@@ -114,5 +120,6 @@ class RouteNotifier extends Notifier<AsyncValue<void>> {
   }
 }
 
-final routeNotifierProvider =
-    NotifierProvider<RouteNotifier, AsyncValue<void>>(RouteNotifier.new);
+final routeNotifierProvider = NotifierProvider<RouteNotifier, AsyncValue<void>>(
+  RouteNotifier.new,
+);

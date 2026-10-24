@@ -58,7 +58,8 @@ class _SettingValueEditorState extends State<SettingValueEditor> {
 
   static SettingValueType _detectType(String value) {
     final trimmed = value.trim().toLowerCase();
-    if (trimmed == 'true' || trimmed == 'false') return SettingValueType.boolean;
+    if (trimmed == 'true' || trimmed == 'false')
+      return SettingValueType.boolean;
     if (double.tryParse(trimmed) != null) return SettingValueType.number;
     if (_isJson(value)) return SettingValueType.json;
     return SettingValueType.text;
@@ -249,14 +250,16 @@ class _SettingValueEditorState extends State<SettingValueEditor> {
                     onPressed: () {
                       try {
                         final parsed = json.decode(_controller.text.trim());
-                        final formatted =
-                            const JsonEncoder.withIndent('  ').convert(parsed);
+                        final formatted = const JsonEncoder.withIndent(
+                          '  ',
+                        ).convert(parsed);
                         _controller.text = formatted;
                         widget.onChanged(formatted);
                         setState(() => _jsonError = null);
                       } on FormatException catch (e) {
                         setState(
-                            () => _jsonError = 'Invalid JSON: ${e.message}');
+                          () => _jsonError = 'Invalid JSON: ${e.message}',
+                        );
                       }
                     },
                   ),

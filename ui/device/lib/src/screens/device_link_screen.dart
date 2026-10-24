@@ -86,8 +86,7 @@ class _DeviceLinkScreenState extends ConsumerState<DeviceLinkScreen> {
                 // Register new device
                 FormFieldCard(
                   label: 'Device Name',
-                  description:
-                      'A friendly name to identify this device.',
+                  description: 'A friendly name to identify this device.',
                   child: TextFormField(
                     controller: _nameController,
                     decoration: InputDecoration(
@@ -108,8 +107,7 @@ class _DeviceLinkScreenState extends ConsumerState<DeviceLinkScreen> {
                 // Link existing device
                 FormFieldCard(
                   label: 'Device ID',
-                  description:
-                      'The ID of the device to link to a profile.',
+                  description: 'The ID of the device to link to a profile.',
                   child: TextFormField(
                     controller: _deviceIdController,
                     decoration: InputDecoration(
@@ -129,8 +127,7 @@ class _DeviceLinkScreenState extends ConsumerState<DeviceLinkScreen> {
                 const SizedBox(height: 16),
                 FormFieldCard(
                   label: 'Profile ID',
-                  description:
-                      'The user profile to link this device to.',
+                  description: 'The user profile to link this device to.',
                   child: TextFormField(
                     controller: _profileIdController,
                     decoration: InputDecoration(
@@ -195,19 +192,15 @@ class _DeviceLinkScreenState extends ConsumerState<DeviceLinkScreen> {
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : Icon(
-                            _isLinking ? Icons.link : Icons.add,
-                            size: 18,
-                          ),
+                        : Icon(_isLinking ? Icons.link : Icons.add, size: 18),
                     label: Text(
                       _saving
                           ? 'Processing...'
                           : _isLinking
-                              ? 'Link Device'
-                              : 'Register Device',
+                          ? 'Link Device'
+                          : 'Register Device',
                     ),
                   ),
                 ],

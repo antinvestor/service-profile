@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 
 /// Scope parameters for filtering settings by object type, instance, and language.
 class SettingsScope {
-  const SettingsScope({
-    this.object = '',
-    this.objectId = '',
-    this.lang = '',
-  });
+  const SettingsScope({this.object = '', this.objectId = '', this.lang = ''});
 
   final String object;
   final String objectId;
@@ -118,15 +114,9 @@ class _SettingsScopeSelectorState extends State<SettingsScopeSelector> {
                       ),
                     ),
                     items: [
-                      const DropdownMenuItem(
-                        value: null,
-                        child: Text('All'),
-                      ),
+                      const DropdownMenuItem(value: null, child: Text('All')),
                       for (final type in widget.objectTypes)
-                        DropdownMenuItem(
-                          value: type,
-                          child: Text(type),
-                        ),
+                        DropdownMenuItem(value: type, child: Text(type)),
                     ],
                     onChanged: (value) {
                       widget.onScopeChanged(

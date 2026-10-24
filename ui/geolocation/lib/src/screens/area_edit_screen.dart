@@ -48,24 +48,24 @@ class _AreaEditScreenState extends ConsumerState<AreaEditScreen> {
     final asyncArea = ref.watch(getAreaProvider(widget.areaId));
 
     return asyncArea.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: const Text('Edit Area')),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(friendlyError(error)),
               const SizedBox(height: 16),
               FilledButton.tonal(
-                onPressed: () =>
-                    ref.invalidate(getAreaProvider(widget.areaId)),
+                onPressed: () => ref.invalidate(getAreaProvider(widget.areaId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -109,8 +109,7 @@ class _AreaEditScreenState extends ConsumerState<AreaEditScreen> {
               description: 'A descriptive name for this area.',
               child: TextFormField(
                 controller: _nameController,
-                decoration:
-                    const InputDecoration(hintText: 'Enter area name'),
+                decoration: const InputDecoration(hintText: 'Enter area name'),
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Name is required' : null,
               ),
@@ -153,8 +152,9 @@ class _AreaEditScreenState extends ConsumerState<AreaEditScreen> {
               description: 'Optional description of the area.',
               child: TextFormField(
                 controller: _descriptionController,
-                decoration:
-                    const InputDecoration(hintText: 'Enter description'),
+                decoration: const InputDecoration(
+                  hintText: 'Enter description',
+                ),
                 maxLines: 3,
               ),
             ),
@@ -164,10 +164,10 @@ class _AreaEditScreenState extends ConsumerState<AreaEditScreen> {
               child: TextFormField(
                 controller: _geometryController,
                 decoration: const InputDecoration(
-                    hintText: '{"type":"Polygon",...}'),
+                  hintText: '{"type":"Polygon",...}',
+                ),
                 maxLines: 4,
-                style:
-                    const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
               ),
             ),
           ],
@@ -196,9 +196,9 @@ class _AreaEditScreenState extends ConsumerState<AreaEditScreen> {
     } catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${friendlyError(e)}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
       }
     }
   }

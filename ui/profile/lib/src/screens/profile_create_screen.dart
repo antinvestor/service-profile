@@ -58,8 +58,9 @@ class _ProfileCreateScreenState extends ConsumerState<ProfileCreateScreen> {
         ..contact = _contactController.text.trim()
         ..properties = props;
 
-      final created =
-          await ref.read(profileNotifierProvider.notifier).create(request);
+      final created = await ref
+          .read(profileNotifierProvider.notifier)
+          .create(request);
 
       if (mounted) {
         context.go('/profiles/${created.id}');
@@ -96,9 +97,7 @@ class _ProfileCreateScreenState extends ConsumerState<ProfileCreateScreen> {
               isRequired: true,
               child: DropdownButtonFormField<ProfileType>(
                 initialValue: _type,
-                decoration: const InputDecoration(
-                  hintText: 'Select type...',
-                ),
+                decoration: const InputDecoration(hintText: 'Select type...'),
                 items: const [
                   DropdownMenuItem(
                     value: ProfileType.PERSON,
@@ -108,10 +107,7 @@ class _ProfileCreateScreenState extends ConsumerState<ProfileCreateScreen> {
                     value: ProfileType.INSTITUTION,
                     child: Text('Institution'),
                   ),
-                  DropdownMenuItem(
-                    value: ProfileType.BOT,
-                    child: Text('Bot'),
-                  ),
+                  DropdownMenuItem(value: ProfileType.BOT, child: Text('Bot')),
                 ],
                 onChanged: (type) {
                   if (type != null) setState(() => _type = type);
@@ -141,10 +137,9 @@ class _ProfileCreateScreenState extends ConsumerState<ProfileCreateScreen> {
                 decoration: const InputDecoration(
                   hintText: 'Enter email or phone...',
                 ),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty
-                        ? 'Contact is required'
-                        : null,
+                validator: (v) => v == null || v.trim().isEmpty
+                    ? 'Contact is required'
+                    : null,
               ),
             ),
 

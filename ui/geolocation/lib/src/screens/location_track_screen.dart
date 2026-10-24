@@ -44,8 +44,11 @@ class LocationTrackScreen extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48,
-                color: Theme.of(context).colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text(friendlyError(error)),
             const SizedBox(height: 16),
@@ -83,24 +86,30 @@ class LocationTrackScreen extends ConsumerWidget {
           selected: selected,
           onSelectChanged: (_) => onSelect(),
           cells: [
-            DataCell(Text(
-              point.latitude.toStringAsFixed(6),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            )),
-            DataCell(Text(
-              point.longitude.toStringAsFixed(6),
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            )),
-            DataCell(Text(
-              point.accuracy > 0
-                  ? '${point.accuracy.toStringAsFixed(0)}m'
-                  : '-',
-            )),
-            DataCell(Text(
-              point.speed > 0
-                  ? '${point.speed.toStringAsFixed(1)} m/s'
-                  : '-',
-            )),
+            DataCell(
+              Text(
+                point.latitude.toStringAsFixed(6),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              ),
+            ),
+            DataCell(
+              Text(
+                point.longitude.toStringAsFixed(6),
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              ),
+            ),
+            DataCell(
+              Text(
+                point.accuracy > 0
+                    ? '${point.accuracy.toStringAsFixed(0)}m'
+                    : '-',
+              ),
+            ),
+            DataCell(
+              Text(
+                point.speed > 0 ? '${point.speed.toStringAsFixed(1)} m/s' : '-',
+              ),
+            ),
             DataCell(Text(_sourceName(point.source))),
             DataCell(Text(_formatTimestamp(point))),
           ],

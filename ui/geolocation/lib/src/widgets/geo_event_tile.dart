@@ -81,26 +81,14 @@ class GeoEventTile extends StatelessWidget {
 
   (IconData, Color, String) _eventTypeDisplay(GeoEventType type) {
     return switch (type) {
-      GeoEventType.GEO_EVENT_TYPE_ENTER => (
-        Icons.login,
-        Colors.green,
-        'Enter',
-      ),
-      GeoEventType.GEO_EVENT_TYPE_EXIT => (
-        Icons.logout,
-        Colors.red,
-        'Exit',
-      ),
+      GeoEventType.GEO_EVENT_TYPE_ENTER => (Icons.login, Colors.green, 'Enter'),
+      GeoEventType.GEO_EVENT_TYPE_EXIT => (Icons.logout, Colors.red, 'Exit'),
       GeoEventType.GEO_EVENT_TYPE_DWELL => (
         Icons.hourglass_bottom,
         Colors.amber,
         'Dwell',
       ),
-      _ => (
-        Icons.help_outline,
-        Colors.grey,
-        'Unknown',
-      ),
+      _ => (Icons.help_outline, Colors.grey, 'Unknown'),
     };
   }
 

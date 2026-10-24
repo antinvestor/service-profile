@@ -52,16 +52,11 @@ class LocationPointTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      _InfoChip(
-                        label: sourceLabel,
-                        icon: icon,
-                        theme: theme,
-                      ),
+                      _InfoChip(label: sourceLabel, icon: icon, theme: theme),
                       if (point.accuracy > 0) ...[
                         const SizedBox(width: 8),
                         _InfoChip(
-                          label:
-                              '${point.accuracy.toStringAsFixed(0)}m',
+                          label: '${point.accuracy.toStringAsFixed(0)}m',
                           icon: Icons.gps_fixed,
                           theme: theme,
                         ),
@@ -69,8 +64,7 @@ class LocationPointTile extends StatelessWidget {
                       if (point.speed > 0) ...[
                         const SizedBox(width: 8),
                         _InfoChip(
-                          label:
-                              '${point.speed.toStringAsFixed(1)} m/s',
+                          label: '${point.speed.toStringAsFixed(1)} m/s',
                           icon: Icons.speed,
                           theme: theme,
                         ),
@@ -111,11 +105,12 @@ class LocationPointTile extends StatelessWidget {
   (IconData, String) _sourceDisplay(LocationSource source) {
     return switch (source) {
       LocationSource.LOCATION_SOURCE_GPS => (Icons.gps_fixed, 'GPS'),
-      LocationSource.LOCATION_SOURCE_NETWORK =>
-        (Icons.cell_tower, 'Network'),
+      LocationSource.LOCATION_SOURCE_NETWORK => (Icons.cell_tower, 'Network'),
       LocationSource.LOCATION_SOURCE_IP => (Icons.language, 'IP'),
-      LocationSource.LOCATION_SOURCE_MANUAL =>
-        (Icons.edit_location_alt, 'Manual'),
+      LocationSource.LOCATION_SOURCE_MANUAL => (
+        Icons.edit_location_alt,
+        'Manual',
+      ),
       _ => (Icons.location_on_outlined, 'Unknown'),
     };
   }

@@ -19,10 +19,12 @@ class RelationshipChip extends StatelessWidget {
   (String, Color, IconData) _typeInfo(RelationshipType type) {
     return switch (type) {
       RelationshipType.MEMBER => ('Member', Colors.blue, Icons.group),
-      RelationshipType.AFFILIATED =>
-        ('Affiliated', Colors.teal, Icons.handshake),
-      RelationshipType.BLACK_LISTED =>
-        ('Blocked', Colors.red, Icons.block),
+      RelationshipType.AFFILIATED => (
+        'Affiliated',
+        Colors.teal,
+        Icons.handshake,
+      ),
+      RelationshipType.BLACK_LISTED => ('Blocked', Colors.red, Icons.block),
       _ => ('Unknown', Colors.grey, Icons.help_outline),
     };
   }
@@ -35,10 +37,10 @@ class RelationshipChip extends StatelessWidget {
     final peerName = relationship.hasPeerProfile()
         ? profileName(relationship.peerProfile)
         : relationship.hasChildEntry()
-            ? relationship.childEntry.objectName
-            : relationship.id.length > 12
-                ? '${relationship.id.substring(0, 12)}...'
-                : relationship.id;
+        ? relationship.childEntry.objectName
+        : relationship.id.length > 12
+        ? '${relationship.id.substring(0, 12)}...'
+        : relationship.id;
 
     return Card(
       elevation: 0,

@@ -22,13 +22,12 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final asyncDevices = ref.watch(
-      deviceSearchProvider(_searchQuery),
-    );
+    final asyncDevices = ref.watch(deviceSearchProvider(_searchQuery));
 
     return asyncDevices.when(
       loading: () => _buildPage(items: const [], isLoading: true),
-      error: (error, _) => _buildPage(items: const [], error: friendlyError(error)),
+      error: (error, _) =>
+          _buildPage(items: const [], error: friendlyError(error)),
       data: (devices) => _buildPage(items: devices),
     );
   }
@@ -49,10 +48,7 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
           children: [
             Text(error),
             const SizedBox(height: 12),
-            FilledButton.tonal(
-              onPressed: _refresh,
-              child: const Text('Retry'),
-            ),
+            FilledButton.tonal(onPressed: _refresh, child: const Text('Retry')),
           ],
         ),
       );
@@ -87,24 +83,28 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
           selected: selected,
           onSelectChanged: (_) => onSelect(),
           cells: [
-            DataCell(Text(
-              device.name.isNotEmpty ? device.name : 'Unnamed Device',
-            )),
+            DataCell(
+              Text(device.name.isNotEmpty ? device.name : 'Unnamed Device'),
+            ),
             DataCell(Text(device.os)),
             DataCell(Text(device.ip)),
             DataCell(Text(device.lastSeen)),
-            DataCell(Text(
-              device.profileId.isNotEmpty
-                  ? device.profileId.length > 12
-                      ? '${device.profileId.substring(0, 12)}...'
-                      : device.profileId
-                  : '-',
-            )),
-            DataCell(PresenceIndicator(
-              status: device.presence,
-              size: 10,
-              showLabel: true,
-            )),
+            DataCell(
+              Text(
+                device.profileId.isNotEmpty
+                    ? device.profileId.length > 12
+                          ? '${device.profileId.substring(0, 12)}...'
+                          : device.profileId
+                    : '-',
+              ),
+            ),
+            DataCell(
+              PresenceIndicator(
+                status: device.presence,
+                size: 10,
+                showLabel: true,
+              ),
+            ),
           ],
         );
       },
@@ -131,8 +131,6 @@ class _DeviceListScreenState extends ConsumerState<DeviceListScreen> {
   }
 
   void _refresh() {
-    ref.invalidate(
-      deviceSearchProvider(_searchQuery),
-    );
+    ref.invalidate(deviceSearchProvider(_searchQuery));
   }
 }

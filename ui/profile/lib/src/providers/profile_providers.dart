@@ -7,18 +7,20 @@ import 'profile_transport_provider.dart';
 /// Search profiles by query string.
 final profileSearchProvider =
     FutureProvider.family<List<ProfileObject>, String>((ref, query) async {
-  final client = ref.watch(profileServiceClientProvider);
-  final request = SearchRequest()..query = query;
-  final stream = client.search(request);
-  return collectStream<SearchResponse, ProfileObject>(
-    stream,
-    extract: (r) => r.data,
-  );
-});
+      final client = ref.watch(profileServiceClientProvider);
+      final request = SearchRequest()..query = query;
+      final stream = client.search(request);
+      return collectStream<SearchResponse, ProfileObject>(
+        stream,
+        extract: (r) => r.data,
+      );
+    });
 
 /// Get a single profile by ID.
-final profileByIdProvider =
-    FutureProvider.family<ProfileObject, String>((ref, id) async {
+final profileByIdProvider = FutureProvider.family<ProfileObject, String>((
+  ref,
+  id,
+) async {
   final client = ref.watch(profileServiceClientProvider);
   final request = GetByIdRequest()..id = id;
   final response = await client.getById(request);
@@ -26,8 +28,10 @@ final profileByIdProvider =
 });
 
 /// Get a profile by contact (email or phone).
-final profileByContactProvider =
-    FutureProvider.family<ProfileObject, String>((ref, contact) async {
+final profileByContactProvider = FutureProvider.family<ProfileObject, String>((
+  ref,
+  contact,
+) async {
   final client = ref.watch(profileServiceClientProvider);
   final request = GetByContactRequest()..contact = contact;
   final response = await client.getByContact(request);
@@ -39,8 +43,7 @@ class ProfileNotifier extends Notifier<AsyncValue<void>> {
   @override
   AsyncValue<void> build() => const AsyncValue.data(null);
 
-  ProfileServiceClient get _client =>
-      ref.read(profileServiceClientProvider);
+  ProfileServiceClient get _client => ref.read(profileServiceClientProvider);
 
   Future<ProfileObject> create(CreateRequest request) async {
     state = const AsyncValue.loading();

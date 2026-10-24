@@ -29,26 +29,25 @@ packages:
     dependency: "direct main"
     description:
       name: antinvestor_api_common
-      sha256: "06210c68804e2720fec6bb497b6cbf43d8f712994deb00c257eec770cd2b12cc"
+      sha256: "8d6f3b1580526cc2fa8f895c9e26b6cbb969d1f9ec273b2635b996ef35e861b3"
       url: "https://pub.dev"
     source: hosted
-    version: "1.52.0"
+    version: "2.0.0"
   antinvestor_api_device:
     dependency: "direct main"
     description:
       name: antinvestor_api_device
-      sha256: "19668b77ecca66d072671b96663512c82c4239e807227247fbb7e609c72ff12e"
+      sha256: "2eaf21bda6b49f9e2050928e02ee5d6aa823d64deca8b37bdc90dc3314cf5c94"
       url: "https://pub.dev"
     source: hosted
-    version: "1.53.13"
+    version: "2.0.0"
   antinvestor_ui_core:
     dependency: "direct main"
     description:
-      name: antinvestor_ui_core
-      sha256: "613afa136b9a8eb612537a5a3d78e8482f588cf7f855dd34b79478184598e775"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.0"
+      path: "/tmp/claude-1000/-home-j-code-antinvestor-service-fintech/8fa0dd27-d180-400f-84fa-3e64abe9d441/scratchpad/common-ui/ui_core"
+      relative: false
+    source: path
+    version: "0.6.0"
   args:
     dependency: transitive
     description:
@@ -197,10 +196,10 @@ packages:
     dependency: "direct main"
     description:
       name: connectrpc
-      sha256: a1dbf301d0dfa189bb879a9f15bbe72f31dbac581f385035a10fcc2d31a93a18
+      sha256: c19e62091f42bcc032d3af22201df91c59d174225480aa1a0c716a2ce2d121af
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "2.0.1"
   convert:
     dependency: transitive
     description:
@@ -636,10 +635,10 @@ packages:
     dependency: transitive
     description:
       name: matcher
-      sha256: dc0b7dc7651697ea4ff3e69ef44b0407ea32c487a39fff6a4004fa585e901861
+      sha256: "31bd099b47c10cd1aeb55146a2d46ce0277630ecef3f7dae54ad7873f36696cd"
       url: "https://pub.dev"
     source: hosted
-    version: "0.12.19"
+    version: "0.12.20"
   material_color_utilities:
     dependency: transitive
     description:
@@ -652,10 +651,10 @@ packages:
     dependency: transitive
     description:
       name: meta
-      sha256: "1741988757a65eb6b36abe716829688cf01910bbf91c34354ff7ec1c3de2b349"
+      sha256: "307249ce4ff29d58a18e97f6345f539382eb9c9c29ecda628900f31de0443dd9"
       url: "https://pub.dev"
     source: hosted
-    version: "1.18.0"
+    version: "1.19.0"
   mime:
     dependency: transitive
     description:
@@ -820,10 +819,10 @@ packages:
     dependency: "direct main"
     description:
       name: protobuf
-      sha256: de9c9eb2c33f8e933a42932fe1dc504800ca45ebc3d673e6ed7f39754ee4053e
+      sha256: "13b6717366aa7ec3792dd62c19c7d33a785708224365f2db23c5ca01f1c1a0f2"
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.0"
+    version: "6.1.0"
   pub_semver:
     dependency: transitive
     description:
@@ -993,26 +992,26 @@ packages:
     dependency: transitive
     description:
       name: test
-      sha256: "8d9ceddbab833f180fbefed08afa76d7c03513dfdba87ffcec2718b02bbcbf20"
+      sha256: ca578dc12bb8b2f40b67b7d3bd2fac4f31c01a6ff7130a14e2597b919934507f
       url: "https://pub.dev"
     source: hosted
-    version: "1.31.0"
+    version: "1.31.1"
   test_api:
     dependency: transitive
     description:
       name: test_api
-      sha256: "949a932224383300f01be9221c39180316445ecb8e7547f70a41a35bf421fb9e"
+      sha256: "2a122cbe059f8b610d3a5415f42e255b6c17b1f21eee1d960f31080237fb4f11"
       url: "https://pub.dev"
     source: hosted
-    version: "0.7.11"
+    version: "0.7.12"
   test_core:
     dependency: transitive
     description:
       name: test_core
-      sha256: "1991d4cfe85d5043241acac92962c3977c8d2f2add1ee73130c7b286417d1d34"
+      sha256: d2e98ec12998368dc59ddd47ab709f2cd55acd6b66dc7db764455a44082f4bc5
       url: "https://pub.dev"
     source: hosted
-    version: "0.6.17"
+    version: "0.6.18"
   typed_data:
     dependency: transitive
     description:
@@ -1033,10 +1032,10 @@ packages:
     dependency: transitive
     description:
       name: vector_math
-      sha256: d530bd74fea330e6e364cda7a85019c434070188383e1cd8d9777ee586914c5b
+      sha256: "92b9910f66ed1057fd4da7b040ae7c74cafacf885bdc81be496928d5049b032d"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "2.4.3"
   vm_service:
     dependency: transitive
     description:

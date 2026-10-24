@@ -19,32 +19,31 @@ class RouteDetailScreen extends ConsumerWidget {
     final asyncRoute = ref.watch(getRouteProvider(routeId));
 
     return asyncRoute.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
         appBar: AppBar(title: const Text('Route')),
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline,
-                  size: 48,
-                  color: Theme.of(context).colorScheme.error),
+              Icon(
+                Icons.error_outline,
+                size: 48,
+                color: Theme.of(context).colorScheme.error,
+              ),
               const SizedBox(height: 16),
               Text(friendlyError(error)),
               const SizedBox(height: 16),
               FilledButton.tonal(
-                onPressed: () =>
-                    ref.invalidate(getRouteProvider(routeId)),
+                onPressed: () => ref.invalidate(getRouteProvider(routeId)),
                 child: const Text('Retry'),
               ),
             ],
           ),
         ),
       ),
-      data: (route) =>
-          _RouteDetailBody(route: route, routeId: routeId),
+      data: (route) => _RouteDetailBody(route: route, routeId: routeId),
     );
   }
 }
@@ -56,8 +55,7 @@ class _RouteDetailBody extends ConsumerStatefulWidget {
   final String routeId;
 
   @override
-  ConsumerState<_RouteDetailBody> createState() =>
-      _RouteDetailBodyState();
+  ConsumerState<_RouteDetailBody> createState() => _RouteDetailBodyState();
 }
 
 class _RouteDetailBodyState extends ConsumerState<_RouteDetailBody> {
@@ -238,10 +236,9 @@ class _RouteDetailBodyState extends ConsumerState<_RouteDetailBody> {
     final subjectId = _subjectIdController.text.trim();
     if (subjectId.isEmpty) return;
     try {
-      await ref.read(routeNotifierProvider.notifier).assignRoute(
-            subjectId: subjectId,
-            routeId: widget.routeId,
-          );
+      await ref
+          .read(routeNotifierProvider.notifier)
+          .assignRoute(subjectId: subjectId, routeId: widget.routeId);
       _subjectIdController.clear();
       ref.invalidate(subjectRouteAssignmentsProvider);
       if (mounted) {
@@ -251,9 +248,9 @@ class _RouteDetailBodyState extends ConsumerState<_RouteDetailBody> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed: ${friendlyError(e)}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed: ${friendlyError(e)}')));
       }
     }
   }
@@ -264,7 +261,8 @@ class _RouteDetailBodyState extends ConsumerState<_RouteDetailBody> {
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Route'),
         content: Text(
-            'Are you sure you want to delete "${widget.route.name}"?'),
+          'Are you sure you want to delete "${widget.route.name}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -312,8 +310,9 @@ class _AssignmentsSection extends ConsumerWidget {
     // The route_detail shows assignments related to this route. Since the API
     // fetches by subject, we display any cached assignments or a placeholder.
     final theme = Theme.of(context);
-    final asyncAssignments =
-        ref.watch(subjectRouteAssignmentsProvider(routeId));
+    final asyncAssignments = ref.watch(
+      subjectRouteAssignmentsProvider(routeId),
+    );
 
     return asyncAssignments.when(
       loading: () => const Padding(
@@ -357,8 +356,7 @@ class _AssignmentsSection extends ConsumerWidget {
                 await ref
                     .read(routeNotifierProvider.notifier)
                     .unassignRoute(assignment.id);
-                ref.invalidate(
-                    subjectRouteAssignmentsProvider(routeId));
+                ref.invalidate(subjectRouteAssignmentsProvider(routeId));
               },
             );
           }).toList(),

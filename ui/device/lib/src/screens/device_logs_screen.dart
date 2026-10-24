@@ -9,10 +9,7 @@ import '../providers/device_log_providers.dart';
 /// Screen displaying session activity logs for a device as a paginated
 /// DataTable with CSV export.
 class DeviceLogsScreen extends ConsumerWidget {
-  const DeviceLogsScreen({
-    super.key,
-    required this.deviceId,
-  });
+  const DeviceLogsScreen({super.key, required this.deviceId});
 
   final String deviceId;
 
@@ -40,8 +37,11 @@ class DeviceLogsScreen extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48,
-                color: Theme.of(context).colorScheme.error),
+            Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Theme.of(context).colorScheme.error,
+            ),
             const SizedBox(height: 16),
             Text(friendlyError(error)),
             const SizedBox(height: 12),
@@ -56,7 +56,11 @@ class DeviceLogsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTable(BuildContext context, WidgetRef ref, List<DeviceLog> logs) {
+  Widget _buildTable(
+    BuildContext context,
+    WidgetRef ref,
+    List<DeviceLog> logs,
+  ) {
     return AdminEntityListPage<DeviceLog>(
       title: 'Session Logs',
       breadcrumbs: const ['Home', 'Devices', 'Session Logs'],
@@ -75,24 +79,28 @@ class DeviceLogsScreen extends ConsumerWidget {
           selected: selected,
           onSelectChanged: (_) => onSelect(),
           cells: [
-            DataCell(Text(
-              log.sessionId.isNotEmpty
-                  ? log.sessionId.length > 12
-                      ? '${log.sessionId.substring(0, 12)}...'
-                      : log.sessionId
-                  : '-',
-              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
-            )),
+            DataCell(
+              Text(
+                log.sessionId.isNotEmpty
+                    ? log.sessionId.length > 12
+                          ? '${log.sessionId.substring(0, 12)}...'
+                          : log.sessionId
+                    : '-',
+                style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+              ),
+            ),
             DataCell(Text(log.ip)),
             DataCell(Text(log.os)),
-            DataCell(ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 200),
-              child: Text(
-                log.userAgent,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
+            DataCell(
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 200),
+                child: Text(
+                  log.userAgent,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
               ),
-            )),
+            ),
             DataCell(Text(log.lastSeen)),
             DataCell(Text(_locationSummary(log))),
           ],
