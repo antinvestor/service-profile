@@ -12,7 +12,7 @@ require (
 	buf.build/gen/go/antinvestor/geolocation/protocolbuffers/go v1.36.12-20261010180548-847a49889ffc.2
 	buf.build/gen/go/antinvestor/notification/connectrpc/go/v2 v2.0.2-20260831182621-e7d71a2bcc5d.1
 	buf.build/gen/go/antinvestor/notification/protocolbuffers/go v1.36.12-20260831182621-e7d71a2bcc5d.2
-	buf.build/gen/go/antinvestor/profile/connectrpc/go/v2 v2.0.2-20261010180548-eeb7b4541358.1
+	buf.build/gen/go/antinvestor/profile/connectrpc/go/v2 v2.0.2-20261103150037-636af3c2aa98.1
 	buf.build/gen/go/antinvestor/settingz/connectrpc/go/v2 v2.0.2-20261010180548-c7910134e0de.1
 	buf.build/gen/go/antinvestor/settingz/protocolbuffers/go v1.36.12-20261010180548-c7910134e0de.2
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260825204119-511051f7f437.2
@@ -48,7 +48,7 @@ require (
 
 require (
 	buf.build/gen/go/antinvestor/audit/protocolbuffers/go v1.36.12-20260929093104-d5d34f953660.2 // indirect
-	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.12-20261010180548-eeb7b4541358.2
+	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.12-20261103150037-636af3c2aa98.2
 	buf.build/go/protovalidate v1.4.0 // indirect
 	cel.dev/expr v0.25.3 // indirect
 	cloud.google.com/go v0.123.0 // indirect

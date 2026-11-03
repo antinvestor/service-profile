@@ -34,6 +34,8 @@ type ProfileBusiness interface {
 		profileID, partitionID string,
 	) (*profilev1.ProfileObject, error)
 	GetByContact(ctx context.Context, detail string) (*profilev1.ProfileObject, error)
+	// GetByHandle finds a profile by its handle, typed with or without "@".
+	GetByHandle(ctx context.Context, handle string) (*profilev1.ProfileObject, error)
 
 	SearchProfile(
 		ctx context.Context,
@@ -138,6 +140,7 @@ func (pb *profileBusiness) ToAPI(ctx context.Context,
 	p *models.Profile) (*profilev1.ProfileObject, error) {
 	profileObject := profilev1.ProfileObject{}
 	profileObject.Id = p.ID
+	profileObject.Handle = p.Handle
 
 	profileObject.Type = models.ProfileTypeIDToEnum(p.ProfileType.UID)
 	profileObject.Properties = p.Properties.ToProtoStruct()
@@ -232,8 +235,36 @@ func (pb *profileBusiness) GetByID(
 	return pb.ToAPI(ctx, profile)
 }
 
+func (pb *profileBusiness) GetByHandle(
+	ctx context.Context,
+	handle string) (*profilev1.ProfileObject, error) {
+	normalized, err := NormalizeHandle(handle)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInvalidArgument, "handle is not valid")
+	}
+	profile, err := pb.profileRepo.GetByHandle(ctx, normalized)
+	if err != nil {
+		return nil, data.ErrorConvertToAPI(err)
+	}
+	return pb.ToAPI(ctx, profile)
+}
+
 func (pb *profileBusiness) SearchProfile(ctx context.Context,
 	request *profilev1.SearchRequest) (workerpool.JobResultPipe[[]*models.Profile], error) {
+	// "@prefix" autocompletes handles. Normalisation leaves only [a-z0-9.],
+	// so the prefix needs no LIKE escaping.
+	if prefix, isHandle := strings.CutPrefix(strings.TrimSpace(request.GetQuery()), "@"); isHandle {
+		prefix = strings.ToLower(prefix)
+		if prefix != "" && !handlePattern.MatchString(strings.TrimSuffix(prefix, ".")) {
+			return nil, connect.NewError(connect.CodeInvalidArgument, "handle search is not valid")
+		}
+		handleQuery := data.NewSearchQuery(
+			data.WithSearchLimit(int(request.GetCount())),
+			data.WithSearchOffset(int(request.GetPage())),
+			data.WithSearchFiltersAndByValue(map[string]any{"handle LIKE ?": prefix + "%"}))
+		return pb.profileRepo.Search(ctx, handleQuery)
+	}
+
 	query := data.NewSearchQuery(
 		data.WithSearchLimit(int(request.GetCount())),
 		data.WithSearchOffset(int(request.GetPage())),
@@ -493,7 +524,7 @@ func (pb *profileBusiness) CreateProfile(
 	// The profile row, its account and their facts are written in one
 	// transaction, so the facts are true exactly when the rows exist
 	// (GFOS K5).
-	createErr := pb.profileRepo.CreateWithAccount(ctx, &p, account, func(created *models.Profile) []*outbox.Event {
+	createErr := pb.createWithHandle(ctx, &p, account, func(created *models.Profile) []*outbox.Event {
 		facts := []*outbox.Event{ProfileCreatedFact(ctx, created)}
 		if account != nil {
 			facts = append(facts, AccountCreatedFact(ctx, account))
@@ -539,6 +570,7 @@ func (pb *profileBusiness) profileFromCreated(
 ) (*profilev1.ProfileObject, error) {
 	obj := &profilev1.ProfileObject{
 		Id:         p.ID,
+		Handle:     p.Handle,
 		Type:       models.ProfileTypeIDToEnum(p.ProfileType.UID),
 		Properties: p.Properties.ToProtoStruct(),
 	}

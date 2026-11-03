@@ -43,6 +43,8 @@ const (
 	// ProfileServiceGetByContactProcedure is the procedure name of the ProfileService's GetByContact
 	// RPC.
 	ProfileServiceGetByContactProcedure = "/profile.v1.ProfileService/GetByContact"
+	// ProfileServiceGetByHandleProcedure is the procedure name of the ProfileService's GetByHandle RPC.
+	ProfileServiceGetByHandleProcedure = "/profile.v1.ProfileService/GetByHandle"
 	// ProfileServiceSearchProcedure is the procedure name of the ProfileService's Search RPC.
 	ProfileServiceSearchProcedure = "/profile.v1.ProfileService/Search"
 	// ProfileServiceMergeProcedure is the procedure name of the ProfileService's Merge RPC.
@@ -111,6 +113,14 @@ var (
 			StreamType:       connect.StreamTypeUnary,
 			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("GetByContact"),
 			Procedure:        ProfileServiceGetByContactProcedure,
+			IdempotencyLevel: connect.IdempotencyNoSideEffects,
+		}
+	})
+	profileServiceGetByHandleSpec = sync.OnceValue(func() connect.Spec {
+		return connect.Spec{
+			StreamType:       connect.StreamTypeUnary,
+			Schema:           v1.File_profile_v1_profile_proto.Services().ByName("ProfileService").Methods().ByName("GetByHandle"),
+			Procedure:        ProfileServiceGetByHandleProcedure,
 			IdempotencyLevel: connect.IdempotencyNoSideEffects,
 		}
 	})
@@ -269,6 +279,8 @@ type ProfileServiceClient interface {
 	GetById(context.Context, *v1.GetByIdRequest) (*v1.GetByIdResponse, error)
 	// GetByContact retrieves a profile by contact information.
 	GetByContact(context.Context, *v1.GetByContactRequest) (*v1.GetByContactResponse, error)
+	// GetByHandle retrieves a profile by its stable handle.
+	GetByHandle(context.Context, *v1.GetByHandleRequest) (*v1.GetByHandleResponse, error)
 	// Search finds profiles matching specified criteria.
 	Search(context.Context, *v1.SearchRequest) (ProfileServiceSearchClientStream, error)
 	// Merge combines two profiles into one.
@@ -389,6 +401,8 @@ type ProfileServiceHandler interface {
 	GetById(context.Context, *v1.GetByIdRequest) (*v1.GetByIdResponse, error)
 	// GetByContact retrieves a profile by contact information.
 	GetByContact(context.Context, *v1.GetByContactRequest) (*v1.GetByContactResponse, error)
+	// GetByHandle retrieves a profile by its stable handle.
+	GetByHandle(context.Context, *v1.GetByHandleRequest) (*v1.GetByHandleResponse, error)
 	// Search finds profiles matching specified criteria.
 	Search(context.Context, *v1.SearchRequest, ProfileServiceSearchServerStream) error
 	// Merge combines two profiles into one.
@@ -442,6 +456,7 @@ func RegisterProfileServiceHandler(server *connect.Server, svc ProfileServiceHan
 	server.Register(
 		connect.Method{Spec: profileServiceGetByIdSpec(), Handler: adapter.getById},
 		connect.Method{Spec: profileServiceGetByContactSpec(), Handler: adapter.getByContact},
+		connect.Method{Spec: profileServiceGetByHandleSpec(), Handler: adapter.getByHandle},
 		connect.Method{Spec: profileServiceSearchSpec(), Handler: adapter.search},
 		connect.Method{Spec: profileServiceMergeSpec(), Handler: adapter.merge},
 		connect.Method{Spec: profileServiceCreateSpec(), Handler: adapter.create},
@@ -521,6 +536,10 @@ func (UnimplementedProfileServiceHandler) GetById(context.Context, *v1.GetByIdRe
 
 func (UnimplementedProfileServiceHandler) GetByContact(context.Context, *v1.GetByContactRequest) (*v1.GetByContactResponse, error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.GetByContact is not implemented")
+}
+
+func (UnimplementedProfileServiceHandler) GetByHandle(context.Context, *v1.GetByHandleRequest) (*v1.GetByHandleResponse, error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, "profile.v1.ProfileService.GetByHandle is not implemented")
 }
 
 func (UnimplementedProfileServiceHandler) Search(context.Context, *v1.SearchRequest, ProfileServiceSearchServerStream) error {
@@ -618,6 +637,14 @@ func (c *profileServiceClient) GetById(ctx context.Context, req *v1.GetByIdReque
 func (c *profileServiceClient) GetByContact(ctx context.Context, req *v1.GetByContactRequest) (*v1.GetByContactResponse, error) {
 	var res v1.GetByContactResponse
 	if err := c.client.CallUnary(ctx, profileServiceGetByContactSpec(), req, &res); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+func (c *profileServiceClient) GetByHandle(ctx context.Context, req *v1.GetByHandleRequest) (*v1.GetByHandleResponse, error) {
+	var res v1.GetByHandleResponse
+	if err := c.client.CallUnary(ctx, profileServiceGetByHandleSpec(), req, &res); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -803,6 +830,18 @@ func (h profileServiceHandler) getByContact(ctx context.Context, _ connect.Spec,
 		return err
 	}
 	res, err := h.svc.GetByContact(ctx, &req)
+	if err != nil {
+		return err
+	}
+	return stream.Send(res)
+}
+
+func (h profileServiceHandler) getByHandle(ctx context.Context, _ connect.Spec, stream connect.ServerStream) error {
+	var req v1.GetByHandleRequest
+	if err := stream.Receive(&req); err != nil {
+		return err
+	}
+	res, err := h.svc.GetByHandle(ctx, &req)
 	if err != nil {
 		return err
 	}

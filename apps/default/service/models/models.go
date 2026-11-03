@@ -59,6 +59,11 @@ type Profile struct {
 	data.BaseModel
 	Properties data.JSONMap
 
+	// Handle is the profile's stable, unique tag (e.g. "peter.bwire"),
+	// assigned at creation and never changed. Unique across all tenants;
+	// see migrations/0001/20261103_profile_handles.sql.
+	Handle string `gorm:"type:varchar(48)"`
+
 	ProfileTypeID string `gorm:"type:varchar(50);index:profile_id"`
 	ProfileType   ProfileType
 }

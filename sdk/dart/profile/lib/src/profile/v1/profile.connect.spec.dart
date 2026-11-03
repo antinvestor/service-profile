@@ -30,6 +30,15 @@ abstract final class ProfileService {
     idempotency: connect.Idempotency.noSideEffects,
   );
 
+  /// GetByHandle retrieves a profile by its stable handle.
+  static const getByHandle = connect.Spec(
+    '/$name/GetByHandle',
+    connect.StreamType.unary,
+    profilev1profile.GetByHandleRequest.new,
+    profilev1profile.GetByHandleResponse.new,
+    idempotency: connect.Idempotency.noSideEffects,
+  );
+
   /// Search finds profiles matching specified criteria.
   static const search = connect.Spec(
     '/$name/Search',

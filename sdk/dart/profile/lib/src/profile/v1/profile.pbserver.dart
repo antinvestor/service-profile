@@ -25,6 +25,8 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
       $pb.ServerContext ctx, $3.GetByIdRequest request);
   $async.Future<$3.GetByContactResponse> getByContact(
       $pb.ServerContext ctx, $3.GetByContactRequest request);
+  $async.Future<$3.GetByHandleResponse> getByHandle(
+      $pb.ServerContext ctx, $3.GetByHandleRequest request);
   $async.Future<$3.SearchResponse> search(
       $pb.ServerContext ctx, $3.SearchRequest request);
   $async.Future<$3.MergeResponse> merge(
@@ -72,6 +74,8 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
         return $3.GetByIdRequest();
       case 'GetByContact':
         return $3.GetByContactRequest();
+      case 'GetByHandle':
+        return $3.GetByHandleRequest();
       case 'Search':
         return $3.SearchRequest();
       case 'Merge':
@@ -124,6 +128,8 @@ abstract class ProfileServiceBase extends $pb.GeneratedService {
         return getById(ctx, request as $3.GetByIdRequest);
       case 'GetByContact':
         return getByContact(ctx, request as $3.GetByContactRequest);
+      case 'GetByHandle':
+        return getByHandle(ctx, request as $3.GetByHandleRequest);
       case 'Search':
         return search(ctx, request as $3.SearchRequest);
       case 'Merge':

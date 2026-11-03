@@ -173,6 +173,16 @@ func (ps *ProfileServer) GetByContact(ctx context.Context,
 	return &profilev1.GetByContactResponse{Data: profileObj}, nil
 }
 
+func (ps *ProfileServer) GetByHandle(ctx context.Context,
+	request *profilev1.GetByHandleRequest) (*profilev1.GetByHandleResponse, error) {
+	profileObj, err := ps.profileBusiness.GetByHandle(ctx, request.GetHandle())
+	if err != nil {
+		return nil, errorutil.CleanErr(err)
+	}
+
+	return &profilev1.GetByHandleResponse{Data: profileObj}, nil
+}
+
 func (ps *ProfileServer) Search(ctx context.Context,
 	request *profilev1.SearchRequest,
 	stream profilev1connect.ProfileServiceSearchServerStream,

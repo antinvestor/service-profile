@@ -20,6 +20,13 @@ type ProfileRepository interface {
 		query *data.SearchQuery,
 	) (workerpool.JobResultPipe[[]*models.Profile], error)
 
+	// GetByHandle finds the profile holding a normalised handle, in any
+	// tenant, as GetByID does.
+	GetByHandle(ctx context.Context, handle string) (*models.Profile, error)
+	// HandleTaken reports whether any profile, deleted ones included, holds
+	// the handle: a handle is never reused.
+	HandleTaken(ctx context.Context, handle string) (bool, error)
+
 	GetTypeByID(ctx context.Context, profileTypeID string) (*models.ProfileType, error)
 	GetTypeByUID(
 		ctx context.Context,

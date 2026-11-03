@@ -463,6 +463,7 @@ class ProfileObject extends $pb.GeneratedMessage {
     $core.Iterable<AddressObject>? addresses,
     $2.STATE? state,
     $core.Iterable<ProfileAccount>? accounts,
+    $core.String? handle,
   }) {
     final result = ProfileObject._();
     if (id != null) result.id = id;
@@ -472,6 +473,7 @@ class ProfileObject extends $pb.GeneratedMessage {
     if (addresses != null) result.addresses.addAll(addresses);
     if (state != null) result.state = state;
     if (accounts != null) result.accounts.addAll(accounts);
+    if (handle != null) result.handle = handle;
     return result;
   }
 
@@ -501,6 +503,7 @@ class ProfileObject extends $pb.GeneratedMessage {
         enumValues: $2.STATE.values)
     ..pPM<ProfileAccount>(7, _omitFieldNames ? '' : 'accounts',
         subBuilder: ProfileAccount.$_createMessage)
+    ..aOS(8, _omitFieldNames ? '' : 'handle')
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -573,6 +576,19 @@ class ProfileObject extends $pb.GeneratedMessage {
   /// own accounts; a merge adds the merged profile's accounts as secondary.
   @$pb.TagNumber(7)
   $pb.PbList<ProfileAccount> get accounts => $_getList(6);
+
+  /// Stable, human-readable handle for tagging and selecting the profile,
+  /// e.g. "peter.bwire". Assigned when the profile is created and never
+  /// changed; unique within the profile's tenant. Shown with a leading "@"
+  /// but stored and returned without it.
+  @$pb.TagNumber(8)
+  $core.String get handle => $_getSZ(7);
+  @$pb.TagNumber(8)
+  set handle($core.String value) => $_setString(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasHandle() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearHandle() => $_clearField(8);
 }
 
 /// ProfileAccount is a chain account derived for a profile:
@@ -1075,6 +1091,9 @@ class SearchRequest extends $pb.GeneratedMessage {
           SearchRequest.$_createMessage);
   static SearchRequest? _defaultInstance;
 
+  /// Free-text search over profile properties. A query starting with "@"
+  /// instead matches handles that begin with the rest of the query, for
+  /// tagging autocomplete (e.g. "@pet" finds "peter.bwire").
   @$pb.TagNumber(1)
   $core.String get query => $_getSZ(0);
   @$pb.TagNumber(1)
@@ -3453,6 +3472,125 @@ class GetByContactResponse extends $pb.GeneratedMessage {
   ProfileObject ensureData() => $_ensure(0);
 }
 
+class GetByHandleRequest extends $pb.GeneratedMessage {
+  factory GetByHandleRequest({
+    $core.String? handle,
+  }) {
+    final result = GetByHandleRequest._();
+    if (handle != null) result.handle = handle;
+    return result;
+  }
+
+  GetByHandleRequest._();
+
+  factory GetByHandleRequest.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetByHandleRequest()..mergeFromBuffer(data, registry);
+  factory GetByHandleRequest.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetByHandleRequest()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetByHandleRequest',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'),
+      createEmptyInstance: GetByHandleRequest.$_createMessage)
+    ..aOS(1, _omitFieldNames ? '' : 'handle')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetByHandleRequest clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetByHandleRequest copyWith(void Function(GetByHandleRequest) updates) =>
+      super.copyWith((message) => updates(message as GetByHandleRequest))
+          as GetByHandleRequest;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use GetByHandleRequest() / GetByHandleRequest.new instead')
+  static GetByHandleRequest create() => GetByHandleRequest._();
+  static $pb.GeneratedMessage $_createMessage() => GetByHandleRequest._();
+  @$core.override
+  GetByHandleRequest createEmptyInstance() => GetByHandleRequest._();
+  @$core.pragma('dart2js:noInline')
+  static GetByHandleRequest getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetByHandleRequest>(
+          GetByHandleRequest.$_createMessage);
+  static GetByHandleRequest? _defaultInstance;
+
+  /// The handle, with or without a leading "@"; matched case-insensitively.
+  @$pb.TagNumber(1)
+  $core.String get handle => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set handle($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasHandle() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearHandle() => $_clearField(1);
+}
+
+class GetByHandleResponse extends $pb.GeneratedMessage {
+  factory GetByHandleResponse({
+    ProfileObject? data,
+  }) {
+    final result = GetByHandleResponse._();
+    if (data != null) result.data = data;
+    return result;
+  }
+
+  GetByHandleResponse._();
+
+  factory GetByHandleResponse.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetByHandleResponse()..mergeFromBuffer(data, registry);
+  factory GetByHandleResponse.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      GetByHandleResponse()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'GetByHandleResponse',
+      package: const $pb.PackageName(_omitMessageNames ? '' : 'profile.v1'),
+      createEmptyInstance: GetByHandleResponse.$_createMessage)
+    ..aOM<ProfileObject>(1, _omitFieldNames ? '' : 'data',
+        subBuilder: ProfileObject.$_createMessage)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetByHandleResponse clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  GetByHandleResponse copyWith(void Function(GetByHandleResponse) updates) =>
+      super.copyWith((message) => updates(message as GetByHandleResponse))
+          as GetByHandleResponse;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core
+      .Deprecated('Use GetByHandleResponse() / GetByHandleResponse.new instead')
+  static GetByHandleResponse create() => GetByHandleResponse._();
+  static $pb.GeneratedMessage $_createMessage() => GetByHandleResponse._();
+  @$core.override
+  GetByHandleResponse createEmptyInstance() => GetByHandleResponse._();
+  @$core.pragma('dart2js:noInline')
+  static GetByHandleResponse getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<GetByHandleResponse>(
+          GetByHandleResponse.$_createMessage);
+  static GetByHandleResponse? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  ProfileObject get data => $_getN(0);
+  @$pb.TagNumber(1)
+  set data(ProfileObject value) => $_setField(1, value);
+  @$pb.TagNumber(1)
+  $core.bool hasData() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearData() => $_clearField(1);
+  @$pb.TagNumber(1)
+  ProfileObject ensureData() => $_ensure(0);
+}
+
 class GetByIDAndPartitionRequest extends $pb.GeneratedMessage {
   factory GetByIDAndPartitionRequest({
     $core.String? id,
@@ -4365,6 +4503,12 @@ class ProfileServiceApi {
           $pb.ClientContext? ctx, GetByContactRequest request) =>
       _client.invoke<GetByContactResponse>(ctx, 'ProfileService',
           'GetByContact', request, GetByContactResponse());
+
+  /// GetByHandle retrieves a profile by its stable handle.
+  $async.Future<GetByHandleResponse> getByHandle(
+          $pb.ClientContext? ctx, GetByHandleRequest request) =>
+      _client.invoke<GetByHandleResponse>(
+          ctx, 'ProfileService', 'GetByHandle', request, GetByHandleResponse());
 
   /// Search finds profiles matching specified criteria.
   $async.Future<SearchResponse> search(

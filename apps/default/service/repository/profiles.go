@@ -61,6 +61,22 @@ func (pr *profileRepository) GetByID(ctx context.Context, id string) (*models.Pr
 	return profile, err
 }
 
+func (pr *profileRepository) GetByHandle(ctx context.Context, handle string) (*models.Profile, error) {
+	// Handles are unique across tenants, so the lookup is too (see GetByID).
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
+	profile := &models.Profile{}
+	err := pr.Pool().DB(unscopedCtx, true).Preload(clause.Associations).First(profile, "handle = ?", handle).Error
+	return profile, err
+}
+
+func (pr *profileRepository) HandleTaken(ctx context.Context, handle string) (bool, error) {
+	unscopedCtx := security.SkipTenancyChecksOnClaims(ctx)
+	var count int64
+	err := pr.Pool().DB(unscopedCtx, true).Unscoped().Model(&models.Profile{}).
+		Where("handle = ?", handle).Limit(1).Count(&count).Error
+	return count > 0, err
+}
+
 func (pr *profileRepository) Save(ctx context.Context, tenant *models.Profile) error {
 	return pr.Pool().DB(ctx, false).Save(tenant).Error
 }
