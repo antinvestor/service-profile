@@ -60,9 +60,9 @@ type Profile struct {
 	Properties data.JSONMap
 
 	// Handle is the profile's stable, unique tag (e.g. "peter.bwire"),
-	// assigned at creation and never changed. Unique across all tenants;
-	// see migrations/0001/20261103_profile_handles.sql.
-	Handle string `gorm:"type:varchar(48)"`
+	// assigned at creation and never changed. Unique across all tenants,
+	// deleted profiles included, so a handle is never reused.
+	Handle string `gorm:"type:varchar(48);uniqueIndex:idx_profiles_handle,where:handle <> ''"`
 
 	ProfileTypeID string `gorm:"type:varchar(50);index:profile_id"`
 	ProfileType   ProfileType

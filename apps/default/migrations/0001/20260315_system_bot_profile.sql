@@ -2,7 +2,7 @@
 -- This profile is used by all internal service accounts.
 -- Contact (system.bot@stawi.org) is added at application startup since
 -- contacts require encryption that can't be done in SQL.
-INSERT INTO profiles (id, created_at, modified_at, version, profile_type_id, properties)
+INSERT INTO profiles (id, created_at, modified_at, version, profile_type_id, properties, handle)
 VALUES (
     'system_bot_profile_01',
     NOW(),
@@ -10,5 +10,5 @@ VALUES (
     1,
     'bjt4h376abi8cg3kgr80',  -- bot profile type
     '{"au_name": "System Bot", "description": "Default bot profile for internal service accounts"}'
-)
+, 'system.bot')
 ON CONFLICT (id) DO NOTHING;

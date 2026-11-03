@@ -200,6 +200,7 @@ func (ps *ProfileServer) RestUserInfo(rw http.ResponseWriter, req *http.Request)
 	properties := profile.GetProperties().AsMap()
 	response := data.JSONMap{
 		"sub":      profile.GetId(),
+		"handle":   profile.GetHandle(),
 		"name":     properties[profileDefaultName],
 		"contacts": profile.GetContacts(),
 		"url":      properties[profileDefaultAvaterURI],

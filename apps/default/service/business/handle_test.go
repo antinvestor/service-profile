@@ -3,7 +3,6 @@ package business_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"testing"
 
@@ -97,47 +96,6 @@ func (pts *ProfileTestSuite) searchIDs(
 	}
 }
 
-// The migration gives profiles created before handles existed one, by the
-// same rules as new profiles.
-func (pts *ProfileTestSuite) Test_profileHandles_Backfill() {
-	t := pts.T()
-
-	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
-		ctx, svc := pts.CreateService(t, dep)
-		pb, _ := pts.getProfileBusiness(ctx, svc)
-
-		taken := pts.createNamed(ctx, t, pb, "backfill.taken@testing.com", data.JSONMap{"name": "Backfill Taken"})
-		older := pts.createNamed(ctx, t, pb, "backfill.a@testing.com", data.JSONMap{"name": "Backfill Twin"})
-		newer := pts.createNamed(ctx, t, pb, "backfill.b@testing.com", data.JSONMap{"au_name": "backfill-twin"})
-		clash := pts.createNamed(ctx, t, pb, "backfill.c@testing.com", data.JSONMap{"name": "Backfill Taken"})
-		anon := pts.createNamed(ctx, t, pb, "backfill.d@testing.com", data.JSONMap{"name": "李"})
-
-		db := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName).
-			DB(security.SkipTenancyChecksOnClaims(ctx), false)
-		ids := []string{older.GetId(), newer.GetId(), clash.GetId(), anon.GetId()}
-		require.NoError(t, db.Exec("UPDATE profiles SET handle = '' WHERE id IN ?", ids).Error)
-
-		sql, err := os.ReadFile("../../migrations/0001/20261103_profile_handles.sql")
-		require.NoError(t, err)
-		backfill, _, found := strings.Cut(string(sql), "CREATE UNIQUE INDEX")
-		require.True(t, found)
-		require.NoError(t, db.Exec(backfill).Error)
-
-		tail := func(id string) string { return id[len(id)-8:] }
-		handleOf := func(id string) string {
-			p, getErr := pb.GetByID(ctx, id)
-			require.NoError(t, getErr)
-			return p.GetHandle()
-		}
-		require.Equal(t, "backfill.taken", handleOf(taken.GetId()), "an assigned handle is left alone")
-		require.Equal(t, "backfill.twin", handleOf(older.GetId()), "the oldest gets the bare name")
-		require.Equal(t, "backfill.twin."+tail(newer.GetId()), handleOf(newer.GetId()))
-		require.Equal(t, "backfill.taken."+tail(clash.GetId()), handleOf(clash.GetId()),
-			"a name another profile already holds gets the id tail")
-		require.Equal(t, "user."+tail(anon.GetId()), handleOf(anon.GetId()))
-	})
-}
-
 // Profiles with the same name created at the same moment all succeed, each
 // with its own handle: a candidate claimed in between is skipped.
 func (pts *ProfileTestSuite) Test_profileHandles_ConcurrentSameName() {
@@ -177,5 +135,55 @@ func (pts *ProfileTestSuite) Test_profileHandles_ConcurrentSameName() {
 			}
 		}
 		require.Equal(t, 1, bare, "exactly one profile gets the bare name")
+	})
+}
+
+// The database refuses a second profile with a handle, through the index
+// createWithHandle recognises, deleted profiles included.
+func (pts *ProfileTestSuite) Test_profileHandles_UniqueIndex() {
+	t := pts.T()
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		held := pts.createNamed(ctx, t, pb, "unique.a@testing.com", data.JSONMap{"name": "Unique Holder"})
+		other := pts.createNamed(ctx, t, pb, "unique.b@testing.com", data.JSONMap{"name": "Someone Else"})
+
+		db := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName).
+			DB(security.SkipTenancyChecksOnClaims(ctx), false)
+		err := db.Exec("UPDATE profiles SET handle = ? WHERE id = ?", held.GetHandle(), other.GetId()).Error
+		require.ErrorContains(t, err, "idx_profiles_handle")
+
+		require.NoError(t, db.Exec("UPDATE profiles SET deleted_at = now() WHERE id = ?", held.GetId()).Error)
+		err = db.Exec("UPDATE profiles SET handle = ? WHERE id = ?", held.GetHandle(), other.GetId()).Error
+		require.ErrorContains(t, err, "idx_profiles_handle", "a deleted profile keeps its handle")
+
+		_, err = pb.GetByHandle(ctx, held.GetHandle())
+		require.Equal(t, connect.CodeNotFound, connect.CodeOf(err), "a deleted profile is not found by handle")
+	})
+}
+
+// Profiles seeded by migrations carry handles too: no profile is ever
+// without one.
+func (pts *ProfileTestSuite) Test_profileHandles_SeededProfilesHaveHandles() {
+	t := pts.T()
+
+	pts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := pts.CreateService(t, dep)
+		pb, _ := pts.getProfileBusiness(ctx, svc)
+
+		db := svc.DatastoreManager().GetPool(ctx, datastore.DefaultPoolName).
+			DB(security.SkipTenancyChecksOnClaims(ctx), true)
+		var seeded, missing int64
+		require.NoError(t, db.Raw("SELECT count(*) FROM profiles").Scan(&seeded).Error)
+		require.Positive(t, seeded, "the migrations seed profiles")
+		require.NoError(t, db.Raw("SELECT count(*) FROM profiles WHERE handle IS NULL OR handle = ''").
+			Scan(&missing).Error)
+		require.Zero(t, missing)
+
+		bot, err := pb.GetByHandle(ctx, "@service.notification.whatsapp")
+		require.NoError(t, err)
+		require.Equal(t, "daenc7kpf2t8pa1q04hg", bot.GetId())
 	})
 }

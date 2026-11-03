@@ -26,8 +26,8 @@ const (
 	handleSuffix   = 8
 	handleFallback = "user"
 
-	// profileHandleIndex is the unique index on profiles.handle
-	// (migrations/0001/20261103_profile_handles.sql).
+	// profileHandleIndex is the unique index on profiles.handle (see
+	// models.Profile).
 	profileHandleIndex = "idx_profiles_handle"
 	pgUniqueViolation  = "23505"
 )

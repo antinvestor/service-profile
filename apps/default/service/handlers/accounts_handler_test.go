@@ -120,6 +120,15 @@ func (s *AccountsHandlerSuite) TestResolveAccountsIsServiceOnly() {
 		require.NoError(t, err)
 		assert.Empty(t, viewed.GetData().GetAccounts())
 
+		// The viewer finds the same profile by its handle, typed with "@",
+		// and also without its accounts.
+		require.NotEmpty(t, profile.GetHandle())
+		byHandle, err := server.GetByHandle(viewerCtx, &profilev1.GetByHandleRequest{Handle: "@" + profile.GetHandle()})
+		require.NoError(t, err)
+		assert.Equal(t, profile.GetId(), byHandle.GetData().GetId())
+		assert.Equal(t, profile.GetHandle(), byHandle.GetData().GetHandle())
+		assert.Empty(t, byHandle.GetData().GetAccounts())
+
 		_, err = server.ResolveAccounts(serviceCtx, &profilev1.ResolveAccountsRequest{
 			Addresses: []string{"not-an-address"},
 		})
