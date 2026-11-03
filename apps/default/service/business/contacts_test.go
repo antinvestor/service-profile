@@ -1043,3 +1043,29 @@ func (cts *ContactTestSuite) TestContactTypeFromDetail() {
 		})
 	}
 }
+
+func (cts *ContactTestSuite) Test_contactBusiness_CreateContact_IDIsDerivedFromDetail() {
+	t := cts.T()
+
+	cts.WithTestDependancies(t, func(t *testing.T, dep *definition.DependencyOption) {
+		ctx, svc := cts.CreateService(t, dep)
+		cb, _ := cts.getContactBusiness(ctx, svc)
+		dek := createContactTestDEK(svc.Config().(*config.ProfileConfig))
+
+		detail := "Stable.Id@Example.com"
+		normalized := business.Normalize(ctx, detail)
+		want := models.ContactIDFromLookupToken(util.ComputeLookupToken(dek.LookUpKey, normalized))
+
+		created, err := cb.CreateContact(ctx, detail, nil)
+		require.NoError(t, err)
+		require.Equal(t, want, created.GetID(), "the id is the hash of the normalised detail")
+
+		found, err := cb.GetByDetail(ctx, "stable.id@example.com")
+		require.NoError(t, err)
+		require.Len(t, found, 1)
+		require.Equal(t, created.GetID(), found[0].GetID())
+
+		_, err = cb.CreateContact(ctx, detail, nil)
+		require.Error(t, err, "the same detail cannot be stored twice")
+	})
+}
