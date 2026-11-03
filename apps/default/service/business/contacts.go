@@ -235,6 +235,7 @@ func (cb *contactBusiness) CreateContact(
 	}
 
 	contact := &models.Contact{
+		BaseModel:       data.BaseModel{ID: models.ContactIDFromLookupToken(lookupToken)},
 		EncryptedDetail: encryptedDetail,
 		EncryptionKeyID: cb.cfg.DEKActiveKeyID,
 		LookUpToken:     lookupToken,
