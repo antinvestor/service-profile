@@ -512,6 +512,116 @@ paths:
                 $ref: '#/components/schemas/profile.v1.GetByContactResponse'
       x-required-permissions:
         - profile_view
+  /profile.v1.ProfileService/GetByHandle:
+    get:
+      tags:
+        - Profiles
+        - profile.v1.ProfileService
+      summary: Get profile by handle
+      description: Retrieves a profile by its stable handle (for example @peter.bwire), as used for tagging and selecting profiles.
+      operationId: getProfileByHandle
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          description: Define the version of the Connect protocol
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
+        - name: Connect-Timeout-Ms
+          in: header
+          description: Define the timeout, in ms
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
+        - name: message
+          in: query
+          description: The URL-encoded message query parameter contains the JSON or binary serialized request message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.GetByHandleRequest'
+        - name: encoding
+          in: query
+          description: Define which encoding or 'Message-Codec' to use
+          required: true
+          schema:
+            $ref: '#/components/schemas/encoding'
+          example: json
+        - name: base64
+          in: query
+          description: Specifies if the message query param is base64 encoded, which may be required for binary data
+          schema:
+            $ref: '#/components/schemas/base64'
+          example: false
+        - name: compression
+          in: query
+          description: Which compression algorithm to use for this request
+          schema:
+            $ref: '#/components/schemas/compression'
+          example: gzip
+        - name: connect
+          in: query
+          description: Define the version of the Connect protocol
+          required: true
+          schema:
+            $ref: '#/components/schemas/connect'
+          example: v1
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.GetByHandleResponse'
+      x-required-permissions:
+        - profile_view
+    post:
+      tags:
+        - Profiles
+        - profile.v1.ProfileService
+      summary: Get profile by handle
+      description: Retrieves a profile by its stable handle (for example @peter.bwire), as used for tagging and selecting profiles.
+      operationId: getProfileByHandle2
+      parameters:
+        - name: Connect-Protocol-Version
+          in: header
+          description: Define the version of the Connect protocol
+          schema:
+            $ref: '#/components/schemas/connect-protocol-version'
+          example: 1
+        - name: Connect-Timeout-Ms
+          in: header
+          description: Define the timeout, in ms
+          schema:
+            $ref: '#/components/schemas/connect-timeout-header'
+          example: 1000
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/profile.v1.GetByHandleRequest'
+        required: true
+      responses:
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/connect.error'
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/profile.v1.GetByHandleResponse'
+      x-required-permissions:
+        - profile_view
   /profile.v1.ProfileService/GetByIDAndPartition:
     get:
       tags:
@@ -1355,10 +1465,15 @@ components:
       enum:
         - NULL_VALUE
       description: |-
-        `NullValue` is a singleton enumeration to represent the null value for the
-         `Value` type union.
+        Represents a JSON `null`.
 
-         The JSON representation for `NullValue` is JSON `null`.
+         `NullValue` is a sentinel, using an enum with only one value to represent
+         the null value for the `Value` type union.
+
+         A field of type `NullValue` with any value other than `0` is considered
+         invalid. Most ProtoJSON serializers will emit a `Value` with a `null_value`
+         set as a JSON `null` regardless of the integer value, and so will round trip
+         to a `0` value.
     google.protobuf.Struct:
       type: object
       additionalProperties:
@@ -1840,6 +1955,26 @@ components:
           title: data
       title: GetByContactResponse
       additionalProperties: false
+    profile.v1.GetByHandleRequest:
+      type: object
+      properties:
+        handle:
+          type: string
+          title: handle
+          maxLength: 41
+          minLength: 3
+          description: The handle, with or without a leading "@"; matched case-insensitively.
+      title: GetByHandleRequest
+      additionalProperties: false
+    profile.v1.GetByHandleResponse:
+      type: object
+      properties:
+        data:
+          allOf:
+            - $ref: '#/components/schemas/profile.v1.ProfileObject'
+          title: data
+      title: GetByHandleResponse
+      additionalProperties: false
     profile.v1.GetByIDAndPartitionRequest:
       type: object
       properties:
@@ -2072,6 +2207,14 @@ components:
           description: |-
             Chain accounts the profile owns, primary first. Only PERSON profiles
              own accounts; a merge adds the merged profile's accounts as secondary.
+        handle:
+          type: string
+          title: handle
+          description: |-
+            Stable, human-readable handle for tagging and selecting the profile,
+             e.g. "peter.bwire". Assigned when the profile is created and never
+             changed; unique within the profile's tenant. Shown with a leading "@"
+             but stored and returned without it.
       title: ProfileObject
       additionalProperties: false
       description: ProfileObject represents a complete user or entity profile.
@@ -2303,6 +2446,10 @@ components:
         query:
           type: string
           title: query
+          description: |-
+            Free-text search over profile properties. A query starting with "@"
+             instead matches handles that begin with the rest of the query, for
+             tagging autocomplete (e.g. "@pet" finds "peter.bwire").
         page:
           type: string
           title: page

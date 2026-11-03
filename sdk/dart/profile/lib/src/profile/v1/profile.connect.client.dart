@@ -46,6 +46,24 @@ extension type ProfileServiceClient (connect.Transport _transport) {
     );
   }
 
+  /// GetByHandle retrieves a profile by its stable handle.
+  Future<profilev1profile.GetByHandleResponse> getByHandle(
+    profilev1profile.GetByHandleRequest input, {
+    connect.Headers? headers,
+    connect.AbortSignal? signal,
+    Function(connect.Headers)? onHeader,
+    Function(connect.Headers)? onTrailer,
+  }) {
+    return connect.Client(_transport).unary(
+      specs.ProfileService.getByHandle,
+      input,
+      signal: signal,
+      headers: headers,
+      onHeader: onHeader,
+      onTrailer: onTrailer,
+    );
+  }
+
   /// Search finds profiles matching specified criteria.
   Stream<profilev1profile.SearchResponse> search(
     profilev1profile.SearchRequest input, {
