@@ -47,7 +47,7 @@ require (
 
 require (
 	buf.build/gen/go/antinvestor/audit/protocolbuffers/go v1.36.12-20260929093104-d5d34f953660.2 // indirect
-	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.12-20261103150037-636af3c2aa98.2
+	buf.build/gen/go/antinvestor/profile/protocolbuffers/go v1.36.12-20261103174907-37a702425cb2.2
 	buf.build/go/protovalidate v1.4.0 // indirect
 	cel.dev/expr v0.25.3 // indirect
 	cloud.google.com/go v0.123.0 // indirect
