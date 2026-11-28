@@ -194,9 +194,8 @@ func (ts *SettingsTestSuite) createTestSettings(
 		}
 
 		err = vRepo.Create(ctx, &models.SettingVal{
-			Ref:     ref.GetID(),
-			Detail:  fmt.Sprintf("Random value for : %s", ref.Name),
-			Version: 0,
+			Ref:    ref.GetID(),
+			Detail: fmt.Sprintf("Random value for : %s", ref.Name),
 		})
 		if err != nil {
 			t.Errorf("Could not save setting val for listing, %v", err)
@@ -358,9 +357,8 @@ func (ts *SettingsTestSuite) createListTestSettings(
 		}
 
 		err = vRepo.Create(ctx, &models.SettingVal{
-			Ref:     ref.GetID(),
-			Detail:  fmt.Sprintf("Random value for : %s", ref.Name),
-			Version: 0,
+			Ref:    ref.GetID(),
+			Detail: fmt.Sprintf("Random value for : %s", ref.Name),
 		})
 		if err != nil {
 			t.Errorf("Could not save setting val for listing, %v", err)

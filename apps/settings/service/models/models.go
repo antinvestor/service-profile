@@ -27,11 +27,13 @@ func (model *SettingRef) ToAPI() *settingsv1.Setting {
 	return &setting
 }
 
+// SettingVal holds the current value of a setting. Its version column is
+// BaseModel.Version, which BaseRepository uses for optimistic locking; do not
+// declare a separate Version field here, as it would shadow that column.
 type SettingVal struct {
 	data.BaseModel
-	Ref     string `gorm:"type:varchar(50);unique_index"`
-	Detail  string `gorm:"type:text"`
-	Version int
+	Ref    string `gorm:"type:varchar(50);unique_index"`
+	Detail string `gorm:"type:text"`
 }
 
 func (model *SettingVal) ToAPI(sRef *SettingRef) *settingsv1.SettingObject {
