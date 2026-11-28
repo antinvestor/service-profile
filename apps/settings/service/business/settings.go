@@ -2,6 +2,7 @@ package business
 
 import (
 	"context"
+	"errors"
 
 	commonv1 "buf.build/gen/go/antinvestor/common/protocolbuffers/go/common/v1"
 	settingsv1 "buf.build/gen/go/antinvestor/settingz/protocolbuffers/go/settings/v1"
@@ -93,28 +94,26 @@ func (nb *settingsBusiness) Set(
 		}
 	}
 
-	var sVal *models.SettingVal
 	sValList, err := nb.valRepo.GetByRef(ctx, sRef.GetID())
-	if err != nil || len(sValList) == 0 {
-		if err != nil && !data.ErrorIsNoRows(err) {
+	if err != nil && !data.ErrorIsNoRows(err) {
+		return nil, err
+	}
+
+	if len(sValList) == 0 {
+		sVal := &models.SettingVal{Ref: sRef.GetID(), Detail: req.GetValue()}
+		if err = nb.valRepo.Create(ctx, sVal); err != nil {
 			return nil, err
 		}
-
-		sVal = &models.SettingVal{
-			Ref:     sRef.GetID(),
-			Version: 0,
-		}
-	} else {
-		sVal = sValList[0]
+		return &settingsv1.SetResponse{Data: sVal.ToAPI(sRef)}, nil
 	}
 
+	sVal := sValList[0]
 	sVal.Detail = req.GetValue()
-	if sVal.Version == 0 {
-		err = nb.valRepo.Create(ctx, sVal)
-	} else {
-		_, err = nb.valRepo.Update(ctx, sVal, "detail")
-	}
-	if err != nil {
+	if err = nb.valRepo.UpdateDetail(ctx, sVal); err != nil {
+		if errors.Is(err, repository.ErrSettingValVersionConflict) {
+			return nil, connect.NewError(connect.CodeAborted,
+				"setting was modified concurrently, retry with the latest value")
+		}
 		return nil, err
 	}
 	return &settingsv1.SetResponse{
